@@ -1,24 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="5c53b2af-a3db-411f-a8ae-07a7ab65b7ee" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/gearbox.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/host/app/version.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/host/cmd/root.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/host/cmd/ssh.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/host/cmd/start.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/host/cmd/stop.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/host/cmd/version.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/host/go.mod" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/host/go.sum" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/host/main.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/apps/vm/main.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bin/gearbox" afterDir="false" />
-    </list>
+    <list default="true" id="5c53b2af-a3db-411f-a8ae-07a7ab65b7ee" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,11 +10,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/apps/host/cmd/ssh.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="576">
-              <caret line="35" selection-start-line="35" selection-end-line="35" />
+            <state relative-caret-position="558">
+              <caret line="34" selection-start-line="34" selection-end-line="34" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="18">
+              <caret line="1" selection-start-line="1" selection-end-line="1" />
             </state>
           </provider>
         </entry>
@@ -98,6 +90,9 @@
     </dirStrings>
   </component>
   <component name="GOROOT" path="/usr/local/Cellar/go/1.11.2/libexec" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
@@ -117,6 +112,7 @@
         <option value="$PROJECT_DIR$/apps/host/cmd/stop.go" />
         <option value="$PROJECT_DIR$/apps/host/cmd/start.go" />
         <option value="$PROJECT_DIR$/apps/host/cmd/ssh.go" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -142,26 +138,6 @@
               <item name="gearbox" type="b2602c69:ProjectViewProjectNode" />
               <item name="gearbox" type="462c0819:PsiDirectoryNode" />
               <item name="apps" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="gearbox" type="b2602c69:ProjectViewProjectNode" />
-              <item name="gearbox" type="462c0819:PsiDirectoryNode" />
-              <item name="apps" type="462c0819:PsiDirectoryNode" />
-              <item name="host" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="gearbox" type="b2602c69:ProjectViewProjectNode" />
-              <item name="gearbox" type="462c0819:PsiDirectoryNode" />
-              <item name="apps" type="462c0819:PsiDirectoryNode" />
-              <item name="host" type="462c0819:PsiDirectoryNode" />
-              <item name="app" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="gearbox" type="b2602c69:ProjectViewProjectNode" />
-              <item name="gearbox" type="462c0819:PsiDirectoryNode" />
-              <item name="apps" type="462c0819:PsiDirectoryNode" />
-              <item name="host" type="462c0819:PsiDirectoryNode" />
-              <item name="cmd" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="gearbox" type="b2602c69:ProjectViewProjectNode" />
@@ -275,6 +251,10 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Initial commit (includes GoLand configuration.)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Initial commit (includes GoLand configuration.)" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -405,8 +385,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/apps/host/cmd/ssh.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="576">
-          <caret line="35" selection-start-line="35" selection-end-line="35" />
+        <state relative-caret-position="558">
+          <caret line="34" selection-start-line="34" selection-end-line="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="1" selection-start-line="1" selection-end-line="1" />
         </state>
       </provider>
     </entry>
