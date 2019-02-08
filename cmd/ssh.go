@@ -5,26 +5,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var stopCmd = &cobra.Command{
-	Use: "stop",
+var sshCmd = &cobra.Command{
+	Use: "ssh",
 	SuggestFor: []string{
-		"poweroff",
-		"shutdown",
-		"down",
-		"halt",
-		"end",
-		"off",
+		"login",
+		"logon",
+		"access",
 	},
-	Short: "Stops the Gearbox VM if it is running.",
-	Long: "The `gearbox stop` command contact VirtualBox and requests that it shutdown the GearboxOS " +
-		"virtual machine that should be running within VirtualBox.",
+	Short: "Connect to the terminal of the running GearboxOS VM",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Gearbox shutdown code goes here...")
+		fmt.Println("Gearbox SSH code goes here...")
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(stopCmd)
+	RootCmd.AddCommand(sshCmd)
 
 	// Here you will define your flags and configuration settings.
 
@@ -35,4 +30,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// versionCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
 }
