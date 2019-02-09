@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"gearbox/app"
+	"gearbox/gearbox"
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +10,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Display the version of this command line app",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(app.VERSION)
+		fmt.Println(gearbox.VERSION)
 	},
 }
 
