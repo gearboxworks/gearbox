@@ -94,6 +94,14 @@ func (me *Config) LoadProjectsAndWrite() {
 	me.Write()
 }
 
+func (me *Config) GetProjectMap() ProjectMap {
+	pm := make(ProjectMap, len(me.Projects))
+	for _, p := range me.Projects {
+		pm[p.Name] = p
+	}
+	return pm
+}
+
 func (me *Config) LoadProjects() {
 	var err error
 	if len(me.ProjectRoots) == 0 {
@@ -102,6 +110,7 @@ func (me *Config) LoadProjects() {
 			ProjectRootAddCmd.CommandPath(),
 		))
 	}
+	projectMap := me.GetProjectMap()
 	me.Projects = make(Projects, 0)
 	me.Candidates = make(Candidates, 0)
 	for _, pr := range me.ProjectRoots {
@@ -122,7 +131,13 @@ func (me *Config) LoadProjects() {
 				Path: file.Name(),
 			}
 			if c.IsProject() {
-				me.Projects = append(me.Projects, NewProject(c.Path))
+				p, ok := projectMap[c.Path]
+				if ok {
+					p.Root = c.Root
+				} else {
+					p = NewProject(c.Path, c.Root)
+				}
+				me.Projects = append(me.Projects, p)
 			} else {
 				me.Candidates = append(me.Candidates, c)
 			}
