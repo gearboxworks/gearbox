@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-//go:generate go-bindata -dev -o gearbox/asset.go -pkg gearbox admin/...
+//go:generate go-bindata -dev -o gearbox/assets.go -pkg gearbox admin/...
 
 func main() {
 	gearbox.Instance = gearbox.NewGearbox(&host.MacOsConnector{})
