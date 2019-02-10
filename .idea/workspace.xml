@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BookmarkManager">
+    <bookmark url="file://$PROJECT_DIR$/gearbox/config.go" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="5c53b2af-a3db-411f-a8ae-07a7ab65b7ee" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/gearbox/admin.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gearbox/host.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gearbox/host/host_connector.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gearbox/host/mac_os_connector.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gearbox/root_dir.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gearbox/candidate.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gearbox/config.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gearbox/gearbox.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gearbox/only/once.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gearbox/project.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gearbox/project_root.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gearbox/util/util.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/admin/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/admin/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/version.go" beforeDir="false" afterPath="$PROJECT_DIR$/gearbox/version.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/gearbox" beforeDir="false" afterPath="$PROJECT_DIR$/bin/gearbox" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/1st.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/1st.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/admin.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/admin.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/version.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/version.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/project.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/project.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gearbox/admin.go" beforeDir="false" afterPath="$PROJECT_DIR$/gearbox/admin.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gearbox/host/host_connector.go" beforeDir="false" afterPath="$PROJECT_DIR$/gearbox/host/host_connector.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gearbox/host/mac_os_connector.go" beforeDir="false" afterPath="$PROJECT_DIR$/gearbox/host/mac_os_connector.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -25,88 +28,68 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.44903433">
-      <split-first>
-        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/admin/index.html">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="540">
-                  <caret line="30" selection-start-line="30" selection-end-line="30" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-        </leaf>
-      </split-first>
-      <split-second>
-        <leaf>
-          <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/main.go">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="234">
-                  <caret line="18" selection-start-line="18" selection-end-line="18" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/gearbox/admin.go">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="666">
-                  <caret line="44" selection-start-line="44" selection-end-line="44" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/gearbox/host.go">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="72">
-                  <caret line="4" column="36" selection-start-line="4" selection-start-column="36" selection-end-line="4" selection-end-column="36" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/gearbox/host/mac_os_connector.go">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="540">
-                  <caret line="34" selection-start-line="34" selection-end-line="34" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/gearbox/host/host_connector.go">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="72">
-                  <caret line="4" column="13" selection-start-line="4" selection-start-column="13" selection-end-line="4" selection-end-column="13" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/gearbox/asset.go">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-859">
-                  <caret line="106" selection-start-line="106" selection-end-line="106" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/cmd/admin.go">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="162">
-                  <caret line="12" selection-start-line="12" selection-end-line="12" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-        </leaf>
-      </split-second>
-    </splitter>
+    <leaf>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/gearbox/host/mac_os_connector.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="450">
+              <caret line="29" column="1" selection-start-line="29" selection-start-column="1" selection-end-line="29" selection-end-column="1" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/gearbox/config.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="504">
+              <caret line="37" column="5" lean-forward="true" selection-start-line="37" selection-start-column="5" selection-end-line="37" selection-end-column="5" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/cmd/project.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="524">
+              <caret line="63" selection-start-line="63" selection-end-line="63" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/gearbox/gearbox.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="560">
+              <caret line="32" column="21" selection-start-line="32" selection-start-column="21" selection-end-line="32" selection-end-column="21" />
+              <folding>
+                <element signature="e#17#58#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/gearbox/project_root.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="234">
+              <caret line="13" selection-start-line="13" selection-end-line="13" />
+              <folding>
+                <element signature="e#17#51#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file:///usr/local/Cellar/go/1.11.2/libexec/src/path/filepath/path.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="276">
+              <caret line="431" selection-start-line="431" selection-end-line="431" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -129,6 +112,13 @@
       <find>Machost.Connector</find>
       <find>Vue</find>
       <find>Web</find>
+      <find>EOENT</find>
+      <find>Command</find>
+      <find>CommandPath</find>
+      <find>gearbox</find>
+      <find>Op</find>
+      <find>gearbox/cmd</find>
+      <find>cmd</find>
     </findStrings>
     <replaceStrings>
       <replace>status</replace>
@@ -140,6 +130,8 @@
     <dirStrings>
       <dir>$PROJECT_DIR$/../..</dir>
       <dir>$PROJECT_DIR$</dir>
+      <dir>/usr/local/Cellar/go/1.11.2/libexec/src/</dir>
+      <dir>$PROJECT_DIR$/cmd</dir>
       <dir>$PROJECT_DIR$/gearbox</dir>
     </dirStrings>
   </component>
@@ -200,14 +192,28 @@
         <option value="$PROJECT_DIR$/admin/css/style.css.go" />
         <option value="$PROJECT_DIR$/bindata.go" />
         <option value="$PROJECT_DIR$/gearbox/bindata.go" />
-        <option value="$PROJECT_DIR$/main.go" />
         <option value="$PROJECT_DIR$/admin/css/style.css" />
         <option value="$PROJECT_DIR$/admin/js/admin.js" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.go" />
+        <option value="$PROJECT_DIR$/admin/index.html" />
+        <option value="$PROJECT_DIR$/gearbox/asset.go" />
+        <option value="$PROJECT_DIR$/gearbox/config/config.go" />
+        <option value="$PROJECT_DIR$/gearbox/only.go" />
+        <option value="$PROJECT_DIR$/gearbox/initialize.go" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_10.json" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_11.json" />
+        <option value="$PROJECT_DIR$/gearbox/admin.go" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_12.json" />
+        <option value="$PROJECT_DIR$/gearbox/candidate.go" />
         <option value="$PROJECT_DIR$/gearbox/host/host_connector.go" />
         <option value="$PROJECT_DIR$/gearbox/host/mac_os_connector.go" />
-        <option value="$PROJECT_DIR$/gearbox/admin.go" />
-        <option value="$PROJECT_DIR$/admin/index.html" />
+        <option value="$PROJECT_DIR$/gearbox/project.go" />
+        <option value="$PROJECT_DIR$/main.go" />
+        <option value="$PROJECT_DIR$/cmd/project.go" />
+        <option value="$PROJECT_DIR$/gearbox/util/util.go" />
+        <option value="$PROJECT_DIR$/gearbox/gearbox.go" />
+        <option value="$PROJECT_DIR$/gearbox/project_root.go" />
+        <option value="$PROJECT_DIR$/gearbox/config.go" />
       </list>
     </option>
   </component>
@@ -233,18 +239,7 @@
             <path>
               <item name="gearbox" type="b2602c69:ProjectViewProjectNode" />
               <item name="gearbox" type="462c0819:PsiDirectoryNode" />
-              <item name="admin" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="gearbox" type="b2602c69:ProjectViewProjectNode" />
-              <item name="gearbox" type="462c0819:PsiDirectoryNode" />
-              <item name="admin" type="462c0819:PsiDirectoryNode" />
-              <item name="js" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="gearbox" type="b2602c69:ProjectViewProjectNode" />
-              <item name="gearbox" type="462c0819:PsiDirectoryNode" />
-              <item name="bin" type="462c0819:PsiDirectoryNode" />
+              <item name="cmd" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="gearbox" type="b2602c69:ProjectViewProjectNode" />
@@ -255,7 +250,11 @@
               <item name="gearbox" type="b2602c69:ProjectViewProjectNode" />
               <item name="gearbox" type="462c0819:PsiDirectoryNode" />
               <item name="gearbox" type="462c0819:PsiDirectoryNode" />
-              <item name="host" type="462c0819:PsiDirectoryNode" />
+              <item name="util" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="gearbox" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
             </path>
           </expand>
           <select />
@@ -269,7 +268,7 @@
     <property name="GO_FMT" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="add_unversioned_files" value="true" />
-    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="go" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="JSON&#10;go" />
     <property name="configurable.Global.GOPATH.is.expanded" value="true" />
     <property name="configurable.Module.GOPATH.is.expanded" value="false" />
     <property name="configurable.Project.GOPATH.is.expanded" value="true" />
@@ -277,21 +276,22 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="com.goide.configuration.GoLibrariesConfigurableProvider" />
+    <property name="settings.editor.selected.configurable" value="Errors" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/admin/images" />
-      <recent name="$PROJECT_DIR$/admin" />
-      <recent name="$PROJECT_DIR$/gearbox" />
-      <recent name="$PROJECT_DIR$/gearbox/host" />
-      <recent name="$PROJECT_DIR$/app" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/gearbox" />
       <recent name="$PROJECT_DIR$/apps/vm/cmds" />
       <recent name="$PROJECT_DIR$/apps/vm" />
       <recent name="$PROJECT_DIR$/apps/host/cmd" />
       <recent name="$PROJECT_DIR$/apps/host" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/gearbox/only" />
+      <recent name="$PROJECT_DIR$/gearbox/config" />
+      <recent name="$PROJECT_DIR$/admin/images" />
+      <recent name="$PROJECT_DIR$/admin" />
+      <recent name="$PROJECT_DIR$/gearbox" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -311,7 +311,7 @@
       <module name="gearbox" />
       <working_directory value="$PROJECT_DIR$" />
       <go_parameters value="-i" />
-      <parameters value="admin" />
+      <parameters value="project root add $USER_HOME$/Sites/archive" />
       <kind value="FILE" />
       <filePath value="$PROJECT_DIR$/main.go" />
       <package value="gearbox" />
@@ -331,15 +331,14 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="2560" height="1417" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25972995" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.26171565" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32949308" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.25729647" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.3986175" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.27112135" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.3655914" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32949308" />
@@ -348,6 +347,7 @@
       <window_info anchor="bottom" id="Version Control" order="9" />
       <window_info anchor="bottom" id="Terminal" order="10" weight="0.32872504" />
       <window_info anchor="bottom" id="Event Log" order="11" side_tool="true" />
+      <window_info anchor="bottom" id="Messages" order="12" visible="true" weight="0.32949308" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -358,11 +358,15 @@
     <option name="version" value="1" />
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="Initial commit (includes GoLand configuration.)" />
     <MESSAGE value="Remove go.mod from the root." />
     <MESSAGE value="Merging all command line option into one command line app." />
     <MESSAGE value="Adding in Webview and a `gearbox admin` command." />
-    <option name="LAST_COMMIT_MESSAGE" value="Adding in Webview and a `gearbox admin` command." />
+    <MESSAGE value="More work on the admin console" />
+    <MESSAGE value="Added objects for Gearbox, Projects, and Config." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added objects for Gearbox, Projects, and Config." />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -372,34 +376,48 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/cmd/admin.go</url>
-          <line>12</line>
+          <url>file://$PROJECT_DIR$/gearbox/config.go</url>
+          <line>130</line>
           <properties />
-          <option name="timeStamp" value="10" />
+          <option name="timeStamp" value="29" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/gearbox/admin.go</url>
-          <line>44</line>
+          <url>file://$PROJECT_DIR$/cmd/project.go</url>
+          <line>63</line>
           <properties />
-          <option name="timeStamp" value="13" />
+          <option name="timeStamp" value="34" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/gearbox/admin.go</url>
-          <line>16</line>
+          <url>file://$PROJECT_DIR$/gearbox/config.go</url>
+          <line>104</line>
           <properties />
-          <option name="timeStamp" value="15" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/gearbox/admin.go</url>
-          <line>23</line>
-          <properties />
-          <option name="timeStamp" value="16" />
+          <option name="timeStamp" value="35" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="watch">
+      <expression>
+        <expression-string>file.name</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>err.Op</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>err.Err</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>err.Error()</expression-string>
+        <language-id>go</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
       <expression>
         <expression-string>rootDir</expression-string>
         <language-id>go</language-id>
@@ -482,9 +500,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/project.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/cmd/deploy.go">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -526,13 +541,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../pkg/mod/github.com/spf13/cobra@v0.0.3/command.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="251">
-          <caret line="995" selection-start-line="995" selection-end-line="995" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/go.mod">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="162">
@@ -547,19 +555,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gearbox/bindata.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-548">
-          <caret line="64" selection-start-line="64" selection-end-line="64" />
-          <folding>
-            <element signature="n#!!block;n#adminIndexHtml#0" />
-            <element signature="n#!!block;n#Asset#0" />
-            <element signature="n#!!block;n#AssetInfo#0" />
-            <element signature="n#!!block;n#AssetNames#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/gearbox/root_dir.go">
       <provider selected="true" editor-type-id="text-editor">
         <state>
@@ -567,23 +562,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gearbox/bindata.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="460">
-          <caret line="221" column="18" lean-forward="true" selection-start-line="221" selection-start-column="18" selection-end-line="221" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/admin/css/style.css">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="14" selection-start-line="14" selection-end-line="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/admin/js/admin.js">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/gearbox/bindata.go" />
+    <entry file="file://$PROJECT_DIR$/admin/css/style.css" />
+    <entry file="file://$PROJECT_DIR$/admin/js/admin.js" />
     <entry file="file://$PROJECT_DIR$/../../pkg/mod/github.com/zserge/webview@v0.0.0-20190123072648-16c93bcaeaeb/webview.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="244">
@@ -614,57 +595,521 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/gearbox/asset.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-859">
-          <caret line="106" selection-start-line="106" selection-end-line="106" />
+        <state relative-caret-position="385">
+          <caret line="218" column="5" selection-start-line="218" selection-start-column="5" selection-end-line="218" selection-end-column="5" />
+          <folding>
+            <element signature="e#158#222#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gearbox/host/host_connector.go">
+    <entry file="file://$PROJECT_DIR$/admin/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="72">
-          <caret line="4" column="13" selection-start-line="4" selection-start-column="13" selection-end-line="4" selection-end-column="13" />
+        <state relative-caret-position="270">
+          <caret line="15" column="14" lean-forward="true" selection-start-line="15" selection-start-column="14" selection-end-line="15" selection-end-column="14" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gearbox/host/mac_os_connector.go">
+    <entry file="file:///usr/local/Cellar/go/1.11.2/libexec/src/syscall/syscall_unix.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="34" selection-start-line="34" selection-end-line="34" />
+        <state relative-caret-position="280">
+          <caret line="30" column="69" lean-forward="true" selection-start-line="30" selection-start-column="69" selection-end-line="30" selection-end-column="69" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/go/1.11.2/libexec/src/syscall/zerrors_darwin_amd64.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="697">
+          <caret line="1170" column="4" selection-start-line="1170" selection-start-column="4" selection-end-line="1170" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/go/1.11.2/libexec/src/syscall/syscall.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="269">
+          <caret line="68" column="30" selection-start-line="68" selection-start-column="30" selection-end-line="68" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/go/1.11.2/libexec/src/syscall/zsyscall_darwin_amd64.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="359">
+          <caret line="1191" column="22" selection-start-line="1191" selection-start-column="22" selection-end-line="1191" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/go/1.11.2/libexec/src/os/stat_unix.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="30" column="21" lean-forward="true" selection-start-line="30" selection-start-column="21" selection-end-line="30" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/go/1.11.2/libexec/src/os/stat.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="216">
+          <caret line="12" column="18" lean-forward="true" selection-start-line="12" selection-start-column="18" selection-end-line="12" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gearbox/only/once.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gearbox/initialize.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="36">
+          <caret line="2" selection-start-line="2" selection-end-line="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_10.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="5" column="1" lean-forward="true" selection-start-line="5" selection-start-column="1" selection-end-line="5" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_11.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="108">
+          <caret line="6" column="1" lean-forward="true" selection-start-line="6" selection-start-column="1" selection-end-line="6" selection-end-column="1" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/gearbox/host.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="72">
-          <caret line="4" column="36" selection-start-line="4" selection-start-column="36" selection-end-line="4" selection-end-column="36" />
+          <caret line="4" column="8" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="8" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/main.go">
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_12.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="18" selection-start-line="18" selection-end-line="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cmd/admin.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="162">
-          <caret line="12" selection-start-line="12" selection-end-line="12" />
+        <state relative-caret-position="198">
+          <caret line="11" column="1" selection-start-line="11" selection-start-column="1" selection-end-line="11" selection-end-column="1" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/gearbox/admin.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="666">
-          <caret line="44" selection-start-line="44" selection-end-line="44" />
+        <state relative-caret-position="69">
+          <caret line="14" selection-start-line="14" selection-end-line="14" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/admin/index.html">
+    <entry file="file://$PROJECT_DIR$/cmd/admin.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="30" selection-start-line="30" selection-end-line="30" />
+        <state relative-caret-position="396">
+          <caret line="22" selection-start-line="22" selection-end-line="22" />
+          <folding>
+            <element signature="e#13#68#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../pkg/mod/github.com/spf13/cobra@v0.0.3/command.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="223">
+          <caret line="996" column="28" selection-start-line="996" selection-start-column="28" selection-end-line="996" selection-end-column="28" />
+          <folding>
+            <element signature="e#1298#7320#0" />
+            <element signature="e#7507#7522#0" />
+            <element signature="e#7674#7696#0" />
+            <element signature="e#7827#7847#0" />
+            <element signature="e#7966#7990#0" />
+            <element signature="e#8143#8167#0" />
+            <element signature="e#8293#8312#0" />
+            <element signature="e#8398#8422#0" />
+            <element signature="e#8565#8588#0" />
+            <element signature="e#8740#8766#0" />
+            <element signature="e#9037#9214#0" />
+            <element signature="e#9168#9212#0" />
+            <element signature="e#9299#9330#0" />
+            <element signature="e#9414#9445#0" />
+            <element signature="e#9497#9608#0" />
+            <element signature="e#9519#9541#0" />
+            <element signature="e#9560#9594#0" />
+            <element signature="e#9799#10075#0" />
+            <element signature="e#9824#9849#0" />
+            <element signature="e#9868#9904#0" />
+            <element signature="e#9936#10073#0" />
+            <element signature="e#10034#10057#0" />
+            <element signature="e#10249#10277#0" />
+            <element signature="e#10478#10743#0" />
+            <element signature="e#10502#10526#0" />
+            <element signature="e#10545#10580#0" />
+            <element signature="e#10618#10741#0" />
+            <element signature="e#10715#10738#0" />
+            <element signature="e#10911#10955#0" />
+            <element signature="e#11032#11153#0" />
+            <element signature="e#11385#11563#0" />
+            <element signature="e#11414#11443#0" />
+            <element signature="e#11463#11501#0" />
+            <element signature="e#11544#11561#0" />
+            <element signature="e#11674#11810#0" />
+            <element signature="e#11744#11773#0" />
+            <element signature="e#11946#12110#0" />
+            <element signature="e#12030#12065#0" />
+            <element signature="e#12218#12354#0" />
+            <element signature="e#12288#12316#0" />
+            <element signature="e#12482#12511#0" />
+            <element signature="e#12531#12569#0" />
+            <element signature="e#13597#13846#0" />
+            <element signature="e#13624#13652#0" />
+            <element signature="e#13672#13709#0" />
+            <element signature="e#13951#14157#0" />
+            <element signature="e#13981#14012#0" />
+            <element signature="e#14032#14072#0" />
+            <element signature="e#14215#14310#0" />
+            <element signature="e#14258#14277#0" />
+            <element signature="e#14373#14521#0" />
+            <element signature="e#14394#14413#0" />
+            <element signature="e#14469#14488#0" />
+            <element signature="e#14575#15414#0" />
+            <element signature="e#14596#14614#0" />
+            <element signature="e#14712#15394#0" />
+            <element signature="e#14749#15391#0" />
+            <element signature="e#14760#14821#0" />
+            <element signature="e#14824#15014#0" />
+            <element signature="e#15017#15307#0" />
+            <element signature="e#15241#15262#0" />
+            <element signature="e#15268#15307#0" />
+            <element signature="e#15310#15387#0" />
+            <element signature="e#15654#15822#0" />
+            <element signature="e#15680#15807#0" />
+            <element signature="e#15694#15804#0" />
+            <element signature="e#15856#15957#0" />
+            <element signature="e#16144#16739#0" />
+            <element signature="e#16279#16554#0" />
+            <element signature="e#16350#16378#0" />
+            <element signature="e#16459#16529#0" />
+            <element signature="e#16624#16708#0" />
+            <element signature="e#16794#17173#0" />
+            <element signature="e#16821#16837#0" />
+            <element signature="e#16876#16915#0" />
+            <element signature="e#17004#17145#0" />
+            <element signature="e#17088#17142#0" />
+            <element signature="e#17224#17558#0" />
+            <element signature="e#17290#17495#0" />
+            <element signature="e#17338#17392#0" />
+            <element signature="e#17453#17492#0" />
+            <element signature="e#17519#17543#0" />
+            <element signature="e#17715#18756#0" />
+            <element signature="e#17782#18733#0" />
+            <element signature="e#17786#18549#0" />
+            <element signature="e#17797#18085#0" />
+            <element signature="e#18088#18319#0" />
+            <element signature="e#18322#18420#0" />
+            <element signature="e#18423#18545#0" />
+            <element signature="e#18592#18620#0" />
+            <element signature="e#18666#18696#0" />
+            <element signature="e#18876#19511#0" />
+            <element signature="e#18937#19489#0" />
+            <element signature="e#18969#19486#0" />
+            <element signature="e#19251#19307#0" />
+            <element signature="e#19361#19482#0" />
+            <element signature="e#19419#19477#0" />
+            <element signature="e#19644#19717#0" />
+            <element signature="e#19664#19715#0" />
+            <element signature="e#19781#19844#0" />
+            <element signature="e#19801#19832#0" />
+            <element signature="e#20000#20037#0" />
+            <element signature="e#20089#22557#0" />
+            <element signature="e#20104#20165#0" />
+            <element signature="e#20193#20266#0" />
+            <element signature="e#20457#20496#0" />
+            <element signature="e#20684#20878#0" />
+            <element signature="e#20892#20918#0" />
+            <element signature="e#21014#21319#0" />
+            <element signature="e#21082#21181#0" />
+            <element signature="e#21198#21316#0" />
+            <element signature="e#21273#21298#0" />
+            <element signature="e#21339#21365#0" />
+            <element signature="e#21437#21458#0" />
+            <element signature="e#21510#21527#0" />
+            <element signature="e#21567#21786#0" />
+            <element signature="e#21601#21697#0" />
+            <element signature="e#21663#21684#0" />
+            <element signature="e#21732#21783#0" />
+            <element signature="e#21808#21881#0" />
+            <element signature="e#21859#21878#0" />
+            <element signature="e#21906#21936#0" />
+            <element signature="e#21987#22004#0" />
+            <element signature="e#22023#22093#0" />
+            <element signature="e#22071#22090#0" />
+            <element signature="e#22099#22126#0" />
+            <element signature="e#22149#22223#0" />
+            <element signature="e#22201#22220#0" />
+            <element signature="e#22249#22280#0" />
+            <element signature="e#22319#22542#0" />
+            <element signature="e#22354#22451#0" />
+            <element signature="e#22417#22438#0" />
+            <element signature="e#22487#22539#0" />
+            <element signature="e#22586#22632#0" />
+            <element signature="e#22620#22630#0" />
+            <element signature="e#22828#22867#0" />
+            <element signature="e#22958#24539#0" />
+            <element signature="e#23048#23081#0" />
+            <element signature="e#23125#23148#0" />
+            <element signature="e#23410#23435#0" />
+            <element signature="e#23441#23461#0" />
+            <element signature="e#23506#23547#0" />
+            <element signature="e#23553#23590#0" />
+            <element signature="e#23606#23863#0" />
+            <element signature="e#23703#23719#0" />
+            <element signature="e#23742#23844#0" />
+            <element signature="e#23935#23979#0" />
+            <element signature="e#24022#24520#0" />
+            <element signature="e#24125#24178#0" />
+            <element signature="e#24310#24351#0" />
+            <element signature="e#24480#24517#0" />
+            <element signature="e#24593#24656#0" />
+            <element signature="e#24613#24630#0" />
+            <element signature="e#24706#25171#0" />
+            <element signature="e#24799#25027#0" />
+            <element signature="e#24887#24902#0" />
+            <element signature="e#24960#25024#0" />
+            <element signature="e#25060#25157#0" />
+            <element signature="e#25395#25618#0" />
+            <element signature="e#25459#25616#0" />
+            <element signature="e#25504#25536#0" />
+            <element signature="e#25542#25568#0" />
+            <element signature="e#25873#26134#0" />
+            <element signature="e#25895#25908#0" />
+            <element signature="e#25975#26132#0" />
+            <element signature="e#26023#26055#0" />
+            <element signature="e#26061#26087#0" />
+            <element signature="e#26386#27047#0" />
+            <element signature="e#26412#26425#0" />
+            <element signature="e#26452#26984#0" />
+            <element signature="e#26480#26981#0" />
+            <element signature="e#26724#26976#0" />
+            <element signature="e#26793#26870#0" />
+            <element signature="e#26876#26971#0" />
+            <element signature="e#27151#27232#0" />
+            <element signature="e#27354#27371#0" />
+            <element signature="e#27421#27448#0" />
+            <element signature="e#27498#27534#0" />
+            <element signature="e#27630#27850#0" />
+            <element signature="e#27751#27829#0" />
+            <element signature="e#28009#28061#0" />
+            <element signature="e#28416#28455#0" />
+            <element signature="e#28549#28602#0" />
+            <element signature="e#28795#29555#0" />
+            <element signature="e#28865#29012#0" />
+            <element signature="e#28894#28970#0" />
+            <element signature="e#28917#28966#0" />
+            <element signature="e#29182#29553#0" />
+            <element signature="e#29251#29290#0" />
+            <element signature="e#29388#29441#0" />
+            <element signature="e#29511#29550#0" />
+            <element signature="e#29695#29733#0" />
+            <element signature="e#29879#29911#0" />
+            <element signature="e#30069#30108#0" />
+            <element signature="e#30410#30695#0" />
+            <element signature="e#30450#30503#0" />
+            <element signature="e#30509#30531#0" />
+            <element signature="e#30560#30581#0" />
+            <element signature="e#30649#30677#0" />
+            <element signature="e#30831#31852#0" />
+            <element signature="e#30941#31834#0" />
+            <element signature="e#30987#31015#0" />
+            <element signature="e#31034#31359#0" />
+            <element signature="e#31075#31354#0" />
+            <element signature="e#31142#31243#0" />
+            <element signature="e#31249#31349#0" />
+            <element signature="e#31388#31716#0" />
+            <element signature="e#31430#31711#0" />
+            <element signature="e#31452#31600#0" />
+            <element signature="e#31492#31594#0" />
+            <element signature="e#31606#31706#0" />
+            <element signature="e#31769#31831#0" />
+            <element signature="e#31803#31827#0" />
+            <element signature="e#31954#32050#0" />
+            <element signature="e#32013#32035#0" />
+            <element signature="e#32163#32247#0" />
+            <element signature="e#32194#32231#0" />
+            <element signature="e#32208#32228#0" />
+            <element signature="e#32426#32506#0" />
+            <element signature="e#32457#32493#0" />
+            <element signature="e#32655#32898#0" />
+            <element signature="e#32697#32751#0" />
+            <element signature="e#32785#32882#0" />
+            <element signature="e#32825#32879#0" />
+            <element signature="e#33011#33083#0" />
+            <element signature="e#33174#33204#0" />
+            <element signature="e#33298#33339#0" />
+            <element signature="e#33448#33479#0" />
+            <element signature="e#33661#33876#0" />
+            <element signature="e#33702#33721#0" />
+            <element signature="e#33772#33791#0" />
+            <element signature="e#33841#33859#0" />
+            <element signature="e#34281#34705#0" />
+            <element signature="e#34417#34436#0" />
+            <element signature="e#34550#34617#0" />
+            <element signature="e#34593#34614#0" />
+            <element signature="e#34930#35190#0" />
+            <element signature="e#35028#35093#0" />
+            <element signature="e#35070#35090#0" />
+            <element signature="e#35407#35709#0" />
+            <element signature="e#35531#35586#0" />
+            <element signature="e#35563#35583#0" />
+            <element signature="e#35805#35832#0" />
+            <element signature="e#36030#36056#0" />
+            <element signature="e#36225#36436#0" />
+            <element signature="e#36246#36417#0" />
+            <element signature="e#36335#36378#0" />
+            <element signature="e#36597#36826#0" />
+            <element signature="e#36740#36811#0" />
+            <element signature="e#36785#36808#0" />
+            <element signature="e#36954#37532#0" />
+            <element signature="e#37003#37176#0" />
+            <element signature="e#37093#37136#0" />
+            <element signature="e#37245#37293#0" />
+            <element signature="e#37329#37439#0" />
+            <element signature="e#37408#37436#0" />
+            <element signature="e#37663#38153#0" />
+            <element signature="e#37712#37885#0" />
+            <element signature="e#37802#37845#0" />
+            <element signature="e#37938#37986#0" />
+            <element signature="e#38033#38133#0" />
+            <element signature="e#38102#38130#0" />
+            <element signature="e#38293#38319#0" />
+            <element signature="e#38462#38676#0" />
+            <element signature="e#38484#38657#0" />
+            <element signature="e#38574#38617#0" />
+            <element signature="e#38755#39064#0" />
+            <element signature="e#39204#39236#0" />
+            <element signature="e#39353#39395#0" />
+            <element signature="e#39516#39553#0" />
+            <element signature="e#39686#39727#0" />
+            <element signature="e#39923#39964#0" />
+            <element signature="e#40134#40185#0" />
+            <element signature="e#40362#40408#0" />
+            <element signature="e#40597#40647#0" />
+            <element signature="e#40765#40862#0" />
+            <element signature="e#40815#40851#0" />
+            <element signature="e#40974#41145#0" />
+            <element signature="e#41003#41049#0" />
+            <element signature="e#41067#41135#0" />
+            <element signature="e#41256#41797#0" />
+            <element signature="e#41283#41300#0" />
+            <element signature="e#41328#41369#0" />
+            <element signature="e#41743#41782#0" />
+            <element signature="e#41880#41900#0" />
+            <element signature="e#42060#42170#0" />
+            <element signature="e#42353#42777#0" />
+            <element signature="e#42382#42534#0" />
+            <element signature="e#42562#42617#0" />
+            <element signature="e#42715#42774#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/go/1.11.2/libexec/src/io/ioutil/ioutil.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="266">
+          <caret line="95" column="30" selection-start-line="95" selection-start-column="30" selection-end-line="95" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/go/1.11.2/libexec/src/os/types.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-12">
+          <caret line="85" column="8" lean-forward="true" selection-start-line="85" selection-start-column="8" selection-end-line="85" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gearbox/host/host_connector.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="72">
+          <caret line="4" column="17" selection-start-line="4" selection-start-column="17" selection-end-line="4" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gearbox/project.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="162">
+          <caret line="9" column="24" lean-forward="true" selection-start-line="9" selection-start-column="24" selection-end-line="9" selection-end-column="24" />
+          <folding>
+            <element signature="e#17#45#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gearbox/candidate.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="20" lean-forward="true" selection-start-line="20" selection-end-line="20" />
+          <folding>
+            <element signature="e#17#58#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="252">
+          <caret line="20" lean-forward="true" selection-start-line="20" selection-end-line="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/go/1.11.2/libexec/src/path/filepath/path.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="276">
+          <caret line="431" selection-start-line="431" selection-end-line="431" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gearbox/util/util.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="234">
+          <caret line="15" column="1" lean-forward="true" selection-start-line="15" selection-start-column="1" selection-end-line="15" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gearbox/host/mac_os_connector.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="450">
+          <caret line="29" column="1" selection-start-line="29" selection-start-column="1" selection-end-line="29" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gearbox/gearbox.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="560">
+          <caret line="32" column="21" selection-start-line="32" selection-start-column="21" selection-end-line="32" selection-end-column="21" />
+          <folding>
+            <element signature="e#17#58#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gearbox/project_root.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="234">
+          <caret line="13" selection-start-line="13" selection-end-line="13" />
+          <folding>
+            <element signature="e#17#51#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cmd/project.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="524">
+          <caret line="63" selection-start-line="63" selection-end-line="63" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gearbox/config.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="504">
+          <caret line="37" column="5" lean-forward="true" selection-start-line="37" selection-start-column="5" selection-end-line="37" selection-end-column="5" />
         </state>
       </provider>
     </entry>

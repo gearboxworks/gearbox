@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"gearbox/gearbox"
 	"github.com/spf13/cobra"
 )
 
@@ -46,4 +47,25 @@ func init() {
 			fmt.Println("Disable Gearbox service containers goes here...")
 		},
 	})
+
+	projectRootCmd := &cobra.Command{
+		Use:   "root",
+		Args:  cobra.ExactArgs(1),
+		Short: "Manage project root directories on a host computer.",
+	}
+
+	projectCmd.AddCommand(projectRootCmd)
+
+	gearbox.ProjectRootAddCmd = &cobra.Command{
+		Use:   "add",
+		Args:  cobra.ExactArgs(1),
+		Short: "Add a new directory on a host computer to the list of project roots in use.",
+		Run: func(cmd *cobra.Command, args []string) {
+			gearbox.Instance.AddProjectRoot(args[0])
+			fmt.Printf("Project root '%s' added.\n", args[0])
+		},
+	}
+
+	projectRootCmd.AddCommand(gearbox.ProjectRootAddCmd)
+
 }

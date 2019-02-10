@@ -8,6 +8,7 @@ import (
 
 const bundleIdentifier = "works.gearbox.gearbox"
 const userDataPath = "Library/Application Support"
+const suggestedProjectsPath = "Sites"
 
 var MacHostConnectorType = (*MacOsConnector)(nil)
 
@@ -20,14 +21,31 @@ type MacOsConnector struct{}
 //           /Conceptual/FileSystemProgrammingGuide/MacOSXDirectories/MacOSXDirectories.html
 //
 //
-func (*MacOsConnector) GetUserDataDir() string {
+func (me *MacOsConnector) GetUserConfigDir() string {
+	return fmt.Sprintf("%s/%s/%s",
+		me.GetUserHomeDir(),
+		userDataPath,
+		bundleIdentifier,
+	)
+}
+
+func (me *MacOsConnector) GetAdminRootDir() string {
+	return fmt.Sprintf("%s/admin",
+		me.GetUserConfigDir(),
+	)
+}
+
+func (me *MacOsConnector) GetSuggestedProjectRoot() string {
+	return fmt.Sprintf("%s/%s",
+		me.GetUserHomeDir(),
+		suggestedProjectsPath,
+	)
+}
+
+func (me *MacOsConnector) GetUserHomeDir() string {
 	homeDir, err := homedir.Dir()
 	if err != nil {
 		log.Fatal(err)
 	}
-	return fmt.Sprintf("%s/%s/%s", homeDir, userDataPath, bundleIdentifier)
-}
-
-func (me *MacOsConnector) GetWebRootDir() string {
-	return fmt.Sprintf("%s/admin", me.GetUserDataDir())
+	return homeDir
 }

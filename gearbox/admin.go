@@ -21,7 +21,7 @@ func (me *Admin) Run() {
 	defer ln.Close()
 	go func() {
 		// See https://hackernoon.com/how-to-create-a-web-server-in-go-a064277287c9
-		http.Handle("/", http.FileServer(http.Dir(me.Host.GetWebRootDir())))
+		http.Handle("/", http.FileServer(http.Dir(me.Host.GetAdminRootDir())))
 		log.Fatal(http.Serve(ln, nil))
 	}()
 
@@ -51,11 +51,11 @@ func (me *Admin) Run() {
 	w.Run()
 }
 
-func WriteAdminAssetsToWebRoot(c host.Connector) {
+func WriteAdminAssetsToWebRoot(hc host.Connector) {
 	for _, afn := range AssetNames() {
-		err := RestoreAsset(c.GetUserDataDir(), afn)
+		err := RestoreAsset(hc.GetUserConfigDir(), afn)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Could not restore asset '%s/%s'", c.GetUserDataDir(), afn))
+			log.Fatal(fmt.Sprintf("Could not restore asset '%s/%s'", hc.GetUserConfigDir(), afn))
 		}
 	}
 

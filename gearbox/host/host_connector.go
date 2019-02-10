@@ -1,6 +1,8 @@
 package host
 
 type Connector interface {
-	GetWebRootDir() string
-	GetUserDataDir() string
+	GetAdminRootDir() string
+	GetUserConfigDir() string
+	GetSuggestedProjectRoot() string
+	GetUserHomeDir() string
 }
