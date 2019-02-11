@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/gearbox/host"
+	"gearbox/gearbox/util"
 	"github.com/zserge/webview"
 	"log"
 	"net"
 	"net/http"
+	"plugin"
 )
 
 var Instance *Gearbox
@@ -101,4 +103,24 @@ func (me *Gearbox) AddProjectRoot(dir string) {
 	pr := NewProjectRoot(me.Config.VmProjectRoot, dir)
 	me.Config.ProjectRoots = append(me.Config.ProjectRoots, pr)
 	me.Config.LoadProjectsAndWrite()
+}
+
+func (me *Gearbox) LoadPlugins() {
+	g, err := plugin.Open(fmt.Sprintf("%s/gears/hello.so", util.GetProjectDir()))
+	if err != nil {
+		println("Open plugin failed")
+		log.Fatal(err)
+	}
+	loader, err := g.Lookup("GetGear")
+	if err != nil {
+		println("Symbol lookup failed")
+		log.Fatal(err)
+	}
+	getter, ok := loader.(func() interface{})
+	if !ok {
+		println("Type assert failed")
+		log.Fatal(err)
+	}
+	gear := getter()
+	println(gear.(Gear).GetName())
 }
