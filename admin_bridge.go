@@ -14,16 +14,16 @@ type Bridge struct {
 }
 
 type BridgeProject struct {
-	Name      string `json:"name"`
-	Hostname  string `json:"hostname"`
-	IsEnabled bool   `json:"is_enabled"`
+	Name     string `json:"name"`
+	Hostname string `json:"hostname"`
+	Enabled  bool   `json:"enabled"`
 }
 
 func NewBrideProject(p *Project) *BridgeProject {
 	return &BridgeProject{
-		Name:      p.Name,
-		Hostname:  p.Hostname,
-		IsEnabled: p.IsEnabled,
+		Name:     p.Name,
+		Hostname: p.Hostname,
+		Enabled:  p.Enabled,
 	}
 }
 

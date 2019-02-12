@@ -8,8 +8,9 @@ import (
 type Candidates []*Candidate
 
 type Candidate struct {
-	Root *string
-	Path string
+	Group int     `json:"group"`
+	Path  string  `json:"path"`
+	Root  *string `json:"-"`
 }
 
 func (me *Candidate) IsProject() bool {

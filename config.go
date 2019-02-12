@@ -113,7 +113,8 @@ func (me *Config) LoadProjects() {
 	projectMap := me.GetProjectMap()
 	me.Projects = make(Projects, 0)
 	me.Candidates = make(Candidates, 0)
-	for _, pr := range me.ProjectRoots {
+	for index, pr := range me.ProjectRoots {
+		group := index + 1
 		var files []os.FileInfo
 		files, err = ioutil.ReadDir(pr.HostDir)
 		if err != nil {
@@ -127,8 +128,9 @@ func (me *Config) LoadProjects() {
 				continue
 			}
 			c := &Candidate{
-				Root: &pr.HostDir,
-				Path: file.Name(),
+				Root:  &pr.HostDir,
+				Path:  file.Name(),
+				Group: group,
 			}
 			if c.IsProject() {
 				p, ok := projectMap[c.Path]
@@ -138,6 +140,7 @@ func (me *Config) LoadProjects() {
 				} else {
 					p = NewProject(c.Path, c.Root)
 				}
+				p.Group = group
 				me.Projects = append(me.Projects, p)
 			} else {
 				me.Candidates = append(me.Candidates, c)
