@@ -3,9 +3,8 @@ package gearbox
 import (
 	"encoding/json"
 	"fmt"
-	"gearbox/gearbox/host"
-	"gearbox/gearbox/only"
-	"github.com/projectcfg/projectcfg"
+	"gearbox/host"
+	"gearbox/only"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
@@ -16,14 +15,14 @@ const SchemaVersion = "1.0"
 const vmProjectRoot = "/home/gearbox/projects"
 
 type Config struct {
-	About         string              `json:"about"`
-	LearnMore     string              `json:"learn_more"`
-	HostConnector host.Connector      `json:"-"`
-	SchemaVersion string              `json:"schema_version"`
-	ProjectRoots  ProjectRoots        `json:"project_roots"`
-	Projects      projectcfg.Projects `json:"projects"`
-	Candidates    Candidates          `json:"-"`
-	VmProjectRoot string              `json:"-"`
+	About         string         `json:"about"`
+	LearnMore     string         `json:"learn_more"`
+	HostConnector host.Connector `json:"-"`
+	SchemaVersion string         `json:"schema_version"`
+	ProjectRoots  ProjectRoots   `json:"project_roots"`
+	Projects      Projects       `json:"projects"`
+	Candidates    Candidates     `json:"-"`
+	VmProjectRoot string         `json:"-"`
 }
 
 func NewConfig(hc host.Connector) *Config {
@@ -33,7 +32,7 @@ func NewConfig(hc host.Connector) *Config {
 		HostConnector: hc,
 		SchemaVersion: SchemaVersion,
 		ProjectRoots:  make(ProjectRoots, 1),
-		Projects:      make(projectcfg.Projects, 0),
+		Projects:      make(Projects, 0),
 		Candidates:    make(Candidates, 0),
 		VmProjectRoot: vmProjectRoot,
 	}
@@ -112,7 +111,7 @@ func (me *Config) LoadProjects() {
 		))
 	}
 	projectMap := me.GetProjectMap()
-	me.Projects = make(projectcfg.Projects, 0)
+	me.Projects = make(Projects, 0)
 	me.Candidates = make(Candidates, 0)
 	for _, pr := range me.ProjectRoots {
 		var files []os.FileInfo
@@ -135,8 +134,9 @@ func (me *Config) LoadProjects() {
 				p, ok := projectMap[c.Path]
 				if ok {
 					p.Root = c.Root
+					p.Hostname = p.MakeHostname()
 				} else {
-					p = projectcfg.New(c.Path, c.Root)
+					p = NewProject(c.Path, c.Root)
 				}
 				me.Projects = append(me.Projects, p)
 			} else {

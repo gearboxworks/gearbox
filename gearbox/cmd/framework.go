@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"gearbox/gearbox"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +16,7 @@ func init() {
 		Args:  cobra.ExactArgs(1),
 		Short: "Load a framework",
 		Run: func(cmd *cobra.Command, args []string) {
-			gearbox.Instance.LoadPlugins()
+			//gearbox.Instance.LoadPlugins()
 		},
 	})
 }

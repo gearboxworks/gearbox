@@ -3,7 +3,6 @@ package gearbox
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/projectcfg/projectcfg"
 	"github.com/zserge/webview"
 	"log"
 	"strings"
@@ -16,14 +15,14 @@ type Bridge struct {
 
 type BridgeProject struct {
 	Name      string `json:"name"`
-	Domain    string `json:"domain"`
-	IsEnabled bool   `json:"isEnabled"`
+	Hostname  string `json:"hostname"`
+	IsEnabled bool   `json:"is_enabled"`
 }
 
-func NewBrideProject(p *projectcfg.Project) *BridgeProject {
+func NewBrideProject(p *Project) *BridgeProject {
 	return &BridgeProject{
 		Name:      p.Name,
-		Domain:    p.Hostname,
+		Hostname:  p.Hostname,
 		IsEnabled: p.IsEnabled,
 	}
 }

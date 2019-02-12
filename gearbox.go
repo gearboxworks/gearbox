@@ -3,13 +3,11 @@ package gearbox
 import (
 	"encoding/json"
 	"fmt"
-	"gearbox/gearbox/host"
-	"gearbox/gearbox/util"
+	"gearbox/host"
 	"github.com/zserge/webview"
 	"log"
 	"net"
 	"net/http"
-	"plugin"
 )
 
 var Instance *Gearbox
@@ -19,16 +17,20 @@ type Gearbox struct {
 	HostConnector host.Connector
 	AdminUpdater  func()
 }
+type GearboxArgs Gearbox
 
 func (me *Gearbox) Initialize() {
 	me.WriteAdminAssetsToWebRoot()
 	me.Config.Initialize()
 }
 
-func NewGearbox(hc host.Connector) *Gearbox {
+func NewGearbox(args *GearboxArgs) *Gearbox {
+	if args.Config == nil {
+		args.Config = NewConfig(args.HostConnector)
+	}
 	gb := Gearbox{
-		HostConnector: hc,
-		Config:        NewConfig(hc),
+		HostConnector: args.HostConnector,
+		Config:        args.Config,
 	}
 	return &gb
 }
@@ -105,22 +107,22 @@ func (me *Gearbox) AddProjectRoot(dir string) {
 	me.Config.LoadProjectsAndWrite()
 }
 
-func (me *Gearbox) LoadPlugins() {
-	g, err := plugin.Open(fmt.Sprintf("%s/gears/hello.so", util.GetProjectDir()))
-	if err != nil {
-		println("Open plugin failed")
-		log.Fatal(err)
-	}
-	loader, err := g.Lookup("GetGear")
-	if err != nil {
-		println("Symbol lookup failed")
-		log.Fatal(err)
-	}
-	getter, ok := loader.(func() interface{})
-	if !ok {
-		println("Type assert failed")
-		log.Fatal(err)
-	}
-	gear := getter()
-	println(gear.(Gear).GetName())
-}
+//func (me *Gearbox) LoadPlugins() {
+//	g, err := plugin.Open(fmt.Sprintf("%s/gears/hello.so", util.GetProjectDir()))
+//	if err != nil {
+//		println("Open plugin failed")
+//		log.Fatal(err)
+//	}
+//	loader, err := g.Lookup("GetGear")
+//	if err != nil {
+//		println("Symbol lookup failed")
+//		log.Fatal(err)
+//	}
+//	getter, ok := loader.(func() interface{})
+//	if !ok {
+//		println("Type assert failed")
+//		log.Fatal(err)
+//	}
+//	gear := getter()
+//	println(gear.(Gear).GetName())
+//}

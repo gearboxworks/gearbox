@@ -2,7 +2,7 @@ package gearbox
 
 import (
 	"fmt"
-	"gearbox/gearbox/util"
+	"gearbox/util"
 )
 
 type Candidates []*Candidate

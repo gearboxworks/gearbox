@@ -1,5 +1,5 @@
 package gearbox
 
-import "gearbox/gearbox/host"
+import "gearbox/host"
 
 var Host host.Connector = &host.MacOsConnector{}
