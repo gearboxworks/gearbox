@@ -1,8 +1,11 @@
 package gearbox
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/apcera/libretto/virtualmachine/virtualbox"
+	"net"
+	"regexp"
 	"time"
 )
 
@@ -21,13 +24,10 @@ type waitIndicator func(int)
 
 
 const VmUnknown = "unknown"
-const VmStopped = "stopped"
 const VmHalted = "halted"
 const VmRunning = "running"
 const VmStarted = "started"
-const VmStarting = "starting"
-const VmStopping = "stopping"
-
+const VmGearBoxOK = "ok"
 
 
 // //////////////////////////////////////////////////////////////////////////////
@@ -158,7 +158,7 @@ func (me *Vm) StartVm(nowait bool) error {
 	if err != nil {
 		return err
 	}
-	if state == VmRunning || state == VmStarted || state == VmStarting {
+	if state == VmRunning || state == VmStarted {
 		return nil
 	}
 
@@ -171,6 +171,11 @@ func (me *Vm) StartVm(nowait bool) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	state, err = me.WaitForConsole()
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -188,7 +193,7 @@ func (me *Vm) StopVm(nowait bool) error {
 	if err != nil {
 		return err
 	}
-	if state == VmHalted || state == VmStopped || state == VmStopping {
+	if state == VmHalted {
 		return nil
 	}
 
@@ -236,17 +241,11 @@ func (me *Vm) RestartVm(nowait bool) error {
 				return err
 			}
 
-		case stateBefore == VmStopped:
-			fallthrough
 		case stateBefore == VmHalted:
 			err := me.StartVm(nowait)
 			if err != nil {
 				return err
 			}
-
-		case stateBefore == VmStarting:
-
-		case stateBefore == VmStopping:
 
 		case stateBefore == VmUnknown:
 
@@ -280,6 +279,69 @@ func (me *Vm) StatusVm() (string, error) {
 	return state, nil
 }
 
+
+func (me *Vm) WaitForConsole() (string, error) {
+
+	if me == nil {
+		// Throw software error.
+		return "", nil
+	}
+
+	state, err := me.Instance.GetState()
+	if err != nil {
+		return state, err
+	}
+
+	if state == VmRunning {
+		// connect to this socket
+		conn, _ := net.Dial("tcp", "127.0.0.1:2023")
+		defer conn.Close()
+
+		scanner := bufio.NewScanner(conn)
+
+		for {
+			ok := scanner.Scan()
+			text := scanner.Text()
+
+			if text == "" {
+				continue
+			}
+
+			fmt.Printf("%s\n", text)
+			match, _ := regexp.MatchString("Welcome to GearBox", text)
+			if match == true {
+				state = VmGearBoxOK
+				break
+			}
+
+			if !ok {
+				// Reached EOF on server connection.
+				state = VmUnknown
+				break
+			}
+		}
+	}
+
+	return state, nil
+}
+
+
+func scanForAPI(text string) bool {
+
+	r, err := regexp.Compile("^.*%$")
+	// r, err := regexp.Compile("Welcome to GearBox.*")
+	if err == nil {
+		if r.MatchString(text) {
+
+			switch {
+				case text == "Welcome to GearBox":
+					return true
+			}
+		}
+	}
+
+	return false
+}
 
 // Wait Indicators.
 const WINew = 0
