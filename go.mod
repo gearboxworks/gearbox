@@ -1,6 +1,8 @@
 module gearbox
 
 require (
+	github.com/apcera/libretto v0.11.0
+	github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48 // indirect
 	github.com/go-bindata/go-bindata v1.0.0
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.2.8 // indirect

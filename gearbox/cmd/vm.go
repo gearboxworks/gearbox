@@ -37,7 +37,7 @@ func init() {
 			"that VirtualBox start the ISO containing GearboxOS. Finally, once Gearbox OS is running and ready to serve " +
 			"web requests `gearbox start` will tell the user that Gearbox is ready for use.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Gearbox startup code goes here...")
+			gearbox.Instance.StartVM()
 		},
 	})
 
@@ -79,7 +79,6 @@ func init() {
 			"\n" +
 			"\nThis is equivalent to running `gearbox vm stop` and then `gearbox vm start`.",
 		Run: func(cmd *cobra.Command, args []string) {
-			gearbox.Instance.StartVM(args[0])
 			fmt.Println("Gearbox vm restart code goes here...")
 		},
 	})

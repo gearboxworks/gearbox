@@ -107,10 +107,20 @@ func (me *Gearbox) AddProjectRoot(dir string) {
 	me.Config.LoadProjectsAndWrite()
 }
 
-func (me *Gearbox) StartVM(dir string) {
-	pr := NewProjectRoot(me.Config.VmProjectRoot, dir)
-	me.Config.ProjectRoots = append(me.Config.ProjectRoots, pr)
-	me.Config.LoadProjectsAndWrite()
+func (me *Gearbox) StartVM() {
+
+	vm := NewVm(*me, VmArgs{
+		VmName: me.Config.VmName,
+	})
+	err := vm.StartVm()
+	if err != nil {
+		panic(err)
+	}
+
+	// Check for existance of VM.
+	//
+
+	return
 }
 
 //func (me *Gearbox) LoadPlugins() {
