@@ -1,10 +1,13 @@
 package cmd
 
 import (
-	"fmt"
 	"gearbox"
 	"github.com/spf13/cobra"
 )
+
+type VmArgs struct {
+	NoWait	bool
+}
 
 var vmCmd = &cobra.Command{
 	Use: "vm",
@@ -16,6 +19,8 @@ var vmCmd = &cobra.Command{
 }
 
 func init() {
+	var vmArgs VmArgs
+
 	RootCmd.AddCommand(vmCmd)
 	vmCmd.AddCommand(&cobra.Command{
 		Use: "start",
@@ -37,7 +42,10 @@ func init() {
 			"that VirtualBox start the ISO containing GearboxOS. Finally, once Gearbox OS is running and ready to serve " +
 			"web requests `gearbox start` will tell the user that Gearbox is ready for use.",
 		Run: func(cmd *cobra.Command, args []string) {
-			gearbox.Instance.StartVM()
+			err := gearbox.Instance.StartVM(vmArgs.NoWait)
+			if err != nil {
+				panic(err)
+			}
 		},
 	})
 
@@ -55,7 +63,10 @@ func init() {
 		Long: "The `gearbox stop` command contact VirtualBox and requests that it shutdown the GearboxOS " +
 			"virtual machine that should be running within VirtualBox.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Gearbox shutdown code goes here...")
+			err := gearbox.Instance.StopVM(vmArgs.NoWait)
+			if err != nil {
+				panic(err)
+			}
 		},
 	})
 
@@ -63,7 +74,10 @@ func init() {
 		Use:   "status",
 		Short: "Display the current status of the Gearbox VM.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Display the current status of Gearbox VM goes here.")
+			_, err := gearbox.Instance.StatusVM()
+			if err != nil {
+				panic(err)
+			}
 		},
 	})
 
@@ -79,7 +93,16 @@ func init() {
 			"\n" +
 			"\nThis is equivalent to running `gearbox vm stop` and then `gearbox vm start`.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Gearbox vm restart code goes here...")
+			err := gearbox.Instance.RestartVM(vmArgs.NoWait)
+			if err != nil {
+				panic(err)
+			}
 		},
 	})
+
+	vmCmd.PersistentFlags().BoolVarP(&vmArgs.NoWait,"no-wait", "w", false, "Don't wait for VM operation to complete.")
+
+	// vmCmd.PersistentFlags().BoolP("no-wait", "w", false, "Don't wait for VM operation to complete.")
+
+	// vmCmd.Flag("no-wait")
 }
