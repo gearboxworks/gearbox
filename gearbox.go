@@ -107,6 +107,12 @@ func (me *Gearbox) AddProjectRoot(dir string) {
 	me.Config.LoadProjectsAndWrite()
 }
 
+func (me *Gearbox) StartVM(dir string) {
+	pr := NewProjectRoot(me.Config.VmProjectRoot, dir)
+	me.Config.ProjectRoots = append(me.Config.ProjectRoots, pr)
+	me.Config.LoadProjectsAndWrite()
+}
+
 //func (me *Gearbox) LoadPlugins() {
 //	g, err := plugin.Open(fmt.Sprintf("%s/gears/hello.so", util.GetProjectDir()))
 //	if err != nil {

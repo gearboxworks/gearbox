@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"gearbox"
 	"github.com/spf13/cobra"
 )
 
@@ -39,6 +40,7 @@ func init() {
 			fmt.Println("Gearbox startup code goes here...")
 		},
 	})
+
 	vmCmd.AddCommand(&cobra.Command{
 		Use: "stop",
 		SuggestFor: []string{
@@ -56,6 +58,7 @@ func init() {
 			fmt.Println("Gearbox shutdown code goes here...")
 		},
 	})
+
 	vmCmd.AddCommand(&cobra.Command{
 		Use:   "status",
 		Short: "Display the current status of the Gearbox VM.",
@@ -63,6 +66,7 @@ func init() {
 			fmt.Println("Display the current status of Gearbox VM goes here.")
 		},
 	})
+
 	vmCmd.AddCommand(&cobra.Command{
 		Use: "restart",
 		SuggestFor: []string{
@@ -75,6 +79,7 @@ func init() {
 			"\n" +
 			"\nThis is equivalent to running `gearbox vm stop` and then `gearbox vm start`.",
 		Run: func(cmd *cobra.Command, args []string) {
+			gearbox.Instance.StartVM(args[0])
 			fmt.Println("Gearbox vm restart code goes here...")
 		},
 	})

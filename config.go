@@ -13,6 +13,7 @@ import (
 
 const SchemaVersion = "1.0"
 const vmProjectRoot = "/home/gearbox/projects"
+const vmName = "Gearbox"
 
 type Config struct {
 	About         string         `json:"about"`
@@ -23,6 +24,7 @@ type Config struct {
 	Projects      Projects       `json:"projects"`
 	Candidates    Candidates     `json:"-"`
 	VmProjectRoot string         `json:"-"`
+	VmName		  string         `json:"-"`
 }
 
 func NewConfig(hc host.Connector) *Config {
@@ -35,6 +37,7 @@ func NewConfig(hc host.Connector) *Config {
 		Projects:      make(Projects, 0),
 		Candidates:    make(Candidates, 0),
 		VmProjectRoot: vmProjectRoot,
+		VmName: vmName,
 	}
 	c.ProjectRoots[0] = &ProjectRoot{
 		HostDir: c.HostConnector.GetSuggestedProjectRoot(),
