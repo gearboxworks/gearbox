@@ -10,6 +10,7 @@ import (
 const Port = "9999"
 
 type Api struct {
+	Port   string
 	Config *Config
 	Echo   *echo.Echo
 }
@@ -45,6 +46,7 @@ func NewApi(conf *Config) *Api {
 	e := echo.New()
 
 	api := &Api{
+		Port:   Port,
 		Config: conf,
 		Echo:   e,
 	}
@@ -52,6 +54,9 @@ func NewApi(conf *Config) *Api {
 		return ctx.String(http.StatusOK, "{}")
 	})
 	e.GET("/projects", func(ctx echo.Context) error {
+		return jsonMarshalHandler(api, ctx, api.Config.Projects)
+	})
+	e.GET("/projects/:project", func(ctx echo.Context) error {
 		return jsonMarshalHandler(api, ctx, api.Config.Projects)
 	})
 	e.GET("/projects/enabled", func(ctx echo.Context) error {
@@ -67,8 +72,8 @@ func NewApi(conf *Config) *Api {
 	return api
 }
 
-func (me *Api) Run() {
-	err := me.Echo.Start(":" + Port)
+func (me *Api) Start() {
+	err := me.Echo.Start(":" + me.Port)
 	if err != nil {
 		util.Error(err)
 	}

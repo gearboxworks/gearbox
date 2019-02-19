@@ -8,5 +8,5 @@ import (
 func main() {
 	c := gearbox.NewConfig(&host.MacOsConnector{})
 	c.Initialize()
-	gearbox.NewApi(c).Run()
+	gearbox.NewApi(c).Start()
 }
