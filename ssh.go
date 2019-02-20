@@ -1,9 +1,9 @@
 package gearbox
 
 import (
-	"bufio"
 	"fmt"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"log"
 	"os"
@@ -168,6 +168,7 @@ func (me *Ssh) StartSsh() error {
 
 
 	session, err := me.Instance.NewSession()
+	defer session.Close()
 	defer me.Instance.Close()
 	if err != nil {
 		log.Println(err)
@@ -177,20 +178,35 @@ func (me *Ssh) StartSsh() error {
 	// Set IO
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
-	in, _ := session.StdinPipe()
+	session.Stdin = os.Stdin
+//	in, _ := session.StdinPipe()
 
 	// Set up terminal modes
 	modes := ssh.TerminalModes{
-		ssh.ECHO:          0,
+		ssh.ECHO:          1,
 		ssh.TTY_OP_ISPEED: 19200,
 		ssh.TTY_OP_OSPEED: 19200,
 	}
 
 	// Request pseudo terminal
-	err = session.RequestPty("xterm", 80, 40, modes)
-	if err != nil {
-		fmt.Printf("Can't assign PTY: %s", err)
-		return err
+	fileDescriptor := int(os.Stdin.Fd())
+	if terminal.IsTerminal(fileDescriptor) {
+		originalState, err := terminal.MakeRaw(fileDescriptor)
+		if err != nil {
+			return nil
+		}
+		defer terminal.Restore(fileDescriptor, originalState)
+
+		termWidth, termHeight, err := terminal.GetSize(fileDescriptor)
+		if err != nil {
+			return nil
+		}
+
+		// xterm-256color
+		err = session.RequestPty("vt100", termHeight, termWidth, modes)
+		if err != nil {
+			return nil
+		}
 	}
 
 	// Start remote shell
@@ -199,12 +215,15 @@ func (me *Ssh) StartSsh() error {
 		fmt.Printf("Can't start shell: %s", err)
 	}
 
+/*
 	// Loop around input <-> output.
 	for {
 		reader := bufio.NewReader(os.Stdin)
 		str, _ := reader.ReadString('\n')
 		fmt.Fprint(in, str)
 	}
+*/
+	session.Wait()
 
 	return nil
 }
