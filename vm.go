@@ -3,79 +3,121 @@ package gearbox
 import (
 	"bufio"
 	"fmt"
+	"gearbox/util"
 	"github.com/apcera/libretto/virtualmachine/virtualbox"
 	"net"
 	"regexp"
+	"strings"
 	"time"
 )
 
 
 type Vm struct {
-	VmName        string
-	Instance      virtualbox.VM
-	Status        string
+	VmName   string
+	Instance virtualbox.VM
+	Status   string
+
+	// Status polling delays.
+	NoWait        bool
 	WaitDelay     time.Duration
 	WaitRetries   int
-	WaitIndicator waitIndicator
+
+	// Console related.
+	ConsoleHost     string
+	ConsolePort     string
+	ConsoleOkString string
+	ConsoleReadWait time.Duration
+	ShowConsole     bool
 }
 type VmArgs Vm
 
-type waitIndicator func(int)
+
+const VmDefaultName = "Gearbox"
+const VmDefaultWaitDelay = time.Second
+const VmDefaultWaitRetries = 30
+const VmDefaultConsoleHost = "127.0.0.1"
+const VmDefaultConsolePort = "2023"
+const VmDefaultConsoleOkString = "GearBox API"
+const VmDefaultShowConsole = false
+const VmDefaultConsoleReadWait = time.Second * 5
 
 
+const VmError = "error"
 const VmUnknown = "unknown"
 const VmHalted = "halted"
 const VmRunning = "running"
 const VmStarted = "started"
 const VmGearBoxOK = "ok"
+const VmGearBoxNOK = "nok"
 
 
 // //////////////////////////////////////////////////////////////////////////////
 // Gearbox related
-func (me *Gearbox) StartVM(nowait bool) error {
+func (me *Gearbox) StartVM(vmArgs VmArgs) error {
 
-	vm := NewVm(*me, VmArgs{
-		VmName: me.Config.VmName,
-	})
-	err := vm.StartVm(nowait)
+	vm := NewVm(*me, vmArgs)
 
-	return err
-}
-
-
-func (me *Gearbox) StopVM(nowait bool) error {
-
-	vm := NewVm(*me, VmArgs{
-		VmName: me.Config.VmName,
-	})
-	err := vm.StopVm(nowait)
+	err := vm.StartVm()
 
 	return err
 }
 
 
-func (me *Gearbox) RestartVM(nowait bool) error {
+func (me *Gearbox) StopVM(vmArgs VmArgs) error {
 
-	vm := NewVm(*me, VmArgs{
-		VmName: me.Config.VmName,
-	})
+	vm := NewVm(*me, vmArgs)
 
-	err := vm.RestartVm(nowait)
+	err := vm.StopVm()
 
 	return err
 }
 
 
-func (me *Gearbox) StatusVM() (string, error) {
+func (me *Gearbox) RestartVM(vmArgs VmArgs) error {
 
-	vm := NewVm(*me, VmArgs{
-		VmName: me.Config.VmName,
-	})
-	state, err := vm.StatusVm()
+	vm := NewVm(*me, vmArgs)
 
-	fmt.Printf("%s VM is in state: %s\n", me.Config.VmName, state)
+	err := vm.RestartVm()
 
-	return state, err
+	return err
+}
+
+
+func (me *Gearbox) StatusVM(vmArgs VmArgs) (string, error) {
+
+	vm := NewVm(*me, vmArgs)
+
+	err := vm.StatusVm()
+	if err != nil {
+		return vm.Status, err
+	}
+
+	err = vm.StatusApi()
+	if err != nil {
+		return vm.Status, err
+	}
+
+	switch vm.Status {
+		case VmUnknown:
+			fmt.Printf("\r👎 %s: VM & API in an unknown state.\n", me.Config.VmName)
+
+		case VmHalted:
+			fmt.Printf("\r👎 %s: VM halted. API halted.\n", me.Config.VmName)
+
+		case VmRunning:
+			fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
+
+		case VmStarted:
+			fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
+
+		case VmGearBoxOK:
+			fmt.Printf("\r👍 %s: VM running. API running.\n", me.Config.VmName)
+
+		case VmGearBoxNOK:
+			fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
+	}
+
+	return vm.Status, err
 }
 
 
@@ -88,23 +130,36 @@ func NewVm(gb Gearbox, args ...VmArgs) *Vm {
 	}
 
 	if _args.VmName == "" {
-		_args.VmName = "Gearbox"
+		_args.VmName = VmDefaultName
 	}
 
 	if _args.WaitDelay == 0 {
-		_args.WaitDelay = time.Second
+		_args.WaitDelay = VmDefaultWaitDelay
 	}
 
 	if _args.WaitRetries == 0 {
-		_args.WaitRetries = 30
+		_args.WaitRetries = VmDefaultWaitRetries
 	}
 
-	// Should be refactored elsewhere.
-	if _args.WaitIndicator == nil {
-		_args.WaitIndicator = UserWaitIndicator
+	if _args.ConsoleHost == "" {
+		_args.ConsoleHost = VmDefaultConsoleHost
 	}
 
-	_args.Instance = virtualbox.VM{Name: "Gearbox", }
+	if _args.ConsolePort == "" {
+		_args.ConsolePort = VmDefaultConsolePort
+	}
+
+	if _args.ConsoleOkString == "" {
+		_args.ConsoleOkString = VmDefaultConsoleOkString
+	}
+
+	if _args.ConsoleReadWait == 0 {
+		_args.ConsoleReadWait = VmDefaultConsoleReadWait
+	}
+
+	_args.Instance = virtualbox.VM{
+		Name: _args.VmName,
+	}
 
 	vm := &Vm{}
 	*vm = Vm(_args)
@@ -116,49 +171,136 @@ func NewVm(gb Gearbox, args ...VmArgs) *Vm {
 }
 
 
-func Exists(gb Gearbox, args ...VmArgs) *Vm {
+func (me *Vm) WaitForVmState(waitForState string, displayString string) error {
 
-	return nil
-}
+	var waitCount int
 
+	spinner := util.NewSpinner(util.SpinnerArgs{
+		Text: displayString,
+		ExitOK: displayString + " - OK",
+		ExitNOK: displayString + " - FAILED",
+	})
+	spinner.Start()
 
-func (me *Vm) WaitForState(waitForState string) error {
-
-	for i := 0; i < me.WaitRetries; i++ {
-		state, err := me.StatusVm()
+	for waitCount = 0; waitCount < me.WaitRetries; waitCount++ {
+		err := me.StatusVm()
 		if err != nil {
+			spinner.Stop(false)
 			return err
 		}
-		if state == waitForState {
-			me.WaitIndicator(WIStopOK)
+		if me.Status == waitForState {
+			spinner.Stop(true)
 			break
 		}
 
-		me.WaitIndicator(WISpin)
 		time.Sleep(me.WaitDelay)
-
-		if i == 1 {
-			// Generally only just indicate to the user any waiting if we are indeed waiting.
-			me.WaitIndicator(WIStart)
-		}
+		spinner.Update(fmt.Sprintf("%s [%d]", displayString, waitCount))
 	}
 
 	return nil
 }
 
 
-func (me *Vm) StartVm(nowait bool) error {
+func (me *Vm) WaitForConsole(displayString string, waitFor time.Duration) error {
 
 	if me == nil {
 		// Throw software error.
 		return nil
 	}
 
-	state, err := me.StatusVm()
+	err := me.StatusVm()
 	if err != nil {
 		return err
 	}
-	if state == VmRunning || state == VmStarted {
+
+	// TRUE - show the spinner on console.
+	displaySpinner := me.ShowConsole == false && displayString != ""
+
+	if me.Status == VmRunning {
+		spinner := util.NewSpinner(util.SpinnerArgs{
+			Text: displayString,
+			ExitOK: displayString + " - OK",
+			ExitNOK: displayString + " - FAILED",
+		})
+
+		if displaySpinner == true {
+			// We want to display just a spinner instead of console output.
+			spinner.Start()
+		}
+
+		// Connect to this console
+		conn, err := net.Dial("tcp", me.ConsoleHost + ":" + me.ConsolePort)
+		defer conn.Close()
+		if err != nil {
+			return err
+		}
+
+		exitWhen := time.Now().Add(time.Second * waitFor)
+
+		readBuffer := make([]byte, 512)
+		for waitCount := 0; time.Now().Unix() < exitWhen.Unix(); waitCount++ {
+			err = conn.SetDeadline(time.Now().Add(me.ConsoleReadWait))
+			if err != nil {
+				return err
+			}
+
+			bytesRead, err := bufio.NewReader(conn).Read(readBuffer)
+			// bytesRead, err := conn.Read(readBuffer)
+			// readBuffer, err := bufio.NewReader(conn).ReadString('\n')
+			// bytesRead := len(readBuffer)
+			if err != nil {
+				me.Status = VmGearBoxNOK
+				if displaySpinner == true {
+					spinner.Stop(false)
+				}
+				break
+			}
+
+			if bytesRead > 0 {
+				if me.ShowConsole == true {
+					fmt.Printf("%s", string(readBuffer[:bytesRead]))
+				}
+
+				apiSplit := strings.Split(string(readBuffer[:bytesRead]), ";")
+				if len(apiSplit) > 1 {
+					match, _ := regexp.MatchString(me.ConsoleOkString, apiSplit[1])
+					if match == true {
+						if apiSplit[2] == "OK" {
+							me.Status = VmGearBoxOK
+						} else {
+							me.Status = VmGearBoxNOK
+						}
+						if displaySpinner == true {
+							spinner.Stop(true)
+						}
+						break
+					}
+				}
+			}
+
+			time.Sleep(me.WaitDelay)
+			if displaySpinner == true {
+				spinner.Update(fmt.Sprintf("%s [%d]", displayString, waitCount))
+			}
+		}
+	}
+
+	return nil
+}
+
+
+func (me *Vm) StartVm() error {
+
+	if me == nil {
+		// Throw software error.
+		return nil
+	}
+
+	err := me.StatusVm()
+	if err != nil {
+		return err
+	}
+	if me.Status == VmRunning || me.Status == VmStarted {
 		return nil
 	}
 
@@ -166,34 +308,35 @@ func (me *Vm) StartVm(nowait bool) error {
 	if err != nil {
 		return err
 	}
-	if nowait == false {
-		err := me.WaitForState(VmRunning)
+	if me.NoWait == false {
+		err := me.WaitForVmState(VmRunning, me.VmName + " VM: Starting")
 		if err != nil {
 			return err
 		}
-	}
 
-	state, err = me.WaitForConsole()
-	if err != nil {
-		return err
+		// Check final state of the system from the top down.
+		err = me.WaitForConsole(me.VmName + " : Starting", 30)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 
-func (me *Vm) StopVm(nowait bool) error {
+func (me *Vm) StopVm() error {
 
 	if me == nil {
 		// Throw software error.
 		return nil
 	}
 
-	state, err := me.StatusVm()
+	err := me.StatusVm()
 	if err != nil {
 		return err
 	}
-	if state == VmHalted {
+	if me.Status == VmHalted {
 		return nil
 	}
 
@@ -201,8 +344,15 @@ func (me *Vm) StopVm(nowait bool) error {
 	if err != nil {
 		return err
 	}
-	if nowait == false {
-		err := me.WaitForState(VmHalted)
+
+	if me.NoWait == false {
+		err := me.WaitForVmState(VmHalted, me.VmName + " VM: Stopping")
+		if err != nil {
+			return err
+		}
+
+		// Check final state of the system from the top down.
+		err = me.WaitForConsole(me.VmName + " : Stopping", 30)
 		if err != nil {
 			return err
 		}
@@ -212,10 +362,8 @@ func (me *Vm) StopVm(nowait bool) error {
 }
 
 
-func (me *Vm) RestartVm(nowait bool) error {
+func (me *Vm) RestartVm() error {
 
-	var stateBefore string
-	var stateAfter string
 	var err error
 
 	if me == nil {
@@ -223,40 +371,39 @@ func (me *Vm) RestartVm(nowait bool) error {
 		return nil
 	}
 
-	stateBefore, err = me.StatusVm()
+	err = me.StatusVm()
 	if err != nil {
 		return err
 	}
 
-	switch {
-		case stateBefore == VmRunning:
+	switch me.Status {
+		case VmGearBoxOK:
 			fallthrough
-		case stateBefore == VmStarted:
-			err := me.StopVm(false)
+		case VmGearBoxNOK:
+			fallthrough
+		case VmRunning:
+			fallthrough
+		case VmStarted:
+			err := me.StopVm()
 			if err != nil {
 				return err
 			}
-			err = me.StartVm(nowait)
+			err = me.StartVm()
 			if err != nil {
 				return err
 			}
 
-		case stateBefore == VmHalted:
-			err := me.StartVm(nowait)
+		case VmHalted:
+			err := me.StartVm()
 			if err != nil {
 				return err
 			}
 
-		case stateBefore == VmUnknown:
+		case VmUnknown:
 
 	}
 
-	stateAfter, err = me.StatusVm()
-	if err != nil {
-		return err
-	}
-
-	if stateAfter != VmRunning {
+	if me.Status != VmRunning {
 		// Throw an error.
 	}
 
@@ -264,68 +411,44 @@ func (me *Vm) RestartVm(nowait bool) error {
 }
 
 
-func (me *Vm) StatusVm() (string, error) {
+func (me *Vm) StatusVm() error {
 
 	if me == nil {
 		// Throw software error.
-		return "", nil
+		me.Status = VmUnknown
+		return nil
 	}
 
 	state, err := me.Instance.GetState()
 	if err != nil {
-		return state, err
+		me.Status = VmError
+	} else {
+		me.Status = state
 	}
 
-	return state, nil
+	return err
 }
 
 
-func (me *Vm) WaitForConsole() (string, error) {
+func (me *Vm) StatusApi() error {
 
 	if me == nil {
 		// Throw software error.
-		return "", nil
+		return nil
 	}
 
-	state, err := me.Instance.GetState()
-	if err != nil {
-		return state, err
-	}
-
-	if state == VmRunning {
-		// connect to this socket
-		conn, _ := net.Dial("tcp", "127.0.0.1:2023")
-		defer conn.Close()
-
-		scanner := bufio.NewScanner(conn)
-
-		for {
-			ok := scanner.Scan()
-			text := scanner.Text()
-
-			if text == "" {
-				continue
-			}
-
-			fmt.Printf("%s\n", text)
-			match, _ := regexp.MatchString("Welcome to GearBox", text)
-			if match == true {
-				state = VmGearBoxOK
-				break
-			}
-
-			if !ok {
-				// Reached EOF on server connection.
-				state = VmUnknown
-				break
-			}
+	if me.Status == VmRunning {
+		err := me.WaitForConsole("", 10)
+		if err != nil {
+			return err
 		}
 	}
 
-	return state, nil
+	return nil
 }
 
 
+/*
 func scanForAPI(text string) bool {
 
 	r, err := regexp.Compile("^.*%$")
@@ -342,49 +465,5 @@ func scanForAPI(text string) bool {
 
 	return false
 }
-
-// Wait Indicators.
-const WINew = 0
-const WIStart = 1
-const WISpin = 2
-const WIStopOK = 3
-const WIStopNOK = 4
-
-func DefaultWaitIndicator(position int) {
-
-	// Do nothing.
-	switch position {
-		case WINew:
-
-		case WIStart:
-
-		case WISpin:
-
-		case WIStopOK:
-
-		case WIStopNOK:
-	}
-
-}
-
-
-func UserWaitIndicator(position int) {
-
-	switch position {
-		case WINew:
-
-		case WIStart:
-			fmt.Printf("\nWaiting")
-
-		case WISpin:
-			fmt.Printf(".")
-
-		case WIStopOK:
-			fmt.Printf("OK\n")
-
-		case WIStopNOK:
-			fmt.Printf("Not OK!\n")
-	}
-
-}
+*/
 
