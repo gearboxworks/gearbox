@@ -103,6 +103,7 @@ func init() {
 	vmCmd.PersistentFlags().StringVarP(&vmArgs.ConsoleHost,"console-host", "", gearbox.VmDefaultConsoleHost, "VM console host name.")
 	vmCmd.PersistentFlags().StringVarP(&vmArgs.ConsolePort,"console-port", "", gearbox.VmDefaultConsolePort, "VM console port number.")
 	vmCmd.PersistentFlags().BoolVarP(&vmArgs.ShowConsole,"show-console", "", gearbox.VmDefaultShowConsole, "Show VM console output.")
+	vmCmd.PersistentFlags().StringVarP(&vmArgs.VmName,"name", "", gearbox.VmDefaultName, "Gearbox VM name.")
 
 	// vmCmd.PersistentFlags().BoolP("no-wait", "w", false, "Don't wait for VM operation to complete.")
 
