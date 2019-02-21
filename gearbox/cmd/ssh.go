@@ -27,8 +27,9 @@ func init() {
 
 	RootCmd.AddCommand(sshCmd)
 
-	vmCmd.PersistentFlags().StringVarP(&sshArgs.SshUsername,"user", "u", gearbox.SshDefaultUsername, "Alternate Gearbox SSH username.")
-	vmCmd.PersistentFlags().StringVarP(&sshArgs.SshPassword,"password", "p", gearbox.SshDefaultPassword, "Alternate Gearbox SSH password.")
-	vmCmd.PersistentFlags().StringVarP(&sshArgs.SshPublicKey,"key-file", "k", gearbox.SshDefaultKeyFile, "Gearbox SSH public key file.")
+	sshCmd.PersistentFlags().StringVarP(&sshArgs.SshUsername,"user", "u", gearbox.SshDefaultUsername, "Alternate Gearbox SSH username.")
+	sshCmd.PersistentFlags().StringVarP(&sshArgs.SshPassword,"password", "p", gearbox.SshDefaultPassword, "Alternate Gearbox SSH password.")
+	sshCmd.PersistentFlags().StringVarP(&sshArgs.SshPublicKey,"key-file", "k", gearbox.SshDefaultKeyFile, "Gearbox SSH public key file.")
+	sshCmd.PersistentFlags().BoolVarP(&sshArgs.DisableStatusLine,"no-status", "", false, "Disable Gearbox status line.")
 
 }
