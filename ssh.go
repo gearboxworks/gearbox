@@ -2,6 +2,7 @@ package gearbox
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
@@ -13,20 +14,23 @@ import (
 type Ssh struct {
 	Instance *ssh.Client
 
-	// Status polling delays.
-	NoWait        bool
-	WaitDelay     time.Duration
-	WaitRetries   int
+	//	// Status polling delays.
+	//	NoWait        bool
+	//	WaitDelay     time.Duration
+	//	WaitRetries   int
 
 	// SSH related.
 	SshUsername  string
 	SshPassword  string
-	SshHost        string
-	SshPort        string
-	SshPublicKey   string
+	SshHost      string
+	SshPort      string
+	SshPublicKey string
 
-	SshOkString    string
-	SshWait        time.Duration
+	//	SshOkString    string
+	//	SshWait        time.Duration
+	SshStatusLine    string
+	DisableStatusLine bool
+	StatusLineUpdateDelay	time.Duration
 }
 type SshArgs Ssh
 
@@ -34,17 +38,9 @@ type SshArgs Ssh
 const SshDefaultUsername = "boxuser"
 const SshDefaultPassword = "box"
 const SshDefaultKeyFile = "./keyfile.pub"
-const SshDefaultWaitDelay = time.Second
 const SshDefaultSshHost = "127.0.0.1"
 const SshDefaultSshPort = "2222"
-const SshDefaultSshWait = time.Second
-
-
-const SshUnknown = "unknown"
-const SshHalted = "halted"
-const SshRunning = "running"
-const SshStarted = "started"
-const SshGearBoxOK = "ok"
+const SshDefaultStatusLineUpdateDelay = time.Second * 2
 
 
 // //////////////////////////////////////////////////////////////////////////////
@@ -80,8 +76,8 @@ func NewSsh(gb Gearbox, args ...SshArgs) (*Ssh, error) {
 		_args.SshPassword = SshDefaultPassword
 	}
 
-	if _args.WaitDelay == 0 {
-		_args.WaitDelay = SshDefaultWaitDelay
+	if _args.StatusLineUpdateDelay == 0 {
+		_args.StatusLineUpdateDelay = SshDefaultStatusLineUpdateDelay
 	}
 
 	if _args.SshHost == "" {
@@ -90,10 +86,6 @@ func NewSsh(gb Gearbox, args ...SshArgs) (*Ssh, error) {
 
 	if _args.SshPort == "" {
 		_args.SshPort = SshDefaultSshPort
-	}
-
-	if _args.SshWait == 0 {
-		_args.SshWait = SshDefaultSshWait
 	}
 
 	if _args.SshPublicKey == "" {
@@ -127,7 +119,7 @@ func NewSsh(gb Gearbox, args ...SshArgs) (*Ssh, error) {
 
 	_args.Instance, err = ssh.Dial("tcp", fmt.Sprintf("%s:%s", _args.SshHost, _args.SshPort), sshConfig)
 	if err != nil {
-		fmt.Printf("Couldn't establish a connection to the remote server:'%s'", err)
+		fmt.Printf("Gearbox SSH error: %s\n", err)
 		return nil, err
 	}
 
@@ -189,6 +181,8 @@ func (me *Ssh) StartSsh() error {
 	}
 
 	// Request pseudo terminal
+	termWidth := 0
+	termHeight := 0
 	fileDescriptor := int(os.Stdin.Fd())
 	if terminal.IsTerminal(fileDescriptor) {
 		originalState, err := terminal.MakeRaw(fileDescriptor)
@@ -197,7 +191,7 @@ func (me *Ssh) StartSsh() error {
 		}
 		defer terminal.Restore(fileDescriptor, originalState)
 
-		termWidth, termHeight, err := terminal.GetSize(fileDescriptor)
+		termWidth, termHeight, err = terminal.GetSize(fileDescriptor)
 		if err != nil {
 			return nil
 		}
@@ -209,10 +203,15 @@ func (me *Ssh) StartSsh() error {
 		}
 	}
 
+	go me.StatusLineWorker(termHeight, termWidth)
+
+
+	go me.exampleHostWorker()
+
 	// Start remote shell
 	err = session.Shell()
 	if err != nil {
-		fmt.Printf("Can't start shell: %s", err)
+		fmt.Printf("Gearbox SSH error: %s\n", err)
 	}
 
 /*
@@ -226,5 +225,53 @@ func (me *Ssh) StartSsh() error {
 	session.Wait()
 
 	return nil
+}
+
+
+func (me *Ssh) StatusLineWorker(termHeight int, termWidth int) {
+	const savePos = "[s"
+	const restorePos = "[u"
+	bottomPos := fmt.Sprintf("[%d;0H", termHeight)
+	scrollFix := fmt.Sprintf("[1;%dr", termHeight-1)
+	fmt.Printf(scrollFix)
+
+	for {
+		if me.DisableStatusLine == false {
+			fmt.Printf("%s%s%s%s", savePos, bottomPos, me.SshStatusLine, restorePos)
+		}
+
+		time.Sleep(me.StatusLineUpdateDelay)
+	}
+}
+
+
+func (me *Ssh) SetStatusLine(text string) {
+
+	me.SshStatusLine = text
+	// fmt.Printf("%s%s%d%s", savePos, bottomPos, time.Now().Unix(), restorePos)
+}
+
+
+// Example host worker. This periodically changes the me.SshStatusLine from the host side.
+// The StatusLineWorker() will update the bottom line using the me.SshStatusLine.
+func (me *Ssh) exampleHostWorker() {
+
+	yellow := color.New(color.BgBlack, color.FgHiYellow).SprintFunc()
+	magenta := color.New(color.BgBlack, color.FgHiMagenta).SprintFunc()
+	green := color.New(color.BgBlack, color.FgHiGreen).SprintFunc()
+	normal := color.New(color.BgWhite, color.FgHiBlack).SprintFunc()
+
+	for {
+		now := time.Now()
+		dateStr := normal("Date:") + " " + yellow(fmt.Sprintf("%.4d/%.2d/%.2d", now.Year(), now.Month(), now.Day()))
+		timeStr := normal("Time:") + " " + magenta(fmt.Sprintf("%.2d:%.2d:%.2d", now.Hour(), now.Minute(), now.Second()))
+		statusStr := normal("Status:") + " " + green("OK")
+
+		line := fmt.Sprintf("%s	%s %s", statusStr, dateStr, timeStr)
+
+		me.SetStatusLine(line)
+
+		time.Sleep(time.Second * 5)
+	}
 }
 
