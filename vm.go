@@ -283,6 +283,10 @@ func (me *Vm) WaitForConsole(displayString string, waitFor time.Duration) error 
 				spinner.Update(fmt.Sprintf("%s [%d]", displayString, waitCount))
 			}
 		}
+
+		if me.ShowConsole == true {
+			fmt.Printf("\n\n# Exiting Console.\n")
+		}
 	}
 
 	return nil

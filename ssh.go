@@ -197,7 +197,7 @@ func (me *Ssh) StartSsh() error {
 		}
 
 		// xterm-256color
-		err = session.RequestPty("vt100", termHeight, termWidth, modes)
+		err = session.RequestPty("xterm-256color", termHeight, termWidth, modes)
 		if err != nil {
 			return nil
 		}
@@ -233,7 +233,9 @@ func (me *Ssh) StatusLineWorker(termHeight int, termWidth int) {
 	const restorePos = "[u"
 	bottomPos := fmt.Sprintf("[%d;0H", termHeight)
 	scrollFix := fmt.Sprintf("[1;%dr", termHeight-1)
-	fmt.Printf(scrollFix)
+	if me.DisableStatusLine == false {
+		fmt.Printf(scrollFix)
+	}
 
 	for {
 		if me.DisableStatusLine == false {
