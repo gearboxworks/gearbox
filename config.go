@@ -47,16 +47,6 @@ func NewConfig(hc host.Connector) *Config {
 }
 
 func (me *Config) Initialize() {
-	for range only.Once {
-		file := me.GetFilepath()
-		_, err := os.Stat(file)
-		if err == nil {
-			break
-		}
-		if !os.IsNotExist(err) {
-			log.Fatal(err.Error())
-		}
-	}
 	me.Load()
 	me.Write()
 }
@@ -81,12 +71,11 @@ func (me *Config) Write() {
 func (me *Config) Load() {
 	for range only.Once {
 		j, err := ioutil.ReadFile(me.GetFilepath())
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		err = json.Unmarshal(j, &me)
-		if err != nil {
-			log.Fatal(err.Error())
+		if err == nil {
+			err = json.Unmarshal(j, &me)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
 		}
 		me.LoadProjects()
 	}
@@ -119,6 +108,7 @@ func (me *Config) LoadProjects() {
 	for index, pr := range me.ProjectRoots {
 		group := index + 1
 		var files []os.FileInfo
+		err = os.Mkdir(pr.HostDir, 0777)
 		files, err = ioutil.ReadDir(pr.HostDir)
 		if err != nil {
 			log.Fatal(err.Error())

@@ -6,13 +6,12 @@ import (
 	"log"
 )
 
-const bundleIdentifier = "works.gearbox.gearbox"
-const userDataPath = "Library/Application Support"
-const suggestedProjectsPath = "Sites"
+const macOsUserDataPath = "Library/Application Support"
+const macOsSuggestedProjectsPath = "Sites"
 
-var MacHostConnectorType = (*MacOsConnector)(nil)
+var MacOsConnectorType = (*MacOsConnector)(nil)
 
-var _ Connector = MacHostConnectorType
+var _ Connector = MacOsConnectorType
 
 type MacOsConnector struct{}
 
@@ -24,8 +23,8 @@ type MacOsConnector struct{}
 func (me *MacOsConnector) GetUserConfigDir() string {
 	return fmt.Sprintf("%s/%s/%s",
 		me.GetUserHomeDir(),
-		userDataPath,
-		bundleIdentifier,
+		macOsUserDataPath,
+		BundleIdentifier,
 	)
 }
 
@@ -38,7 +37,7 @@ func (me *MacOsConnector) GetAdminRootDir() string {
 func (me *MacOsConnector) GetSuggestedProjectRoot() string {
 	return fmt.Sprintf("%s/%s",
 		me.GetUserHomeDir(),
-		suggestedProjectsPath,
+		macOsSuggestedProjectsPath,
 	)
 }
 

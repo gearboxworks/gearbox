@@ -2,6 +2,7 @@ module gearbox
 
 require (
 	github.com/go-bindata/go-bindata v1.0.0
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.2.8 // indirect
 	github.com/mattn/go-colorable v0.1.0 // indirect

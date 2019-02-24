@@ -1,14 +1,22 @@
-gearbox.loadProjects();
 function getGearboxProjects() {
-    if (!gearbox.projects) {
-        window.setTimeout(getGearboxProjects,50);
-        return;
-    }
+    // if ( "undefined" == typeof gearbox ) {
+    //     window.setTimeout(getGearboxProjects,50);
+    //     return;
+    // }
+    //gearbox.loadProjects();
+    // if (!gearbox.projects) {
+    //     window.setTimeout(getGearboxProjects,50);
+    //     return;
+    // }
     var app = new Vue({
         el: '#app',
         data: {
-            projects: gearbox.projects,
+            projects: [
+                { "name": 'Some project 1' },
+                { "name": 'Some project 2' }
+            ],
         },
     });
+    //alert('All good!');
 }
 getGearboxProjects();

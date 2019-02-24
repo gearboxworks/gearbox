@@ -6,3 +6,5 @@ type Connector interface {
 	GetSuggestedProjectRoot() string
 	GetUserHomeDir() string
 }
+
+const BundleIdentifier = "works.gearbox.gearbox"
