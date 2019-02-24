@@ -38,7 +38,10 @@ const ApiResponse = `{
 		"projects":           "/projects",
 		"enabled-projects":   "/projects/enabled",
 		"disabled-projects":  "/projects/disabled",
-		"candidate-projects": "/projects/candidates"
+		"candidate-projects": "/projects/candidates",
+		"stacks":             "/stacks",
+		"stack":              "/stacks/{stack}",
+		"services":           "/services/{service_id}"
 	}
 }`
 
@@ -67,6 +70,46 @@ func NewApi(conf *Config) *Api {
 	})
 	e.GET("/projects/candidates", func(ctx echo.Context) error {
 		return jsonMarshalHandler(api, ctx, api.Config.Candidates)
+	})
+	e.POST("/projects/new", func(ctx echo.Context) error {
+		return jsonMarshalHandler(api, ctx, api.Config.Candidates)
+	})
+
+	e.GET("/stacks", func(ctx echo.Context) error {
+		return jsonMarshalHandler(api, ctx, []string{
+			"WordPress",
+			"Drupal",
+			"Joomla",
+		})
+	})
+
+	e.GET("/stacks/:stack", func(ctx echo.Context) error {
+		return jsonMarshalHandler(api, ctx, []string{
+			"wordpress/dbserver",
+			"wordpress/webserver",
+			"wordpress/processvm",
+			"wordpress/cacheserver",
+		})
+	})
+
+	e.GET("/services/:service_id", func(ctx echo.Context) error {
+		return jsonMarshalHandler(api, ctx, []string{
+			"gearbox/mariadb:5.5",
+			"gearbox/mariadb:10.0",
+			"gearbox/mariadb:10.1",
+			"gearbox/mariadb:10.2",
+			"gearbox/mariadb:10.3",
+			"gearbox/mysql:5.5",
+			"gearbox/mysql:5.6",
+			"gearbox/mysql:5.7",
+			"gearbox/mysql:8.0",
+		})
+	})
+	e.GET("/whatever", func(ctx echo.Context) error {
+		return jsonMarshalHandler(api, ctx, map[string]string{
+			"foo": "bar",
+			"bar": "baz",
+		})
 	})
 
 	return api
