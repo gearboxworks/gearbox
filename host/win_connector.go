@@ -2,36 +2,16 @@ package host
 
 import (
 	"fmt"
-	"github.com/mitchellh/go-homedir"
-	"log"
 )
 
-const winUserDataPath = ".gearbox"
 const winSuggestedProjectsPath = "Gearbox Sites"
 
-var WinConnectorType = (*WinConnector)(nil)
+var WinConnectorInstance = (*WinConnector)(nil)
 
-var _ Connector = WinConnectorType
+var _ Connector = WinConnectorInstance
 
-type WinConnector struct{}
-
-//
-// See https://developer.apple.com/library/archive/documentation/FileManagement
-//           /Conceptual/FileSystemProgrammingGuide/MacOSXDirectories/MacOSXDirectories.html
-//
-//
-func (me *WinConnector) GetUserConfigDir() string {
-	return fmt.Sprintf("%s\\%s\\%s",
-		me.GetUserHomeDir(),
-		winUserDataPath,
-		BundleIdentifier,
-	)
-}
-
-func (me *WinConnector) GetAdminRootDir() string {
-	return fmt.Sprintf("%s\\admin",
-		me.GetUserConfigDir(),
-	)
+type WinConnector struct {
+	BaseConnector
 }
 
 func (me *WinConnector) GetSuggestedProjectRoot() string {
@@ -41,10 +21,14 @@ func (me *WinConnector) GetSuggestedProjectRoot() string {
 	)
 }
 
-func (me *WinConnector) GetUserHomeDir() string {
-	homeDir, err := homedir.Dir()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return homeDir
+func (me *WinConnector) GetUserConfigDir() string {
+	return fmt.Sprintf("%s\\%s",
+		me.GetUserHomeDir(),
+		UserDataPath,
+	)
+}
+func (me *WinConnector) GetAdminRootDir() string {
+	return fmt.Sprintf("%s\\admin",
+		me.GetUserConfigDir(),
+	)
 }
