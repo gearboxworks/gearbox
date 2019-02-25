@@ -28,7 +28,7 @@ func (me *WinConnector) GetUserConfigDir() string {
 	)
 }
 func (me *WinConnector) GetAdminRootDir() string {
-	return fmt.Sprintf("%s\\admin",
+	return fmt.Sprintf("%s\\admin\\dist",
 		me.GetUserConfigDir(),
 	)
 }
