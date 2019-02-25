@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"gearbox/host"
 	"github.com/zserge/webview"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"os"
 )
 
 var Instance *Gearbox
@@ -20,7 +22,7 @@ type Gearbox struct {
 type GearboxArgs Gearbox
 
 func (me *Gearbox) Initialize() {
-	me.WriteAdminAssetsToWebRoot()
+	me.WriteAssetsToAdminWebRoot()
 	me.Config.Initialize()
 }
 
@@ -51,15 +53,30 @@ func (me *Gearbox) GetProjects() string {
 func (me *Gearbox) Admin() {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	defer ln.Close()
+
+	adminRootDir := me.HostConnector.GetAdminRootDir()
+
 	go func() {
 		// See [1]
-		http.Handle("/", http.FileServer(http.Dir(me.HostConnector.GetAdminRootDir())))
-		log.Fatal(http.Serve(ln, nil))
+		http.Handle("/", http.FileServer(http.Dir(adminRootDir)))
+		err = http.Serve(ln, nil)
+		if err != nil {
+			print(err.Error())
+		}
 	}()
 
+	api := NewHostApi(me.Config)
+	apiJson := fmt.Sprintf(`{"host_api":"%s","vm_api":"%s"}`, api.Url(), api.Url())
+	apiJsonFile := fmt.Sprintf("%s/api.json", adminRootDir)
+	err = ioutil.WriteFile(apiJsonFile, []byte(apiJson), os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	go api.Start()
+	defer api.Stop()
 	// See [2]
 	wv := webview.New(webview.Settings{
 		Title:     "Gearbox Admin Console",
@@ -69,23 +86,10 @@ func (me *Gearbox) Admin() {
 		URL:       fmt.Sprintf("http://%s/index.html", ln.Addr().String()),
 		Debug:     true,
 	})
-	wv.Dispatch(func() {
-		me.AdminUpdater, err = wv.Bind("gearbox", &Bridge{
-			Webview: wv,
-			Gearbox: me,
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-		//err = wv.Eval(string(MustAsset("admin/js/vue.js")))
-		//if err != nil {
-		//	log.Fatal(err)
-		//}
-	})
 	wv.Run()
 }
 
-func (me *Gearbox) WriteAdminAssetsToWebRoot() {
+func (me *Gearbox) WriteAssetsToAdminWebRoot() {
 	hc := me.HostConnector
 	if hc == nil {
 		log.Fatal("Gearbox has no host connector. (End users should never see this; it is a programming error.)")
