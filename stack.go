@@ -3,6 +3,7 @@ package gearbox
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 type Stacks []*Stack
@@ -30,7 +31,7 @@ func (me *Stack) CloneSansMembers() *Stack {
 
 func (me *Stack) GetMembers() StackMemberMap {
 	mm := make(StackMemberMap, len(me.Members))
-	ren := regexp.QuoteMeta(string(me.Name))
+	ren := regexp.QuoteMeta(string(me.Label))
 	for mt, st := range me.Members {
 		sl := regexp.MustCompile(fmt.Sprintf("^%s", ren)).ReplaceAllString(st.Label, "")
 		mm[mt] = &StackMember{
@@ -38,7 +39,7 @@ func (me *Stack) GetMembers() StackMemberMap {
 			StackName:  me.Name,
 			MemberType: string(mt),
 			Label:      st.Label,
-			ShortLabel: sl,
+			ShortLabel: strings.Trim(sl, " "),
 			Examples:   st.Examples,
 		}
 	}

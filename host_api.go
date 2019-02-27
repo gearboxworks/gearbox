@@ -174,7 +174,6 @@ func (me *HostApi) addRoutes() {
 
 	_api.GET("/stacks/:stack/members/:member/options", "stack-member-options", func(ctx echo.Context) error {
 		response := me.getStackMemberResponse(ctx)
-
 		response = me.Gearbox.RequestAvailableContainers(&dockerhub.ContainerQuery{})
 		return _api.JsonMarshalHandler(ctx, response)
 	})
