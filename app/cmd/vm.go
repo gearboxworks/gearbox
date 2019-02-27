@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
 var vmCmd = &cobra.Command{
 	Use: "vm",
 	SuggestFor: []string{
@@ -97,13 +96,13 @@ func init() {
 		},
 	})
 
-	vmCmd.PersistentFlags().BoolVarP(&vmArgs.NoWait,"no-wait", "", false, "Don't wait for VM operation to complete.")
-	vmCmd.PersistentFlags().IntVarP(&vmArgs.WaitRetries,"wait-delay", "", gearbox.VmDefaultWaitRetries, "VM operation wait retries.")
-	vmCmd.PersistentFlags().DurationVarP(&vmArgs.WaitDelay,"wait-retries", "", gearbox.VmDefaultWaitDelay, "VM operation wait delay between retries.")
-	vmCmd.PersistentFlags().StringVarP(&vmArgs.ConsoleHost,"console-host", "", gearbox.VmDefaultConsoleHost, "VM console host name.")
-	vmCmd.PersistentFlags().StringVarP(&vmArgs.ConsolePort,"console-port", "", gearbox.VmDefaultConsolePort, "VM console port number.")
-	vmCmd.PersistentFlags().BoolVarP(&vmArgs.ShowConsole,"show-console", "", gearbox.VmDefaultShowConsole, "Show VM console output.")
-	vmCmd.PersistentFlags().StringVarP(&vmArgs.VmName,"name", "", gearbox.VmDefaultName, "Gearbox VM name.")
+	vmCmd.PersistentFlags().BoolVarP(&vmArgs.NoWait, "no-wait", "", false, "Don't wait for VM operation to complete.")
+	vmCmd.PersistentFlags().IntVarP(&vmArgs.WaitRetries, "wait-delay", "", gearbox.VmDefaultWaitRetries, "VM operation wait retries.")
+	vmCmd.PersistentFlags().DurationVarP(&vmArgs.WaitDelay, "wait-retries", "", gearbox.VmDefaultWaitDelay, "VM operation wait delay between retries.")
+	vmCmd.PersistentFlags().StringVarP(&vmArgs.ConsoleHost, "console-host", "", gearbox.VmDefaultConsoleHost, "VM console host name.")
+	vmCmd.PersistentFlags().StringVarP(&vmArgs.ConsolePort, "console-port", "", gearbox.VmDefaultConsolePort, "VM console port number.")
+	vmCmd.PersistentFlags().BoolVarP(&vmArgs.ShowConsole, "show-console", "", gearbox.VmDefaultShowConsole, "Show VM console output.")
+	vmCmd.PersistentFlags().StringVarP(&vmArgs.VmName, "name", "", gearbox.VmDefaultName, "Gearbox VM name.")
 
 	// vmCmd.PersistentFlags().BoolP("no-wait", "w", false, "Don't wait for VM operation to complete.")
 

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"gearbox"
-	"gearbox/gearbox/cmd"
+	"gearbox/app/cmd"
 	"gearbox/host"
 	"os"
 )
