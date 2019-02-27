@@ -21,6 +21,13 @@ func (me *Stack) String() string {
 	return string(me.Name)
 }
 
+func (me *Stack) CloneSansMembers() *Stack {
+	s := Stack{}
+	s.Name = me.Name
+	s.Label = me.Label
+	return &s
+}
+
 func (me *Stack) GetMembers() StackMemberMap {
 	mm := make(StackMemberMap, len(me.Members))
 	ren := regexp.QuoteMeta(string(me.Name))

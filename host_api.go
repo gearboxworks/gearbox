@@ -64,10 +64,6 @@ func (me *HostApi) getStackResponse(ctx echo.Context) interface{} {
 			}
 			break
 		}
-		s := &Stack{}
-		*s = *me.Gearbox.Stacks[StackName(sn)]
-		s.Members = nil
-		response = s
 	}
 	return response
 }
@@ -162,6 +158,9 @@ func (me *HostApi) addRoutes() {
 	})
 	_api.GET("/stacks/:stack", "stack", func(ctx echo.Context) error {
 		response := me.getStackResponse(ctx)
+		if _, ok := response.(*api.Error); !ok {
+			response = response.(*Stack).CloneSansMembers()
+		}
 		return _api.JsonMarshalHandler(ctx, response)
 	})
 	_api.GET("/stacks/:stack/members", "stack-members", func(ctx echo.Context) error {
