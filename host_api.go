@@ -64,6 +64,10 @@ func (me *HostApi) getStackResponse(ctx echo.Context) interface{} {
 			}
 			break
 		}
+		s := &Stack{}
+		*s = *me.Gearbox.Stacks[StackName(sn)]
+		s.Members = nil
+		response = s
 	}
 	return response
 }

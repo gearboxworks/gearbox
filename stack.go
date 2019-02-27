@@ -14,7 +14,7 @@ type StackName string
 type Stack struct {
 	Name    StackName      `json:"name"`
 	Label   string         `json:"label"`
-	Members StackMemberMap `json:"members"`
+	Members StackMemberMap `json:"members,omitempty"`
 }
 
 func (me *Stack) String() string {
