@@ -41,6 +41,7 @@ func (me *Stack) GetMembers() StackMemberMap {
 			Label:      st.Label,
 			ShortLabel: strings.Trim(sl, " "),
 			Examples:   st.Examples,
+			Optional:   st.Optional,
 		}
 	}
 	return mm
