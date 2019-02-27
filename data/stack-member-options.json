@@ -1,0 +1,32 @@
+{
+   "wordpress/webserver": [
+      "wplib/apache/2.4",
+      "wplib/nginx/1.12",
+      "wplib/nginx/1.13",
+      "wplib/nginx/1.14",
+      "wplib/nginx/1.15"
+   ],
+   "wordpress/dbserver": [
+      "wplib/mariadb/5.5",
+      "wplib/mariadb/10.0",
+      "wplib/mariadb/10.1",
+      "wplib/mariadb/10.2",
+      "wplib/mariadb/10.3",
+      "wplib/mysql/5.5",
+      "wplib/mysql/5.6",
+      "wplib/mysql/5.7",
+      "wplib/mysql/8.0"
+   ],
+   "wordpress/cacheserver": [
+      "wplib/memcached/1.5",
+      "wplib/redis/3.2",
+      "wplib/redis/4.0"
+   ],
+   "wordpress/processvm": [
+      "wplib/php/5.2",
+      "wplib/php/5.6",
+      "wplib/php/7.0",
+      "wplib/php/7.1",
+      "wplib/php/7.2"
+   ]
+}
