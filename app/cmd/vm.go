@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"gearbox"
 	"github.com/spf13/cobra"
 )
@@ -16,6 +15,8 @@ var vmCmd = &cobra.Command{
 }
 
 func init() {
+	var vmArgs gearbox.VmArgs
+
 	RootCmd.AddCommand(vmCmd)
 	vmCmd.AddCommand(&cobra.Command{
 		Use: "start",
@@ -37,9 +38,13 @@ func init() {
 			"that VirtualBox start the ISO containing GearboxOS. Finally, once Gearbox OS is running and ready to serve " +
 			"web requests `gearbox start` will tell the user that Gearbox is ready for use.",
 		Run: func(cmd *cobra.Command, args []string) {
-			gearbox.Instance.StartVm()
+			err := gearbox.Instance.StartVM(vmArgs)
+			if err != nil {
+				panic(err)
+			}
 		},
 	})
+
 	vmCmd.AddCommand(&cobra.Command{
 		Use: "stop",
 		SuggestFor: []string{
@@ -54,16 +59,24 @@ func init() {
 		Long: "The `gearbox stop` command contact VirtualBox and requests that it shutdown the GearboxOS " +
 			"virtual machine that should be running within VirtualBox.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Gearbox shutdown code goes here...")
+			err := gearbox.Instance.StopVM(vmArgs)
+			if err != nil {
+				panic(err)
+			}
 		},
 	})
+
 	vmCmd.AddCommand(&cobra.Command{
 		Use:   "status",
 		Short: "Display the current status of the Gearbox VM.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Display the current status of Gearbox VM goes here.")
+			_, err := gearbox.Instance.StatusVM(vmArgs)
+			if err != nil {
+				panic(err)
+			}
 		},
 	})
+
 	vmCmd.AddCommand(&cobra.Command{
 		Use: "restart",
 		SuggestFor: []string{
@@ -76,7 +89,22 @@ func init() {
 			"\n" +
 			"\nThis is equivalent to running `gearbox vm stop` and then `gearbox vm start`.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Gearbox vm restart code goes here...")
+			err := gearbox.Instance.RestartVM(vmArgs)
+			if err != nil {
+				panic(err)
+			}
 		},
 	})
+
+	vmCmd.PersistentFlags().BoolVarP(&vmArgs.NoWait, "no-wait", "", false, "Don't wait for VM operation to complete.")
+	vmCmd.PersistentFlags().IntVarP(&vmArgs.WaitRetries, "wait-delay", "", gearbox.VmDefaultWaitRetries, "VM operation wait retries.")
+	vmCmd.PersistentFlags().DurationVarP(&vmArgs.WaitDelay, "wait-retries", "", gearbox.VmDefaultWaitDelay, "VM operation wait delay between retries.")
+	vmCmd.PersistentFlags().StringVarP(&vmArgs.ConsoleHost, "console-host", "", gearbox.VmDefaultConsoleHost, "VM console host name.")
+	vmCmd.PersistentFlags().StringVarP(&vmArgs.ConsolePort, "console-port", "", gearbox.VmDefaultConsolePort, "VM console port number.")
+	vmCmd.PersistentFlags().BoolVarP(&vmArgs.ShowConsole, "show-console", "", gearbox.VmDefaultShowConsole, "Show VM console output.")
+	vmCmd.PersistentFlags().StringVarP(&vmArgs.VmName, "name", "", gearbox.VmDefaultName, "Gearbox VM name.")
+
+	// vmCmd.PersistentFlags().BoolP("no-wait", "w", false, "Don't wait for VM operation to complete.")
+
+	// vmCmd.Flag("no-wait")
 }

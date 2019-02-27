@@ -1,3 +1,4 @@
+// +build !vm
 package cmd
 
 import (
