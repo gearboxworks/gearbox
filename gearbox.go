@@ -3,6 +3,7 @@ package gearbox
 import (
 	"encoding/json"
 	"fmt"
+	"gearbox/dockerhub"
 	"gearbox/host"
 	"github.com/zserge/webview"
 	"io/ioutil"
@@ -17,8 +18,9 @@ var Instance *Gearbox
 type Gearbox struct {
 	Config        *Config
 	HostConnector host.Connector
-	AdminUpdater  func()
+	Stacks        StackMap
 }
+
 type GearboxArgs Gearbox
 
 func (me *Gearbox) Initialize() {
@@ -33,6 +35,7 @@ func NewGearbox(args *GearboxArgs) *Gearbox {
 	gb := Gearbox{
 		HostConnector: args.HostConnector,
 		Config:        args.Config,
+		Stacks:        GetStackMap(),
 	}
 	return &gb
 }
@@ -68,7 +71,7 @@ func (me *Gearbox) Admin() {
 		}
 	}()
 
-	api := NewHostApi(me.Config)
+	api := NewHostApi(me)
 	apiJson := fmt.Sprintf(`{"host_api":"%s","vm_api":"%s"}`, api.Url(), api.Url())
 	apiJsonFile := fmt.Sprintf("%s/api.json", adminRootDir)
 	err = ioutil.WriteFile(apiJsonFile, []byte(apiJson), os.ModePerm)
@@ -120,22 +123,13 @@ func (me *Gearbox) StartVm() {
 	return
 }
 
-//func (me *Gearbox) LoadPlugins() {
-//	g, err := plugin.Open(fmt.Sprintf("%s/gears/hello.so", util.GetProjectDir()))
-//	if err != nil {
-//		println("Open plugin failed")
-//		log.Fatal(err)
-//	}
-//	loader, err := g.Lookup("GetGear")
-//	if err != nil {
-//		println("Symbol lookup failed")
-//		log.Fatal(err)
-//	}
-//	getter, ok := loader.(func() interface{})
-//	if !ok {
-//		println("Type assert failed")
-//		log.Fatal(err)
-//	}
-//	gear := getter()
-//	println(gear.(Gear).GetName())
-//}
+func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery) dockerhub.ContainerNames {
+	var _query *dockerhub.ContainerQuery
+	if len(query) == 0 {
+		_query = &dockerhub.ContainerQuery{}
+	} else {
+		_query = query[0]
+	}
+	dh := dockerhub.DockerHub{}
+	return dh.RequestAvailableContainerNames(_query)
+}

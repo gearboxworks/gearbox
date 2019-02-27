@@ -1,155 +1,205 @@
 package gearbox
 
 import (
-	"encoding/json"
 	"fmt"
+	"gearbox/api"
+	"gearbox/dockerhub"
+	"gearbox/only"
 	"github.com/labstack/echo"
-	"github.com/projectcfg/projectcfg/util"
 	"net/http"
 )
 
 const Port = "9999"
 
 type HostApi struct {
-	Port   string
-	Config *Config
-	Echo   *echo.Echo
+	Config  *Config
+	Api     *api.Api
+	Gearbox *Gearbox
 }
 
-type ResponseMeta struct {
-	Version string `json:"version"`
-	Name    string `json:"name"`
-	Docs    string `json:"docs"`
-}
-
-type Response struct {
-	Meta  ResponseMeta      `json:"meta"`
-	Links map[string]string `json:"links"`
-	Data  interface{}       `json:"data"`
-}
-
-const ApiResponse = `{
-	"meta":{
-		"version":"0.1",
-		"name":"GearBox API",
-		"docs":"https://docs.gearbox.works/api"
-	},
-	"links":{
-		"root":          	  "/",
-		"projects":           "/projects",
-		"enabled-projects":   "/projects/enabled",
-		"disabled-projects":  "/projects/disabled",
-		"candidate-projects": "/projects/candidates",
-		"stacks":             "/stacks",
-		"stack":              "/stacks/{stack}",
-		"services":           "/services/{service_id}"
+func apiResponseDefaults() *api.Response {
+	return &api.Response{
+		Meta: &api.ResponseMeta{
+			Service: "GearBox VM API",
+			Version: "0.1",
+			DocsUrl: "https://docs.gearbox.works/api",
+		},
+		Links: make(api.Links, 0),
 	}
-}`
+}
 
-func NewHostApi(conf *Config) *HostApi {
-	api := &HostApi{
-		Port:   Port,
-		Config: conf,
-		Echo:   echo.New(),
+func NewHostApi(gearbox *Gearbox) *HostApi {
+	ha := &HostApi{
+		Config:  gearbox.Config,
+		Api:     api.NewApi(echo.New(), apiResponseDefaults()),
+		Gearbox: gearbox,
 	}
-	api.addRoutes()
-	return api
+	ha.Api.Port = Port
+	ha.addRoutes()
+	return ha
 }
 
 func (me *HostApi) Url() string {
-	return fmt.Sprintf("http://127.0.0.1:%s", me.Port)
+	return fmt.Sprintf("http://127.0.0.1:%s", me.Api.Port)
 }
 
 func (me *HostApi) Start() {
-	err := me.Echo.Start(":" + me.Port)
-	if err != nil {
-		util.Error(err)
-	}
+	me.Api.Start()
 }
 
 func (me *HostApi) Stop() {
-	err := me.Echo.Close()
-	if err != nil {
-		util.Error(err)
-	}
+	me.Api.Stop()
 }
 
-// @TODO Add ?format=yes to pretty print JSON
-func (me *HostApi) jsonMarshalHandler(ctx echo.Context, js interface{}) error {
-	r := &Response{}
-	err := json.Unmarshal([]byte(ApiResponse), &r)
-	if err != nil {
-		panic(err)
+func (me *HostApi) getStackResponse(ctx echo.Context) interface{} {
+	var response interface{}
+	for range only.Once {
+		sn := me.getStackName(ctx)
+		var ok bool
+		response, ok = me.Gearbox.Stacks[StackName(sn)]
+		if !ok {
+			response = &api.Error{
+				StatusCode: http.StatusNotFound,
+				Error:      fmt.Errorf("'%s' is not a valid stack", sn),
+			}
+			break
+		}
 	}
-	r.Data = js
-	r.Links["self"] = ctx.Path()
-	j, err := json.MarshalIndent(r, "", "   ")
-	if err != nil {
-		return ctx.String(http.StatusInternalServerError, err.Error())
+	return response
+}
+
+func (me *HostApi) getStackMembersResponse(ctx echo.Context) interface{} {
+	var response interface{}
+	for range only.Once {
+		response = me.getStackResponse(ctx)
+		if _, ok := response.(api.Error); ok {
+			break
+		}
+		stack, ok := response.(*Stack)
+		if !ok {
+			response = &api.Error{
+				StatusCode: http.StatusInternalServerError,
+				Error: fmt.Errorf("unexpected: stack '%s' not found",
+					me.getStackName(ctx),
+				),
+			}
+			break
+		}
+		response = stack.GetMembers()
 	}
-	return ctx.String(http.StatusOK, string(j))
+	return response
+}
+
+func (me *HostApi) getStackMemberResponse(ctx echo.Context) interface{} {
+	var response interface{}
+	for range only.Once {
+		response := me.getStackMembersResponse(ctx)
+		if _, ok := response.(api.Error); ok {
+			break
+		}
+		memberMap, ok := response.(StackMemberMap)
+		if !ok {
+			response = &api.Error{
+				StatusCode: http.StatusInternalServerError,
+				Error: fmt.Errorf("unexpected: member map for stack '%s' not found",
+					me.getStackName(ctx),
+				),
+			}
+			break
+		}
+		member, ok := memberMap[me.getStackMemberName(ctx)]
+		if !ok {
+			response = &api.Error{
+				StatusCode: http.StatusInternalServerError,
+				Error: fmt.Errorf("unexpected: member map '%s' for stack '%s' not found",
+					me.getStackMemberName(ctx),
+					me.getStackName(ctx),
+				),
+			}
+			break
+		}
+		response = member
+	}
+	return response
+}
+
+func (me *HostApi) getStackName(ctx echo.Context) StackName {
+	return StackName(ctx.Param("stack"))
+}
+
+func (me *HostApi) getStackMemberName(ctx echo.Context) StackMemberName {
+	return StackMemberName(ctx.Param("member"))
 }
 
 func (me *HostApi) addRoutes() {
 
-	e := me.Echo
+	_api := me.Api
 
-	e.GET("/", func(ctx echo.Context) error {
+	_api.GET("/", "root", func(ctx echo.Context) error {
 		return ctx.String(http.StatusOK, "{}")
 	})
-	e.GET("/projects", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(ctx, me.Config.Projects)
+	_api.GET("/projects", "projects", func(ctx echo.Context) error {
+		return _api.JsonMarshalHandler(ctx, me.Config.Projects)
 	})
-	e.GET("/projects/:project", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(ctx, me.Config.Projects)
+	_api.GET("/projects/:project", "project", func(ctx echo.Context) error {
+		return _api.JsonMarshalHandler(ctx, me.Config.Projects)
 	})
-	e.GET("/projects/enabled", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(ctx, me.Config.Projects.GetEnabled())
+	_api.GET("/projects/enabled", "enabled-projects", func(ctx echo.Context) error {
+		return _api.JsonMarshalHandler(ctx, me.Config.Projects.GetEnabled())
 	})
-	e.GET("/projects/disabled", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(ctx, me.Config.Projects.GetDisabled())
+	_api.GET("/projects/disabled", "disabled-projects", func(ctx echo.Context) error {
+		return _api.JsonMarshalHandler(ctx, me.Config.Projects.GetDisabled())
 	})
-	e.GET("/projects/candidates", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(ctx, me.Config.Candidates)
+	_api.GET("/projects/candidates", "candidate-projects", func(ctx echo.Context) error {
+		return _api.JsonMarshalHandler(ctx, me.Config.Candidates)
 	})
-	e.POST("/projects/new", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(ctx, me.Config.Candidates)
+	_api.GET("/stacks", "stacks", func(ctx echo.Context) error {
+		return _api.JsonMarshalHandler(ctx, me.Gearbox.Stacks)
+	})
+	_api.GET("/stacks/:stack", "stack", func(ctx echo.Context) error {
+		response := me.getStackResponse(ctx)
+		return _api.JsonMarshalHandler(ctx, response)
+	})
+	_api.GET("/stacks/:stack/members", "stack-members", func(ctx echo.Context) error {
+		response := me.getStackMembersResponse(ctx)
+		return _api.JsonMarshalHandler(ctx, response)
+	})
+	_api.GET("/stacks/:stack/members/:member", "stack-member", func(ctx echo.Context) error {
+		response := me.getStackMemberResponse(ctx)
+		return _api.JsonMarshalHandler(ctx, response)
 	})
 
-	e.GET("/stacks", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(ctx, []string{
-			"WordPress",
-			"Drupal",
-			"Joomla",
+	_api.GET("/stacks/:stack/members/:member/options", "stack-member-options", func(ctx echo.Context) error {
+		response := me.getStackMemberResponse(ctx)
+
+		response = me.Gearbox.RequestAvailableContainers(&dockerhub.ContainerQuery{})
+		return _api.JsonMarshalHandler(ctx, response)
+	})
+
+	_api.PUT("/projects/paths/:path_id", "update-projects-path", func(ctx echo.Context) error {
+		return _api.JsonMarshalHandler(ctx, &api.Error{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      fmt.Errorf("the 'update-projects-path' method has not been implemented yet"),
 		})
 	})
 
-	e.GET("/stacks/:stack", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(ctx, []string{
-			"wordpress/dbserver",
-			"wordpress/webserver",
-			"wordpress/processvm",
-			"wordpress/cacheserver",
+	_api.POST("/projects/new", "add-project", func(ctx echo.Context) error {
+		return _api.JsonMarshalHandler(ctx, &api.Error{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      fmt.Errorf("the 'add-project' method has not been implemented yet"),
+		})
+	})
+	_api.POST("/projects/paths/new", "add-projects-path", func(ctx echo.Context) error {
+		return _api.JsonMarshalHandler(ctx, &api.Error{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      fmt.Errorf("the 'add-projects-path' method has not been implemented yet"),
 		})
 	})
 
-	e.GET("/services/:service_id", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(ctx, []string{
-			"gearbox/mariadb:5.5",
-			"gearbox/mariadb:10.0",
-			"gearbox/mariadb:10.1",
-			"gearbox/mariadb:10.2",
-			"gearbox/mariadb:10.3",
-			"gearbox/mysql:5.5",
-			"gearbox/mysql:5.6",
-			"gearbox/mysql:5.7",
-			"gearbox/mysql:8.0",
-		})
-	})
-	e.GET("/whatever", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(ctx, map[string]string{
-			"foo": "bar",
-			"bar": "baz",
+	_api.DELETE("/projects/paths/:path_id", "delete-projects-path", func(ctx echo.Context) error {
+		return _api.JsonMarshalHandler(ctx, &api.Error{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      fmt.Errorf("the 'delete-projects-path' method has not been implemented yet"),
 		})
 	})
 

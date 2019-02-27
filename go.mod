@@ -6,6 +6,7 @@ require (
 	github.com/fatih/color v1.7.0
 	github.com/gernest/wow v0.1.0
 	github.com/go-bindata/go-bindata v1.0.0
+	github.com/hashicorp/go-version v1.1.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.2.8 // indirect
