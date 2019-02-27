@@ -67,6 +67,7 @@ func GetStackMap() StackMap {
 				"cacheserver": &StackMember{
 					Label:    "WordPress Cache Server",
 					Examples: []string{"Redis", "Memcached"},
+					Optional: true,
 				},
 			},
 		},

@@ -13,6 +13,7 @@ type StackMember struct {
 	Examples   []string        `json:"examples"`
 	StackName  StackName       `json:"stack"`
 	MemberType string          `json:"member_type"`
+	Optional   bool            `json:"optional"`
 }
 type StackMemberArgs StackMember
 
