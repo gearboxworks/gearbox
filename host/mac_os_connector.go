@@ -7,7 +7,7 @@ import (
 )
 
 const bundleIdentifier = "works.gearbox.gearbox"
-const userDataPath = "Library/Application Support"
+const userDataPath = ".gearbox"
 const suggestedProjectsPath = "Sites"
 
 var MacHostConnectorType = (*MacOsConnector)(nil)

@@ -3,7 +3,6 @@ module gearbox
 require (
 	github.com/apcera/libretto v0.11.0
 	github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48 // indirect
-	// github.com/briandowns/spinner v0.0.0-20181018151057-dd69c579ff20
 	github.com/fatih/color v1.7.0
 	github.com/gernest/wow v0.1.0
 	github.com/go-bindata/go-bindata v1.0.0
