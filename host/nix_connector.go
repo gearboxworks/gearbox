@@ -16,7 +16,14 @@ func (me *NixConnector) GetUserConfigDir() string {
 }
 
 func (me *NixConnector) GetAdminRootDir() string {
-	return fmt.Sprintf("%s/admin/dist",
+	return fmt.Sprintf("%s/%s",
 		me.GetUserConfigDir(),
+		me.GetAdminPath(),
+	)
+}
+func (me *NixConnector) GetCacheDir() string {
+	return fmt.Sprintf("%s/%s",
+		me.GetUserConfigDir(),
+		CachePath,
 	)
 }

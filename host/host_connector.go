@@ -10,6 +10,7 @@ type Connector interface {
 	GetUserConfigDir() string
 	GetSuggestedProjectRoot() string
 	GetUserHomeDir() string
+	GetCacheDir() string
 }
 
 func GetConnector() Connector {
