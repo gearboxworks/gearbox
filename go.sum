@@ -4,6 +4,8 @@ github.com/apcera/libretto v0.11.0/go.mod h1:9bCXjm5M0gafGzozqBA7oOvh7nd8yicZ6cv
 github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48 h1:l9RDXySez/kS9116AdiHPtK5RDqOoLlUPjNRRBt7bog=
 github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48/go.mod h1:cXeNj+QhW0mxc26R8I87i6ekZz/VEvdx8/KSRwdc5BU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
+github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
+github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/gernest/wow v0.1.0 h1:g9xdwCwP0+xgVYlA2sopI0gZHqXe7HjI/7/LykG4fks=
