@@ -22,6 +22,11 @@ type Api struct {
 }
 
 func NewApi(echo *echo.Echo, defaults *Response) *Api {
+	//
+	//See https://echo.labstack.com/cookbook/cors
+	//See https://flaviocopes.com/golang-enable-cors/
+	//
+	echo.Use(middleware.CORS())
 	return &Api{
 		Echo:     echo,
 		Defaults: defaults,
@@ -83,13 +88,6 @@ func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) error {
 
 func (me *Api) GET(path, name string, handler echo.HandlerFunc) *echo.Route {
 	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
-
-	//
-	//See https://echo.labstack.com/cookbook/cors
-	//See https://flaviocopes.com/golang-enable-cors/
-	//
-	me.Echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{}))
-
 	return me.Echo.GET(path, handler)
 }
 func (me *Api) POST(path, name string, handler echo.HandlerFunc) *echo.Route {
