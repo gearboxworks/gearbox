@@ -64,6 +64,7 @@ type Error struct {
 func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) error {
 	var err error
 	for range only.Once {
+		ctx.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		ae, ok := js.(*Error)
 		if ok {
 			err = ctx.String(ae.StatusCode, ae.Error.Error())
