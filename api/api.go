@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"gearbox/only"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+
+	//	"github.com/labstack/echo/middleware"
 	"github.com/projectcfg/projectcfg/util"
 	"net/http"
 	"strings"
@@ -19,6 +22,11 @@ type Api struct {
 }
 
 func NewApi(echo *echo.Echo, defaults *Response) *Api {
+	//
+	//See https://echo.labstack.com/cookbook/cors
+	//See https://flaviocopes.com/golang-enable-cors/
+	//
+	echo.Use(middleware.CORS())
 	return &Api{
 		Echo:     echo,
 		Defaults: defaults,

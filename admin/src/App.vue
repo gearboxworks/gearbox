@@ -1,31 +1,66 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <div>
-      <el-button>Button from ElementUI library</el-button>
-    </div>
-    <Home title="" />
+    <el-container
+      style="height: 800px; border: 1px solid #eee"
+    >
+      <Sidebar />
+      <el-container>
+        <el-header
+          style="text-align: right; font-size: 12px"
+        >
+          <el-dropdown>
+            <i
+              class="el-icon-setting"
+              style="margin-right: 15px"
+            />
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item>View</el-dropdown-item>
+              <el-dropdown-item>Add</el-dropdown-item>
+              <el-dropdown-item>Delete</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+          <span>Tom</span>
+        </el-header>
+        <el-main>
+          <router-view />
+        </el-main>
+        <el-footer>
+          <p>&copy; Gearbox Works, 2019</p>
+        </el-footer>
+      </el-container>
+    </el-container>
   </div>
 </template>
 
 <script>
-import Home from './views/Home.vue';
+import Sidebar from './components/Sidebar.vue';
 
 export default {
   name: 'App',
   components: {
-    Home,
+    Sidebar,
   },
 };
 </script>
 
 <style>
+body{
+  margin: 0;
+}
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
+  text-align: left;
   color: #2c3e50;
-  margin-top: 60px;
+  margin: 0;
+}
+.el-header, .el-footer {
+  background-color: #B3C0D1;
+  color: #333;
+  line-height: 60px;
+}
+.el-aside {
+  color: #333;
 }
 </style>
