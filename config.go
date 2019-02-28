@@ -27,6 +27,12 @@ type Config struct {
 	VmName        string         `json:"-"`
 }
 
+func UnmarshalConfig(b []byte) *Config {
+	c := Config{}
+	_ = json.Unmarshal(b, &c)
+	return &c
+}
+
 func NewConfig(hc host.Connector) *Config {
 	c := &Config{
 		About:         "This is a Gearbox user configuration file.",
@@ -49,6 +55,11 @@ func NewConfig(hc host.Connector) *Config {
 func (me *Config) Initialize() {
 	me.Load()
 	me.Write()
+}
+
+func (me *Config) Bytes() []byte {
+	b, _ := json.Marshal(me)
+	return b
 }
 
 var ProjectRootAddCmd *cobra.Command
