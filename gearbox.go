@@ -49,9 +49,9 @@ func (me *Gearbox) GetProjects() string {
 	return string(j)
 }
 
-func addCorsMiddleware(next http.Handler) http.Handler {
+func addCorsMiddleware(rooturl string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", "")
+		w.Header().Add("Access-Control-Allow-Origin", rooturl)
 		w.Header().Add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
 		next.ServeHTTP(w, r)
 	})
@@ -59,7 +59,6 @@ func addCorsMiddleware(next http.Handler) http.Handler {
 func shutdownServer(srv *http.Server) {
 	fmt.Print("Shutting down Gearbox Admin Console web server...\n")
 	err := srv.Shutdown(context.TODO())
-	fmt.Print("Done.")
 	if err != nil {
 		panic(err) // failure/timeout shutting down the server gracefully
 	}
@@ -77,13 +76,12 @@ func (me *Gearbox) Admin() {
 		panic(err)
 	}
 	defer ln.Close()
+	rooturl := fmt.Sprintf("http://%s", ln.Addr().String())
 
 	srv := &http.Server{
-		Handler: addCorsMiddleware(http.FileServer(http.Dir(adminRootDir))),
+		Handler: addCorsMiddleware(rooturl, http.FileServer(http.Dir(adminRootDir))),
 	}
 	defer shutdownServer(srv)
-
-	hostname := ln.Addr().String()
 
 	go func() {
 		// returns ErrServerClosed on graceful close
@@ -112,7 +110,7 @@ func (me *Gearbox) Admin() {
 		Height:    600,
 		Width:     800,
 		Resizable: true,
-		URL:       fmt.Sprintf("http://%s/index.html", hostname),
+		URL:       fmt.Sprintf("%s/index.html", rooturl),
 		Debug:     true,
 	})
 	wv.Run()
