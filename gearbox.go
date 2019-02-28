@@ -48,7 +48,14 @@ func (me *Gearbox) GetProjects() string {
 	return string(j)
 }
 
-//
+func addCorsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "")
+		w.Header().Add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+		next.ServeHTTP(w, r)
+	})
+}
+
 //
 // [1] https://hackernoon.com/how-to-create-a-web-server-in-go-a064277287c9
 // [2] https://github.com/zserge/webview
@@ -60,11 +67,12 @@ func (me *Gearbox) Admin() {
 	}
 	defer ln.Close()
 
+	hostname := ln.Addr().String()
 	adminRootDir := me.HostConnector.GetAdminRootDir()
 
 	go func() {
 		// See [1]
-		http.Handle("/", http.FileServer(http.Dir(adminRootDir)))
+		http.Handle("/", addCorsMiddleware(http.FileServer(http.Dir(adminRootDir))))
 		err = http.Serve(ln, nil)
 		if err != nil {
 			print(err.Error())
@@ -86,7 +94,7 @@ func (me *Gearbox) Admin() {
 		Height:    600,
 		Width:     800,
 		Resizable: true,
-		URL:       fmt.Sprintf("http://%s/index.html", ln.Addr().String()),
+		URL:       fmt.Sprintf("http://%s/index.html", hostname),
 		Debug:     true,
 	})
 	wv.Run()

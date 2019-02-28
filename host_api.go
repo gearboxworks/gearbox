@@ -19,7 +19,7 @@ type HostApi struct {
 
 func apiResponseDefaults() *api.Response {
 	return &api.Response{
-		Meta: &api.ResponseMeta{
+		Meta: api.ResponseMeta{
 			Service: "GearBox API",
 			Version: "0.1",
 			DocsUrl: "https://docs.gearbox.works/api",

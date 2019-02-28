@@ -43,10 +43,16 @@ type ResponseMeta struct {
 type Links map[string]string
 
 type Response struct {
-	StatusCode int           `json:"status_code"`
-	Meta       *ResponseMeta `json:"meta"`
-	Links      Links         `json:"links"`
-	Data       interface{}   `json:"data"`
+	StatusCode int          `json:"status_code"`
+	Meta       ResponseMeta `json:"meta"`
+	Links      Links        `json:"links"`
+	Data       interface{}  `json:"data"`
+}
+
+func (me *Response) Clone() *Response {
+	r := &Response{}
+	*r = *me
+	return r
 }
 
 type Error struct {
@@ -63,7 +69,7 @@ func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) error {
 			err = ctx.String(ae.StatusCode, ae.Error.Error())
 			break
 		}
-		r := me.Defaults
+		r := *me.Defaults.Clone()
 		if err != nil {
 			err = ctx.String(http.StatusInternalServerError, err.Error())
 			break
