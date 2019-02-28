@@ -1,6 +1,7 @@
 package gearbox
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"gearbox/dockerhub"
@@ -55,28 +56,45 @@ func addCorsMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+func shutdownServer(srv *http.Server) {
+	fmt.Print("Shutting down Gearbox Admin Console web server...\n")
+	err := srv.Shutdown(context.TODO())
+	fmt.Print("Done.")
+	if err != nil {
+		panic(err) // failure/timeout shutting down the server gracefully
+	}
+}
 
 //
 // [1] https://hackernoon.com/how-to-create-a-web-server-in-go-a064277287c9
 // [2] https://github.com/zserge/webview
 //
 func (me *Gearbox) Admin() {
+	adminRootDir := me.HostConnector.GetAdminRootDir()
+
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		panic(err)
 	}
 	defer ln.Close()
 
+	srv := &http.Server{
+		Handler: addCorsMiddleware(http.FileServer(http.Dir(adminRootDir))),
+	}
+	defer shutdownServer(srv)
+
 	hostname := ln.Addr().String()
-	adminRootDir := me.HostConnector.GetAdminRootDir()
 
 	go func() {
-		// See [1]
-		http.Handle("/", addCorsMiddleware(http.FileServer(http.Dir(adminRootDir))))
-		err = http.Serve(ln, nil)
-		if err != nil {
-			print(err.Error())
+		// returns ErrServerClosed on graceful close
+		if err := srv.Serve(ln); err != http.ErrServerClosed {
+			// NOTE: there is a chance that next line won't have time to run,
+			// as main() doesn't wait for this goroutine to stop. don't use
+			// code with race conditions like these for production. see post
+			// comments below on more discussion on how to handle this.
+			log.Fatalf("ListenAndServe(): %s", err)
 		}
+
 	}()
 
 	api := NewHostApi(me)
