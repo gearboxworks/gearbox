@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gearbox/host"
 	"gearbox/only"
-	"gearbox/util"
 	"github.com/labstack/gommon/log"
 	"github.com/zserge/lorca"
 	"github.com/zserge/webview"
@@ -133,23 +132,9 @@ func (me *AdminUi) Start() {
 	}
 }
 
-func (me *AdminUi) GetChromeProfileDir() string {
-	dir := fmt.Sprintf("%s/chrome", me.HostConnector.GetUserConfigDir())
-	if !util.DirExists(dir) {
-		err := os.Mkdir(dir, os.ModePerm)
-		if err != nil {
-			log.Warnf("error making Chrome user profile dir '%s': $s",
-				dir,
-				err,
-			)
-		}
-	}
-	return dir
-}
-
 func (me *AdminUi) StartLorca() {
 	win := me.Window
-	//time.Sleep(time.Second)
+	//time.Sleep(time.Second*3)
 	ui, err := lorca.New(
 		me.GetWebRootFileUrl(),
 		string(me.GetWebRootDir()),
