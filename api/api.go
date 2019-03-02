@@ -49,9 +49,15 @@ type Response struct {
 }
 
 func (me *Response) Clone() *Response {
-	r := &Response{}
-	*r = *me
-	return r
+	r := Response{}
+	for range only.Once {
+		b, err := json.Marshal(me)
+		if err != nil {
+			break
+		}
+		_ = json.Unmarshal(b, &r)
+	}
+	return &r
 }
 
 type Error struct {
