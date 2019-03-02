@@ -3,11 +3,16 @@
     width="200px"
     style="background-color: rgb(238, 241, 246)"
   >
-    <h3>Gearbox Admin</h3>
+    <h3>
+      <router-link
+        to="/"
+      >
+        Gearbox Admin
+      </router-link>
+    </h3>
 
     <ProjectMenu />
     <StackMenu />
-    <GearMenu />
 
     <el-menu>
       <el-submenu index="4">
@@ -27,18 +32,22 @@
 <script>
 import ProjectMenu from './ProjectMenu.vue';
 import StackMenu from './StackMenu.vue';
-import GearMenu from './GearMenu.vue';
 
 export default {
   name: 'Sidebar',
   components: {
     ProjectMenu,
     StackMenu,
-    GearMenu,
   },
 };
 </script>
 
 <style scoped>
+.el-aside h3 {
+  text-align: center;
+}
+.el-aside h3 a {
+  text-decoration: none;
+}
 
 </style>

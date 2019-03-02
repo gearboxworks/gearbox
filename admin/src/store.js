@@ -7,6 +7,10 @@ Vue.use(Vuex);
 Vue.use(VueAxios, axios);
 
 export default new Vuex.Store({
+  /**
+   * In strict mode, whenever Vuex state is mutated outside of mutation handlers, an error will be thrown.
+   */
+  strict: true,
   state: {
     projects: [],
     stacks: [],
@@ -14,7 +18,9 @@ export default new Vuex.Store({
     gears: [],
   },
   getters: {
-
+    projectByName: (state) => (projectName) => {
+      return state.projects.find(p => p.name === projectName);
+    },
   },
   actions: {
     loadProjects({ commit }) {
@@ -48,22 +54,45 @@ export default new Vuex.Store({
         });
     },
     loadGears({ commit }) {
-      axios
-        .get(
-          'http://127.0.0.1:9999/gears',
-          { crossDomain: true },
-        )
-        .catch((error) => {
-          // handle error
-          // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
-        })
-        .then(r => r.data.data)
-        .then((gears) => {
-          commit('SET_GEARS', gears);
+      // axios
+      //   .get(
+      //     'http://127.0.0.1:9999/gears',
+      //     { crossDomain: true },
+      //   )
+      //   .catch((error) => {
+      //     // handle error
+      //     // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
+      //   })
+      //   .then(r => r.data.data)
+      //   .then((gears) => {
+      //     commit('SET_GEARS', gears);
+      //   });
+    },
+    updateProject({ commit }, payload) {
+
+      const { projectName, project } = payload;
+
+      commit('UPDATE_PROJECT', { projectName, project });
+
+      axios({
+        method: 'post',
+        url:  'http://127.0.0.1:9999/project/' + projectName,
+        data: project
+      })
+        .then( r => r.data )
+        .then( ( project ) => {
+          //move commit here
+          resolve();
+        }).catch( (e) => {
+          console.log('rejected', e);
+          //resolve();
         });
     },
   },
   mutations: {
+    /**
+     * Names of mutation functions should be all-caps -- that's "idiomatic Vue"
+     */
     SET_PROJECTS(state, projects) {
       state.projects = projects;
     },
@@ -73,7 +102,16 @@ export default new Vuex.Store({
     SET_GEARS(state, gears) {
       state.gears = gears;
     },
+    UPDATE_PROJECT(state, args ){
 
+      const {projectName, project } = args;
+      const p = this.getters.projectByName( projectName );
+
+      p.name = project.name;
+      p.hostname = project.hostname;
+      p.group = project.group;
+      p.enabled = project.enabled;
+    }
   },
 
 });

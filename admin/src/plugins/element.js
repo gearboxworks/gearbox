@@ -19,6 +19,12 @@ import {
   Radio,
   Row,
   Col,
+  Input,
+  Select,
+  Option,
+  Switch,
+  Form,
+  FormItem,
 } from 'element-ui';
 import lang from 'element-ui/lib/locale/lang/en';
 import locale from 'element-ui/lib/locale';
@@ -40,7 +46,13 @@ Vue.use(Dropdown);
 Vue.use(DropdownItem);
 Vue.use(Tabs);
 Vue.use(TabPane);
-Vue.use(RadioGroup);
-Vue.use(Radio);
 Vue.use(Row);
 Vue.use(Col);
+Vue.use(RadioGroup);
+Vue.use(Radio);
+Vue.use(Input);
+Vue.use(Select);
+Vue.use(Option);
+Vue.use(Switch);
+Vue.use(Form);
+Vue.use(FormItem);
