@@ -1,0 +1,2 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["preferences"],{a55d:function(e,n,r){"use strict";r.r(n);var c=function(){var e=this,n=e.$createElement,r=e._self._c||n;return r("h1",[e._v("Preferences")])},s=[],t=(r("cadf"),r("551c"),r("f751"),r("097d"),{name:"Preferences"}),a=t,f=r("2877"),u=Object(f["a"])(a,c,s,!1,null,"e111d972",null);n["default"]=u.exports}}]);
+//# sourceMappingURL=preferences.edb08fd9.js.map
