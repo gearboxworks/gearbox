@@ -61,7 +61,7 @@ func (me *Gearbox) AddBaseDir(dir string, nickname ...string) (status *Status) {
 	})
 	if bd.Error != nil {
 		status = NewStatus(&StatusArgs{
-			HttpStatus: http.StatusUnprocessableEntity,
+			HttpStatus: http.StatusBadRequest,
 			Error:      bd.Error,
 		})
 		if dir == "" {

@@ -173,7 +173,7 @@ func (me *Config) LoadProjects() (status *Status) {
 				Message:    fmt.Sprintf("no project roots found in %s", me.GetFilepath()),
 				CliHelp:    fmt.Sprintf("Add with the '%s <dir>' command", ProjectRootAddCmd.CommandPath()),
 				ApiHelp:    fmt.Sprintf("Add by POSTing JSON to 'add-basedir' resource"),
-				HttpStatus: http.StatusUnprocessableEntity,
+				HttpStatus: http.StatusInternalServerError,
 				Error:      IsStatusError,
 			})
 			break
@@ -189,7 +189,7 @@ func (me *Config) LoadProjects() (status *Status) {
 				if err != nil {
 					status = NewStatus(&StatusArgs{
 						Message:    fmt.Sprintf("unable to make directory '%s'", bd.HostDir),
-						HttpStatus: http.StatusUnprocessableEntity,
+						HttpStatus: http.StatusInternalServerError,
 						Error:      err,
 					})
 					break
@@ -199,7 +199,7 @@ func (me *Config) LoadProjects() (status *Status) {
 			if err != nil {
 				status = NewStatus(&StatusArgs{
 					Message:    fmt.Sprintf("unable to read directory %s", bd.HostDir),
-					HttpStatus: http.StatusUnprocessableEntity,
+					HttpStatus: http.StatusInternalServerError,
 					Error:      err,
 				})
 				break

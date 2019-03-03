@@ -2,13 +2,17 @@ package gearbox
 
 import (
 	"errors"
+	"gearbox/api"
 	"net/http"
 )
+
+var StatusInstance = (*Status)(nil)
+var _ api.SuccessInspector = StatusInstance
 
 var IsStatusError = errors.New("")
 
 type Status struct {
-	Success    bool   `json:"success"`
+	Success    bool   `json:"-"`
 	Message    string `json:"message,omitempty"`
 	Help       string `json:"-"`
 	ApiHelp    string `json:"api_help,omitempty"`
@@ -30,11 +34,10 @@ func NewOkStatus(msg ...string) *Status {
 	}
 }
 
-func NewSuccessStatus(code int) *Status {
-	return &Status{
-		Success:    true,
-		HttpStatus: code,
-	}
+func NewSuccessStatus(code int, msg ...string) *Status {
+	s := NewOkStatus(msg...)
+	s.HttpStatus = code
+	return s
 }
 
 func NewStatus(args *StatusArgs) *Status {
@@ -56,6 +59,11 @@ func NewStatus(args *StatusArgs) *Status {
 	s.Success = s.Error == nil
 	return &s
 }
+
 func (me *Status) IsError() bool {
 	return me.Error != nil
+}
+
+func (me *Status) IsSuccess() bool {
+	return me.Success
 }

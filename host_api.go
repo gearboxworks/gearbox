@@ -328,7 +328,10 @@ func (me *HostApi) addBaseDir(ctx echo.Context) (status *Status) {
 		}
 		status = me.Gearbox.AddBaseDir(bd.HostDir, bd.Nickname)
 		if !status.IsError() {
-			status = NewSuccessStatus(http.StatusCreated)
+			status = NewSuccessStatus(
+				http.StatusCreated,
+				fmt.Sprintf("base dir '%s' added", bd.HostDir),
+			)
 		}
 	}
 	return status

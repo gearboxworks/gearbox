@@ -42,10 +42,11 @@ type ResponseMeta struct {
 type Links map[string]string
 
 type Response struct {
+	Success    bool         `json:"success,omitempty"`
 	StatusCode int          `json:"status_code"`
 	Meta       ResponseMeta `json:"meta"`
 	Links      Links        `json:"links"`
-	Data       interface{}  `json:"data"`
+	Data       interface{}  `json:"data,omitempty"`
 }
 
 func (me *Response) Clone() *Response {
@@ -74,6 +75,10 @@ func (me *Status) ToJson() string {
 	return string(j)
 }
 
+type SuccessInspector interface {
+	IsSuccess() bool
+}
+
 // @TODO Add ?format=yes to pretty print JSON
 func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) (status *Status) {
 	var err error
@@ -92,6 +97,9 @@ func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) (status *Sta
 		r.Data = js
 		r.Links["self"] = convertEchoPathToUriTemplatePath(ctx.Path())
 		r.StatusCode = httpStatus
+		if si, ok := js.(SuccessInspector); ok {
+			r.Success = si.IsSuccess()
+		}
 		var j []byte
 		j, err = json.MarshalIndent(r, "", "   ")
 		if err != nil {
