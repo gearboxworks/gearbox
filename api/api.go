@@ -95,8 +95,8 @@ func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) (status *Sta
 		if err != nil {
 			break
 		}
-		err = ctx.String(http.StatusOK, string(j))
-		status = &Status{StatusCode: http.StatusOK}
+		err = ctx.String(ctx.Response().Status, string(j))
+		status = &Status{StatusCode: ctx.Response().Status}
 	}
 	if status == nil && err != nil {
 		status = &Status{

@@ -30,9 +30,19 @@ func NewOkStatus(msg ...string) *Status {
 	}
 }
 
+func NewSuccessStatus(code int) *Status {
+	return &Status{
+		Success:    true,
+		HttpStatus: code,
+	}
+}
+
 func NewStatus(args *StatusArgs) *Status {
 	s := Status(*args)
 	if s.Error == IsStatusError {
+		s.Error = errors.New(s.Message)
+	}
+	if !s.Success && s.Error == nil {
 		s.Error = errors.New(s.Message)
 	}
 	if s.Help != "" {

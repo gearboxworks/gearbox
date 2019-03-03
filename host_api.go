@@ -136,7 +136,7 @@ func (me *HostApi) getStackMemberName(ctx echo.Context) StackMemberName {
 func (me *HostApi) addRoutes() {
 
 	_api := me.Api
-	_api.GET("/", "basedir", func(ctx echo.Context) error {
+	_api.GET("/", "root", func(ctx echo.Context) error {
 		return ctx.String(http.StatusOK, "{}")
 	})
 
@@ -158,6 +158,9 @@ func (me *HostApi) jsonMarshalHandler(_api *api.Api, ctx echo.Context, value int
 			}
 			_ = ctx.String(apiError.StatusCode, apiError.ToJson())
 			break
+		}
+		if ok {
+			ctx.Response().Status = s.HttpStatus
 		}
 		apiError = _api.JsonMarshalHandler(ctx, value)
 	}
@@ -203,31 +206,107 @@ func (me *HostApi) addProjectRoutes() {
 	_api.GET("/projects/:project", "project", func(ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, me.Config.Projects)
 	})
-	_api.GET("/projects/enabled", "enabled-projects", func(ctx echo.Context) error {
+	_api.GET("/projects/enabled", "projects-enabled", func(ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, me.Config.Projects.GetEnabled())
 	})
-	_api.GET("/projects/disabled", "disabled-projects", func(ctx echo.Context) error {
+	_api.GET("/projects/disabled", "projects-disabled", func(ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, me.Config.Projects.GetDisabled())
 	})
-	_api.GET("/projects/candidates", "candidate-projects", func(ctx echo.Context) error {
+	_api.GET("/projects/candidates", "project-candidates", func(ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, me.Config.Candidates)
 	})
 
-	_api.POST("/projects/new", "add-project", func(ctx echo.Context) error {
+	_api.POST("/projects/new", "project-add", func(ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, &api.Status{
 			StatusCode: http.StatusMethodNotAllowed,
-			Error:      fmt.Errorf("the 'add-project' method has not been implemented yet"),
+			Error:      fmt.Errorf("the 'project-add' method has not been implemented yet"),
+		})
+	})
+
+	_api.POST("/projects/:project", "project-update", func(ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, &api.Status{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      fmt.Errorf("the 'project-update' method has not been implemented yet"),
+		})
+	})
+
+	_api.DELETE("/basedirs/:project", "project-delete", func(ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, &api.Status{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      fmt.Errorf("the 'project-delete' method has not been implemented yet"),
 		})
 	})
 }
 
+func closeBody(ctx echo.Context) {
+	_ = ctx.Request().Body.Close()
+}
+
+func (me *HostApi) addBaseDirRoutes() {
+	_api := me.Api
+
+	_api.GET("/basedirs", "basedirs", func(ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, me.Config.GetHostBaseDirs())
+	})
+
+	_api.POST("/basedirs/new", "basedir-add", func(ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, me.addBaseDir(ctx))
+	})
+
+	_api.GET("/basedirs/:nickname", "basedir-delete", func(ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, me.deleteBaseDir(ctx))
+	})
+
+	_api.PUT("/basedirs/:nickname", "basedir-update", func(ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, &api.Status{
+			StatusCode: http.StatusMethodNotAllowed,
+			Error:      fmt.Errorf("the 'update-basedir' method has not been implemented yet"),
+		})
+	})
+
+}
+
+func getBaseDirNickname(ctx echo.Context) string {
+	return ctx.Param("nickname")
+}
+
+func validateBaseDirNickename(nickname string) (status *Status) {
+	for range only.Once {
+		if nickname == "" {
+			status = NewStatus(&StatusArgs{
+				Success:    false,
+				Message:    "basedir nickname is empty",
+				HttpStatus: http.StatusBadRequest,
+				ApiHelp:    "see https://docs.gearbox.works/api/delete-basedir",
+			})
+			break
+		}
+		status = NewOkStatus()
+	}
+	return status
+}
+
+func (me *HostApi) deleteBaseDir(ctx echo.Context) (status *Status) {
+	for range only.Once {
+		nickname := getBaseDirNickname(ctx)
+		status = validateBaseDirNickename(nickname)
+		if status.IsError() {
+			break
+		}
+		status = NewStatus(&StatusArgs{
+			Success:    false,
+			Message:    "not yet implemented",
+			HttpStatus: http.StatusNotImplemented,
+		})
+	}
+	return status
+}
+
 func (me *HostApi) addBaseDir(ctx echo.Context) (status *Status) {
-	var err error
 	for range only.Once {
 		bd := BaseDir{}
 		defer closeBody(ctx)
-		var b []byte
-		b, err = ioutil.ReadAll(ctx.Request().Body)
+		b, err := ioutil.ReadAll(ctx.Request().Body)
 		if err != nil {
 			status = NewStatus(&StatusArgs{
 				Message:    "could not read request body",
@@ -249,46 +328,8 @@ func (me *HostApi) addBaseDir(ctx echo.Context) (status *Status) {
 		}
 		status = me.Gearbox.AddBaseDir(bd.HostDir, bd.Nickname)
 		if !status.IsError() {
-			status = NewOkStatus()
+			status = NewSuccessStatus(http.StatusCreated)
 		}
 	}
 	return status
-}
-
-func closeBody(ctx echo.Context) {
-	_ = ctx.Request().Body.Close()
-}
-
-func (me *HostApi) addBaseDirRoutes() {
-	_api := me.Api
-
-	_api.GET("/basedirs", "get-basedirs", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.Config.GetHostBaseDirs())
-	})
-
-	_api.POST("/basedirs/new", "add-basedir", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.addBaseDir(ctx))
-	})
-
-	_api.GET("/basedirs/:nickname", "delete-basedir", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, &api.Status{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      fmt.Errorf("the 'delete-basedir' method has not been implemented yet"),
-		})
-	})
-
-	_api.PUT("/basedirs/:nickname", "update-basedir", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, &api.Status{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      fmt.Errorf("the 'update-basedir' method has not been implemented yet"),
-		})
-	})
-
-	_api.DELETE("/basedirs/:nickname", "delete-projects", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, &api.Status{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      fmt.Errorf("the 'delete-projects' method has not been implemented yet"),
-		})
-	})
-
 }
