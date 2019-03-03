@@ -60,36 +60,54 @@ func (me *Response) Clone() *Response {
 	return &r
 }
 
-type Error struct {
-	StatusCode int   `json:"status_code"`
-	Error      error `json:"error"`
+type Status struct {
+	StatusCode int    `json:"status_code"`
+	Help       string `json:"help"`
+	Error      error  `json:"error"`
+}
+
+func (me *Status) ToJson() string {
+	j, err := json.Marshal(me)
+	if err != nil {
+		j = []byte(`{"error":"Multiple errors occurred"`)
+	}
+	return string(j)
 }
 
 // @TODO Add ?format=yes to pretty print JSON
-func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) error {
+func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) (status *Status) {
 	var err error
 	for range only.Once {
 		ctx.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		ae, ok := js.(*Error)
+		var ok bool
+		status, ok = js.(*Status)
 		if ok {
-			err = ctx.String(ae.StatusCode, ae.Error.Error())
 			break
 		}
 		r := *me.Defaults.Clone()
 		if err != nil {
-			err = ctx.String(http.StatusInternalServerError, err.Error())
 			break
 		}
 		r.Data = js
 		r.Links["self"] = convertEchoPathToUriTemplatePath(ctx.Path())
-		j, err := json.MarshalIndent(r, "", "   ")
+		var j []byte
+		j, err = json.MarshalIndent(r, "", "   ")
 		if err != nil {
-			err = ctx.String(http.StatusInternalServerError, err.Error())
 			break
 		}
 		err = ctx.String(http.StatusOK, string(j))
+		status = &Status{StatusCode: http.StatusOK}
 	}
-	return err
+	if status == nil && err != nil {
+		status = &Status{
+			StatusCode: http.StatusInternalServerError,
+			Error:      err,
+		}
+	}
+	if status.Error != nil {
+		_ = ctx.String(status.StatusCode, status.ToJson())
+	}
+	return status
 }
 
 func (me *Api) GET(path, name string, handler echo.HandlerFunc) *echo.Route {
@@ -98,15 +116,21 @@ func (me *Api) GET(path, name string, handler echo.HandlerFunc) *echo.Route {
 }
 func (me *Api) POST(path, name string, handler echo.HandlerFunc) *echo.Route {
 	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
+	me.Echo.OPTIONS(path, optionsHandler)
 	return me.Echo.POST(path, handler)
 }
 func (me *Api) DELETE(path, name string, handler echo.HandlerFunc) *echo.Route {
 	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
+	me.Echo.OPTIONS(path, optionsHandler)
 	return me.Echo.DELETE(path, handler)
 }
 func (me *Api) PUT(path, name string, handler echo.HandlerFunc) *echo.Route {
 	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
+	me.Echo.OPTIONS(path, optionsHandler)
 	return me.Echo.PUT(path, handler)
+}
+func optionsHandler(ctx echo.Context) error {
+	return nil
 }
 
 func (me *Api) Start() {

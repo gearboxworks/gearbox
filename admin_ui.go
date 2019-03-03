@@ -164,7 +164,7 @@ func (me *AdminUi) WriteApiUrlResource() {
 	var err error
 	url := me.api.Url()
 	file := me.GetApiUrlResourceFile()
-	err = ioutil.WriteFile(file, NewApiRootUrls(url, url).Bytes(), os.ModePerm)
+	err = ioutil.WriteFile(file, NewApiBaseUrls(url, url).Bytes(), os.ModePerm)
 	if err != nil {
 		log.Warnf("error writing API bootrap file '%s': %s",
 			me.GetApiUrlResourceFile(),
@@ -220,6 +220,7 @@ func addCorsMiddleware(rooturl string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Access-Control-Allow-Origin", rooturl)
 		w.Header().Add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+		w.Header().Add("Access-Control-Allow-Headers", "Accept,Content-Type,Content-Length,Accept-Encoding,X-CSRF-Token,Authorization")
 		next.ServeHTTP(w, r)
 	})
 }

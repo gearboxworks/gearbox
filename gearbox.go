@@ -2,9 +2,11 @@ package gearbox
 
 import (
 	"encoding/json"
+	"fmt"
 	"gearbox/dockerhub"
 	"gearbox/host"
 	"log"
+	"net/http"
 )
 
 var Instance *Gearbox
@@ -17,8 +19,8 @@ type Gearbox struct {
 
 type GearboxArgs Gearbox
 
-func (me *Gearbox) Initialize() {
-	me.Config.Initialize()
+func (me *Gearbox) Initialize() (status *Status) {
+	return me.Config.Initialize()
 }
 
 func NewGearbox(args *GearboxArgs) *Gearbox {
@@ -48,10 +50,29 @@ func (me *Gearbox) Admin(viewer ViewerType) {
 	aui.Start()
 }
 
-func (me *Gearbox) AddProjectRoot(dir string) {
-	pr := NewProjectRoot(me.Config.VmProjectRoot, dir)
-	me.Config.ProjectRoots = append(me.Config.ProjectRoots, pr)
-	me.Config.LoadProjectsAndWrite()
+func (me *Gearbox) AddBaseDir(dir string, nickname ...string) (status *Status) {
+	var nn string
+	if len(nickname) > 0 {
+		nn = nickname[0]
+	}
+	bd := NewBaseDir(dir, &BaseDirArgs{
+		VmDir:    me.Config.VmBaseDir,
+		Nickname: nn,
+	})
+	if bd.Error != nil {
+		status = NewStatus(&StatusArgs{
+			HttpStatus: http.StatusUnprocessableEntity,
+			Error:      bd.Error,
+		})
+		if dir == "" {
+			status.Message = fmt.Sprint("value provide for base dir in 'host_dir' property was empty")
+		} else {
+			status.Message = fmt.Sprintf("could add add base dir '%s'; the ~ could not be expanded", dir)
+		}
+	}
+	me.Config.BaseDirs[bd.Nickname] = bd
+	status = me.Config.LoadProjectsAndWrite()
+	return status
 }
 
 func (me *Gearbox) StartVm() {

@@ -14,7 +14,14 @@ func main() {
 	gearbox.Instance = gearbox.NewGearbox(&gearbox.GearboxArgs{
 		HostConnector: host.GetConnector(),
 	})
-	gearbox.Instance.Initialize()
+	status := gearbox.Instance.Initialize()
+	if status.IsError() {
+		fmt.Println(status.Message)
+		if status.CliHelp != "" {
+			fmt.Println(status.CliHelp)
+		}
+		os.Exit(1)
+	}
 	if err := cmd.RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

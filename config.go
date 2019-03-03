@@ -5,25 +5,29 @@ import (
 	"fmt"
 	"gearbox/host"
 	"gearbox/only"
+	"gearbox/util"
 	"github.com/spf13/cobra"
 	"io/ioutil"
-	"log"
+	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 const SchemaVersion = "1.0"
-const vmProjectRoot = "/home/gearbox/projects"
+const vmBaseDir = "/home/gearbox/projects"
 const vmName = "Gearbox"
+const ConfigHelpDocs = "https://docs.gearbox.works/config"
 
 type Config struct {
 	About         string         `json:"about"`
 	LearnMore     string         `json:"learn_more"`
 	HostConnector host.Connector `json:"-"`
 	SchemaVersion string         `json:"schema_version"`
-	ProjectRoots  ProjectRoots   `json:"project_roots"`
-	Projects      Projects       `json:"projects"`
+	BaseDirs      BaseDirMap     `json:"base_dirs"`
+	Projects      ProjectMap     `json:"projects"`
 	Candidates    Candidates     `json:"-"`
-	VmProjectRoot string         `json:"-"`
+	VmBaseDir     string         `json:"-"`
 	VmName        string         `json:"-"`
 }
 
@@ -39,22 +43,43 @@ func NewConfig(hc host.Connector) *Config {
 		LearnMore:     "To learn about Gearbox visit https://gearbox.works",
 		HostConnector: hc,
 		SchemaVersion: SchemaVersion,
-		ProjectRoots:  make(ProjectRoots, 1),
-		Projects:      make(Projects, 0),
+		BaseDirs:      make(BaseDirMap, 1),
+		Projects:      make(ProjectMap, 0),
 		Candidates:    make(Candidates, 0),
-		VmProjectRoot: vmProjectRoot,
+		VmBaseDir:     vmBaseDir,
 		VmName:        vmName,
 	}
-	c.ProjectRoots[0] = &ProjectRoot{
-		HostDir: c.HostConnector.GetSuggestedProjectRoot(),
-		VmDir:   vmProjectRoot,
-	}
+	c.BaseDirs[DefaultBaseDirNickname] = NewBaseDir(
+		c.HostConnector.GetSuggestedBaseDir(),
+		&BaseDirArgs{
+			Nickname: DefaultBaseDirNickname,
+		},
+	)
 	return c
 }
 
-func (me *Config) Initialize() {
-	me.Load()
-	me.Write()
+func (me *Config) Initialize() (status *Status) {
+	status = me.Load()
+	if !status.IsError() {
+		status = me.Write()
+	}
+	return status
+}
+
+func (me *Config) GetHostBaseDir(nickname string) (basedir string) {
+	bd, ok := me.BaseDirs[nickname]
+	if ok {
+		basedir = bd.HostDir
+	}
+	return basedir
+}
+
+func (me *Config) GetHostBaseDirs() map[string]string {
+	bds := make(map[string]string, len(me.BaseDirs))
+	for _, bd := range me.BaseDirs {
+		bds[bd.Nickname] = bd.HostDir
+	}
+	return bds
 }
 
 func (me *Config) Bytes() []byte {
@@ -68,90 +93,146 @@ func (me *Config) GetFilepath() string {
 	return fmt.Sprintf("%s/config.json", me.HostConnector.GetUserConfigDir())
 }
 
-func (me *Config) Write() {
-	j, err := json.MarshalIndent(me, "", "    ")
-	if err != nil {
-		log.Fatal(err.Error())
+func (me *Config) Write() (status *Status) {
+	for range only.Once {
+		j, err := json.MarshalIndent(me, "", "    ")
+		if err != nil {
+			status = NewStatus(&StatusArgs{
+				Message:    fmt.Sprintf("unable to marhsal config"),
+				Help:       fmt.Sprintf("contact support"),
+				HttpStatus: http.StatusInternalServerError,
+				Error:      err,
+			})
+			break
+		}
+		err = ioutil.WriteFile(me.GetFilepath(), j, os.ModePerm)
+		if err != nil {
+			status = NewStatus(&StatusArgs{
+				Message:    fmt.Sprintf("unable to write to config file '%s'", me.GetFilepath()),
+				Help:       fmt.Sprintf("check '%s' for write permissions", filepath.Dir(me.GetFilepath())),
+				HttpStatus: http.StatusInternalServerError,
+				Error:      err,
+			})
+			break
+		}
+		status = NewOkStatus(fmt.Sprintf("project config file written"))
 	}
-	err = ioutil.WriteFile(me.GetFilepath(), j, os.ModePerm)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	return status
 }
 
-func (me *Config) Load() {
+func (me *Config) Load() (status *Status) {
 	for range only.Once {
 		j, err := ioutil.ReadFile(me.GetFilepath())
-		if err == nil {
-			err = json.Unmarshal(j, &me)
-			if err != nil {
-				log.Fatal(err.Error())
-			}
+		if err != nil {
+			status = NewStatus(&StatusArgs{
+				Message:    fmt.Sprintf("failed to read config file '%s'", me.GetFilepath()),
+				Help:       fmt.Sprintf("confirm file '%s' exists and its directory is readable", me.GetFilepath()),
+				HttpStatus: http.StatusInternalServerError,
+				Error:      err,
+			})
+			break
 		}
-		me.LoadProjects()
+		err = json.Unmarshal(j, &me)
+		if err != nil {
+			status = NewStatus(&StatusArgs{
+				Message: fmt.Sprintf("unable to load config file '%s'", me.GetFilepath()),
+				Help: fmt.Sprintf("ensure config file '%s' is in correct format per %s",
+					me.GetFilepath(),
+					ConfigHelpDocs,
+				),
+				HttpStatus: http.StatusInternalServerError,
+				Error:      err,
+			})
+			break
+		}
+		status = me.LoadProjects()
 	}
+	return status
 }
 
-func (me *Config) LoadProjectsAndWrite() {
-	me.LoadProjects()
-	me.Write()
+func (me *Config) LoadProjectsAndWrite() (status *Status) {
+	status = me.LoadProjects()
+	if !status.IsError() {
+		status = me.Write()
+	}
+	return status
 }
 
 func (me *Config) GetProjectMap() ProjectMap {
 	pm := make(ProjectMap, len(me.Projects))
-	for _, p := range me.Projects {
-		pm[p.Name] = p
+	for hostname, p := range me.Projects {
+		pm[hostname] = p
 	}
 	return pm
 }
 
-func (me *Config) LoadProjects() {
-	var err error
-	if len(me.ProjectRoots) == 0 {
-		log.Fatal(fmt.Sprintf("No project roots found in %s. Add with the '%s <dir>' command.",
-			me.GetFilepath(),
-			ProjectRootAddCmd.CommandPath(),
-		))
-	}
-	projectMap := me.GetProjectMap()
-	me.Projects = make(Projects, 0)
-	me.Candidates = make(Candidates, 0)
-	for index, pr := range me.ProjectRoots {
-		group := index + 1
-		var files []os.FileInfo
-		err = os.Mkdir(pr.HostDir, 0777)
-		files, err = ioutil.ReadDir(pr.HostDir)
-		if err != nil {
-			log.Fatal(err.Error())
+func (me *Config) LoadProjects() (status *Status) {
+	for range only.Once {
+		if len(me.BaseDirs) == 0 {
+			status = NewStatus(&StatusArgs{
+				Message:    fmt.Sprintf("no project roots found in %s", me.GetFilepath()),
+				CliHelp:    fmt.Sprintf("Add with the '%s <dir>' command", ProjectRootAddCmd.CommandPath()),
+				ApiHelp:    fmt.Sprintf("Add by POSTing JSON to 'add-basedir' resource"),
+				HttpStatus: http.StatusUnprocessableEntity,
+				Error:      IsStatusError,
+			})
+			break
 		}
-		for _, file := range files {
-			if !file.IsDir() {
-				continue
-			}
-			if file.Name()[0] == '.' {
-				continue
-			}
-			c := &Candidate{
-				Root:  &pr.HostDir,
-				Path:  file.Name(),
-				Group: group,
-			}
-			if c.IsProject() {
-				p, ok := projectMap[c.Path]
-				if ok {
-					p.Root = c.Root
-					p.Hostname = p.MakeHostname()
-				} else {
-					p = NewProject(c.Path, c.Root)
+		me.Candidates = make(Candidates, 0)
+		baseDirs := make([]string, 0)
+		for bdnn, bd := range me.BaseDirs {
+			baseDirs = append(baseDirs, fmt.Sprintf("'%s'", bd.HostDir)) // For status message
+			bd.Nickname = bdnn                                           // In case it is not set, since it is not written to JSON as a property
+			var files []os.FileInfo
+			if !util.DirExists(bd.HostDir) {
+				err := os.Mkdir(bd.HostDir, 0777)
+				if err != nil {
+					status = NewStatus(&StatusArgs{
+						Message:    fmt.Sprintf("unable to make directory '%s'", bd.HostDir),
+						HttpStatus: http.StatusUnprocessableEntity,
+						Error:      err,
+					})
+					break
 				}
-				p.Group = group
-				me.Projects = append(me.Projects, p)
-			} else {
-				me.Candidates = append(me.Candidates, c)
+			}
+			files, err := ioutil.ReadDir(bd.HostDir)
+			if err != nil {
+				status = NewStatus(&StatusArgs{
+					Message:    fmt.Sprintf("unable to read directory %s", bd.HostDir),
+					HttpStatus: http.StatusUnprocessableEntity,
+					Error:      err,
+				})
+				break
+			}
+			for _, file := range files {
+				if !file.IsDir() {
+					continue
+				}
+				if file.Name()[0] == '.' {
+					continue
+				}
+				c := NewCandidate(&CandidateArgs{
+					Config:  me,
+					BaseDir: bdnn,
+					Path:    file.Name(),
+				})
+				if c.IsProject() {
+					p := me.Projects.FindProject(bdnn, c.Path)
+					if p == nil {
+						p = NewProject(c.Path)
+					}
+					p.BaseDir = bdnn
+					me.Projects[p.Hostname] = p
+				} else {
+					me.Candidates = append(me.Candidates, c)
+				}
 			}
 		}
+		if status == nil {
+			status = NewOkStatus(
+				fmt.Sprintf("projects loaded for basedirs: %s", strings.Join(baseDirs, ", ")),
+			)
+		}
 	}
-	if err != nil {
-		log.Fatal(err)
-	}
+	return status
 }
