@@ -112,7 +112,7 @@ func (me *AdminUi) WriteAssetsToAdminWebRoot() {
 			))
 		}
 	}
-	me.WriteApiUrlResource()
+	me.WriteApiBaseUrls()
 }
 
 func (me *AdminUi) StartApi() {
@@ -160,20 +160,20 @@ func (me *AdminUi) StartWebView() {
 	wv.Run()
 }
 
-func (me *AdminUi) WriteApiUrlResource() {
+func (me *AdminUi) WriteApiBaseUrls() {
 	var err error
 	url := me.api.Url()
-	file := me.GetApiUrlResourceFile()
+	file := me.GetApiBaseUrls()
 	err = ioutil.WriteFile(file, NewApiBaseUrls(url, url).Bytes(), os.ModePerm)
 	if err != nil {
 		log.Warnf("error writing API bootrap file '%s': %s",
-			me.GetApiUrlResourceFile(),
+			me.GetApiBaseUrls(),
 			err,
 		)
 	}
 }
 
-func (me *AdminUi) GetApiUrlResourceFile() string {
+func (me *AdminUi) GetApiBaseUrls() string {
 	return fmt.Sprintf("%s/api.json", me.GetWebRootDir())
 }
 

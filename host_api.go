@@ -13,6 +13,8 @@ import (
 
 const Port = "9999"
 
+const ApiDocsBaseUrl = "https://docs.gearbox.works/api"
+
 type HostApi struct {
 	Config  *Config
 	Api     *api.Api
@@ -230,7 +232,7 @@ func (me *HostApi) addProjectRoutes() {
 		})
 	})
 
-	_api.DELETE("/basedirs/:project", "project-delete", func(ctx echo.Context) error {
+	_api.DELETE("/projects/:project", "project-delete", func(ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, &api.Status{
 			StatusCode: http.StatusMethodNotAllowed,
 			Error:      fmt.Errorf("the 'project-delete' method has not been implemented yet"),
@@ -250,34 +252,40 @@ func (me *HostApi) addBaseDirRoutes() {
 	})
 
 	_api.POST("/basedirs/new", "basedir-add", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.addBaseDir(ctx))
-	})
-
-	_api.GET("/basedirs/:nickname", "basedir-delete", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.deleteBaseDir(ctx))
+		return me.jsonMarshalHandler(_api, ctx, me.addBaseDir(me.Gearbox, ctx))
 	})
 
 	_api.PUT("/basedirs/:nickname", "basedir-update", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, &api.Status{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      fmt.Errorf("the 'update-basedir' method has not been implemented yet"),
-		})
+		return me.jsonMarshalHandler(_api, ctx, me.updateBaseDir(me.Gearbox, ctx))
+	})
+
+	_api.DELETE("/basedirs/:nickname", "basedir-delete", func(ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, me.deleteNamedBaseDir(me.Gearbox, ctx))
 	})
 
 }
 
-func getBaseDirNickname(ctx echo.Context) string {
-	return ctx.Param("nickname")
-}
-
-func validateBaseDirNickename(nickname string) (status *Status) {
+func readBaseDirFromResponse(name string, ctx echo.Context, bd *BaseDir) (status *Status) {
 	for range only.Once {
-		if nickname == "" {
+		apiHelp := fmt.Sprintf("see %s", GetApiDocsUrl(name))
+		defer closeBody(ctx)
+		b, err := readContextBody(ctx)
+		if err != nil {
 			status = NewStatus(&StatusArgs{
-				Success:    false,
-				Message:    "basedir nickname is empty",
-				HttpStatus: http.StatusBadRequest,
-				ApiHelp:    "see https://docs.gearbox.works/api/delete-basedir",
+				Message:    "could not read request body",
+				HttpStatus: http.StatusUnprocessableEntity,
+				ApiHelp:    apiHelp,
+				Error:      err,
+			})
+			break
+		}
+		err = json.Unmarshal(b, bd)
+		if err != nil {
+			status = NewStatus(&StatusArgs{
+				Message:    fmt.Sprintf("unexpected format for request body: '%s'", string(b)),
+				HttpStatus: http.StatusUnprocessableEntity,
+				ApiHelp:    apiHelp,
+				Error:      err,
 			})
 			break
 		}
@@ -286,53 +294,42 @@ func validateBaseDirNickename(nickname string) (status *Status) {
 	return status
 }
 
-func (me *HostApi) deleteBaseDir(ctx echo.Context) (status *Status) {
-	for range only.Once {
-		nickname := getBaseDirNickname(ctx)
-		status = validateBaseDirNickename(nickname)
-		if status.IsError() {
-			break
-		}
-		status = NewStatus(&StatusArgs{
-			Success:    false,
-			Message:    "not yet implemented",
-			HttpStatus: http.StatusNotImplemented,
-		})
+func (me *HostApi) addBaseDir(gb *Gearbox, ctx echo.Context) (status *Status) {
+	bd := BaseDir{}
+	status = readBaseDirFromResponse("basedir-add", ctx, &bd)
+	if !status.IsError() {
+		status = me.Gearbox.AddBaseDir(bd.HostDir, bd.Nickname)
+	}
+	return status
+}
+func (me *HostApi) updateBaseDir(gb *Gearbox, ctx echo.Context) (status *Status) {
+	bd := BaseDir{}
+	status = readBaseDirFromResponse("basedir-update", ctx, &bd)
+	if !status.IsError() {
+		status = me.Gearbox.UpdateBaseDir(bd.Nickname, bd.HostDir)
 	}
 	return status
 }
 
-func (me *HostApi) addBaseDir(ctx echo.Context) (status *Status) {
-	for range only.Once {
-		bd := BaseDir{}
-		defer closeBody(ctx)
-		b, err := ioutil.ReadAll(ctx.Request().Body)
-		if err != nil {
-			status = NewStatus(&StatusArgs{
-				Message:    "could not read request body",
-				HttpStatus: http.StatusUnprocessableEntity,
-				ApiHelp:    "see https://docs.api.gearbox.works",
-				Error:      err,
-			})
-			break
-		}
-		err = json.Unmarshal(b, &bd)
-		if err != nil {
-			status = NewStatus(&StatusArgs{
-				Message:    fmt.Sprintf("unexpected format for request body: '%s'", string(b)),
-				HttpStatus: http.StatusUnprocessableEntity,
-				ApiHelp:    "see https://docs.api.gearbox.works/add-basedir",
-				Error:      err,
-			})
-			break
-		}
-		status = me.Gearbox.AddBaseDir(bd.HostDir, bd.Nickname)
-		if !status.IsError() {
-			status = NewSuccessStatus(
-				http.StatusCreated,
-				fmt.Sprintf("base dir '%s' added", bd.HostDir),
-			)
-		}
+func (me *HostApi) deleteNamedBaseDir(gb *Gearbox, ctx echo.Context) (status *Status) {
+	return me.Gearbox.DeleteNamedBaseDir(getBaseDirNickname(ctx))
+}
+
+func getBaseDirNickname(ctx echo.Context) string {
+	return ctx.Param("nickname")
+}
+
+func GetApiDocsUrl(topic string) string {
+	return fmt.Sprintf("%s/%s", ApiDocsBaseUrl, topic)
+}
+
+func readContextBody(ctx echo.Context) ([]byte, error) {
+	return ioutil.ReadAll(ctx.Request().Body)
+}
+
+func iif(expr bool, ifyes, ifno interface{}) interface{} {
+	if expr {
+		return ifyes
 	}
-	return status
+	return ifno
 }

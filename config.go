@@ -49,10 +49,10 @@ func NewConfig(hc host.Connector) *Config {
 		VmBaseDir:     vmBaseDir,
 		VmName:        vmName,
 	}
-	c.BaseDirs[DefaultBaseDirNickname] = NewBaseDir(
+	c.BaseDirs[PrimaryBaseDirNickname] = NewBaseDir(
 		c.HostConnector.GetSuggestedBaseDir(),
 		&BaseDirArgs{
-			Nickname: DefaultBaseDirNickname,
+			Nickname: PrimaryBaseDirNickname,
 		},
 	)
 	return c

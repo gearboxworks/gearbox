@@ -2,11 +2,9 @@ package gearbox
 
 import (
 	"encoding/json"
-	"fmt"
 	"gearbox/dockerhub"
 	"gearbox/host"
 	"log"
-	"net/http"
 )
 
 var Instance *Gearbox
@@ -50,29 +48,49 @@ func (me *Gearbox) Admin(viewer ViewerType) {
 	aui.Start()
 }
 
+func (me *Gearbox) NamedBaseDirExists(nickname string) bool {
+	return me.Config.BaseDirs.NamedBaseDirExists(nickname)
+}
+
+func (me *Gearbox) BaseDirExists(dir string) bool {
+	return me.Config.BaseDirs.BaseDirExists(dir)
+}
+
 func (me *Gearbox) AddBaseDir(dir string, nickname ...string) (status *Status) {
-	var nn string
-	if len(nickname) > 0 {
-		nn = nickname[0]
-	}
-	bd := NewBaseDir(dir, &BaseDirArgs{
-		VmDir:    me.Config.VmBaseDir,
-		Nickname: nn,
-	})
-	if bd.Error != nil {
-		status = NewStatus(&StatusArgs{
-			HttpStatus: http.StatusBadRequest,
-			Error:      bd.Error,
-		})
-		if dir == "" {
-			status.Message = fmt.Sprint("value provide for base dir in 'host_dir' property was empty")
-		} else {
-			status.Message = fmt.Sprintf("could add add base dir '%s'; the ~ could not be expanded", dir)
+	status = me.Config.BaseDirs.AddBaseDir(me, dir, nickname...)
+	if !status.IsError() {
+		status2 := me.Config.LoadProjectsAndWrite()
+		if status2.IsError() {
+			status = status2
 		}
 	}
-	me.Config.BaseDirs[bd.Nickname] = bd
-	status = me.Config.LoadProjectsAndWrite()
 	return status
+}
+
+func (me *Gearbox) UpdateBaseDir(nickname string, dir string) (status *Status) {
+	status = me.Config.BaseDirs.UpdateBaseDir(me, nickname, dir)
+	if !status.IsError() {
+		status2 := me.Config.LoadProjectsAndWrite()
+		if status2.IsError() {
+			status = status2
+		}
+	}
+	return status
+}
+
+func (me *Gearbox) DeleteNamedBaseDir(nickname string) (status *Status) {
+	status = me.Config.BaseDirs.DeleteNamedBaseDir(me, nickname)
+	if !status.IsError() {
+		status2 := me.Config.LoadProjectsAndWrite()
+		if status2.IsError() {
+			status = status2
+		}
+	}
+	return status
+}
+func (me *Gearbox) ValidateBaseDirNickname(nn string, args *validateArgs) *Status {
+	args.Gearbox = me
+	return ValidateBaseDirNickname(nn, args)
 }
 
 func (me *Gearbox) StartVm() {
