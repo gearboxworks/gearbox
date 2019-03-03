@@ -79,6 +79,7 @@ func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) (status *Sta
 	var err error
 	for range only.Once {
 		ctx.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		httpStatus := ctx.Response().Status
 		var ok bool
 		status, ok = js.(*Status)
 		if ok {
@@ -90,13 +91,14 @@ func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) (status *Sta
 		}
 		r.Data = js
 		r.Links["self"] = convertEchoPathToUriTemplatePath(ctx.Path())
+		r.StatusCode = httpStatus
 		var j []byte
 		j, err = json.MarshalIndent(r, "", "   ")
 		if err != nil {
 			break
 		}
-		err = ctx.String(ctx.Response().Status, string(j))
-		status = &Status{StatusCode: ctx.Response().Status}
+		err = ctx.String(httpStatus, string(j))
+		status = &Status{StatusCode: httpStatus}
 	}
 	if status == nil && err != nil {
 		status = &Status{
