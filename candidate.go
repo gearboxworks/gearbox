@@ -9,14 +9,18 @@ import (
 type Candidates []*Candidate
 
 type Candidate struct {
-	BaseDir string  `json:"nickname"`
-	Path    string  `json:"path"`
-	Config  *Config `json:"-"`
+	BaseDir  string   `json:"base_dir"`
+	Path     string   `json:"path"`
+	FullPath string   `json:"full_path"`
+	Config   *Config  `json:"-"`
+	Gearbox  *Gearbox `json:"-"`
 }
+
 type CandidateArgs Candidate
 
 func NewCandidate(args *CandidateArgs) *Candidate {
 	c := Candidate(*args)
+	c.FullPath = c.GetFullPath()
 	return &c
 }
 
@@ -36,4 +40,9 @@ func (me *Candidate) IsProject() bool {
 	return util.FileExists(
 		fmt.Sprintf("%s/%s/%s", me.GetHostBaseDir(), me.Path, ProjectFile),
 	)
+}
+
+func (me *Candidate) GetFullPath() (fp string) {
+	fp, _ = ExpandBaseDirPath(me.Gearbox, me.BaseDir, me.Path)
+	return fp
 }

@@ -7,7 +7,6 @@ import (
 	"gearbox/dockerhub"
 	"gearbox/only"
 	"github.com/labstack/echo"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -205,8 +204,8 @@ func (me *HostApi) addProjectRoutes() {
 	_api.GET("/projects", "projects", func(ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, me.Config.Projects)
 	})
-	_api.GET("/projects/:project", "project", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.Config.Projects)
+	_api.GET("/projects/:hostname", "project", func(ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, me.getProject(ctx))
 	})
 	_api.GET("/projects/enabled", "projects-enabled", func(ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, me.Config.Projects.GetEnabled())
@@ -225,23 +224,19 @@ func (me *HostApi) addProjectRoutes() {
 		})
 	})
 
-	_api.POST("/projects/:project", "project-update", func(ctx echo.Context) error {
+	_api.POST("/projects/:hostname", "project-update", func(ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, &api.Status{
 			StatusCode: http.StatusMethodNotAllowed,
 			Error:      fmt.Errorf("the 'project-update' method has not been implemented yet"),
 		})
 	})
 
-	_api.DELETE("/projects/:project", "project-delete", func(ctx echo.Context) error {
+	_api.DELETE("/projects/:hostname", "project-delete", func(ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, &api.Status{
 			StatusCode: http.StatusMethodNotAllowed,
 			Error:      fmt.Errorf("the 'project-delete' method has not been implemented yet"),
 		})
 	})
-}
-
-func closeBody(ctx echo.Context) {
-	_ = ctx.Request().Body.Close()
 }
 
 func (me *HostApi) addBaseDirRoutes() {
@@ -267,9 +262,9 @@ func (me *HostApi) addBaseDirRoutes() {
 
 func readBaseDirFromResponse(name string, ctx echo.Context, bd *BaseDir) (status *Status) {
 	for range only.Once {
-		apiHelp := fmt.Sprintf("see %s", GetApiDocsUrl(name))
-		defer closeBody(ctx)
-		b, err := readContextBody(ctx)
+		apiHelp := GetApiHelp(name)
+		defer api.CloseResponseBody(ctx)
+		b, err := api.ReadResponseBody(ctx)
 		if err != nil {
 			status = NewStatus(&StatusArgs{
 				Message:    "could not read request body",
@@ -315,6 +310,22 @@ func (me *HostApi) deleteNamedBaseDir(gb *Gearbox, ctx echo.Context) (status *St
 	return me.Gearbox.DeleteNamedBaseDir(getBaseDirNickname(ctx))
 }
 
+func (me *HostApi) getProject(ctx echo.Context) (response interface{}) {
+	for range only.Once {
+		pr, status := me.Gearbox.GetProjectResponse(getProjectHostname(ctx))
+		if status.IsError() {
+			response = status
+			break
+		}
+		response = pr
+	}
+	return response
+}
+
+func getProjectHostname(ctx echo.Context) string {
+	return ctx.Param("hostname")
+}
+
 func getBaseDirNickname(ctx echo.Context) string {
 	return ctx.Param("nickname")
 }
@@ -322,14 +333,6 @@ func getBaseDirNickname(ctx echo.Context) string {
 func GetApiDocsUrl(topic string) string {
 	return fmt.Sprintf("%s/%s", ApiDocsBaseUrl, topic)
 }
-
-func readContextBody(ctx echo.Context) ([]byte, error) {
-	return ioutil.ReadAll(ctx.Request().Body)
-}
-
-func iif(expr bool, ifyes, ifno interface{}) interface{} {
-	if expr {
-		return ifyes
-	}
-	return ifno
+func GetApiHelp(topic string) string {
+	return fmt.Sprintf("see %s", GetApiDocsUrl(topic))
 }

@@ -29,6 +29,7 @@ type Config struct {
 	Candidates    Candidates     `json:"-"`
 	VmBaseDir     string         `json:"-"`
 	VmName        string         `json:"-"`
+	Gearbox       *Gearbox       `json:"-"`
 }
 
 func UnmarshalConfig(b []byte) *Config {
@@ -37,17 +38,18 @@ func UnmarshalConfig(b []byte) *Config {
 	return &c
 }
 
-func NewConfig(hc host.Connector) *Config {
+func NewConfig(gb *Gearbox) *Config {
 	c := &Config{
 		About:         "This is a Gearbox user configuration file.",
 		LearnMore:     "To learn about Gearbox visit https://gearbox.works",
-		HostConnector: hc,
+		HostConnector: gb.HostConnector,
 		SchemaVersion: SchemaVersion,
 		BaseDirs:      make(BaseDirMap, 1),
 		Projects:      make(ProjectMap, 0),
 		Candidates:    make(Candidates, 0),
 		VmBaseDir:     vmBaseDir,
 		VmName:        vmName,
+		Gearbox:       gb,
 	}
 	c.BaseDirs[PrimaryBaseDirNickname] = NewBaseDir(
 		c.HostConnector.GetSuggestedBaseDir(),
@@ -215,11 +217,12 @@ func (me *Config) LoadProjects() (status *Status) {
 					Config:  me,
 					BaseDir: bdnn,
 					Path:    file.Name(),
+					Gearbox: me.Gearbox,
 				})
 				if c.IsProject() {
 					p := me.Projects.FindProject(bdnn, c.Path)
 					if p == nil {
-						p = NewProject(c.Path)
+						p = NewProject(me.Gearbox, c.Path)
 					}
 					p.BaseDir = bdnn
 					me.Projects[p.Hostname] = p
@@ -228,6 +231,18 @@ func (me *Config) LoadProjects() (status *Status) {
 				}
 			}
 		}
+		//
+		// Remove any old projects that are not located in one of the basedirs
+		//
+		for k, p := range me.Projects {
+			_, ok := me.BaseDirs[p.BaseDir]
+			if !ok {
+				delete(me.Projects, k)
+				continue
+			}
+
+		}
+
 		if status == nil {
 			status = NewOkStatus(
 				fmt.Sprintf("projects loaded for basedirs: %s", strings.Join(baseDirs, ", ")),

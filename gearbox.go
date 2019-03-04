@@ -22,15 +22,23 @@ func (me *Gearbox) Initialize() (status *Status) {
 }
 
 func NewGearbox(args *GearboxArgs) *Gearbox {
-	if args.Config == nil {
-		args.Config = NewConfig(args.HostConnector)
-	}
 	gb := Gearbox{
 		HostConnector: args.HostConnector,
 		Config:        args.Config,
 		Stacks:        GetStackMap(),
 	}
+	if args.Config == nil {
+		gb.Config = NewConfig(&gb)
+	}
 	return &gb
+}
+
+func (me *Gearbox) GetProjectResponse(hostname string) (pr *ProjectResponse, status *Status) {
+	return me.Config.Projects.GetProjectResponse(me, hostname)
+}
+
+func (me *Gearbox) GetProject(hostname string) (p *Project, status *Status) {
+	return me.Config.Projects.GetProject(me, hostname)
 }
 
 func (me *Gearbox) GetProjects() string {
@@ -46,6 +54,10 @@ func (me *Gearbox) Admin(viewer ViewerType) {
 	aui.Initialize()
 	defer aui.Close()
 	aui.Start()
+}
+
+func (me *Gearbox) ProjectExists(hostname string) (ok bool) {
+	return me.Config.Projects.ProjectExists(hostname)
 }
 
 func (me *Gearbox) NamedBaseDirExists(nickname string) bool {
@@ -91,6 +103,11 @@ func (me *Gearbox) DeleteNamedBaseDir(nickname string) (status *Status) {
 func (me *Gearbox) ValidateBaseDirNickname(nn string, args *validateArgs) *Status {
 	args.Gearbox = me
 	return ValidateBaseDirNickname(nn, args)
+}
+
+func (me *Gearbox) ValidateProjectHostname(hn string, args *validateArgs) *Status {
+	args.Gearbox = me
+	return ValidateProjectHostname(hn, args)
 }
 
 func (me *Gearbox) StartVm() {

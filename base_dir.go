@@ -38,6 +38,21 @@ func NewBaseDir(hostDir string, args ...*BaseDirArgs) *BaseDir {
 	return &bd
 }
 
+func ExpandBaseDirPath(gb *Gearbox, nickname string, path string) (fp string, status *Status) {
+	status = gb.ValidateBaseDirNickname(nickname, &validateArgs{
+		MustNotBeEmpty: true,
+		MustExist:      true,
+		ApiHelpUrl:     GetApiDocsUrl(api.GetCurrentActionName()),
+	})
+	if !status.IsError() {
+		fp = fmt.Sprintf("%s/%s",
+			gb.Config.GetHostBaseDir(nickname),
+			path,
+		)
+	}
+	return fp, status
+}
+
 func (me *BaseDir) MaybeExpandDir() (status *Status) {
 	for range only.Once {
 		status = NewOkStatus()

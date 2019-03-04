@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
+	"io/ioutil"
 
 	//	"github.com/labstack/echo/middleware"
 	"github.com/projectcfg/projectcfg/util"
@@ -219,4 +220,11 @@ func convertEchoPathToUriTemplatePath(url string) string {
 		parts[i] = fmt.Sprintf("{%s}", p[1:])
 	}
 	return strings.Join(parts, "/")
+}
+
+func ReadResponseBody(ctx echo.Context) ([]byte, error) {
+	return ioutil.ReadAll(ctx.Request().Body)
+}
+func CloseResponseBody(ctx echo.Context) {
+	_ = ctx.Request().Body.Close()
 }
