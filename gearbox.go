@@ -18,7 +18,7 @@ type Gearbox struct {
 
 type GearboxArgs Gearbox
 
-func (me *Gearbox) Initialize() (status *Status) {
+func (me *Gearbox) Initialize() (status Status) {
 	return me.Config.Initialize()
 }
 
@@ -34,11 +34,11 @@ func NewGearbox(args *GearboxArgs) *Gearbox {
 	return &gb
 }
 
-func (me *Gearbox) GetProjectResponse(hostname string) (pr *ProjectResponse, status *Status) {
+func (me *Gearbox) GetProjectResponse(hostname string) (pr *ProjectResponse, status Status) {
 	return me.Config.Projects.GetProjectResponse(me, hostname)
 }
 
-func (me *Gearbox) GetProject(hostname string) (p *Project, status *Status) {
+func (me *Gearbox) GetProject(hostname string) (p *Project, status Status) {
 	return me.Config.Projects.GetProject(me, hostname)
 }
 
@@ -69,7 +69,7 @@ func (me *Gearbox) BaseDirExists(dir string) bool {
 	return me.Config.BaseDirs.BaseDirExists(dir)
 }
 
-func (me *Gearbox) AddBaseDir(dir string, nickname ...string) (status *Status) {
+func (me *Gearbox) AddBaseDir(dir string, nickname ...string) (status Status) {
 	status = me.Config.BaseDirs.AddBaseDir(me, dir, nickname...)
 	if !status.IsError() {
 		status2 := me.Config.LoadProjectsAndWrite()
@@ -80,7 +80,7 @@ func (me *Gearbox) AddBaseDir(dir string, nickname ...string) (status *Status) {
 	return status
 }
 
-func (me *Gearbox) UpdateBaseDir(nickname string, dir string) (status *Status) {
+func (me *Gearbox) UpdateBaseDir(nickname string, dir string) (status Status) {
 	status = me.Config.BaseDirs.UpdateBaseDir(me, nickname, dir)
 	if !status.IsError() {
 		status2 := me.Config.LoadProjectsAndWrite()
@@ -91,7 +91,7 @@ func (me *Gearbox) UpdateBaseDir(nickname string, dir string) (status *Status) {
 	return status
 }
 
-func (me *Gearbox) DeleteNamedBaseDir(nickname string) (status *Status) {
+func (me *Gearbox) DeleteNamedBaseDir(nickname string) (status Status) {
 	status = me.Config.BaseDirs.DeleteNamedBaseDir(me, nickname)
 	if !status.IsError() {
 		status2 := me.Config.LoadProjectsAndWrite()
@@ -101,12 +101,12 @@ func (me *Gearbox) DeleteNamedBaseDir(nickname string) (status *Status) {
 	}
 	return status
 }
-func (me *Gearbox) ValidateBaseDirNickname(nn string, args *validateArgs) *Status {
+func (me *Gearbox) ValidateBaseDirNickname(nn string, args *validateArgs) Status {
 	args.Gearbox = me
 	return ValidateBaseDirNickname(nn, args)
 }
 
-func (me *Gearbox) ValidateProjectHostname(hn string, args *validateArgs) *Status {
+func (me *Gearbox) ValidateProjectHostname(hn string, args *validateArgs) Status {
 	args.Gearbox = me
 	return ValidateProjectHostname(hn, args)
 }

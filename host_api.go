@@ -153,7 +153,7 @@ func (me *HostApi) addRoutes() {
 func (me *HostApi) jsonMarshalHandler(_api *api.Api, ctx echo.Context, requestType string, value interface{}) error {
 	var apiError *api.Status
 	for range only.Once {
-		status, ok := value.(*Status)
+		status, ok := value.(Status)
 		if ok && status.IsError() {
 			apiError = &api.Status{
 				Error:      status.Error,
@@ -163,6 +163,7 @@ func (me *HostApi) jsonMarshalHandler(_api *api.Api, ctx echo.Context, requestTy
 			apiError = _api.JsonMarshalHandler(ctx, requestType, apiError)
 			break
 		}
+		status.Finalize()
 		if ok {
 			ctx.Response().Status = status.HttpStatus
 		}
@@ -262,7 +263,7 @@ func (me *HostApi) addBaseDirRoutes() {
 
 }
 
-func readBaseDirFromRequest(name string, ctx echo.Context, bd *BaseDir) (status *Status) {
+func readBaseDirFromRequest(name string, ctx echo.Context, bd *BaseDir) (status Status) {
 	for range only.Once {
 		apiHelp := GetApiHelp(name)
 		defer api.CloseRequestBody(ctx)
@@ -294,7 +295,7 @@ func readBaseDirFromRequest(name string, ctx echo.Context, bd *BaseDir) (status 
 	return status
 }
 
-func (me *HostApi) addBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status *Status) {
+func (me *HostApi) addBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
 	bd := BaseDir{}
 	status = readBaseDirFromRequest(requestType, ctx, &bd)
 	if !status.IsError() {
@@ -303,7 +304,7 @@ func (me *HostApi) addBaseDir(gb *Gearbox, ctx echo.Context, requestType string)
 	}
 	return status
 }
-func (me *HostApi) updateBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status *Status) {
+func (me *HostApi) updateBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
 	bd := BaseDir{}
 	status = readBaseDirFromRequest(requestType, ctx, &bd)
 	if !status.IsError() {
@@ -313,7 +314,7 @@ func (me *HostApi) updateBaseDir(gb *Gearbox, ctx echo.Context, requestType stri
 	return status
 }
 
-func (me *HostApi) deleteNamedBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status *Status) {
+func (me *HostApi) deleteNamedBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
 	me.Gearbox.RequestType = requestType
 	return me.Gearbox.DeleteNamedBaseDir(getBaseDirNickname(ctx))
 }

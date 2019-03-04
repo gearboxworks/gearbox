@@ -14,7 +14,7 @@ var _ api.SuccessInspector = StatusInstance
 var IsStatusError = errors.New("")
 
 type Status struct {
-	Success    bool   `json:"-"`
+	success    bool
 	Message    string `json:"message,omitempty"`
 	Help       string `json:"-"`
 	ApiHelp    string `json:"api_help,omitempty"`
@@ -24,26 +24,29 @@ type Status struct {
 }
 type StatusArgs Status
 
-func NewOkStatus(msg string, args ...interface{}) *Status {
-	return &Status{
-		Success:    true,
+func NewOkStatus(msg string, args ...interface{}) Status {
+	return Status{
+		success:    true,
 		Message:    fmt.Sprintf(msg, args...),
 		HttpStatus: http.StatusOK,
 	}
 }
+func ContactSupportHelp() string {
+	return "contact support"
+}
 
-func NewSuccessStatus(code int, msg ...string) (status *Status) {
+func NewSuccessStatus(code int, msg ...string) (status Status) {
 	for range only.Once {
 		if len(msg) == 0 {
 			m := fmt.Sprintf("NewSuccessStatus(%d) called with no msg parameter",
 				code,
 			)
 			status = NewStatus(&StatusArgs{
-				Success:    false,
+				success:    false,
 				HttpStatus: http.StatusInternalServerError,
 				Message:    m,
 				Error:      errors.New(m),
-				Help:       "contact support",
+				Help:       ContactSupportHelp(),
 			})
 			break
 		}
@@ -58,29 +61,47 @@ func NewSuccessStatus(code int, msg ...string) (status *Status) {
 	return status
 }
 
-func NewStatus(args *StatusArgs) *Status {
-	s := Status(*args)
-	if s.Error == IsStatusError {
-		s.Error = errors.New(s.Message)
-	}
-	if !s.Success && s.Error == nil {
-		s.Error = errors.New(s.Message)
-	}
-	if s.Help != "" {
-		if s.ApiHelp == "" {
-			s.ApiHelp = s.Help
+func NewStatus(args *StatusArgs) (status Status) {
+	for range only.Once {
+		if args.HttpStatus == 0 {
+			m := fmt.Sprintf("NewStatus() called with no HttpStatus for %s",
+				args.Message,
+			)
+			status = Status{
+				success:    false,
+				HttpStatus: http.StatusInternalServerError,
+				Message:    m,
+				Error:      errors.New(m),
+				Help:       ContactSupportHelp(),
+			}
+			break
 		}
-		if s.CliHelp == "" {
-			s.CliHelp = s.Help
+		status = Status(*args)
+		if status.Error == IsStatusError {
+			status.Error = errors.New(status.Message)
 		}
+		if !status.success && status.Error == nil {
+			status.Error = errors.New(status.Message)
+		}
+		if status.Help != "" {
+			if status.ApiHelp == "" {
+				status.ApiHelp = status.Help
+			}
+			if status.CliHelp == "" {
+				status.CliHelp = status.Help
+			}
+		}
+		status.success = status.Error == nil
 	}
-	s.Success = s.Error == nil
-	return &s
+	return status
 }
 
+//
+// Call just because you need to return an HTTP response
+//
 func (me Status) Finalize() {
 	if me.HttpStatus == 0 {
-		me.Success = true
+		me.success = true
 		me.HttpStatus = http.StatusOK
 	}
 }
@@ -90,5 +111,9 @@ func (me *Status) IsError() bool {
 }
 
 func (me *Status) IsSuccess() bool {
-	return me.Success
+	return me.success || me.HttpStatus == 0
+}
+
+func (me *Status) NotYetFinalized() bool {
+	return me.HttpStatus == 0
 }

@@ -60,7 +60,7 @@ func NewConfig(gb *Gearbox) *Config {
 	return c
 }
 
-func (me *Config) Initialize() (status *Status) {
+func (me *Config) Initialize() (status Status) {
 	status = me.Load()
 	if !status.IsError() {
 		status = me.Write()
@@ -99,13 +99,13 @@ func (me *Config) GetFilepath() string {
 	return fmt.Sprintf("%s/config.json", me.HostConnector.GetUserConfigDir())
 }
 
-func (me *Config) Write() (status *Status) {
+func (me *Config) Write() (status Status) {
 	for range only.Once {
 		j, err := json.MarshalIndent(me, "", "    ")
 		if err != nil {
 			status = NewStatus(&StatusArgs{
 				Message:    fmt.Sprintf("unable to marhsal config"),
-				Help:       fmt.Sprintf("contact support"),
+				Help:       ContactSupportHelp(),
 				HttpStatus: http.StatusInternalServerError,
 				Error:      err,
 			})
@@ -130,7 +130,7 @@ func (me *Config) Write() (status *Status) {
 	return status
 }
 
-func (me *Config) MaybeMakeDir(dir string, mode os.FileMode) (status *Status) {
+func (me *Config) MaybeMakeDir(dir string, mode os.FileMode) (status Status) {
 	for range only.Once {
 		err := util.MaybeMakeDir(dir, mode)
 		if err == nil {
@@ -148,7 +148,7 @@ func (me *Config) MaybeMakeDir(dir string, mode os.FileMode) (status *Status) {
 	return status
 }
 
-func (me *Config) ReadBytes() (b []byte, status *Status) {
+func (me *Config) ReadBytes() (b []byte, status Status) {
 	for range only.Once {
 		var err error
 		fp := me.GetFilepath()
@@ -170,7 +170,7 @@ func (me *Config) ReadBytes() (b []byte, status *Status) {
 	return b, status
 }
 
-func (me *Config) Unmarshal(j []byte) (status *Status) {
+func (me *Config) Unmarshal(j []byte) (status Status) {
 	for range only.Once {
 		err := json.Unmarshal(j, &me)
 		if err != nil {
@@ -190,7 +190,7 @@ func (me *Config) Unmarshal(j []byte) (status *Status) {
 	return status
 }
 
-func (me *Config) Load() (status *Status) {
+func (me *Config) Load() (status Status) {
 	for range only.Once {
 		var j []byte
 		j, status = me.ReadBytes()
@@ -208,7 +208,7 @@ func (me *Config) Load() (status *Status) {
 	return status
 }
 
-func (me *Config) LoadProjectsAndWrite() (status *Status) {
+func (me *Config) LoadProjectsAndWrite() (status Status) {
 	status = me.LoadProjects()
 	if !status.IsError() {
 		status = me.Write()
@@ -224,7 +224,7 @@ func (me *Config) GetProjectMap() ProjectMap {
 	return pm
 }
 
-func (me *Config) LoadProjects() (status *Status) {
+func (me *Config) LoadProjects() (status Status) {
 	for range only.Once {
 		if len(me.BaseDirs) == 0 {
 			status = NewStatus(&StatusArgs{
@@ -296,10 +296,9 @@ func (me *Config) LoadProjects() (status *Status) {
 				delete(me.Projects, k)
 				continue
 			}
-
 		}
 
-		if status == nil {
+		if status.NotYetFinalized() {
 			status = NewOkStatus("projects loaded for basedirs: %s",
 				strings.Join(baseDirs, ", "),
 			)
