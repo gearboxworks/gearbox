@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-const macOsSuggestedProjectsPath = "Sites"
+const macOsSuggestedBaseDir = "Sites"
 
 var MacOsConnectorInstance = (*MacOsConnector)(nil)
 
@@ -14,9 +14,9 @@ type MacOsConnector struct {
 	NixConnector
 }
 
-func (me *MacOsConnector) GetSuggestedProjectRoot() string {
+func (me *MacOsConnector) GetSuggestedBaseDir() string {
 	return fmt.Sprintf("%s/%s",
 		me.GetUserHomeDir(),
-		macOsSuggestedProjectsPath,
+		macOsSuggestedBaseDir,
 	)
 }

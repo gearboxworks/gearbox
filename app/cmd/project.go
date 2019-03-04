@@ -58,11 +58,17 @@ func init() {
 
 	gearbox.ProjectRootAddCmd = &cobra.Command{
 		Use:   "add",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.RangeArgs(1, 2),
 		Short: "Add a new directory on a host computer to the list of project roots in use.",
 		Run: func(cmd *cobra.Command, args []string) {
-			gearbox.Instance.AddProjectRoot(args[0])
-			fmt.Printf("Project root '%s' added.\n", args[0])
+			switch len(args) {
+			case 1:
+				status := gearbox.Instance.AddBaseDir(args[0])
+				fmt.Printf(status.Message)
+			case 2:
+				status := gearbox.Instance.AddBaseDir(args[0], args[1])
+				fmt.Printf(status.Message)
+			}
 		},
 	}
 
