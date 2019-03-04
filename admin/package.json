@@ -11,6 +11,7 @@
     "axios": "^0.18.0",
     "element-ui": "^2.4.5",
     "npm": "^6.8.0",
+    "retry-axios": "^0.5.0",
     "to": "^0.2.9",
     "update": "^0.7.4",
     "vue": "^2.6.6",
@@ -23,7 +24,7 @@
     "@vue/cli-plugin-babel": "^3.4.0",
     "@vue/cli-plugin-eslint": "^3.4.0",
     "@vue/cli-service": "^3.4.0",
-    "@vue/eslint-config-airbnb": "^4.0.0",
+    "@vue/eslint-config-standard": "^4.0.0",
     "babel-eslint": "^10.0.1",
     "babel-plugin-component": "^1.1.1",
     "eslint": "^5.8.0",
@@ -41,30 +42,30 @@
       "node": true
     },
     "extends": [
-      "plugin:vue/strongly-recommended",
-      "@vue/airbnb"
+      "plugin:vue/essential",
+      "@vue/standard"
     ],
     "parserOptions": {
       "parser": "babel-eslint"
     },
     "rules": {
-        "no-param-reassign": [
-          "error",
-          {
-            "props": true,
-            "ignorePropertyModificationsFor": [
-              "state",
-              "acc",
-              "e",
-              "ctx",
-              "req",
-              "request",
-              "res",
-              "response",
-              "$scope"
-            ]
-          }
-        ]
+      "no-param-reassign": [
+        "error",
+        {
+          "props": true,
+          "ignorePropertyModificationsFor": [
+            "state",
+            "acc",
+            "e",
+            "ctx",
+            "req",
+            "request",
+            "res",
+            "response",
+            "$scope"
+          ]
+        }
+      ]
     }
   },
   "postcss": {

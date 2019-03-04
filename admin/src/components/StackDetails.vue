@@ -21,25 +21,25 @@
 
 <script>
 
-import StackMemberWeb from './StackMemberWeb.vue';
-import StackMemberDB from './StackMemberDB.vue';
-import StackMemberCache from './StackMemberCache.vue';
-import StackMemberWorker from './StackMemberWorker.vue';
+import StackMemberWeb from './StackMemberWeb.vue'
+import StackMemberDB from './StackMemberDB.vue'
+import StackMemberCache from './StackMemberCache.vue'
+import StackMemberWorker from './StackMemberWorker.vue'
 
 export default {
   name: 'StackDetails',
   computed: {
-    stack() {
-      return this.$store.state.stacks[this.$route.params.stackName];
-    },
+    stack () {
+      return this.$store.state.stacks[this.$route.params.stackName]
+    }
   },
   components: {
     StackMemberWeb,
     StackMemberDB,
     StackMemberCache,
-    StackMemberWorker,
-  },
-};
+    StackMemberWorker
+  }
+}
 </script>
 
 <style scoped>

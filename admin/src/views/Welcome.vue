@@ -8,8 +8,8 @@ export default {
   props: {
     title: {
       type: String,
-      default: 'Welcome!',
-    },
-  },
-};
+      default: 'Welcome!'
+    }
+  }
+}
 </script>

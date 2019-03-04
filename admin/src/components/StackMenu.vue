@@ -20,17 +20,17 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState } from 'vuex'
 
 export default {
   name: 'StackList',
   computed: {
     ...mapState([
-      'stacks',
-    ]),
+      'stacks'
+    ])
   },
-  mounted() {
-    this.$store.dispatch('loadStacks');
-  },
-};
+  mounted () {
+    this.$store.dispatch('loadStacks')
+  }
+}
 </script>

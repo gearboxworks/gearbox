@@ -30,16 +30,16 @@
 </template>
 
 <script>
-import ProjectMenu from './ProjectMenu.vue';
-import StackMenu from './StackMenu.vue';
+import ProjectMenu from './ProjectMenu.vue'
+import StackMenu from './StackMenu.vue'
 
 export default {
   name: 'Sidebar',
   components: {
     ProjectMenu,
-    StackMenu,
-  },
-};
+    StackMenu
+  }
+}
 </script>
 
 <style scoped>
