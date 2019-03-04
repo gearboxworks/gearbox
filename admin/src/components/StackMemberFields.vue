@@ -2,7 +2,15 @@
   <div :class="'stack-member stack-member--'+ member_type">
     <h3>{{ member.label }}</h3>
     <el-radio-group size="small">
-      <el-radio v-for="example in member.examples" label="example" border disabled>{{ example }}</el-radio>
+      <el-radio
+        v-for="example in member.examples"
+        :key="example"
+        label="example"
+        border
+        disabled
+      >
+        {{ example }}
+      </el-radio>
     </el-radio-group>
     <dl>
       <dt>Name:</dt>
@@ -20,19 +28,19 @@
 </template>
 
 <script>
-  export default {
-    name: "StackMemberFields",
-    props: {
-      member_type: {
-        type: String,
-        required: true,
-      },
-      member: {
-        type: Object,
-        required: true,
-      },
+export default {
+  name: 'StackMemberFields',
+  props: {
+    memberType: {
+      type: String,
+      required: true
     },
-  };
+    member: {
+      type: Object,
+      required: true
+    }
+  }
+}
 </script>
 
 <style scoped>

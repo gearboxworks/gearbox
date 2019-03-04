@@ -23,7 +23,7 @@
     "@vue/cli-plugin-babel": "^3.4.0",
     "@vue/cli-plugin-eslint": "^3.4.0",
     "@vue/cli-service": "^3.4.0",
-    "@vue/eslint-config-airbnb": "^4.0.0",
+    "@vue/eslint-config-standard": "^4.0.0",
     "babel-eslint": "^10.0.1",
     "babel-plugin-component": "^1.1.1",
     "eslint": "^5.8.0",
@@ -41,30 +41,30 @@
       "node": true
     },
     "extends": [
-      "plugin:vue/strongly-recommended",
-      "@vue/airbnb"
+      "plugin:vue/essential",
+      "@vue/standard"
     ],
     "parserOptions": {
       "parser": "babel-eslint"
     },
     "rules": {
-        "no-param-reassign": [
-          "error",
-          {
-            "props": true,
-            "ignorePropertyModificationsFor": [
-              "state",
-              "acc",
-              "e",
-              "ctx",
-              "req",
-              "request",
-              "res",
-              "response",
-              "$scope"
-            ]
-          }
-        ]
+      "no-param-reassign": [
+        "error",
+        {
+          "props": true,
+          "ignorePropertyModificationsFor": [
+            "state",
+            "acc",
+            "e",
+            "ctx",
+            "req",
+            "request",
+            "res",
+            "response",
+            "$scope"
+          ]
+        }
+      ]
     }
   },
   "postcss": {

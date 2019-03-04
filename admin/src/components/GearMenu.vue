@@ -17,17 +17,17 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState } from 'vuex'
 
 export default {
   name: 'GearList',
   computed: {
     ...mapState([
-      'gears',
-    ]),
+      'gears'
+    ])
   },
-  mounted() {
-    this.$store.dispatch('loadGears');
-  },
-};
+  mounted () {
+    this.$store.dispatch('loadGears')
+  }
+}
 </script>

@@ -42,24 +42,23 @@
         Dummy Candidate 1
       </el-menu-item>
     </el-submenu>
-
   </el-menu>
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState } from 'vuex'
 
 export default {
   name: 'ProjectList',
   computed: {
     ...mapState([
-      'projects',
-    ]),
+      'projects'
+    ])
   },
-  mounted() {
-    this.$store.dispatch('loadProjects');
-  },
-};
+  mounted () {
+    this.$store.dispatch('loadProjects')
+  }
+}
 </script>
 <style scoped>
   .el-icon-caret-right {

@@ -4,8 +4,8 @@
 
 <script>
 export default {
-  name: 'GearDetails',
-};
+  name: 'GearDetails'
+}
 </script>
 
 <style scoped>

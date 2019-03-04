@@ -1,23 +1,34 @@
 <template>
   <div>
     <h1>Project Details</h1>
-    <el-form v-if="project" label-width="120px">
-
+    <el-form
+      v-if="project"
+      label-width="120px"
+    >
       <h2>{{ project.name }}</h2>
 
       <el-form-item label="Project Name">
         <i class="el-icon-info" />
-        <el-input placeholder="Please input" v-model="name"></el-input>
+        <el-input
+          placeholder="Please input"
+          v-model="name"
+        />
       </el-form-item>
 
       <el-form-item label="Hostname">
         <i class="el-icon-info" />
-        <el-input placeholder="Please input" v-model="hostname"></el-input>
+        <el-input
+          placeholder="Please input"
+          v-model="hostname"
+        />
       </el-form-item>
 
       <el-form-item label="Root Dir">
         <i class="el-icon-info" />
-        <el-input placeholder="Please input" v-model="group"></el-input>
+        <el-input
+          placeholder="Please input"
+          v-model="group"
+        />
       </el-form-item>
 
       <el-form-item label="Enabled">
@@ -25,18 +36,25 @@
         <el-switch
           v-model="enabled"
           active-color="#13ce66"
-          inactive-color="#ff4949">
-        </el-switch>
+          inactive-color="#ff4949"
+        />
       </el-form-item>
 
       <el-form-item>
-        <el-button type="primary" @click="onSubmit">Submit</el-button>
-        <el-button disabled>Reset</el-button>
+        <el-button
+          type="primary"
+          @click="onSubmit"
+        >
+          Submit
+        </el-button>
+        <el-button disabled>
+          Reset
+        </el-button>
       </el-form-item>
     </el-form>
 
     <div
-      v-else="project"
+      v-else
       class="project-details"
     >
       <h2>{{ this.$route.params.projectName }}</h2>
@@ -47,11 +65,11 @@
 
 <script>
 
-  import {mapGetters} from 'vuex';
+import { mapGetters } from 'vuex'
 
-  export default {
+export default {
   name: 'ProjectDetails',
-  data(){
+  data () {
     return {
       name: '',
       hostname: '',
@@ -69,36 +87,36 @@
         {
           value: '2',
           label: 'Group 2'
-        },
-      ],
-    };
+        }
+      ]
+    }
   },
   watch: {
-    '$route.params.projectName':  {
-      handler: function(projectName) {
-        const p = this.projectByName( projectName );
-        this.name     = p.name;
-        this.hostname = p.hostname;
-        this.group    = p.group;
-        this.enabled  = p.enabled;
+    '$route.params.projectName': {
+      handler: function (projectName) {
+        const p = this.projectByName(projectName)
+        this.name = p.name
+        this.hostname = p.hostname
+        this.group = p.group
+        this.enabled = p.enabled
       },
       deep: true,
-      immediate: true,
-    },
+      immediate: true
+    }
   },
   computed: {
     ...mapGetters([
       'projectByName'
     ]),
-    project() {
-      return this.projectByName( this.$route.params.projectName );
-    },
+    project () {
+      return this.projectByName(this.$route.params.projectName)
+    }
   },
   methods: {
-    updateProjectHostname( value ){
-      this.hostname = value;
+    updateProjectHostname (value) {
+      this.hostname = value
     },
-    onSubmit(ev){
+    onSubmit (ev) {
       this.$store.dispatch(
         'updateProject',
         {
@@ -107,15 +125,15 @@
             'name': this.name,
             'hostname': this.hostname,
             'group': this.group,
-            'enabled': this.enabled,
-          },
-        },
+            'enabled': this.enabled
+          }
+        }
       ).then(() => {
-        this.$router.push('/project/'+this.name);
-      });
+        this.$router.push('/project/' + this.name)
+      })
     }
   }
-};
+}
 </script>
 
 <style scoped>
