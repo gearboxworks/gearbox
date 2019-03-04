@@ -64,7 +64,7 @@ func (me ProjectMap) GetProjectResponse(gb *Gearbox, hostname string) (pr *Proje
 			Notes:    p.Notes,
 			FullPath: fp,
 		}
-		status = NewOkStatus()
+		status = NewOkStatus("got response for project '%s'", hostname)
 	}
 	return pr, status
 }
@@ -73,7 +73,7 @@ func (me ProjectMap) GetProject(gb *Gearbox, hostname string) (p *Project, statu
 	var ok bool
 	p, ok = me[hostname]
 	if ok {
-		status = NewOkStatus()
+		status = NewOkStatus("got project '%s'", hostname)
 	} else {
 		status = NewStatus(&StatusArgs{
 			Success:    false,
@@ -152,7 +152,7 @@ func ValidateProjectHostname(hostname string, args ...*validateArgs) (status *St
 			})
 			break
 		}
-		status = NewOkStatus()
+		status = NewOkStatus("validated project hostname '%s'", hostname)
 
 	}
 	return status

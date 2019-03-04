@@ -2,7 +2,9 @@ package gearbox
 
 import (
 	"errors"
+	"fmt"
 	"gearbox/api"
+	"gearbox/only"
 	"net/http"
 )
 
@@ -22,29 +24,38 @@ type Status struct {
 }
 type StatusArgs Status
 
-func NewOkStatus(msg ...string) *Status {
-	var _msg string
-	if len(msg) > 0 {
-		_msg = msg[0]
-	}
+func NewOkStatus(msg string, args ...interface{}) *Status {
 	return &Status{
 		Success:    true,
-		Message:    _msg,
+		Message:    fmt.Sprintf(msg, args...),
 		HttpStatus: http.StatusOK,
 	}
 }
 
-func (me Status) Finalize() {
-	if me.HttpStatus == 0 {
-		me.Success = true
-		me.HttpStatus = http.StatusOK
+func NewSuccessStatus(code int, msg ...string) (status *Status) {
+	for range only.Once {
+		if len(msg) == 0 {
+			m := fmt.Sprintf("NewSuccessStatus(%d) called with no msg parameter",
+				code,
+			)
+			status = NewStatus(&StatusArgs{
+				Success:    false,
+				HttpStatus: http.StatusInternalServerError,
+				Message:    m,
+				Error:      errors.New(m),
+				Help:       "contact support",
+			})
+			break
+		}
+		msg = msg[1:]
+		is := make([]interface{}, len(msg))
+		for i, m := range msg {
+			is[i] = m
+		}
+		status := NewOkStatus(msg[0], is...)
+		status.HttpStatus = code
 	}
-}
-
-func NewSuccessStatus(code int, msg ...string) *Status {
-	s := NewOkStatus(msg...)
-	s.HttpStatus = code
-	return s
+	return status
 }
 
 func NewStatus(args *StatusArgs) *Status {
@@ -65,6 +76,13 @@ func NewStatus(args *StatusArgs) *Status {
 	}
 	s.Success = s.Error == nil
 	return &s
+}
+
+func (me Status) Finalize() {
+	if me.HttpStatus == 0 {
+		me.Success = true
+		me.HttpStatus = http.StatusOK
+	}
 }
 
 func (me *Status) IsError() bool {

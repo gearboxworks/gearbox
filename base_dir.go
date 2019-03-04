@@ -54,7 +54,7 @@ func ExpandBaseDirPath(gb *Gearbox, nickname string, path string) (fp string, st
 
 func (me *BaseDir) MaybeExpandDir() (status *Status) {
 	for range only.Once {
-		status = NewOkStatus()
+		origDir := me.HostDir
 		if strings.HasPrefix(me.HostDir, "~") {
 			dir, err := homedir.Expand(me.HostDir)
 			if err != nil {
@@ -70,6 +70,10 @@ func (me *BaseDir) MaybeExpandDir() (status *Status) {
 			}
 			me.HostDir = dir
 		}
+		status = NewOkStatus("directory expanded from '%s' to '%s'",
+			origDir,
+			me.HostDir,
+		)
 	}
 	return status
 }
@@ -140,10 +144,9 @@ func (me BaseDirMap) DeleteNamedBaseDir(gb *Gearbox, nickname string) (status *S
 		delete(me, nickname)
 		status = NewSuccessStatus(
 			http.StatusOK,
-			fmt.Sprintf("named base dir '%s' ('%s') deleted",
-				nickname,
-				bd.HostDir,
-			),
+			"named base dir '%s' ('%s') deleted",
+			nickname,
+			bd.HostDir,
 		)
 	}
 	return status
@@ -168,10 +171,9 @@ func (me BaseDirMap) UpdateBaseDir(gb *Gearbox, nickname string, dir string) (st
 		}
 		status = NewSuccessStatus(
 			http.StatusOK,
-			fmt.Sprintf("named base dir '%s' updated to: '%s'",
-				nickname,
-				bd.HostDir,
-			),
+			"named base dir '%s' updated to: '%s'",
+			nickname,
+			bd.HostDir,
 		)
 	}
 	return status
@@ -210,7 +212,8 @@ func (me BaseDirMap) AddBaseDir(gb *Gearbox, dir string, nickname ...string) (st
 		me[bd.Nickname] = bd
 		status = NewSuccessStatus(
 			http.StatusCreated,
-			fmt.Sprintf("base dir '%s' added", bd.HostDir),
+			"base dir '%s' added",
+			bd.HostDir,
 		)
 	}
 	return status
@@ -250,7 +253,7 @@ func ValidateBaseDirNickname(nickname string, args *validateArgs) (status *Statu
 			})
 			break
 		}
-		status = NewOkStatus()
+		status = NewOkStatus("nickname '%s' validated", nickname)
 	}
 	return status
 }

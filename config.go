@@ -125,7 +125,7 @@ func (me *Config) Write() (status *Status) {
 			})
 			break
 		}
-		status = NewOkStatus(fmt.Sprintf("project config file written"))
+		status = NewOkStatus("project config file written")
 	}
 	return status
 }
@@ -151,20 +151,21 @@ func (me *Config) MaybeMakeDir(dir string, mode os.FileMode) (status *Status) {
 func (me *Config) ReadBytes() (b []byte, status *Status) {
 	for range only.Once {
 		var err error
-		b, err = ioutil.ReadFile(me.GetFilepath())
+		fp := me.GetFilepath()
+		b, err = ioutil.ReadFile(fp)
 		if err != nil && util.ErrorIsFileDoesNotExist(err) {
 			err = nil
 		}
 		if err != nil {
 			status = NewStatus(&StatusArgs{
-				Message:    fmt.Sprintf("cannot read from '%s' file.", me.GetFilepath()),
-				Help:       fmt.Sprintf("confirm file '%s' is readable", me.GetFilepath()),
+				Message:    fmt.Sprintf("cannot read from '%s' file.", fp),
+				Help:       fmt.Sprintf("confirm file '%s' is readable", fp),
 				HttpStatus: http.StatusInternalServerError,
 				Error:      err,
 			})
 			break
 		}
-		status = NewOkStatus()
+		status = NewOkStatus("read %d bytes from file '%s'.", len(b), fp)
 	}
 	return b, status
 }
@@ -184,7 +185,7 @@ func (me *Config) Unmarshal(j []byte) (status *Status) {
 			})
 			break
 		}
-		status = NewOkStatus()
+		status = NewOkStatus("bytes unmarshalled")
 	}
 	return status
 }
@@ -299,8 +300,8 @@ func (me *Config) LoadProjects() (status *Status) {
 		}
 
 		if status == nil {
-			status = NewOkStatus(
-				fmt.Sprintf("projects loaded for basedirs: %s", strings.Join(baseDirs, ", ")),
+			status = NewOkStatus("projects loaded for basedirs: %s",
+				strings.Join(baseDirs, ", "),
 			)
 		}
 	}

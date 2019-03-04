@@ -262,11 +262,11 @@ func (me *HostApi) addBaseDirRoutes() {
 
 }
 
-func readBaseDirFromResponse(name string, ctx echo.Context, bd *BaseDir) (status *Status) {
+func readBaseDirFromRequest(name string, ctx echo.Context, bd *BaseDir) (status *Status) {
 	for range only.Once {
 		apiHelp := GetApiHelp(name)
-		defer api.CloseResponseBody(ctx)
-		b, err := api.ReadResponseBody(ctx)
+		defer api.CloseRequestBody(ctx)
+		b, err := api.ReadRequestBody(ctx)
 		if err != nil {
 			status = NewStatus(&StatusArgs{
 				Message:    "could not read request body",
@@ -286,14 +286,17 @@ func readBaseDirFromResponse(name string, ctx echo.Context, bd *BaseDir) (status
 			})
 			break
 		}
-		status = NewOkStatus()
+		status = NewOkStatus("read %d bytes from body of '%s' request",
+			len(b),
+			name,
+		)
 	}
 	return status
 }
 
 func (me *HostApi) addBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status *Status) {
 	bd := BaseDir{}
-	status = readBaseDirFromResponse(requestType, ctx, &bd)
+	status = readBaseDirFromRequest(requestType, ctx, &bd)
 	if !status.IsError() {
 		me.Gearbox.RequestType = requestType
 		status = me.Gearbox.AddBaseDir(bd.HostDir, bd.Nickname)
@@ -302,7 +305,7 @@ func (me *HostApi) addBaseDir(gb *Gearbox, ctx echo.Context, requestType string)
 }
 func (me *HostApi) updateBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status *Status) {
 	bd := BaseDir{}
-	status = readBaseDirFromResponse(requestType, ctx, &bd)
+	status = readBaseDirFromRequest(requestType, ctx, &bd)
 	if !status.IsError() {
 		me.Gearbox.RequestType = requestType
 		status = me.Gearbox.UpdateBaseDir(bd.Nickname, bd.HostDir)

@@ -224,9 +224,9 @@ func convertEchoPathToUriTemplatePath(url string) string {
 	return strings.Join(parts, "/")
 }
 
-func ReadResponseBody(ctx echo.Context) ([]byte, error) {
+func ReadRequestBody(ctx echo.Context) ([]byte, error) {
 	return ioutil.ReadAll(ctx.Request().Body)
 }
-func CloseResponseBody(ctx echo.Context) {
+func CloseRequestBody(ctx echo.Context) {
 	_ = ctx.Request().Body.Close()
 }
