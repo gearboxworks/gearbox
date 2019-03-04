@@ -1,5 +1,20 @@
 <template>
   <div id="app">
+    <el-alert
+      v-if="isConnectionProblem"
+      title="Connection Problem"
+      type="alert"
+      :description="'It seems that Gearbox Server is not running. Remaining connection attempts: ' + remainingAttempts"
+      show-icon>
+    </el-alert>
+    <el-alert
+      v-if="isUnrecoverableConnectionProblem"
+      title="Connection Failed"
+      type="error"
+      description="Failed to connect to Gearbox Server."
+      show-icon>
+    </el-alert>
+
     <el-container
       style="height: 800px; border: 1px solid #eee"
     >
@@ -39,6 +54,20 @@ export default {
   name: 'App',
   components: {
     Sidebar
+  },
+  computed: {
+    isConnectionProblem () {
+      console.log('isConnectionProblem', this.$store.state.connectionStatus.networkError, this.$store.state.connectionStatus.remainingRetries)
+      return this.$store.state.connectionStatus.networkError && this.$store.state.connectionStatus.remainingRetries > 0
+    },
+    remainingAttempts () {
+      return this.$store.state.connectionStatus.remainingRetries
+    },
+    isUnrecoverableConnectionProblem () {
+      return this.$store.state.connectionStatus.networkError
+        ? (this.$store.state.connectionStatus.networkError && this.$store.state.connectionStatus.remainingRetries === 0)
+        : ''
+    }
   }
 }
 </script>

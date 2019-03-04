@@ -24,7 +24,8 @@ import {
   Option,
   Switch,
   Form,
-  FormItem
+  FormItem,
+  Alert
 } from 'element-ui'
 import lang from 'element-ui/lib/locale/lang/en'
 import locale from 'element-ui/lib/locale'
@@ -56,3 +57,4 @@ Vue.use(Option)
 Vue.use(Switch)
 Vue.use(Form)
 Vue.use(FormItem)
+Vue.use(Alert)

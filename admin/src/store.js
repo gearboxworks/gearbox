@@ -2,7 +2,8 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
-import { HTTP } from './http-common'
+import { getConfig as raxConfig } from 'retry-axios'
+import HTTP from './http-common'
 
 Vue.use(Vuex)
 Vue.use(VueAxios, axios)
@@ -16,7 +17,11 @@ export default new Vuex.Store({
     projects: [],
     stacks: [],
     stack_members: [],
-    gears: []
+    gears: [],
+    connectionStatus: {
+      networkError: null,
+      remainingRetries: 5
+    }
   },
   getters: {
     projectByName: (state) => (projectName) => {
@@ -24,17 +29,42 @@ export default new Vuex.Store({
     }
   },
   actions: {
+    retryHTTPRequest (url) {
+
+    },
     loadProjects ({ commit }) {
-      HTTP.get(
-        'projects',
-        { crossDomain: true }
-      ).catch((error) => {
-        // handle error
-        // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
-        console.log('rejected', error)
-      }).then(r => r.data.data).then((projects) => {
-        commit('SET_PROJECTS', projects)
-      })
+      try {
+        HTTP.get(
+          'projects',
+          {
+            crossDomain: true,
+            raxConfig: {
+              // You can detect when a retry is happening, and figure out how many
+              // retry attempts have been made
+              onRetryAttempt: (err) => {
+                const cfg = raxConfig(err)
+                commit('SET_NETWORK_ERROR', err.message)
+                commit('SET_REMAINING_RETRIES', cfg.retry - cfg.currentRetryAttempt)
+              }
+            }
+          }
+        ).catch((error, config) => {
+          // handle error
+          // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
+          console.log('rejected', error)
+          // if (error.message === 'Network Error') {
+          //   commit('SET_NETWORK_ERROR', error.message)
+          // }
+        })
+          .then(r => r ? r.data.data : null)
+          .then((projects) => {
+            if (projects) {
+              commit('SET_PROJECTS', projects)
+            }
+          })
+      } catch (e) {
+        console.log(e)
+      }
     },
     loadStacks ({ commit }) {
       HTTP.get(
@@ -44,9 +74,13 @@ export default new Vuex.Store({
         // handle error
         // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
         console.log('rejected', error)
-      }).then(r => r.data.data).then((stacks) => {
-        commit('SET_STACKS', stacks)
       })
+        .then(r => r ? r.data.data : null)
+        .then((stacks) => {
+          if (stacks) {
+            commit('SET_STACKS', stacks)
+          }
+        })
     },
     loadGears ({ commit }) {
       // axios
@@ -102,6 +136,15 @@ export default new Vuex.Store({
       p.hostname = project.hostname
       p.group = project.group
       p.enabled = project.enabled
+    },
+    SET_NETWORK_ERROR (state, message) {
+      state.connectionStatus.networkError = message
+    },
+    CLEAR_NETWORK_ERROR (state) {
+      state.connectionStatus.networkError = ''
+    },
+    SET_REMAINING_RETRIES (state, remainingRetries) {
+      state.connectionStatus.remainingRetries = remainingRetries
     }
   }
 
