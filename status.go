@@ -34,6 +34,13 @@ func NewOkStatus(msg ...string) *Status {
 	}
 }
 
+func (me Status) Finalize() {
+	if me.HttpStatus == 0 {
+		me.Success = true
+		me.HttpStatus = http.StatusOK
+	}
+}
+
 func NewSuccessStatus(code int, msg ...string) *Status {
 	s := NewOkStatus(msg...)
 	s.HttpStatus = code

@@ -91,6 +91,10 @@ func (me *Config) Bytes() []byte {
 
 var ProjectRootAddCmd *cobra.Command
 
+func (me *Config) GetDir() string {
+	return me.HostConnector.GetUserConfigDir()
+}
+
 func (me *Config) GetFilepath() string {
 	return fmt.Sprintf("%s/config.json", me.HostConnector.GetUserConfigDir())
 }
@@ -105,6 +109,10 @@ func (me *Config) Write() (status *Status) {
 				HttpStatus: http.StatusInternalServerError,
 				Error:      err,
 			})
+			break
+		}
+		status = me.MaybeMakeDir(me.GetDir(), os.ModePerm)
+		if status.IsError() {
 			break
 		}
 		err = ioutil.WriteFile(me.GetFilepath(), j, os.ModePerm)
@@ -122,19 +130,48 @@ func (me *Config) Write() (status *Status) {
 	return status
 }
 
-func (me *Config) Load() (status *Status) {
+func (me *Config) MaybeMakeDir(dir string, mode os.FileMode) (status *Status) {
 	for range only.Once {
-		j, err := ioutil.ReadFile(me.GetFilepath())
+		err := util.MaybeMakeDir(dir, mode)
+		if err == nil {
+			status = NewOkStatus("directory '%s' created", dir)
+			break
+		}
+		status = NewStatus(&StatusArgs{
+			Message:    fmt.Sprintf("failed to create directory '%s'", dir),
+			Help:       fmt.Sprintf("confirm directory '%s' is readable", filepath.Dir(dir)),
+			HttpStatus: http.StatusInternalServerError,
+			Error:      err,
+		})
+
+	}
+	return status
+}
+
+func (me *Config) ReadBytes() (b []byte, status *Status) {
+	for range only.Once {
+		var err error
+		b, err = ioutil.ReadFile(me.GetFilepath())
+		if err != nil && util.ErrorIsFileDoesNotExist(err) {
+			err = nil
+		}
 		if err != nil {
 			status = NewStatus(&StatusArgs{
-				Message:    fmt.Sprintf("failed to read config file '%s'", me.GetFilepath()),
-				Help:       fmt.Sprintf("confirm file '%s' exists and its directory is readable", me.GetFilepath()),
+				Message:    fmt.Sprintf("cannot read from '%s' file.", me.GetFilepath()),
+				Help:       fmt.Sprintf("confirm file '%s' is readable", me.GetFilepath()),
 				HttpStatus: http.StatusInternalServerError,
 				Error:      err,
 			})
 			break
 		}
-		err = json.Unmarshal(j, &me)
+		status = NewOkStatus()
+	}
+	return b, status
+}
+
+func (me *Config) Unmarshal(j []byte) (status *Status) {
+	for range only.Once {
+		err := json.Unmarshal(j, &me)
 		if err != nil {
 			status = NewStatus(&StatusArgs{
 				Message: fmt.Sprintf("unable to load config file '%s'", me.GetFilepath()),
@@ -145,6 +182,24 @@ func (me *Config) Load() (status *Status) {
 				HttpStatus: http.StatusInternalServerError,
 				Error:      err,
 			})
+			break
+		}
+		status = NewOkStatus()
+	}
+	return status
+}
+
+func (me *Config) Load() (status *Status) {
+	for range only.Once {
+		var j []byte
+		j, status = me.ReadBytes()
+		if status.IsError() {
+			break
+		}
+		if len(j) > 0 {
+			status = me.Unmarshal(j)
+		}
+		if status.IsError() {
 			break
 		}
 		status = me.LoadProjects()

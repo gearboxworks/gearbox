@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"syscall"
 )
 
 func EntryExists(file string) bool {
@@ -28,4 +29,14 @@ func GetExecutableDir() string {
 }
 func GetProjectDir() string {
 	return filepath.Dir(GetExecutableDir())
+}
+func ErrorIsFileDoesNotExist(err error) bool {
+	pe, ok := err.(*os.PathError)
+	return ok && pe.Op == "open" && pe.Err == syscall.ENOENT
+}
+func MaybeMakeDir(dir string, perms os.FileMode) (err error) {
+	if !DirExists(dir) {
+		err = os.MkdirAll(dir, perms)
+	}
+	return err
 }
