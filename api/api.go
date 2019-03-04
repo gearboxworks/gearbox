@@ -36,15 +36,16 @@ func NewApi(echo *echo.Echo, defaults *Response) *Api {
 }
 
 type ResponseMeta struct {
-	Version string `json:"version"`
-	Service string `json:"service"`
-	DocsUrl string `json:"docs_url"`
+	Version     string `json:"version"`
+	Service     string `json:"service"`
+	DocsUrl     string `json:"docs_url"`
+	RequestType string `json:"request_type"`
 }
 
 type Links map[string]string
 
 type Response struct {
-	Success    bool         `json:"success,omitempty"`
+	Success    bool         `json:"success"`
 	StatusCode int          `json:"status_code"`
 	Meta       ResponseMeta `json:"meta"`
 	Links      Links        `json:"links"`
@@ -64,27 +65,21 @@ func (me *Response) Clone() *Response {
 }
 
 type Status struct {
+	Success    bool
 	StatusCode int
 	Help       string
 	Error      error
 }
-type jsonStatus struct {
-	StatusCode int    `json:"status_code"`
-	Help       string `json:"help"`
-	Error      string `json:"error"`
+type StatusResponse struct {
+	Help  string `json:"help"`
+	Error string `json:"error"`
 }
 
-func (me *Status) ToJson() string {
-	js := &jsonStatus{
-		StatusCode: me.StatusCode,
-		Help:       me.Help,
-		Error:      me.Error.Error(),
+func (me *Status) ToResponse() *StatusResponse {
+	return &StatusResponse{
+		Help:  me.Help,
+		Error: me.Error.Error(),
 	}
-	j, err := json.Marshal(js)
-	if err != nil {
-		j = []byte(`{"status_code": 500, "error":"multiple errors occurred"`)
-	}
-	return string(j)
 }
 
 type SuccessInspector interface {
@@ -92,23 +87,26 @@ type SuccessInspector interface {
 }
 
 // @TODO Add ?format=yes to pretty print JSON
-func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) (status *Status) {
+func (me *Api) JsonMarshalHandler(ctx echo.Context, requestType string, js interface{}) (status *Status) {
 	var err error
 	for range only.Once {
 		ctx.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		httpStatus := ctx.Response().Status
 		var ok bool
+		success := true
 		status, ok = js.(*Status)
 		if ok {
-			break
+			success = false
+			js = status.ToResponse()
+			ctx.Response().Status = status.StatusCode
 		}
+		httpStatus := ctx.Response().Status
 		r := *me.Defaults.Clone()
-		if err != nil {
-			break
-		}
 		r.Data = js
 		r.Links["self"] = convertEchoPathToUriTemplatePath(ctx.Path())
+		r.Meta.DocsUrl = fmt.Sprintf("%s/%s", r.Meta.DocsUrl, requestType)
+		r.Meta.RequestType = requestType
 		r.StatusCode = httpStatus
+		r.Success = success
 		if si, ok := js.(SuccessInspector); ok {
 			r.Success = si.IsSuccess()
 		}
@@ -127,12 +125,13 @@ func (me *Api) JsonMarshalHandler(ctx echo.Context, js interface{}) (status *Sta
 		}
 	}
 	if status.Error != nil {
-		_ = ctx.String(status.StatusCode, status.ToJson())
+		b, _ := json.Marshal(status.ToResponse())
+		_ = ctx.String(status.StatusCode, string(b))
 	}
 	return status
 }
 
-func GetCurrentActionName() string {
+func GetCurrentRequestType() string {
 	return actionNameStack.get()
 }
 
@@ -162,33 +161,36 @@ func (me stack) pop() string {
 	return pop
 }
 
-func pushPopActionName(name string, next echo.HandlerFunc) echo.HandlerFunc {
+func passRequestType(requestType string, next HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		actionNameStack.push(name)
-		response := next(ctx)
-		actionNameStack.pop()
-		return response
+		return next(requestType, ctx)
 	}
 }
 
-func (me *Api) GET(path, name string, handler echo.HandlerFunc) *echo.Route {
-	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
-	return me.Echo.GET(path, pushPopActionName(name, handler))
+type HandlerFunc func(requestType string, ctx echo.Context) error
+
+func (me *Api) GET(path, requestType string, handler HandlerFunc) *echo.Route {
+	me.Defaults.Meta.RequestType = requestType
+	me.Defaults.Links[requestType] = convertEchoPathToUriTemplatePath(path)
+	return me.Echo.GET(path, passRequestType(requestType, handler))
 }
-func (me *Api) POST(path, name string, handler echo.HandlerFunc) *echo.Route {
-	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
+func (me *Api) POST(path, requestType string, handler HandlerFunc) *echo.Route {
+	me.Defaults.Meta.RequestType = requestType
+	me.Defaults.Links[requestType] = convertEchoPathToUriTemplatePath(path)
 	me.Echo.OPTIONS(path, optionsHandler)
-	return me.Echo.POST(path, pushPopActionName(name, handler))
+	return me.Echo.POST(path, passRequestType(requestType, handler))
 }
-func (me *Api) DELETE(path, name string, handler echo.HandlerFunc) *echo.Route {
-	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
+func (me *Api) DELETE(path, requestType string, handler HandlerFunc) *echo.Route {
+	me.Defaults.Meta.RequestType = requestType
+	me.Defaults.Links[requestType] = convertEchoPathToUriTemplatePath(path)
 	me.Echo.OPTIONS(path, optionsHandler)
-	return me.Echo.DELETE(path, pushPopActionName(name, handler))
+	return me.Echo.DELETE(path, passRequestType(requestType, handler))
 }
-func (me *Api) PUT(path, name string, handler echo.HandlerFunc) *echo.Route {
-	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
+func (me *Api) PUT(path, requestType string, handler HandlerFunc) *echo.Route {
+	me.Defaults.Meta.RequestType = requestType
+	me.Defaults.Links[requestType] = convertEchoPathToUriTemplatePath(path)
 	me.Echo.OPTIONS(path, optionsHandler)
-	return me.Echo.PUT(path, pushPopActionName(name, handler))
+	return me.Echo.PUT(path, passRequestType(requestType, handler))
 }
 func optionsHandler(ctx echo.Context) error {
 	return nil

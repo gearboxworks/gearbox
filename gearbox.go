@@ -13,6 +13,7 @@ type Gearbox struct {
 	Config        *Config
 	HostConnector host.Connector
 	Stacks        StackMap
+	RequestType   string
 }
 
 type GearboxArgs Gearbox

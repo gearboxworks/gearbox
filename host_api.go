@@ -137,8 +137,11 @@ func (me *HostApi) getStackMemberName(ctx echo.Context) StackMemberName {
 func (me *HostApi) addRoutes() {
 
 	_api := me.Api
-	_api.GET("/", "root", func(ctx echo.Context) error {
-		return ctx.String(http.StatusOK, "{}")
+	_api.GET("/", "root", func(rt string, ctx echo.Context) error {
+		defaults := apiResponseDefaults()
+		defaults.Meta.RequestType = rt
+		defaults.Links[rt] = "/"
+		return me.jsonMarshalHandler(_api, ctx, rt, defaults)
 	})
 
 	me.addBaseDirRoutes()
@@ -147,115 +150,114 @@ func (me *HostApi) addRoutes() {
 
 }
 
-func (me *HostApi) jsonMarshalHandler(_api *api.Api, ctx echo.Context, value interface{}) error {
+func (me *HostApi) jsonMarshalHandler(_api *api.Api, ctx echo.Context, requestType string, value interface{}) error {
 	var apiError *api.Status
 	for range only.Once {
-		s, ok := value.(*Status)
-		if ok && s.IsError() {
+		status, ok := value.(*Status)
+		if ok && status.IsError() {
 			apiError = &api.Status{
-				Error:      s.Error,
-				StatusCode: s.HttpStatus,
-				Help:       s.ApiHelp,
+				Error:      status.Error,
+				StatusCode: status.HttpStatus,
+				Help:       status.ApiHelp,
 			}
-			_ = ctx.String(apiError.StatusCode, apiError.ToJson())
+			apiError = _api.JsonMarshalHandler(ctx, requestType, apiError)
 			break
 		}
 		if ok {
-			ctx.Response().Status = s.HttpStatus
+			ctx.Response().Status = status.HttpStatus
 		}
-		apiError = _api.JsonMarshalHandler(ctx, value)
+		apiError = _api.JsonMarshalHandler(ctx, requestType, value)
 	}
 	return apiError.Error
 }
 
 func (me *HostApi) addStackRoutes() {
 	_api := me.Api
-	_api.GET("/stacks", "stacks", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.Gearbox.Stacks)
+	_api.GET("/stacks", "stacks", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, me.Gearbox.Stacks)
 	})
 
-	_api.GET("/stacks/:stack", "stack", func(ctx echo.Context) error {
+	_api.GET("/stacks/:stack", "stack", func(rt string, ctx echo.Context) error {
 		response := me.getStackResponse(ctx)
 		if _, ok := response.(*api.Status); !ok {
 			response = response.(*Stack).CloneSansMembers()
 		}
-		return me.jsonMarshalHandler(_api, ctx, response)
+		return me.jsonMarshalHandler(_api, ctx, rt, response)
 	})
 
-	_api.GET("/stacks/:stack/members", "stack-members", func(ctx echo.Context) error {
+	_api.GET("/stacks/:stack/members", "stack-members", func(rt string, ctx echo.Context) error {
 		response := me.getStackMembersResponse(ctx)
-		return me.jsonMarshalHandler(_api, ctx, response)
+		return me.jsonMarshalHandler(_api, ctx, rt, response)
 	})
 
-	_api.GET("/stacks/:stack/members/:member", "stack-member", func(ctx echo.Context) error {
+	_api.GET("/stacks/:stack/members/:member", "stack-member", func(rt string, ctx echo.Context) error {
 		response := me.getStackMemberResponse(ctx)
-		return me.jsonMarshalHandler(_api, ctx, response)
+		return me.jsonMarshalHandler(_api, ctx, rt, response)
 	})
 
-	_api.GET("/stacks/:stack/members/:member/options", "stack-member-options", func(ctx echo.Context) error {
+	_api.GET("/stacks/:stack/members/:member/options", "stack-member-options", func(rt string, ctx echo.Context) error {
 		response := me.getStackMemberResponse(ctx)
 		response = me.Gearbox.RequestAvailableContainers(&dockerhub.ContainerQuery{})
-		return me.jsonMarshalHandler(_api, ctx, response)
+		return me.jsonMarshalHandler(_api, ctx, rt, response)
 	})
 }
 
 func (me *HostApi) addProjectRoutes() {
 	_api := me.Api
-	_api.GET("/projects", "projects", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.Config.Projects)
+	_api.GET("/projects", "projects", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Projects)
 	})
-	_api.GET("/projects/:hostname", "project", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.getProject(ctx))
+	_api.GET("/projects/:hostname", "project", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, me.getProject(ctx, rt))
 	})
-	_api.GET("/projects/enabled", "projects-enabled", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.Config.Projects.GetEnabled())
+	_api.GET("/projects/enabled", "projects-enabled", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Projects.GetEnabled())
 	})
-	_api.GET("/projects/disabled", "projects-disabled", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.Config.Projects.GetDisabled())
+	_api.GET("/projects/disabled", "projects-disabled", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Projects.GetDisabled())
 	})
-	_api.GET("/projects/candidates", "project-candidates", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.Config.Candidates)
+	_api.GET("/projects/candidates", "project-candidates", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Candidates)
 	})
 
-	_api.POST("/projects/new", "project-add", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, &api.Status{
+	_api.POST("/projects/new", "project-add", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
 			StatusCode: http.StatusMethodNotAllowed,
 			Error:      fmt.Errorf("the 'project-add' method has not been implemented yet"),
 		})
 	})
 
-	_api.POST("/projects/:hostname", "project-update", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, &api.Status{
+	_api.POST("/projects/:hostname", "project-update", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
 			StatusCode: http.StatusMethodNotAllowed,
 			Error:      fmt.Errorf("the 'project-update' method has not been implemented yet"),
 		})
 	})
 
-	_api.DELETE("/projects/:hostname", "project-delete", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, &api.Status{
+	_api.DELETE("/projects/:hostname", "project-delete", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
 			StatusCode: http.StatusMethodNotAllowed,
 			Error:      fmt.Errorf("the 'project-delete' method has not been implemented yet"),
 		})
 	})
 }
-
 func (me *HostApi) addBaseDirRoutes() {
 	_api := me.Api
 
-	_api.GET("/basedirs", "basedirs", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.Config.GetHostBaseDirs())
+	_api.GET("/basedirs", "basedirs", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.GetHostBaseDirs())
 	})
 
-	_api.POST("/basedirs/new", "basedir-add", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.addBaseDir(me.Gearbox, ctx))
+	_api.POST("/basedirs/new", "basedir-add", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, me.addBaseDir(me.Gearbox, ctx, rt))
 	})
 
-	_api.PUT("/basedirs/:nickname", "basedir-update", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.updateBaseDir(me.Gearbox, ctx))
+	_api.PUT("/basedirs/:nickname", "basedir-update", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBaseDir(me.Gearbox, ctx, rt))
 	})
 
-	_api.DELETE("/basedirs/:nickname", "basedir-delete", func(ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, me.deleteNamedBaseDir(me.Gearbox, ctx))
+	_api.DELETE("/basedirs/:nickname", "basedir-delete", func(rt string, ctx echo.Context) error {
+		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBaseDir(me.Gearbox, ctx, rt))
 	})
 
 }
@@ -289,29 +291,33 @@ func readBaseDirFromResponse(name string, ctx echo.Context, bd *BaseDir) (status
 	return status
 }
 
-func (me *HostApi) addBaseDir(gb *Gearbox, ctx echo.Context) (status *Status) {
+func (me *HostApi) addBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status *Status) {
 	bd := BaseDir{}
-	status = readBaseDirFromResponse("basedir-add", ctx, &bd)
+	status = readBaseDirFromResponse(requestType, ctx, &bd)
 	if !status.IsError() {
+		me.Gearbox.RequestType = requestType
 		status = me.Gearbox.AddBaseDir(bd.HostDir, bd.Nickname)
 	}
 	return status
 }
-func (me *HostApi) updateBaseDir(gb *Gearbox, ctx echo.Context) (status *Status) {
+func (me *HostApi) updateBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status *Status) {
 	bd := BaseDir{}
-	status = readBaseDirFromResponse("basedir-update", ctx, &bd)
+	status = readBaseDirFromResponse(requestType, ctx, &bd)
 	if !status.IsError() {
+		me.Gearbox.RequestType = requestType
 		status = me.Gearbox.UpdateBaseDir(bd.Nickname, bd.HostDir)
 	}
 	return status
 }
 
-func (me *HostApi) deleteNamedBaseDir(gb *Gearbox, ctx echo.Context) (status *Status) {
+func (me *HostApi) deleteNamedBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status *Status) {
+	me.Gearbox.RequestType = requestType
 	return me.Gearbox.DeleteNamedBaseDir(getBaseDirNickname(ctx))
 }
 
-func (me *HostApi) getProject(ctx echo.Context) (response interface{}) {
+func (me *HostApi) getProject(ctx echo.Context, requestType string) (response interface{}) {
 	for range only.Once {
+		me.Gearbox.RequestType = requestType
 		pr, status := me.Gearbox.GetProjectResponse(getProjectHostname(ctx))
 		if status.IsError() {
 			response = status

@@ -3,7 +3,6 @@ package gearbox
 import (
 	"errors"
 	"fmt"
-	"gearbox/api"
 	"gearbox/only"
 	"github.com/mitchellh/go-homedir"
 	"net/http"
@@ -42,7 +41,7 @@ func ExpandBaseDirPath(gb *Gearbox, nickname string, path string) (fp string, st
 	status = gb.ValidateBaseDirNickname(nickname, &validateArgs{
 		MustNotBeEmpty: true,
 		MustExist:      true,
-		ApiHelpUrl:     GetApiDocsUrl(api.GetCurrentActionName()),
+		ApiHelpUrl:     GetApiDocsUrl(gb.RequestType),
 	})
 	if !status.IsError() {
 		fp = fmt.Sprintf("%s/%s",
@@ -83,7 +82,7 @@ func (me *BaseDir) Initialize() (status *Status) {
 				Error:      me.Error,
 				Message:    me.Error.Error(),
 				HttpStatus: http.StatusBadRequest,
-				ApiHelp:    fmt.Sprintf("see %s", GetApiDocsUrl(api.GetCurrentActionName())),
+				ApiHelp:    fmt.Sprintf("see %s", GetApiDocsUrl("basedirs")),
 			})
 			break
 		}
@@ -132,7 +131,7 @@ func (me BaseDirMap) DeleteNamedBaseDir(gb *Gearbox, nickname string) (status *S
 		status = gb.ValidateBaseDirNickname(nickname, &validateArgs{
 			MustNotBeEmpty: true,
 			MustExist:      true,
-			ApiHelpUrl:     GetApiDocsUrl(api.GetCurrentActionName()),
+			ApiHelpUrl:     GetApiDocsUrl(gb.RequestType),
 		})
 		if status.IsError() {
 			break
@@ -140,7 +139,7 @@ func (me BaseDirMap) DeleteNamedBaseDir(gb *Gearbox, nickname string) (status *S
 		bd := me.GetNamedBaseDir(nickname)
 		delete(me, nickname)
 		status = NewSuccessStatus(
-			http.StatusCreated,
+			http.StatusOK,
 			fmt.Sprintf("named base dir '%s' ('%s') deleted",
 				nickname,
 				bd.HostDir,
@@ -155,7 +154,7 @@ func (me BaseDirMap) UpdateBaseDir(gb *Gearbox, nickname string, dir string) (st
 		status = gb.ValidateBaseDirNickname(nickname, &validateArgs{
 			MustNotBeEmpty: true,
 			MustExist:      true,
-			ApiHelpUrl:     GetApiDocsUrl(api.GetCurrentActionName()),
+			ApiHelpUrl:     GetApiDocsUrl(gb.RequestType),
 		})
 		if status.IsError() {
 			break
@@ -168,7 +167,7 @@ func (me BaseDirMap) UpdateBaseDir(gb *Gearbox, nickname string, dir string) (st
 			break
 		}
 		status = NewSuccessStatus(
-			http.StatusCreated,
+			http.StatusOK,
 			fmt.Sprintf("named base dir '%s' updated to: '%s'",
 				nickname,
 				bd.HostDir,
@@ -187,7 +186,7 @@ func (me BaseDirMap) AddBaseDir(gb *Gearbox, dir string, nickname ...string) (st
 		status = gb.ValidateBaseDirNickname(nn, &validateArgs{
 			MustNotBeEmpty: true,
 			MustNotExist:   true,
-			ApiHelpUrl:     GetApiDocsUrl(api.GetCurrentActionName()),
+			ApiHelpUrl:     GetApiDocsUrl(gb.RequestType),
 		})
 		if status.IsError() {
 			break
@@ -237,7 +236,7 @@ func ValidateBaseDirNickname(nickname string, args *validateArgs) (status *Statu
 			status = NewStatus(&StatusArgs{
 				Success:    false,
 				Message:    fmt.Sprintf("nickname '%s' does not exist", nickname),
-				HttpStatus: http.StatusBadRequest,
+				HttpStatus: http.StatusNotFound,
 				ApiHelp:    apiHelp,
 			})
 			break
@@ -246,7 +245,7 @@ func ValidateBaseDirNickname(nickname string, args *validateArgs) (status *Statu
 			status = NewStatus(&StatusArgs{
 				Success:    false,
 				Message:    fmt.Sprintf("nickname '%s' already exists", nickname),
-				HttpStatus: http.StatusBadRequest,
+				HttpStatus: http.StatusInternalServerError,
 				ApiHelp:    apiHelp,
 			})
 			break
