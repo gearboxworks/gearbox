@@ -12,7 +12,7 @@ type ErrorLog struct {
 
 func (me *ErrorLog) Write(b []byte) (nn int, err error) {
 	for range only.Once {
-		if me.Gearbox.Options.IsDebug {
+		if me.Gearbox.IsDebug() {
 			fmt.Print(string(b))
 		}
 		file := fmt.Sprintf("%s/error.log", me.Gearbox.HostConnector.GetUserConfigDir())

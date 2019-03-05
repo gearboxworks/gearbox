@@ -191,7 +191,7 @@ func (me *AdminUi) GetWebListener() net.Listener {
 			log.Printf("error initiating a TCP connection for AdminUi on '127.0.0.0:0': %s\n", err)
 		}
 		fmt.Print("Starting Gearbox admin console...")
-		if me.Gearbox.Options.IsDebug {
+		if me.Gearbox.IsDebug() {
 			fmt.Printf("\nListening on %s", me.GetHostname())
 		}
 	}
