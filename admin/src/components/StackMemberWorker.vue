@@ -1,7 +1,7 @@
 <template>
   <StackMemberFields
     :member="member"
-    member_type="worker"
+    memberType="worker"
   />
 </template>
 
