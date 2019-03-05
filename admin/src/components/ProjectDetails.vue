@@ -7,11 +7,19 @@
     >
       <h2>{{ project.name }}</h2>
 
-      <el-form-item label="Project Name">
+      <el-form-item label="Base Dir">
         <i class="el-icon-info" />
         <el-input
           placeholder="Please input"
-          v-model="name"
+          v-model="baseDir"
+        />
+      </el-form-item>
+
+      <el-form-item label="Path">
+        <i class="el-icon-info" />
+        <el-input
+          placeholder="Please input"
+          v-model="path"
         />
       </el-form-item>
 
@@ -19,15 +27,17 @@
         <i class="el-icon-info" />
         <el-input
           placeholder="Please input"
-          v-model="hostname"
+          v-model="name"
         />
       </el-form-item>
 
-      <el-form-item label="Root Dir">
+      <el-form-item label="Notes">
         <i class="el-icon-info" />
         <el-input
           placeholder="Please input"
-          v-model="group"
+          v-model="notes"
+          type="textarea"
+          :rows="2"
         />
       </el-form-item>
 
@@ -72,33 +82,24 @@ export default {
   data () {
     return {
       name: '',
-      hostname: '',
-      group: 0,
-      enabled: null,
-      groups: [
-        {
-          value: '0',
-          label: 'Group 0'
-        },
-        {
-          value: '1',
-          label: 'Group 1'
-        },
-        {
-          value: '2',
-          label: 'Group 2'
-        }
-      ]
+      notes: '',
+      baseDir: '',
+      path: '',
+      enabled: null
     }
   },
   watch: {
     '$route.params.projectName': {
       handler: function (projectName) {
         const p = this.projectByName(projectName)
-        this.name = p.name
-        this.hostname = p.hostname
-        this.group = p.group
-        this.enabled = p.enabled
+        if (p) {
+          // console.log(projectName, p.baseDir)
+          this.name = p.name
+          this.notes = p.notes
+          this.baseDir = p.baseDir
+          this.path = p.path
+          this.enabled = p.enabled
+        }
       },
       deep: true,
       immediate: true
@@ -113,9 +114,6 @@ export default {
     }
   },
   methods: {
-    updateProjectHostname (value) {
-      this.hostname = value
-    },
     onSubmit (ev) {
       this.$store.dispatch(
         'updateProject',
@@ -123,8 +121,9 @@ export default {
           'projectName': this.project.name,
           'project': {
             'name': this.name,
-            'hostname': this.hostname,
-            'group': this.group,
+            'notes': this.notes,
+            'baseDir': this.baseDir,
+            'path': this.path,
             'enabled': this.enabled
           }
         }

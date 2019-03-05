@@ -1,5 +1,5 @@
 <template>
-  <div :class="'stack-member stack-member--'+ member_type">
+  <div :class="'stack-member stack-member--'+ memberType">
     <h3>{{ member.label }}</h3>
     <el-radio-group size="small">
       <el-radio
@@ -16,9 +16,9 @@
       <dt>Name:</dt>
       <dd>{{ member.name ? member.name : '&ndash;' }}</dd>
       <dt>Short label:</dt>
-      <dd>{{ member.short_label ? member.short_label : '&ndash;' }}</dd>
+      <dd>{{ member.shortLabel ? member.shortLabel : '&ndash;' }}</dd>
       <dt>Member type:</dt>
-      <dd>{{ member.member_type ? member.member_type : '&ndash;' }}</dd>
+      <dd>{{ member.memberType ? member.memberType : '&ndash;' }}</dd>
       <dt>Optional:</dt>
       <dd>{{ (true === member.optional) ? 'true' : (false === member.optional) ? 'false' : '&ndash;' }}</dd>
       <dt>Stack:</dt>

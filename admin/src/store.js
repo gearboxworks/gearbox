@@ -59,7 +59,26 @@ export default new Vuex.Store({
           .then(r => r ? r.data.data : null)
           .then((projects) => {
             if (projects) {
-              commit('SET_PROJECTS', projects)
+              // console.log(projects)
+
+              const p = []
+              for (const projectName in projects) {
+                if (!projects.hasOwnProperty(projectName)) {
+                  continue
+                }
+                let project = projects[projectName]
+                p.push(
+                  {
+                    name: projectName,
+                    baseDir: project.base_dir,
+                    notes: project.notes,
+                    path: project.path,
+                    enabled: project.enabled
+                  }
+                )
+              }
+
+              commit('SET_PROJECTS', p)
             }
           })
       } catch (e) {
@@ -78,6 +97,25 @@ export default new Vuex.Store({
         .then(r => r ? r.data.data : null)
         .then((stacks) => {
           if (stacks) {
+            const s = []
+            for (const stackName in stacks) {
+              if (!stacks.hasOwnProperty(stackName)) {
+                continue
+              }
+              let stack = stacks[stackName]
+              s.push(
+                {
+                  name: stackName,
+                  label: stack.label,
+                  examples: stack.examples,
+                  stack: stack.stack,
+                  optional: stack.optional,
+                  shortLabel: stack.short_label,
+                  memberType: stack.member_type
+                }
+              )
+            }
+
             commit('SET_STACKS', stacks)
           }
         })
@@ -131,10 +169,10 @@ export default new Vuex.Store({
     UPDATE_PROJECT (state, args) {
       const { projectName, project } = args
       const p = this.getters.projectByName(projectName)
-
       p.name = project.name
-      p.hostname = project.hostname
-      p.group = project.group
+      p.notes = project.notes
+      p.path = project.path
+      p.baseDir = project.baseDir
       p.enabled = project.enabled
     },
     SET_NETWORK_ERROR (state, message) {

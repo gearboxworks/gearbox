@@ -16,7 +16,7 @@
     </el-alert>
 
     <el-container
-      style="height: 800px; border: 1px solid #eee"
+      style="height: 1024px; border: 1px solid #eee"
     >
       <Sidebar />
       <el-container>
@@ -57,7 +57,7 @@ export default {
   },
   computed: {
     isConnectionProblem () {
-      console.log('isConnectionProblem', this.$store.state.connectionStatus.networkError, this.$store.state.connectionStatus.remainingRetries)
+      // console.log('isConnectionProblem', this.$store.state.connectionStatus.networkError, this.$store.state.connectionStatus.remainingRetries)
       return this.$store.state.connectionStatus.networkError && this.$store.state.connectionStatus.remainingRetries > 0
     },
     remainingAttempts () {
