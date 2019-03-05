@@ -14,6 +14,7 @@ type Gearbox struct {
 	HostConnector host.Connector
 	Stacks        StackMap
 	RequestType   string
+	Options       *GlobalOptions
 }
 
 type GearboxArgs Gearbox
@@ -25,11 +26,15 @@ func (me *Gearbox) Initialize() (status Status) {
 func NewGearbox(args *GearboxArgs) *Gearbox {
 	gb := Gearbox{
 		HostConnector: args.HostConnector,
+		Options:       args.Options,
 		Config:        args.Config,
 		Stacks:        GetStackMap(),
 	}
 	if args.Config == nil {
 		gb.Config = NewConfig(&gb)
+	}
+	if args.Options == nil {
+		gb.Options = &GlobalOptions{}
 	}
 	return &gb
 }

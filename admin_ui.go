@@ -187,7 +187,9 @@ func (me *AdminUi) GetWebListener() net.Listener {
 		if err != nil {
 			log.Warnf("error initiating a TCP connection for AdminUi on '127.0.0.0:0': %s", err)
 		}
-		fmt.Printf("Admin web server listening on %s...", me.GetHostname())
+		if me.Gearbox.Options.IsDebug {
+			fmt.Printf("\nListening on %s", me.GetHostname())
+		}
 	}
 	return me.webListener
 }

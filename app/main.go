@@ -13,6 +13,7 @@ import (
 func main() {
 	gearbox.Instance = gearbox.NewGearbox(&gearbox.GearboxArgs{
 		HostConnector: host.GetConnector(),
+		Options:       cmd.GlobalOptions,
 	})
 	status := gearbox.Instance.Initialize()
 	if status.IsError() {
