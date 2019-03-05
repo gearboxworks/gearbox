@@ -227,7 +227,7 @@ func ValidateBaseDirNickname(nickname string, args *validateArgs) (status Status
 		}
 		if args.MustNotBeEmpty && nickname == "" {
 			status = NewStatus(&StatusArgs{
-				success:    false,
+				Success:    false,
 				Message:    "basedir nickname is empty",
 				HttpStatus: http.StatusBadRequest,
 				ApiHelp:    apiHelp,
@@ -237,7 +237,7 @@ func ValidateBaseDirNickname(nickname string, args *validateArgs) (status Status
 		nnExists := args.Gearbox.NamedBaseDirExists(nickname)
 		if args.MustExist && !nnExists {
 			status = NewStatus(&StatusArgs{
-				success:    false,
+				Success:    false,
 				Message:    fmt.Sprintf("nickname '%s' does not exist", nickname),
 				HttpStatus: http.StatusNotFound,
 				ApiHelp:    apiHelp,
@@ -246,7 +246,7 @@ func ValidateBaseDirNickname(nickname string, args *validateArgs) (status Status
 		}
 		if args.MustNotExist && nnExists {
 			status = NewStatus(&StatusArgs{
-				success:    false,
+				Success:    false,
 				Message:    fmt.Sprintf("nickname '%s' already exists", nickname),
 				HttpStatus: http.StatusInternalServerError,
 				ApiHelp:    apiHelp,

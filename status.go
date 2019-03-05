@@ -14,7 +14,7 @@ var _ api.SuccessInspector = StatusInstance
 var IsStatusError = errors.New("")
 
 type Status struct {
-	success    bool
+	Success    bool
 	Message    string `json:"message,omitempty"`
 	Help       string `json:"-"`
 	ApiHelp    string `json:"api_help,omitempty"`
@@ -26,7 +26,7 @@ type StatusArgs Status
 
 func NewOkStatus(msg string, args ...interface{}) Status {
 	return Status{
-		success:    true,
+		Success:    true,
 		Message:    fmt.Sprintf(msg, args...),
 		HttpStatus: http.StatusOK,
 	}
@@ -42,7 +42,7 @@ func NewSuccessStatus(code int, msg ...string) (status Status) {
 				code,
 			)
 			status = NewStatus(&StatusArgs{
-				success:    false,
+				Success:    false,
 				HttpStatus: http.StatusInternalServerError,
 				Message:    m,
 				Error:      errors.New(m),
@@ -68,7 +68,7 @@ func NewStatus(args *StatusArgs) (status Status) {
 				args.Message,
 			)
 			status = Status{
-				success:    false,
+				Success:    false,
 				HttpStatus: http.StatusInternalServerError,
 				Message:    m,
 				Error:      errors.New(m),
@@ -80,7 +80,7 @@ func NewStatus(args *StatusArgs) (status Status) {
 		if status.Error == IsStatusError {
 			status.Error = errors.New(status.Message)
 		}
-		if !status.success && status.Error == nil {
+		if !status.Success && status.Error == nil {
 			status.Error = errors.New(status.Message)
 		}
 		if status.Help != "" {
@@ -91,7 +91,7 @@ func NewStatus(args *StatusArgs) (status Status) {
 				status.CliHelp = status.Help
 			}
 		}
-		status.success = status.Error == nil
+		status.Success = status.Error == nil
 	}
 	return status
 }
@@ -101,7 +101,7 @@ func NewStatus(args *StatusArgs) (status Status) {
 //
 func (me Status) Finalize() {
 	if me.HttpStatus == 0 {
-		me.success = true
+		me.Success = true
 		me.HttpStatus = http.StatusOK
 	}
 }
@@ -111,7 +111,7 @@ func (me *Status) IsError() bool {
 }
 
 func (me *Status) IsSuccess() bool {
-	return me.success || me.HttpStatus == 0
+	return me.Success || me.HttpStatus == 0
 }
 
 func (me *Status) NotYetFinalized() bool {
