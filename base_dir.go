@@ -60,7 +60,7 @@ func (me *BaseDir) MaybeExpandDir() (status Status) {
 			if err != nil {
 				status = NewStatus(&StatusArgs{
 					Error:      err,
-					HttpStatus: http.StatusCreated,
+					HttpStatus: http.StatusInternalServerError,
 					Message: fmt.Sprintf("could not expand dir '%s' for '%s'",
 						me.HostDir,
 						me.Nickname,
@@ -165,6 +165,9 @@ func (me BaseDirMap) UpdateBaseDir(gb *Gearbox, nickname string, dir string) (st
 		bd := me.GetNamedBaseDir(nickname)
 		bd.HostDir = dir
 		status = bd.MaybeExpandDir()
+		if status.IsError() {
+			break
+		}
 		bd.Initialize()
 		if status.IsError() {
 			break
