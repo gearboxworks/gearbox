@@ -29,6 +29,8 @@ func NewApi(echo *echo.Echo, defaults *Response) *Api {
 	//See https://flaviocopes.com/golang-enable-cors/
 	//
 	echo.Use(middleware.CORS())
+	echo.HideBanner = true
+	echo.HidePort = true
 	return &Api{
 		Echo:     echo,
 		Defaults: defaults,

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"gearbox/host"
 	"gearbox/only"
-	"github.com/labstack/gommon/log"
 	"github.com/zserge/lorca"
 	"github.com/zserge/webview"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -52,6 +52,7 @@ type AdminUi struct {
 	webServer     *http.Server
 	api           *HostApi
 	Window        *UiWindow
+	ErrorLog      *ErrorLog
 }
 
 type UiWindowArgs struct {
@@ -96,6 +97,8 @@ func (me *AdminUi) Initialize() {
 	me.webServer = me.GetWebServer()
 	me.api = NewHostApi(me.Gearbox)
 	me.WriteAssetsToAdminWebRoot()
+	me.ErrorLog = &ErrorLog{Gearbox: me.Gearbox}
+	log.SetOutput(me.ErrorLog)
 }
 
 func (me *AdminUi) WriteAssetsToAdminWebRoot() {
@@ -128,7 +131,7 @@ func (me *AdminUi) Start() {
 	case LorcaViewer:
 		me.StartLorca()
 	default:
-		log.Warnf("invalid viewer type '%s'.", me.ViewerType)
+		log.Printf("invalid viewer type '%s'\n", me.ViewerType)
 	}
 }
 
@@ -142,7 +145,7 @@ func (me *AdminUi) StartLorca() {
 		win.Height,
 	)
 	if err != nil {
-		log.Warnf("error loading Lorca to view Gearbox Admin UI: %s", err)
+		log.Printf("error loading Lorca to view Gearbox Admin UI: %s\n", err)
 	}
 	<-ui.Done()
 }
@@ -166,7 +169,7 @@ func (me *AdminUi) WriteApiBaseUrls() {
 	file := me.GetApiBaseUrls()
 	err = ioutil.WriteFile(file, NewApiBaseUrls(url, url).Bytes(), os.ModePerm)
 	if err != nil {
-		log.Warnf("error writing API bootrap file '%s': %s",
+		log.Printf("error writing API bootrap file '%s': %s\n",
 			me.GetApiBaseUrls(),
 			err,
 		)
@@ -185,8 +188,9 @@ func (me *AdminUi) GetWebListener() net.Listener {
 		}
 		me.webListener, err = net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
-			log.Warnf("error initiating a TCP connection for AdminUi on '127.0.0.0:0': %s", err)
+			log.Printf("error initiating a TCP connection for AdminUi on '127.0.0.0:0': %s\n", err)
 		}
+		fmt.Print("Starting Gearbox admin console...")
 		if me.Gearbox.Options.IsDebug {
 			fmt.Printf("\nListening on %s", me.GetHostname())
 		}
@@ -227,8 +231,8 @@ func addCorsMiddleware(rooturl string, next http.Handler) http.Handler {
 	})
 }
 
-func shutdownServer(srv *http.Server) {
-	fmt.Print("Shutting down Gearbox Admin Console web server...\n")
+func (me *AdminUi) shutdownServer(srv *http.Server) {
+	fmt.Print("Stopping Gearbox admin console.\n")
 	err := srv.Shutdown(context.TODO())
 	if err != nil {
 		panic(err) // failure/timeout shutting down the server gracefully
@@ -260,7 +264,7 @@ func (me *AdminUi) GetHostApi() *HostApi {
 }
 
 func (me *AdminUi) Close() {
-	shutdownServer(me.webServer)
+	me.shutdownServer(me.webServer)
 	//err := me.webListener.Close()
 	//if err != nil {
 	//	log.Warnf("error attempting to close AdminUi: %s", err)
