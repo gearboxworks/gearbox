@@ -15,8 +15,8 @@ import (
 )
 
 const SchemaVersion = "1.0"
-const vmBaseDir = "/home/gearbox/projects"
-const vmName = "Gearbox"
+const boxBaseDir = "/home/gearbox/projects"
+const boxName = "Gearbox"
 const ConfigHelpDocs = "https://docs.gearbox.works/config"
 
 type Config struct {
@@ -27,8 +27,8 @@ type Config struct {
 	BaseDirs      BaseDirMap     `json:"base_dirs"`
 	Projects      ProjectMap     `json:"projects"`
 	Candidates    Candidates     `json:"-"`
-	VmBaseDir     string         `json:"-"`
-	VmName        string         `json:"-"`
+	BoxBaseDir    string         `json:"-"`
+	BoxName       string         `json:"-"`
 	Gearbox       *Gearbox       `json:"-"`
 }
 
@@ -47,8 +47,8 @@ func NewConfig(gb *Gearbox) *Config {
 		BaseDirs:      make(BaseDirMap, 1),
 		Projects:      make(ProjectMap, 0),
 		Candidates:    make(Candidates, 0),
-		VmBaseDir:     vmBaseDir,
-		VmName:        vmName,
+		BoxBaseDir:    boxBaseDir,
+		BoxName:       boxName,
 		Gearbox:       gb,
 	}
 	c.BaseDirs[PrimaryBaseDirNickname] = NewBaseDir(

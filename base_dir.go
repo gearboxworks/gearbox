@@ -19,7 +19,7 @@ type BaseDirs []*BaseDir
 type BaseDir struct {
 	Nickname string `json:"nickname"`
 	HostDir  string `json:"host_dir"`
-	VmDir    string `json:"vm_dir"`
+	BoxDir   string `json:"box_dir"`
 	Error    error  `json:"-"`
 }
 type BaseDirArgs BaseDir
@@ -98,12 +98,12 @@ func (me *BaseDir) Initialize() (status Status) {
 		if me.Nickname == "" {
 			me.Nickname = filepath.Base(me.HostDir)
 		}
-		if me.VmDir == PrimaryBaseDirNickname {
-			me.VmDir = vmBaseDir
+		if me.BoxDir == PrimaryBaseDirNickname {
+			me.BoxDir = boxBaseDir
 			break
 		}
-		if me.VmDir == "" || me.VmDir == vmBaseDir {
-			me.VmDir = fmt.Sprintf("%s/%s", vmBaseDir, me.Nickname)
+		if me.BoxDir == "" || me.BoxDir == boxBaseDir {
+			me.BoxDir = fmt.Sprintf("%s/%s", boxBaseDir, me.Nickname)
 		}
 	}
 	return status
@@ -197,7 +197,7 @@ func (me BaseDirMap) AddBaseDir(gb *Gearbox, dir string, nickname ...string) (st
 			break
 		}
 		bd := NewBaseDir(dir, &BaseDirArgs{
-			VmDir:    gb.Config.VmBaseDir,
+			BoxDir:   gb.Config.BoxBaseDir,
 			Nickname: nn,
 		})
 		if bd.Error != nil {

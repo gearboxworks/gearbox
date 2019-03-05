@@ -18,8 +18,8 @@
 
 
 ## Next Gearbox Milestone
-- `gearbox vm start`
-- `gearbox vm stop`
+- `gearbox box start`
+- `gearbox box stop`
 - `gearbox ssh`
 
 
@@ -33,8 +33,8 @@
 
 
 ## APIs
-- Host API - Used for host things, before VM is running
-- VM API - Used for VM things
+- Host API - Used for host things, before Box is running
+- Box API - Used for Box things
 
 ## Gearbox Components
 - "Single" Executable
@@ -53,7 +53,7 @@
 	- One executable for a host computer 
 	    - On a Windows `gearbox.exe`
 	    - On a Mac, Linux `gearbox`
-	- One executable inside the Gearbox VM
+	- One executable inside the Gearbox Box
 	    - `gearbox`
 
 
@@ -63,12 +63,12 @@
 	- If installed ensure correct version and configuration
 	- If not installed, install and configure if not installed
 - Download ISO for GearboxOS
-- Create Gearbox VM using VirtualBox and the ISO 
-- Configure Gearbox VM correctly
+- Create Box using VirtualBox and the ISO 
+- Configure Box correctly
 	
 ## On Every Execution
 - Start Admin console from local host
-- Reverify VirtualBox & Gearbox VM
+- Reverify VirtualBox &  Box
 - Loads User Config file 
 - Scans	Project(s) directories
 	- Looks for:

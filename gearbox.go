@@ -116,15 +116,6 @@ func (me *Gearbox) ValidateProjectHostname(hn string, args *validateArgs) Status
 	return ValidateProjectHostname(hn, args)
 }
 
-func (me *Gearbox) StartVm() {
-	vm := &Vm{}
-	err := vm.StartVm()
-	if err != nil {
-		panic(err)
-	}
-	return
-}
-
 func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery) dockerhub.ContainerNames {
 	var _query *dockerhub.ContainerQuery
 	if len(query) == 0 {

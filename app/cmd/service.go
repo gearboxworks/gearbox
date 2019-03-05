@@ -143,7 +143,7 @@ func init() {
 		Use:   "status",
 		Short: "Display the current status of the running Gearbox services.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Display the current status of Gearbox VM goes here.")
+			fmt.Println("Display the current status of Gearbox goes here.")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{

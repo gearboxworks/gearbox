@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-type Vm struct {
-	VmName   string
+type Box struct {
+	Name     string
 	Instance virtualbox.VM
 	Status   string
 
@@ -28,141 +28,141 @@ type Vm struct {
 	ConsoleReadWait time.Duration
 	ShowConsole     bool
 }
-type VmArgs Vm
+type BoxArgs Box
 
-const VmDefaultName = "Gearbox"
-const VmDefaultWaitDelay = time.Second
-const VmDefaultWaitRetries = 30
-const VmDefaultConsoleHost = "127.0.0.1"
-const VmDefaultConsolePort = "2023"
-const VmDefaultConsoleOkString = "GearBox API"
-const VmDefaultShowConsole = false
-const VmDefaultConsoleReadWait = time.Second * 5
+const BoxDefaultName = "Gearbox"
+const BoxDefaultWaitDelay = time.Second
+const BoxDefaultWaitRetries = 30
+const BoxDefaultConsoleHost = "127.0.0.1"
+const BoxDefaultConsolePort = "2023"
+const BoxDefaultConsoleOkString = "GearBox API"
+const BoxDefaultShowConsole = false
+const BoxDefaultConsoleReadWait = time.Second * 5
 
-const VmError = "error"
-const VmUnknown = "unknown"
-const VmHalted = "halted"
-const VmRunning = "running"
-const VmStarted = "started"
-const VmGearBoxOK = "ok"
-const VmGearBoxNOK = "nok"
+const BoxError = "error"
+const BoxUnknown = "unknown"
+const BoxHalted = "halted"
+const BoxRunning = "running"
+const BoxStarted = "started"
+const BoxOK = "ok"
+const BoxNOK = "nok"
 
 // //////////////////////////////////////////////////////////////////////////////
 // Gearbox related
-func (me *Gearbox) StartVM(vmArgs VmArgs) error {
+func (me *Gearbox) StartBox(boxArgs BoxArgs) error {
 
-	vm := NewVm(*me, vmArgs)
+	box := NewBox(*me, boxArgs)
 
-	err := vm.StartVm()
-
-	return err
-}
-
-func (me *Gearbox) StopVM(vmArgs VmArgs) error {
-
-	vm := NewVm(*me, vmArgs)
-
-	err := vm.StopVm()
+	err := box.Start()
 
 	return err
 }
 
-func (me *Gearbox) RestartVM(vmArgs VmArgs) error {
+func (me *Gearbox) StopBox(boxArgs BoxArgs) error {
 
-	vm := NewVm(*me, vmArgs)
+	box := NewBox(*me, boxArgs)
 
-	err := vm.RestartVm()
+	err := box.Stop()
 
 	return err
 }
 
-func (me *Gearbox) StatusVM(vmArgs VmArgs) (string, error) {
+func (me *Gearbox) RestartBox(boxArgs BoxArgs) error {
 
-	vm := NewVm(*me, vmArgs)
+	box := NewBox(*me, boxArgs)
 
-	err := vm.StatusVm()
+	err := box.Restart()
+
+	return err
+}
+
+func (me *Gearbox) GetBoxStatus(boxArgs BoxArgs) (string, error) {
+
+	box := NewBox(*me, boxArgs)
+
+	err := box.GetStatus()
 	if err != nil {
-		return vm.Status, err
+		return box.Status, err
 	}
 
-	err = vm.StatusApi()
+	err = box.GetApiStatus()
 	if err != nil {
-		return vm.Status, err
+		return box.Status, err
 	}
 
-	switch vm.Status {
-	case VmUnknown:
-		fmt.Printf("\r👎 %s: VM & API in an unknown state.\n", me.Config.VmName)
+	switch box.Status {
+	case BoxUnknown:
+		fmt.Printf("\r👎 %s: BOX & API in an unknown state.\n", me.Config.BoxName)
 
-	case VmHalted:
-		fmt.Printf("\r👎 %s: VM halted. API halted.\n", me.Config.VmName)
+	case BoxHalted:
+		fmt.Printf("\r👎 %s: BOX halted. API halted.\n", me.Config.BoxName)
 
-	case VmRunning:
-		fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
+	case BoxRunning:
+		fmt.Printf("\r👎 %s: BOX running. API halted.\n", me.Config.BoxName)
 
-	case VmStarted:
-		fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
+	case BoxStarted:
+		fmt.Printf("\r👎 %s: BOX running. API halted.\n", me.Config.BoxName)
 
-	case VmGearBoxOK:
-		fmt.Printf("\r👍 %s: VM running. API running.\n", me.Config.VmName)
+	case BoxOK:
+		fmt.Printf("\r👍 %s: BOX running. API running.\n", me.Config.BoxName)
 
-	case VmGearBoxNOK:
-		fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
+	case BoxNOK:
+		fmt.Printf("\r👎 %s: BOX running. API halted.\n", me.Config.BoxName)
 	}
 
-	return vm.Status, err
+	return box.Status, err
 }
 
 // //////////////////////////////////////////////////////////////////////////////
 // Low-level related
-func NewVm(gb Gearbox, args ...VmArgs) *Vm {
-	var _args VmArgs
+func NewBox(gb Gearbox, args ...BoxArgs) *Box {
+	var _args BoxArgs
 	if len(args) > 0 {
 		_args = args[0]
 	}
 
-	if _args.VmName == "" {
-		_args.VmName = VmDefaultName
+	if _args.Name == "" {
+		_args.Name = BoxDefaultName
 	}
 
 	if _args.WaitDelay == 0 {
-		_args.WaitDelay = VmDefaultWaitDelay
+		_args.WaitDelay = BoxDefaultWaitDelay
 	}
 
 	if _args.WaitRetries == 0 {
-		_args.WaitRetries = VmDefaultWaitRetries
+		_args.WaitRetries = BoxDefaultWaitRetries
 	}
 
 	if _args.ConsoleHost == "" {
-		_args.ConsoleHost = VmDefaultConsoleHost
+		_args.ConsoleHost = BoxDefaultConsoleHost
 	}
 
 	if _args.ConsolePort == "" {
-		_args.ConsolePort = VmDefaultConsolePort
+		_args.ConsolePort = BoxDefaultConsolePort
 	}
 
 	if _args.ConsoleOkString == "" {
-		_args.ConsoleOkString = VmDefaultConsoleOkString
+		_args.ConsoleOkString = BoxDefaultConsoleOkString
 	}
 
 	if _args.ConsoleReadWait == 0 {
-		_args.ConsoleReadWait = VmDefaultConsoleReadWait
+		_args.ConsoleReadWait = BoxDefaultConsoleReadWait
 	}
 
 	_args.Instance = virtualbox.VM{
-		Name: _args.VmName,
+		Name: _args.Name,
 	}
 
-	vm := &Vm{}
-	*vm = Vm(_args)
+	box := &Box{}
+	*box = Box(_args)
 
 	// Query VB to see if it exists.
 	// If not return nil.
 
-	return vm
+	return box
 }
 
-func (me *Vm) WaitForVmState(waitForState string, displayString string) error {
+func (me *Box) WaitForBoxState(waitForState string, displayString string) error {
 
 	var waitCount int
 
@@ -174,7 +174,7 @@ func (me *Vm) WaitForVmState(waitForState string, displayString string) error {
 	spinner.Start()
 
 	for waitCount = 0; waitCount < me.WaitRetries; waitCount++ {
-		err := me.StatusVm()
+		err := me.GetStatus()
 		if err != nil {
 			spinner.Stop(false)
 			return err
@@ -191,14 +191,14 @@ func (me *Vm) WaitForVmState(waitForState string, displayString string) error {
 	return nil
 }
 
-func (me *Vm) WaitForConsole(displayString string, waitFor time.Duration) error {
+func (me *Box) WaitForConsole(displayString string, waitFor time.Duration) error {
 
 	if me == nil {
 		// Throw software error.
 		return nil
 	}
 
-	err := me.StatusVm()
+	err := me.GetStatus()
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (me *Vm) WaitForConsole(displayString string, waitFor time.Duration) error 
 	// TRUE - show the spinner on console.
 	displaySpinner := me.ShowConsole == false && displayString != ""
 
-	if me.Status == VmRunning {
+	if me.Status == BoxRunning {
 		spinner := util.NewSpinner(util.SpinnerArgs{
 			Text:    displayString,
 			ExitOK:  displayString + " - OK",
@@ -239,7 +239,7 @@ func (me *Vm) WaitForConsole(displayString string, waitFor time.Duration) error 
 			// readBuffer, err := bufio.NewReader(conn).ReadString('\n')
 			// bytesRead := len(readBuffer)
 			if err != nil {
-				me.Status = VmGearBoxNOK
+				me.Status = BoxNOK
 				if displaySpinner == true {
 					spinner.Stop(false)
 				}
@@ -256,9 +256,9 @@ func (me *Vm) WaitForConsole(displayString string, waitFor time.Duration) error 
 					match, _ := regexp.MatchString(me.ConsoleOkString, apiSplit[1])
 					if match == true {
 						if apiSplit[2] == "OK" {
-							me.Status = VmGearBoxOK
+							me.Status = BoxOK
 						} else {
-							me.Status = VmGearBoxNOK
+							me.Status = BoxNOK
 						}
 						if displaySpinner == true {
 							spinner.Stop(true)
@@ -282,18 +282,18 @@ func (me *Vm) WaitForConsole(displayString string, waitFor time.Duration) error 
 	return nil
 }
 
-func (me *Vm) StartVm() error {
+func (me *Box) Start() error {
 
 	if me == nil {
 		// Throw software error.
 		return nil
 	}
 
-	err := me.StatusVm()
+	err := me.GetStatus()
 	if err != nil {
 		return err
 	}
-	if me.Status == VmRunning || me.Status == VmStarted {
+	if me.Status == BoxRunning || me.Status == BoxStarted {
 		return nil
 	}
 
@@ -302,13 +302,13 @@ func (me *Vm) StartVm() error {
 		return err
 	}
 	if me.NoWait == false {
-		err := me.WaitForVmState(VmRunning, me.VmName+" VM: Starting")
+		err := me.WaitForBoxState(BoxRunning, me.Name+" BOX: Starting")
 		if err != nil {
 			return err
 		}
 
 		// Check final state of the system from the top down.
-		err = me.WaitForConsole(me.VmName+" : Starting", 30)
+		err = me.WaitForConsole(me.Name+" : Starting", 30)
 		if err != nil {
 			return err
 		}
@@ -317,18 +317,18 @@ func (me *Vm) StartVm() error {
 	return nil
 }
 
-func (me *Vm) StopVm() error {
+func (me *Box) Stop() error {
 
 	if me == nil {
 		// Throw software error.
 		return nil
 	}
 
-	err := me.StatusVm()
+	err := me.GetStatus()
 	if err != nil {
 		return err
 	}
-	if me.Status == VmHalted {
+	if me.Status == BoxHalted {
 		return nil
 	}
 
@@ -338,13 +338,13 @@ func (me *Vm) StopVm() error {
 	}
 
 	if me.NoWait == false {
-		err := me.WaitForVmState(VmHalted, me.VmName+" VM: Stopping")
+		err := me.WaitForBoxState(BoxHalted, me.Name+" BOX: Stopping")
 		if err != nil {
 			return err
 		}
 
 		// Check final state of the system from the top down.
-		err = me.WaitForConsole(me.VmName+" : Stopping", 30)
+		err = me.WaitForConsole(me.Name+" : Stopping", 30)
 		if err != nil {
 			return err
 		}
@@ -353,7 +353,7 @@ func (me *Vm) StopVm() error {
 	return nil
 }
 
-func (me *Vm) RestartVm() error {
+func (me *Box) Restart() error {
 
 	var err error
 
@@ -362,56 +362,56 @@ func (me *Vm) RestartVm() error {
 		return nil
 	}
 
-	err = me.StatusVm()
+	err = me.GetStatus()
 	if err != nil {
 		return err
 	}
 
 	switch me.Status {
-	case VmGearBoxOK:
+	case BoxOK:
 		fallthrough
-	case VmGearBoxNOK:
+	case BoxNOK:
 		fallthrough
-	case VmRunning:
+	case BoxRunning:
 		fallthrough
-	case VmStarted:
-		err := me.StopVm()
+	case BoxStarted:
+		err := me.Stop()
 		if err != nil {
 			return err
 		}
-		err = me.StartVm()
-		if err != nil {
-			return err
-		}
-
-	case VmHalted:
-		err := me.StartVm()
+		err = me.Start()
 		if err != nil {
 			return err
 		}
 
-	case VmUnknown:
+	case BoxHalted:
+		err := me.Start()
+		if err != nil {
+			return err
+		}
+
+	case BoxUnknown:
 
 	}
 
-	if me.Status != VmRunning {
+	if me.Status != BoxRunning {
 		// Throw an error.
 	}
 
 	return err
 }
 
-func (me *Vm) StatusVm() error {
+func (me *Box) GetStatus() error {
 
 	if me == nil {
 		// Throw software error.
-		me.Status = VmUnknown
+		me.Status = BoxUnknown
 		return nil
 	}
 
 	state, err := me.Instance.GetState()
 	if err != nil {
-		me.Status = VmError
+		me.Status = BoxError
 	} else {
 		me.Status = state
 	}
@@ -419,14 +419,14 @@ func (me *Vm) StatusVm() error {
 	return err
 }
 
-func (me *Vm) StatusApi() error {
+func (me *Box) GetApiStatus() error {
 
 	if me == nil {
 		// Throw software error.
 		return nil
 	}
 
-	if me.Status == VmRunning {
+	if me.Status == BoxRunning {
 		err := me.WaitForConsole("", 10)
 		if err != nil {
 			return err

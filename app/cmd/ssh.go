@@ -12,7 +12,7 @@ var sshCmd = &cobra.Command{
 		"logon",
 		"access",
 	},
-	Short: "Connect to the terminal of the running GearboxOS VM",
+	Short: "Connect to the terminal of the Box running GearboxOS",
 	Run: func(cmd *cobra.Command, args []string) {
 		err := gearbox.Instance.ConnectSSH(sshArgs)
 		if err != nil {
