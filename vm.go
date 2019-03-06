@@ -3,9 +3,12 @@ package gearbox
 import (
 	"bufio"
 	"fmt"
+	"gearbox/box/vm"
 	"gearbox/util"
+	"github.com/apcera/libretto/ssh"
 	"github.com/apcera/libretto/virtualmachine/virtualbox"
 	"net"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -15,6 +18,12 @@ type Vm struct {
 	VmName   string
 	Instance virtualbox.VM
 	Status   string
+	OvaFile   string
+
+	// SSH related - Need to fix this. It's used within CreateVm()
+	SshUsername  string
+	SshPassword  string
+	SshPublicKey string
 
 	// Status polling delays.
 	NoWait      bool
@@ -31,16 +40,18 @@ type Vm struct {
 type VmArgs Vm
 
 const VmDefaultName = "Gearbox"
+const VmDefaultOvaFileName = "box/vm/Gearbox.ova"
 const VmDefaultWaitDelay = time.Second
 const VmDefaultWaitRetries = 30
 const VmDefaultConsoleHost = "127.0.0.1"
 const VmDefaultConsolePort = "2023"
-const VmDefaultConsoleOkString = "GearBox API"
+const VmDefaultConsoleOkString = "Gearbox Heartbeat"
 const VmDefaultShowConsole = false
 const VmDefaultConsoleReadWait = time.Second * 5
 
 const VmError = "error"
 const VmUnknown = "unknown"
+const VmAbsent = "absent"
 const VmHalted = "halted"
 const VmRunning = "running"
 const VmStarted = "started"
@@ -58,6 +69,7 @@ func (me *Gearbox) StartVM(vmArgs VmArgs) error {
 	return err
 }
 
+
 func (me *Gearbox) StopVM(vmArgs VmArgs) error {
 
 	vm := NewVm(*me, vmArgs)
@@ -67,6 +79,7 @@ func (me *Gearbox) StopVM(vmArgs VmArgs) error {
 	return err
 }
 
+
 func (me *Gearbox) RestartVM(vmArgs VmArgs) error {
 
 	vm := NewVm(*me, vmArgs)
@@ -75,6 +88,7 @@ func (me *Gearbox) RestartVM(vmArgs VmArgs) error {
 
 	return err
 }
+
 
 func (me *Gearbox) StatusVM(vmArgs VmArgs) (string, error) {
 
@@ -91,27 +105,48 @@ func (me *Gearbox) StatusVM(vmArgs VmArgs) (string, error) {
 	}
 
 	switch vm.Status {
-	case VmUnknown:
-		fmt.Printf("\r👎 %s: VM & API in an unknown state.\n", me.Config.VmName)
+		case VmUnknown:
+			fmt.Printf("\r👎 %s: VM & API in an unknown state.\n", me.Config.VmName)
 
-	case VmHalted:
-		fmt.Printf("\r👎 %s: VM halted. API halted.\n", me.Config.VmName)
+		case VmHalted:
+			fmt.Printf("\r👎 %s: VM halted. API halted.\n", me.Config.VmName)
 
-	case VmRunning:
-		fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
+		case VmRunning:
+			fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
 
-	case VmStarted:
-		fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
+		case VmStarted:
+			fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
 
-	case VmGearBoxOK:
-		fmt.Printf("\r👍 %s: VM running. API running.\n", me.Config.VmName)
+		case VmGearBoxOK:
+			fmt.Printf("\r👍 %s: VM running. API running.\n", me.Config.VmName)
 
-	case VmGearBoxNOK:
-		fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
+		case VmGearBoxNOK:
+			fmt.Printf("\r👎 %s: VM running. API halted.\n", me.Config.VmName)
 	}
 
 	return vm.Status, err
 }
+
+
+func (me *Gearbox) CreateVM(vmArgs VmArgs) (string, error) {
+
+	vm := NewVm(*me, vmArgs)
+
+	err := vm.CreateVm()
+	if err != nil {
+		return vm.Status, err
+	}
+
+	err = vm.StatusApi()
+	if err != nil {
+		return vm.Status, err
+	}
+
+	fmt.Printf("\r👎 %s: VM & API in an unknown state.\n", me.Config.VmName)
+
+	return vm.Status, err
+}
+
 
 // //////////////////////////////////////////////////////////////////////////////
 // Low-level related
@@ -123,6 +158,25 @@ func NewVm(gb Gearbox, args ...VmArgs) *Vm {
 
 	if _args.VmName == "" {
 		_args.VmName = VmDefaultName
+	}
+
+	if _args.OvaFile == "" {
+
+		// The '/' will become a problem on Windows
+		_args.OvaFile = gb.HostConnector.GetUserConfigDir() + "/" + VmDefaultOvaFileName
+		// The OvaFile is created from an export from within VirtualBox.
+		// VBoxManage export Gearbox -o Gearbox.ova --options manifest
+		// This was the best way to create a base template, avoiding too much code bloat.
+		// And allows multiple VM frameworks to be used with libretto.
+		// It doesn't include the ISO image yet as it is too large.
+		// Once the ISO image size has been reduced, we can do this:
+		// VBoxManage export Gearbox -o Gearbox.ova --options iso,manifest
+		if _, err := os.Stat(_args.OvaFile); os.IsNotExist(err) {
+			err := vm.RestoreAssets(gb.HostConnector.GetUserConfigDir(), VmDefaultOvaFileName)
+			if err != nil {
+				fmt.Printf("\r👎 %s: VM OVA file cannot be created in %s.\n", _args.VmName, _args.OvaFile)
+			}
+		}
 	}
 
 	if _args.WaitDelay == 0 {
@@ -149,8 +203,27 @@ func NewVm(gb Gearbox, args ...VmArgs) *Vm {
 		_args.ConsoleReadWait = VmDefaultConsoleReadWait
 	}
 
+	if _args.SshUsername == "" {
+		_args.SshUsername = SshDefaultUsername
+	}
+
+	if _args.SshPassword == "" {
+		_args.SshPassword = SshDefaultPassword
+	}
+
+	if _args.SshPublicKey == "" {
+		_args.SshPublicKey = SshDefaultKeyFile
+	}
+
 	_args.Instance = virtualbox.VM{
 		Name: _args.VmName,
+		Src: _args.OvaFile,
+		Credentials: ssh.Credentials{
+			// Need a way of obtaining this.
+			SSHUser: _args.SshUsername,
+			SSHPassword: _args.SshPassword,
+			SSHPrivateKey: _args.SshPublicKey,
+		},
 	}
 
 	vm := &Vm{}
@@ -436,21 +509,53 @@ func (me *Vm) StatusApi() error {
 	return nil
 }
 
-/*
-func scanForAPI(text string) bool {
+func (me *Vm) CreateVm() error {
 
-	r, err := regexp.Compile("^.*%$")
-	// r, err := regexp.Compile("Welcome to GearBox.*")
-	if err == nil {
-		if r.MatchString(text) {
-
-			switch {
-				case text == "Welcome to GearBox":
-					return true
-			}
-		}
+	if me == nil {
+		// Throw software error.
+		me.Status = VmUnknown
+		return nil
 	}
 
-	return false
+	// Check if the VM is already there.
+	state, err := me.Instance.GetState()
+	if err != nil {
+		// Doesn't exist - great!
+		if _, err := os.Stat(me.OvaFile); os.IsNotExist(err) {
+			fmt.Printf("\r👎 %s: VM OVA file does not exist in %s.\n", me.VmName, me.OvaFile)
+			return err
+		}
+
+		err = me.Instance.Provision()
+		if err != nil {
+			me.Status = VmError
+		}
+	} else {
+		// Already created!
+		fmt.Printf("\r👎 %s: Cannot create. VM already exists and is in state %s.\n", me.VmName, state)
+	}
+
+	return err
 }
+
+
+func (me *Vm) ValidateVm() error {
+
+	if me == nil {
+		// Throw software error.
+		me.Status = VmUnknown
+		return nil
+	}
+/*
+	state, err := me.Instance.Provision()
+	if err != nil {
+		me.Status = VmError
+	} else {
+		me.Status = state
+	}
+	return err
 */
+	return nil
+}
+
+

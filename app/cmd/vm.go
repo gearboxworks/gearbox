@@ -96,6 +96,20 @@ func init() {
 		},
 	})
 
+	vmCmd.AddCommand(&cobra.Command{
+		Use:   "create",
+		SuggestFor: []string{
+			"new",
+		},
+		Short: "Create a new instance of the Gearbox VM.",
+		Run: func(cmd *cobra.Command, args []string) {
+			_, err := gearbox.Instance.CreateVM(vmArgs)
+			if err != nil {
+				panic(err)
+			}
+		},
+	})
+
 	vmCmd.PersistentFlags().BoolVarP(&vmArgs.NoWait, "no-wait", "", false, "Don't wait for VM operation to complete.")
 	vmCmd.PersistentFlags().IntVarP(&vmArgs.WaitRetries, "wait-delay", "", gearbox.VmDefaultWaitRetries, "VM operation wait retries.")
 	vmCmd.PersistentFlags().DurationVarP(&vmArgs.WaitDelay, "wait-retries", "", gearbox.VmDefaultWaitDelay, "VM operation wait delay between retries.")
@@ -104,7 +118,13 @@ func init() {
 	vmCmd.PersistentFlags().BoolVarP(&vmArgs.ShowConsole, "show-console", "", gearbox.VmDefaultShowConsole, "Show VM console output.")
 	vmCmd.PersistentFlags().StringVarP(&vmArgs.VmName, "name", "", gearbox.VmDefaultName, "Gearbox VM name.")
 
+	// Mike will not like this bit.
+	vmCmd.PersistentFlags().StringVarP(&vmArgs.Instance.Credentials.SSHUser, "user", "u", gearbox.SshDefaultUsername, "Alternate Gearbox SSH username.")
+	vmCmd.PersistentFlags().StringVarP(&vmArgs.Instance.Credentials.SSHPassword, "password", "p", gearbox.SshDefaultPassword, "Alternate Gearbox SSH password.")
+	vmCmd.PersistentFlags().StringVarP(&vmArgs.Instance.Credentials.SSHPassword, "key-file", "k", gearbox.SshDefaultKeyFile, "Gearbox SSH public key file.")
+
 	// vmCmd.PersistentFlags().BoolP("no-wait", "w", false, "Don't wait for VM operation to complete.")
 
 	// vmCmd.Flag("no-wait")
 }
+
