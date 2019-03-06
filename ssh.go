@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"time"
 )
 
@@ -22,19 +23,22 @@ type Ssh struct {
 	// SSH related.
 	SshUsername  string
 	SshPassword  string
+	SshPublicKey string
 	SshHost      string
 	SshPort      string
-	SshPublicKey string
 
 	//	SshOkString    string
 	//	SshWait        time.Duration
 	SshStatusLine         string
 	DisableStatusLine     bool
 	StatusLineUpdateDelay time.Duration
+	SshTermWidth int
+	SshTermHeight int
+	SshTerminateFlag	bool
 }
 type SshArgs Ssh
 
-const SshDefaultUsername = "boxuser"
+const SshDefaultUsername = "gearbox"
 const SshDefaultPassword = "box"
 const SshDefaultKeyFile = "./keyfile.pub"
 const SshDefaultSshHost = "127.0.0.1"
@@ -73,6 +77,10 @@ func NewSsh(gb Gearbox, args ...SshArgs) (*Ssh, error) {
 		_args.SshPassword = SshDefaultPassword
 	}
 
+	if _args.SshPublicKey == "" {
+		_args.SshPublicKey = SshDefaultKeyFile
+	}
+
 	if _args.StatusLineUpdateDelay == 0 {
 		_args.StatusLineUpdateDelay = SshDefaultStatusLineUpdateDelay
 	}
@@ -83,10 +91,6 @@ func NewSsh(gb Gearbox, args ...SshArgs) (*Ssh, error) {
 
 	if _args.SshPort == "" {
 		_args.SshPort = SshDefaultSshPort
-	}
-
-	if _args.SshPublicKey == "" {
-		_args.SshPublicKey = SshDefaultKeyFile
 	}
 
 	sshConfig := &ssh.ClientConfig{}
@@ -174,8 +178,6 @@ func (me *Ssh) StartSsh() error {
 	}
 
 	// Request pseudo terminal
-	termWidth := 0
-	termHeight := 0
 	fileDescriptor := int(os.Stdin.Fd())
 	if terminal.IsTerminal(fileDescriptor) {
 		originalState, err := terminal.MakeRaw(fileDescriptor)
@@ -184,19 +186,19 @@ func (me *Ssh) StartSsh() error {
 		}
 		defer terminal.Restore(fileDescriptor, originalState)
 
-		termWidth, termHeight, err = terminal.GetSize(fileDescriptor)
+		me.SshTermWidth, me.SshTermHeight, err = terminal.GetSize(fileDescriptor)
 		if err != nil {
 			return nil
 		}
 
 		// xterm-256color
-		err = session.RequestPty("xterm-256color", termHeight, termWidth, modes)
+		err = session.RequestPty("xterm-256color", me.SshTermHeight, me.SshTermWidth, modes)
 		if err != nil {
 			return nil
 		}
 	}
 
-	go me.StatusLineWorker(termHeight, termWidth)
+	go me.StatusLineWorker()
 
 	go me.exampleHostWorker()
 
@@ -215,33 +217,83 @@ func (me *Ssh) StartSsh() error {
 		}
 	*/
 	session.Wait()
+	me.resetView()
 
 	return nil
 }
 
-func (me *Ssh) StatusLineWorker(termHeight int, termWidth int) {
-	const savePos = "[s"
-	const restorePos = "[u"
-	bottomPos := fmt.Sprintf("[%d;0H", termHeight)
-	scrollFix := fmt.Sprintf("[1;%dr", termHeight-1)
-	if me.DisableStatusLine == false {
-		fmt.Printf(scrollFix)
-	}
 
-	for {
-		if me.DisableStatusLine == false {
-			fmt.Printf("%s%s%s%s", savePos, bottomPos, me.SshStatusLine, restorePos)
-		}
+func (me *Ssh) StatusLineWorker() {
+
+	me.setView()
+	defer me.resetView()
+
+	for ; me.SshTerminateFlag == false; {
+		me.displayStatusLine()
 
 		time.Sleep(me.StatusLineUpdateDelay)
 	}
+
 }
+
 
 func (me *Ssh) SetStatusLine(text string) {
 
 	me.SshStatusLine = text
-	// fmt.Printf("%s%s%d%s", savePos, bottomPos, time.Now().Unix(), restorePos)
 }
+
+func (me *Ssh) displayStatusLine() {
+	const savePos = "\033[s"
+	const restorePos = "\033[u"
+	bottomPos := fmt.Sprintf("\033[%d;0H", me.SshTermHeight)
+	// topPos := fmt.Sprintf("\033[0;0H")
+
+	if me.DisableStatusLine == false {
+		fmt.Printf("%s%s%s%s", savePos, bottomPos, me.SshStatusLine, restorePos)
+	}
+}
+
+
+func (me *Ssh) setView() {
+	const clearScreen = "\033[H\033[2J"
+	scrollFixBottom := fmt.Sprintf("\033[1;%dr", me.SshTermHeight-1)
+	// scrollFixTop := fmt.Sprintf("\033[2;%dr", termHeight)
+
+	if me.DisableStatusLine == false {
+		fmt.Printf(scrollFixBottom)
+		fmt.Printf(clearScreen)
+	}
+}
+
+
+func (me *Ssh) resetView() {
+	const savePos = "\033[s"
+	const restorePos = "\033[u"
+	scrollFixBottom := fmt.Sprintf("\033[1;%dr", me.SshTermHeight)
+	// scrollFixTop := fmt.Sprintf("\033[2;%dr", termHeight)
+
+	if me.DisableStatusLine == false {
+		fmt.Printf(savePos)
+		fmt.Printf(scrollFixBottom)
+		fmt.Printf(restorePos)
+
+		me.SshStatusLine = ""
+		for i := 0; i <= me.SshTermWidth; i++ {
+			me.SshStatusLine += " "
+		}
+		me.displayStatusLine()
+	}
+
+}
+
+
+func stripAnsi(str string) string {
+	const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+	var re = regexp.MustCompile(ansi)
+
+	return re.ReplaceAllString(str, "")
+}
+
 
 // Example host worker. This periodically changes the me.SshStatusLine from the host side.
 // The StatusLineWorker() will update the bottom line using the me.SshStatusLine.
@@ -252,16 +304,26 @@ func (me *Ssh) exampleHostWorker() {
 	green := color.New(color.BgBlack, color.FgHiGreen).SprintFunc()
 	normal := color.New(color.BgWhite, color.FgHiBlack).SprintFunc()
 
-	for {
-		now := time.Now()
-		dateStr := normal("Date:") + " " + yellow(fmt.Sprintf("%.4d/%.2d/%.2d", now.Year(), now.Month(), now.Day()))
-		timeStr := normal("Time:") + " " + magenta(fmt.Sprintf("%.2d:%.2d:%.2d", now.Hour(), now.Minute(), now.Second()))
+	for ; me.SshTerminateFlag == false; {
+		//now := time.Now()
+		//dateStr := normal("Date:") + " " + yellow(fmt.Sprintf("%.4d/%.2d/%.2d", now.Year(), now.Month(), now.Day()))
+		//timeStr := normal("Time:") + " " + magenta(fmt.Sprintf("%.2d:%.2d:%.2d", now.Hour(), now.Minute(), now.Second()))
 		statusStr := normal("Status:") + " " + green("OK")
+		infoStr := yellow("You are connected to") + " " + magenta("Gearbox OS")
 
-		line := fmt.Sprintf("%s	%s %s", statusStr, dateStr, timeStr)
+		//line := fmt.Sprintf("%s	%s %s", statusStr, dateStr, timeStr)
+		line := fmt.Sprintf("%s - %s", infoStr, statusStr)
 
-		me.SetStatusLine(line)
+		// Add spaces to ensure it's right justified.
+		spaces := ""
+		lineLen := len(stripAnsi(line))
+		for i:=0; i < me.SshTermWidth - lineLen; i++ {
+			spaces += " "
+		}
+
+		me.SetStatusLine(spaces + line) // + fmt.Sprintf("W:%d L:%d S:%d C:%d", me.SshTermWidth, len(line), len(spaces), lineLen))
 
 		time.Sleep(time.Second * 5)
 	}
 }
+
