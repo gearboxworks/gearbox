@@ -9,7 +9,7 @@ import (
 type Candidates []*Candidate
 
 type Candidate struct {
-	BaseDir  string   `json:"base_dir"`
+	Basedir  string   `json:"basedir"`
 	Path     string   `json:"path"`
 	FullPath string   `json:"full_path"`
 	Config   *Config  `json:"-"`
@@ -32,17 +32,18 @@ func (me *Candidate) GetPotentialHostname() string {
 	return strings.ToLower(hostname)
 }
 
-func (me *Candidate) GetHostBaseDir() string {
-	return me.Config.GetHostBaseDir(me.BaseDir)
+func (me *Candidate) GetHostBasedir() (string,error) {
+	return me.Config.GetHostBasedir(me.Basedir)
 }
 
 func (me *Candidate) IsProject() bool {
-	return util.FileExists(
-		fmt.Sprintf("%s/%s/%s", me.GetHostBaseDir(), me.Path, ProjectFile),
+	bd,err := me.GetHostBasedir()
+	return err == nil && util.FileExists(
+		fmt.Sprintf("%s/%s/%s", bd, me.Path, ProjectFilename),
 	)
 }
 
 func (me *Candidate) GetFullPath() (fp string) {
-	fp, _ = ExpandBaseDirPath(me.Gearbox, me.BaseDir, me.Path)
+	fp, _ = ExpandHostBasedirPath(me.Gearbox, me.Basedir, me.Path)
 	return fp
 }

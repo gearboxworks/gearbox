@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gearbox/api"
 	"gearbox/only"
+	"gearbox/util"
 	"net/http"
 )
 
@@ -22,7 +23,17 @@ type Status struct {
 	HttpStatus int    `json:"-"`
 	Error      error  `json:"-"`
 }
-type StatusArgs Status
+
+type StatusArgs struct {
+	Success    bool
+	Message    string
+	Help       string
+	ApiHelp    string
+	CliHelp    string
+	HttpStatus int
+	Error      error
+	util.HelpfulError
+}
 
 func NewOkStatus(msg string, args ...interface{}) Status {
 	return Status{
@@ -76,7 +87,23 @@ func NewStatus(args *StatusArgs) (status Status) {
 			}
 			break
 		}
-		status = Status(*args)
+
+		status = Status{
+			Success:    args.Success,
+			Message:    args.Message,
+			Help:       args.Help,
+			ApiHelp:    args.ApiHelp,
+			CliHelp:    args.CliHelp,
+			HttpStatus: args.HttpStatus,
+			Error:      args.Error,
+		}
+
+		if status.Error == nil {
+			status.Error = args.HelpfulError
+		}
+		if status.Help == "" && args.HelpfulError.Help != "" {
+			status.Help = args.HelpfulError.Help
+		}
 		if status.Error == IsStatusError {
 			status.Error = errors.New(status.Message)
 		}

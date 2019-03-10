@@ -3,12 +3,11 @@ package gearbox
 import (
 	"fmt"
 	"gearbox/only"
-	"github.com/projectcfg/projectcfg"
+	"gearbox/util"
 	"net/http"
+	"path/filepath"
 	"strings"
 )
-
-const ProjectFile = "project.json"
 
 type ProjectMap map[string]*Project
 
@@ -17,20 +16,11 @@ type Projects []*Project
 type Project struct {
 	Hostname string                 `json:"-"`
 	Enabled  bool                   `json:"enabled"`
-	BaseDir  string                 `json:"base_dir"`
+	Basedir  string                 `json:"base_dir"`
 	Notes    string                 `json:"notes"`
 	Path     string                 `json:"path"`
-	Config   *projectcfg.ProjectCfg `json:"-"`
 	Gearbox  *Gearbox               `json:"-"`
-}
-
-type ProjectResponse struct {
-	Hostname string `json:"hostname"`
-	Enabled  bool   `json:"enabled"`
-	BaseDir  string `json:"base_dir"`
-	Notes    string `json:"notes"`
-	FullPath string `json:"full_path"`
-	projectcfg.ProjectCfg
+	*projectDetails
 }
 
 func NewProject(gb *Gearbox, path string) *Project {
@@ -41,8 +31,64 @@ func NewProject(gb *Gearbox, path string) *Project {
 	}
 }
 
+type ProjectResponse struct {
+	Hostname   string   `json:"hostname"`
+	Enabled    bool     `json:"enabled"`
+	Basedir    string   `json:"basedir"`
+	Notes      string   `json:"notes"`
+	ProjectDir string   `json:"project_dir"`
+	Aliases    Aliases  `json:"aliases"`
+	StackMap   StackMap `json:"stack"`
+}
+
+func NewProjectResponse(p *Project) *ProjectResponse {
+	return &ProjectResponse{
+		Hostname:   p.Hostname,
+		Basedir:    p.Basedir,
+		Notes:      p.Notes,
+		Aliases:    p.Aliases,
+		StackMap:   p.StackMap,
+		ProjectDir: filepath.Dir(p.projectDetails.Filepath),
+	}
+}
+
+func (me *Project) GetProjectFilepath() (fp string, err error) {
+	return me.Gearbox.GetProjectFilepath(me.Hostname, me.Basedir)
+}
+
+func (me *Project) LoadProjectFile() (status Status) {
+	var err error
+	for range only.Once {
+		var fp string
+		fp, err = me.GetProjectFilepath()
+		if err != nil {
+			status = NewStatus(&StatusArgs{
+				Success:    false,
+				HttpStatus: http.StatusInternalServerError,
+				HelpfulError: err.(util.HelpfulError),
+			})
+			break
+		}
+		var j []byte
+		j, err = util.ReadBytes(fp)
+		if status.IsError() {
+			break
+		}
+		pf := ProjectFile{Filepath: fp}
+		if len(j) > 0 {
+			status = pf.Unmarshal(j)
+		}
+		pf.FixupStackMap()
+		if status.IsError() {
+			break
+		}
+		me.projectDetails = pf.ExportProjectDetails()
+	}
+	return status
+}
+
 func (me *Project) Fullpath() (fp string) {
-	fp, _ = ExpandBaseDirPath(me.Gearbox, me.BaseDir, me.Path)
+	fp, _ = ExpandHostBasedirPath(me.Gearbox, me.Basedir, me.Path)
 	return fp
 }
 
@@ -53,17 +99,11 @@ func (me ProjectMap) GetProjectResponse(gb *Gearbox, hostname string) (pr *Proje
 		if status.IsError() {
 			break
 		}
-		var fp string
-		fp, status = ExpandBaseDirPath(gb, p.BaseDir, p.Path)
+		status = p.LoadProjectFile()
 		if status.IsError() {
 			break
 		}
-		pr = &ProjectResponse{
-			Hostname: p.Hostname,
-			BaseDir:  p.BaseDir,
-			Notes:    p.Notes,
-			FullPath: fp,
-		}
+		pr = NewProjectResponse(p)
 		status = NewOkStatus("got response for project '%s'", hostname)
 	}
 	return pr, status
@@ -73,6 +113,9 @@ func (me ProjectMap) GetProject(gb *Gearbox, hostname string) (p *Project, statu
 	var ok bool
 	p, ok = me[hostname]
 	if ok {
+		// The next two
+		p.Gearbox = gb
+		p.Hostname = hostname
 		status = NewOkStatus("got project '%s'", hostname)
 	} else {
 		status = NewStatus(&StatusArgs{
@@ -177,7 +220,7 @@ func (me ProjectMap) FindProject(basedir, path string) (p *Project) {
 		if path != _p.Path {
 			continue
 		}
-		if basedir != _p.BaseDir {
+		if basedir != _p.Basedir {
 			continue
 		}
 		p = _p

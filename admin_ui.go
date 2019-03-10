@@ -95,7 +95,7 @@ func NewAdminUi(gearbox *Gearbox, viewer ViewerType) *AdminUi {
 func (me *AdminUi) Initialize() {
 	me.webListener = me.GetWebListener()
 	me.webServer = me.GetWebServer()
-	me.api = NewHostApi(me.Gearbox)
+	me.api = me.Gearbox.hostApi
 	me.WriteAssetsToAdminWebRoot()
 	me.ErrorLog = &ErrorLog{Gearbox: me.Gearbox}
 	log.SetOutput(me.ErrorLog)
@@ -258,7 +258,7 @@ func (me *AdminUi) GetHostApi() *HostApi {
 		if me.api != nil {
 			break
 		}
-		me.api = NewHostApi(me.Gearbox)
+		me.api = me.Gearbox.hostApi
 	}
 	return me.api
 }

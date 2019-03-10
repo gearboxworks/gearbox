@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-const linuxSuggestedBaseDir = "projects"
+const linuxSuggestedBasedir = "projects"
 
 var LinuxConnectorInstance = (*LinuxConnector)(nil)
 
@@ -14,9 +14,9 @@ type LinuxConnector struct {
 	NixConnector
 }
 
-func (me *LinuxConnector) GetSuggestedBaseDir() string {
+func (me *LinuxConnector) GetSuggestedBasedir() string {
 	return fmt.Sprintf("%s/%s",
 		me.GetUserHomeDir(),
-		linuxSuggestedBaseDir,
+		linuxSuggestedBasedir,
 	)
 }

@@ -71,7 +71,7 @@ func (me *HostApi) getStackResponse(ctx echo.Context) interface{} {
 	return response
 }
 
-func (me *HostApi) getStackMembersResponse(ctx echo.Context) interface{} {
+func (me *HostApi) getServicesResponse(ctx echo.Context) interface{} {
 	var response interface{}
 	for range only.Once {
 		response = me.getStackResponse(ctx)
@@ -88,40 +88,40 @@ func (me *HostApi) getStackMembersResponse(ctx echo.Context) interface{} {
 			}
 			break
 		}
-		response = stack.GetMembers()
+		response = stack.GetServiceMap()
 	}
 	return response
 }
 
-func (me *HostApi) getStackMemberResponse(ctx echo.Context) interface{} {
+func (me *HostApi) getServiceResponse(ctx echo.Context) interface{} {
 	var response interface{}
 	for range only.Once {
-		response := me.getStackMembersResponse(ctx)
+		response := me.getServicesResponse(ctx)
 		if _, ok := response.(api.Status); ok {
 			break
 		}
-		memberMap, ok := response.(StackMemberMap)
+		serviceMap, ok := response.(ServiceMap)
 		if !ok {
 			response = &api.Status{
 				StatusCode: http.StatusInternalServerError,
-				Error: fmt.Errorf("unexpected: member map for stack '%s' not found",
+				Error: fmt.Errorf("unexpected: service map for stack '%s' not found",
 					me.getStackName(ctx),
 				),
 			}
 			break
 		}
-		member, ok := memberMap[me.getStackMemberName(ctx)]
+		service, ok := serviceMap[me.getServiceName(ctx)]
 		if !ok {
 			response = &api.Status{
 				StatusCode: http.StatusInternalServerError,
-				Error: fmt.Errorf("unexpected: member map '%s' for stack '%s' not found",
-					me.getStackMemberName(ctx),
+				Error: fmt.Errorf("unexpected: service map '%s' for stack '%s' not found",
+					me.getServiceName(ctx),
 					me.getStackName(ctx),
 				),
 			}
 			break
 		}
-		response = member
+		response = service
 	}
 	return response
 }
@@ -130,21 +130,18 @@ func (me *HostApi) getStackName(ctx echo.Context) StackName {
 	return StackName(ctx.Param("stack"))
 }
 
-func (me *HostApi) getStackMemberName(ctx echo.Context) StackMemberName {
-	return StackMemberName(ctx.Param("member"))
+func (me *HostApi) getServiceName(ctx echo.Context) ServiceName {
+	return ServiceName(ctx.Param("service"))
 }
 
 func (me *HostApi) addRoutes() {
 
 	_api := me.Api
 	_api.GET("/", "root", func(rt string, ctx echo.Context) error {
-		defaults := apiResponseDefaults()
-		defaults.Meta.RequestType = rt
-		defaults.Links[rt] = "/"
-		return me.jsonMarshalHandler(_api, ctx, rt, defaults)
+		return me.jsonMarshalHandler(_api, ctx, rt, nil)
 	})
 
-	me.addBaseDirRoutes()
+	me.addBasedirRoutes()
 	me.addProjectRoutes()
 	me.addStackRoutes()
 
@@ -181,23 +178,23 @@ func (me *HostApi) addStackRoutes() {
 	_api.GET("/stacks/:stack", "stack", func(rt string, ctx echo.Context) error {
 		response := me.getStackResponse(ctx)
 		if _, ok := response.(*api.Status); !ok {
-			response = response.(*Stack).CloneSansMembers()
+			response = response.(*Stack).CloneSansServices()
 		}
 		return me.jsonMarshalHandler(_api, ctx, rt, response)
 	})
 
-	_api.GET("/stacks/:stack/members", "stack-members", func(rt string, ctx echo.Context) error {
-		response := me.getStackMembersResponse(ctx)
+	_api.GET("/stacks/:stack/services", "stack-services", func(rt string, ctx echo.Context) error {
+		response := me.getServicesResponse(ctx)
 		return me.jsonMarshalHandler(_api, ctx, rt, response)
 	})
 
-	_api.GET("/stacks/:stack/members/:member", "stack-member", func(rt string, ctx echo.Context) error {
-		response := me.getStackMemberResponse(ctx)
+	_api.GET("/stacks/:stack/services/:service", "stack-service", func(rt string, ctx echo.Context) error {
+		response := me.getServiceResponse(ctx)
 		return me.jsonMarshalHandler(_api, ctx, rt, response)
 	})
 
-	_api.GET("/stacks/:stack/members/:member/options", "stack-member-options", func(rt string, ctx echo.Context) error {
-		response := me.getStackMemberResponse(ctx)
+	_api.GET("/stacks/:stack/services/:service/options", "stack-service-options", func(rt string, ctx echo.Context) error {
+		response := me.getServiceResponse(ctx)
 		response = me.Gearbox.RequestAvailableContainers(&dockerhub.ContainerQuery{})
 		return me.jsonMarshalHandler(_api, ctx, rt, response)
 	})
@@ -242,28 +239,28 @@ func (me *HostApi) addProjectRoutes() {
 		})
 	})
 }
-func (me *HostApi) addBaseDirRoutes() {
+func (me *HostApi) addBasedirRoutes() {
 	_api := me.Api
 
 	_api.GET("/basedirs", "basedirs", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.GetHostBaseDirs())
+		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.GetHostBasedirs())
 	})
 
 	_api.POST("/basedirs/new", "basedir-add", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.addBaseDir(me.Gearbox, ctx, rt))
+		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(me.Gearbox, ctx, rt))
 	})
 
 	_api.PUT("/basedirs/:nickname", "basedir-update", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBaseDir(me.Gearbox, ctx, rt))
+		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(me.Gearbox, ctx, rt))
 	})
 
 	_api.DELETE("/basedirs/:nickname", "basedir-delete", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBaseDir(me.Gearbox, ctx, rt))
+		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(me.Gearbox, ctx, rt))
 	})
 
 }
 
-func readBaseDirFromRequest(name string, ctx echo.Context, bd *BaseDir) (status Status) {
+func readBasedirFromRequest(name string, ctx echo.Context, bd *Basedir) (status Status) {
 	for range only.Once {
 		apiHelp := GetApiHelp(name)
 		defer api.CloseRequestBody(ctx)
@@ -295,28 +292,28 @@ func readBaseDirFromRequest(name string, ctx echo.Context, bd *BaseDir) (status 
 	return status
 }
 
-func (me *HostApi) addBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
-	bd := BaseDir{}
-	status = readBaseDirFromRequest(requestType, ctx, &bd)
+func (me *HostApi) addBasedir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
+	bd := Basedir{}
+	status = readBasedirFromRequest(requestType, ctx, &bd)
 	if !status.IsError() {
 		me.Gearbox.RequestType = requestType
-		status = me.Gearbox.AddBaseDir(bd.HostDir, bd.Nickname)
+		status = me.Gearbox.AddBasedir(bd.HostDir, bd.Nickname)
 	}
 	return status
 }
-func (me *HostApi) updateBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
-	bd := BaseDir{}
-	status = readBaseDirFromRequest(requestType, ctx, &bd)
+func (me *HostApi) updateBasedir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
+	bd := Basedir{}
+	status = readBasedirFromRequest(requestType, ctx, &bd)
 	if !status.IsError() {
 		me.Gearbox.RequestType = requestType
-		status = me.Gearbox.UpdateBaseDir(bd.Nickname, bd.HostDir)
+		status = me.Gearbox.UpdateBasedir(bd.Nickname, bd.HostDir)
 	}
 	return status
 }
 
-func (me *HostApi) deleteNamedBaseDir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
+func (me *HostApi) deleteNamedBasedir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
 	me.Gearbox.RequestType = requestType
-	return me.Gearbox.DeleteNamedBaseDir(getBaseDirNickname(ctx))
+	return me.Gearbox.DeleteNamedBasedir(getBasedirNickname(ctx))
 }
 
 func (me *HostApi) getProject(ctx echo.Context, requestType string) (response interface{}) {
@@ -336,7 +333,7 @@ func getProjectHostname(ctx echo.Context) string {
 	return ctx.Param("hostname")
 }
 
-func getBaseDirNickname(ctx echo.Context) string {
+func getBasedirNickname(ctx echo.Context) string {
 	return ctx.Param("nickname")
 }
 

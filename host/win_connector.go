@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-const winSuggestedBaseDir = "Gearbox Sites"
+const winSuggestedBasedir = "Gearbox Sites"
 
 var WinConnectorInstance = (*WinConnector)(nil)
 
@@ -14,10 +14,10 @@ type WinConnector struct {
 	BaseConnector
 }
 
-func (me *WinConnector) GetSuggestedBaseDir() string {
+func (me *WinConnector) GetSuggestedBasedir() string {
 	return fmt.Sprintf("%s\\%s",
 		me.GetUserHomeDir(),
-		winSuggestedBaseDir,
+		winSuggestedBasedir,
 	)
 }
 

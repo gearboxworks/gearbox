@@ -9,7 +9,7 @@ type Connector interface {
 	GetAdminPath() string
 	GetAdminRootDir() string
 	GetUserConfigDir() string
-	GetSuggestedBaseDir() string
+	GetSuggestedBasedir() string
 	GetUserHomeDir() string
 	GetCacheDir() string
 }

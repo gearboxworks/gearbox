@@ -2,8 +2,10 @@ package gearbox
 
 import (
 	"encoding/json"
+	"fmt"
 	"gearbox/dockerhub"
 	"gearbox/host"
+	"gearbox/only"
 	"log"
 )
 
@@ -15,6 +17,7 @@ type Gearbox struct {
 	Stacks        StackMap
 	RequestType   string
 	Options       *GlobalOptions
+	hostApi 	  *HostApi
 }
 
 type GearboxArgs Gearbox
@@ -36,6 +39,7 @@ func NewGearbox(args *GearboxArgs) *Gearbox {
 	if args.Options == nil {
 		gb.Options = &GlobalOptions{}
 	}
+	gb.hostApi = NewHostApi(&gb)
 	return &gb
 }
 
@@ -66,16 +70,16 @@ func (me *Gearbox) ProjectExists(hostname string) (ok bool) {
 	return me.Config.Projects.ProjectExists(hostname)
 }
 
-func (me *Gearbox) NamedBaseDirExists(nickname string) bool {
-	return me.Config.BaseDirs.NamedBaseDirExists(nickname)
+func (me *Gearbox) NamedBasedirExists(nickname string) bool {
+	return me.Config.Basedirs.NamedBasedirExists(nickname)
 }
 
-func (me *Gearbox) BaseDirExists(dir string) bool {
-	return me.Config.BaseDirs.BaseDirExists(dir)
+func (me *Gearbox) BasedirExists(dir string) bool {
+	return me.Config.Basedirs.BasedirExists(dir)
 }
 
-func (me *Gearbox) AddBaseDir(dir string, nickname ...string) (status Status) {
-	status = me.Config.BaseDirs.AddBaseDir(me, dir, nickname...)
+func (me *Gearbox) AddBasedir(dir string, nickname ...string) (status Status) {
+	status = me.Config.Basedirs.AddBasedir(me, dir, nickname...)
 	if !status.IsError() {
 		status2 := me.Config.LoadProjectsAndWrite()
 		if status2.IsError() {
@@ -85,8 +89,8 @@ func (me *Gearbox) AddBaseDir(dir string, nickname ...string) (status Status) {
 	return status
 }
 
-func (me *Gearbox) UpdateBaseDir(nickname string, dir string) (status Status) {
-	status = me.Config.BaseDirs.UpdateBaseDir(me, nickname, dir)
+func (me *Gearbox) UpdateBasedir(nickname string, dir string) (status Status) {
+	status = me.Config.Basedirs.UpdateBasedir(me, nickname, dir)
 	if !status.IsError() {
 		status2 := me.Config.LoadProjectsAndWrite()
 		if status2.IsError() {
@@ -96,8 +100,8 @@ func (me *Gearbox) UpdateBaseDir(nickname string, dir string) (status Status) {
 	return status
 }
 
-func (me *Gearbox) DeleteNamedBaseDir(nickname string) (status Status) {
-	status = me.Config.BaseDirs.DeleteNamedBaseDir(me, nickname)
+func (me *Gearbox) DeleteNamedBasedir(nickname string) (status Status) {
+	status = me.Config.Basedirs.DeleteNamedBasedir(me, nickname)
 	if !status.IsError() {
 		status2 := me.Config.LoadProjectsAndWrite()
 		if status2.IsError() {
@@ -106,9 +110,9 @@ func (me *Gearbox) DeleteNamedBaseDir(nickname string) (status Status) {
 	}
 	return status
 }
-func (me *Gearbox) ValidateBaseDirNickname(nn string, args *validateArgs) Status {
+func (me *Gearbox) ValidateBasedirNickname(nn string, args *validateArgs) Status {
 	args.Gearbox = me
-	return ValidateBaseDirNickname(nn, args)
+	return ValidateBasedirNickname(nn, args)
 }
 
 func (me *Gearbox) ValidateProjectHostname(hn string, args *validateArgs) Status {
@@ -125,4 +129,37 @@ func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery
 	}
 	dh := dockerhub.DockerHub{}
 	return dh.RequestAvailableContainerNames(_query)
+}
+
+func getFirstBasedir(basedirs []string) (basedir string) {
+	if len(basedirs)==0 {
+		basedir = PrimaryBasedirNickname
+	} else {
+		basedir = basedirs[0]
+	}
+	return basedir
+}
+
+func (me *Gearbox) GetProjectDir(hostname string, basedirs ...string) (basedir string, err error) {
+	for range only.Once {
+		var bd string
+		bd,err = me.Config.GetHostBasedir(getFirstBasedir(basedirs))
+		if err != nil {
+			break
+		}
+		basedir = fmt.Sprintf("%s/%s",bd,hostname)
+	}
+	return basedir,err
+}
+
+func (me *Gearbox) GetProjectFilepath(hostname string, basedirs ...string) (basedir string, err error) {
+	for range only.Once {
+		var pd string
+		pd,err = me.GetProjectDir(hostname,getFirstBasedir(basedirs))
+		if err != nil {
+			break
+		}
+		basedir = fmt.Sprintf("%s/%s",pd,ProjectFilename)
+	}
+	return basedir,err
 }

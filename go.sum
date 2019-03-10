@@ -4,6 +4,8 @@ github.com/apcera/libretto v0.11.0/go.mod h1:9bCXjm5M0gafGzozqBA7oOvh7nd8yicZ6cv
 github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48 h1:l9RDXySez/kS9116AdiHPtK5RDqOoLlUPjNRRBt7bog=
 github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48/go.mod h1:cXeNj+QhW0mxc26R8I87i6ekZz/VEvdx8/KSRwdc5BU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
+github.com/cznic/golex v0.0.0-20181122101858-9c343928389c h1:G8zTsaqyVfIHpgMFcGgdbhHSFhlNc77rAKkhVbQ9kQg=
+github.com/cznic/golex v0.0.0-20181122101858-9c343928389c/go.mod h1:+bmmJDNmKlhWNG+gwWCkaBoTy39Fs+bzRxVBzoTQbIc=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
@@ -39,6 +41,8 @@ github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6Kllzaw
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4 h1:gKMu1Bf6QINDnvyZuTaACm9ofY+PRh+5vFz4oxBZeF8=
 github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4/go.mod h1:50wTf68f99/Zt14pr046Tgt3Lp2vLyFZKzbFXTOabXw=
+github.com/z7zmey/php-parser v0.6.0 h1:wFYAvINirrwWsCRHV+32HWo9U/vQCvhW3CDB6apWq88=
+github.com/z7zmey/php-parser v0.6.0/go.mod h1:xnGTLhHQs5VFWzvKo1wMgEjVwclZmQybMDeEBMBN/AU=
 github.com/zserge/lorca v0.1.6-0.20190218211750-4829a608311d/go.mod h1:gTrVdXKyWxNhc8aUb1Uu3s0mY343arR1T6jUtxmBxR8=
 github.com/zserge/lorca v0.1.6 h1:+vPEY29oMLZK34lvRVM+OBytJK3hMQTGaeLsGym240c=
 github.com/zserge/lorca v0.1.6/go.mod h1:gTrVdXKyWxNhc8aUb1Uu3s0mY343arR1T6jUtxmBxR8=

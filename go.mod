@@ -3,6 +3,7 @@ module gearbox
 require (
 	github.com/apcera/libretto v0.11.0
 	github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48 // indirect
+	github.com/cznic/golex v0.0.0-20181122101858-9c343928389c // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/fatih/color v1.7.0
 	github.com/gernest/wow v0.1.0
@@ -19,6 +20,7 @@ require (
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4 // indirect
+	github.com/z7zmey/php-parser v0.6.0
 	github.com/zserge/lorca v0.1.6
 	github.com/zserge/webview v0.0.0-20190123072648-16c93bcaeaeb
 	golang.org/x/crypto v0.0.0-20190211182817-74369b46fc67

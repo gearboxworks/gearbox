@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type Ssh struct {
+type SSH struct {
 	Instance *ssh.Client
 
 	//	// Status polling delays.
@@ -20,19 +20,22 @@ type Ssh struct {
 	//	WaitRetries   int
 
 	// SSH related.
-	SshUsername  string
-	SshPassword  string
-	SshHost      string
-	SshPort      string
-	SshPublicKey string
-
-	//	SshOkString    string
-	//	SshWait        time.Duration
-	SshStatusLine         string
-	DisableStatusLine     bool
-	StatusLineUpdateDelay time.Duration
+	Username   string
+	Password   string
+	Host       string
+	Port       string
+	PublicKey  string
+	StatusLine StatusLine
+	//	OkString    string
+	//	Wait        time.Duration
 }
-type SshArgs Ssh
+type StatusLine struct {
+	Text        string
+	Disable     bool
+	UpdateDelay time.Duration
+}
+
+type SshArgs SSH
 
 const SshDefaultUsername = "boxuser"
 const SshDefaultPassword = "box"
@@ -57,7 +60,7 @@ func (me *Gearbox) ConnectSSH(sshArgs SshArgs) error {
 
 // //////////////////////////////////////////////////////////////////////////////
 // Low-level related
-func NewSsh(gb Gearbox, args ...SshArgs) (*Ssh, error) {
+func NewSsh(gb Gearbox, args ...SshArgs) (*SSH, error) {
 
 	var err error
 	var _args SshArgs
@@ -65,39 +68,39 @@ func NewSsh(gb Gearbox, args ...SshArgs) (*Ssh, error) {
 		_args = args[0]
 	}
 
-	if _args.SshUsername == "" {
-		_args.SshUsername = SshDefaultUsername
+	if _args.Username == "" {
+		_args.Username = SshDefaultUsername
 	}
 
-	if _args.SshPassword == "" {
-		_args.SshPassword = SshDefaultPassword
+	if _args.Password == "" {
+		_args.Password = SshDefaultPassword
 	}
 
-	if _args.StatusLineUpdateDelay == 0 {
-		_args.StatusLineUpdateDelay = SshDefaultStatusLineUpdateDelay
+	if _args.StatusLine.UpdateDelay == 0 {
+		_args.StatusLine.UpdateDelay = SshDefaultStatusLineUpdateDelay
 	}
 
-	if _args.SshHost == "" {
-		_args.SshHost = SshDefaultSshHost
+	if _args.Host == "" {
+		_args.Host = SshDefaultSshHost
 	}
 
-	if _args.SshPort == "" {
-		_args.SshPort = SshDefaultSshPort
+	if _args.Port == "" {
+		_args.Port = SshDefaultSshPort
 	}
 
-	if _args.SshPublicKey == "" {
-		_args.SshPublicKey = SshDefaultKeyFile
+	if _args.PublicKey == "" {
+		_args.PublicKey = SshDefaultKeyFile
 	}
 
 	sshConfig := &ssh.ClientConfig{}
 
 	// Try SSH key file first.
-	keyfile, err := readPublicKeyFile(_args.SshPublicKey)
+	keyfile, err := readPublicKeyFile(_args.PublicKey)
 	if err == nil && keyfile != nil {
 		// Authenticate using SSH key.
 		authenticate := []ssh.AuthMethod{keyfile}
 		sshConfig = &ssh.ClientConfig{
-			User: _args.SshUsername,
+			User: _args.Username,
 			Auth: authenticate,
 			// HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
@@ -105,22 +108,22 @@ func NewSsh(gb Gearbox, args ...SshArgs) (*Ssh, error) {
 		}
 	} else {
 		sshConfig = &ssh.ClientConfig{
-			User: _args.SshUsername,
-			Auth: []ssh.AuthMethod{ssh.Password(_args.SshPassword)},
+			User: _args.Username,
+			Auth: []ssh.AuthMethod{ssh.Password(_args.Password)},
 			// HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 			Timeout:         time.Second * 10,
 		}
 	}
 
-	_args.Instance, err = ssh.Dial("tcp", fmt.Sprintf("%s:%s", _args.SshHost, _args.SshPort), sshConfig)
+	_args.Instance, err = ssh.Dial("tcp", fmt.Sprintf("%s:%s", _args.Host, _args.Port), sshConfig)
 	if err != nil {
 		fmt.Printf("Gearbox SSH error: %s\n", err)
 		return nil, err
 	}
 
-	sshClient := &Ssh{}
-	*sshClient = Ssh(_args)
+	sshClient := &SSH{}
+	*sshClient = SSH(_args)
 
 	// Query VB to see if it exists.
 	// If not return nil.
@@ -145,7 +148,7 @@ func readPublicKeyFile(file string) (ssh.AuthMethod, error) {
 	return ssh.PublicKeys(signer), err
 }
 
-func (me *Ssh) StartSsh() error {
+func (me *SSH) StartSsh() error {
 
 	if me == nil || me.Instance == nil {
 		// Throw software error.
@@ -219,33 +222,33 @@ func (me *Ssh) StartSsh() error {
 	return nil
 }
 
-func (me *Ssh) StatusLineWorker(termHeight int, termWidth int) {
+func (me *SSH) StatusLineWorker(termHeight int, termWidth int) {
 	const savePos = "[s"
 	const restorePos = "[u"
 	bottomPos := fmt.Sprintf("[%d;0H", termHeight)
 	scrollFix := fmt.Sprintf("[1;%dr", termHeight-1)
-	if me.DisableStatusLine == false {
+	if me.StatusLine.Disable == false {
 		fmt.Printf(scrollFix)
 	}
 
 	for {
-		if me.DisableStatusLine == false {
-			fmt.Printf("%s%s%s%s", savePos, bottomPos, me.SshStatusLine, restorePos)
+		if me.StatusLine.Disable == false {
+			fmt.Printf("%s%s%s%s", savePos, bottomPos, me.StatusLine.Text, restorePos)
 		}
 
-		time.Sleep(me.StatusLineUpdateDelay)
+		time.Sleep(me.StatusLine.UpdateDelay)
 	}
 }
 
-func (me *Ssh) SetStatusLine(text string) {
+func (me *SSH) SetStatusLine(text string) {
 
-	me.SshStatusLine = text
+	me.StatusLine.Text = text
 	// fmt.Printf("%s%s%d%s", savePos, bottomPos, time.Now().Unix(), restorePos)
 }
 
-// Example host worker. This periodically changes the me.SshStatusLine from the host side.
-// The StatusLineWorker() will update the bottom line using the me.SshStatusLine.
-func (me *Ssh) exampleHostWorker() {
+// Example host worker. This periodically changes the me.Text from the host side.
+// The StatusLineWorker() will update the bottom line using the me.Text.
+func (me *SSH) exampleHostWorker() {
 
 	yellow := color.New(color.BgBlack, color.FgHiYellow).SprintFunc()
 	magenta := color.New(color.BgBlack, color.FgHiMagenta).SprintFunc()

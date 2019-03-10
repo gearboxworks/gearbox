@@ -63,10 +63,10 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			switch len(args) {
 			case 1:
-				status := gearbox.Instance.AddBaseDir(args[0])
+				status := gearbox.Instance.AddBasedir(args[0])
 				fmt.Printf(status.Message)
 			case 2:
-				status := gearbox.Instance.AddBaseDir(args[0], args[1])
+				status := gearbox.Instance.AddBasedir(args[0], args[1])
 				fmt.Printf(status.Message)
 			}
 		},
