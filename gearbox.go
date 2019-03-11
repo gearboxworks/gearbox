@@ -148,22 +148,22 @@ func getFirstBasedir(basedirs []string) (basedir string) {
 	return basedir
 }
 
-func (me *Gearbox) GetProjectDir(hostname string, basedirs ...string) (basedir string, err error) {
+func (me *Gearbox) GetProjectDir(path string, basedirs ...string) (basedir string, err error) {
 	for range only.Once {
 		var bd string
 		bd, err = me.Config.GetHostBasedir(getFirstBasedir(basedirs))
 		if err != nil {
 			break
 		}
-		basedir = filepath.FromSlash(fmt.Sprintf("%s/%s", bd, hostname))
+		basedir = filepath.FromSlash(fmt.Sprintf("%s/%s", bd, path))
 	}
 	return basedir, err
 }
 
-func (me *Gearbox) GetProjectFilepath(hostname string, basedirs ...string) (pfp string, err error) {
+func (me *Gearbox) GetProjectFilepath(path string, basedirs ...string) (pfp string, err error) {
 	for range only.Once {
 		var pd string
-		pd, err = me.GetProjectDir(hostname, getFirstBasedir(basedirs))
+		pd, err = me.GetProjectDir(path, getFirstBasedir(basedirs))
 		if err != nil {
 			break
 		}

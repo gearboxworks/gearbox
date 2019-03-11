@@ -38,6 +38,7 @@ type ProjectResponse struct {
 	Enabled    bool       `json:"enabled"`
 	Basedir    string     `json:"basedir"`
 	Notes      string     `json:"notes"`
+	Path       string     `json:"path"`
 	ProjectDir string     `json:"project_dir"`
 	Aliases    Aliases    `json:"aliases"`
 	ServiceMap ServiceMap `json:"stack"`
@@ -49,6 +50,7 @@ func NewProjectResponse(p *Project) *ProjectResponse {
 		Scope:      p.Scope,
 		Basedir:    p.Basedir,
 		Notes:      p.Notes,
+		Path:       p.Path,
 		Aliases:    p.Aliases,
 		ServiceMap: p.ServiceMap,
 		ProjectDir: filepath.Dir(p.projectDetails.Filepath),
@@ -56,7 +58,7 @@ func NewProjectResponse(p *Project) *ProjectResponse {
 }
 
 func (me *Project) GetProjectFilepath() (fp string, err error) {
-	return me.Gearbox.GetProjectFilepath(me.Hostname, me.Basedir)
+	return me.Gearbox.GetProjectFilepath(me.Path, me.Basedir)
 }
 
 func (me *Project) LoadProjectFile() (status Status) {
