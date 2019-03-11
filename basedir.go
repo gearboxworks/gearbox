@@ -44,8 +44,8 @@ func ExpandHostBasedirPath(gb *Gearbox, nickname string, path string) (fp string
 		ApiHelpUrl:     GetApiDocsUrl(gb.RequestType),
 	})
 	if !status.IsError() {
-		bd,_ := gb.Config.GetHostBasedir(nickname)
-		fp = fmt.Sprintf("%s/%s",bd,path)
+		bd, _ := gb.Config.GetHostBasedir(nickname)
+		fp = filepath.FromSlash(fmt.Sprintf("%s/%s", bd, path))
 	}
 	return fp, status
 }
@@ -101,7 +101,7 @@ func (me *Basedir) Initialize() (status Status) {
 			break
 		}
 		if me.BoxDir == "" || me.BoxDir == boxBasedir {
-			me.BoxDir = fmt.Sprintf("%s/%s", boxBasedir, me.Nickname)
+			me.BoxDir = filepath.FromSlash(fmt.Sprintf("%s/%s", boxBasedir, me.Nickname))
 		}
 	}
 	return status

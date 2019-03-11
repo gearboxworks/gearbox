@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 //
@@ -215,7 +216,7 @@ func (me *AdminUi) GetWebRootDir() http.Dir {
 }
 
 func (me *AdminUi) GetWebRootFileDir() string {
-	return fmt.Sprintf("%s/index.html", me.GetWebRootDir())
+	return filepath.FromSlash(fmt.Sprintf("%s/index.html", me.GetWebRootDir()))
 }
 
 func (me *AdminUi) GetWebHandler() http.Handler {

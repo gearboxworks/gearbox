@@ -34,7 +34,7 @@ func (me *Cache) Close(f *os.File) {
 
 func (me *Cache) Get(key string) (data []byte, err error) {
 	for range only.Once {
-		fn := fmt.Sprintf("%s/%s.json", me.Dir, key)
+		fn := filepath.FromSlash(fmt.Sprintf("%s/%s.json", me.Dir, key))
 		var f *os.File
 		f, err = os.Open(fn)
 		if err != nil {
@@ -88,7 +88,7 @@ func (me *Cache) Set(key string, b []byte, duration string) (err error) {
 		if err != nil {
 			break
 		}
-		f := fmt.Sprintf("%s/%s.json", me.Dir, key)
+		f := filepath.FromSlash(fmt.Sprintf("%s/%s.json", me.Dir, key))
 		d := filepath.Dir(f)
 		if !dirExists(d) {
 			err = os.Mkdir(filepath.Dir(f), 0777)

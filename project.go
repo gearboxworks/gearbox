@@ -81,7 +81,7 @@ func (me *Project) LoadProjectFile() (status Status) {
 		if len(j) > 0 {
 			status = pf.Unmarshal(j)
 		}
-		status = pf.FixupStackMap()
+		status = pf.FixupStack()
 		if status.IsError() {
 			break
 		}

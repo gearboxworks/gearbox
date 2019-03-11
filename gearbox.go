@@ -7,6 +7,7 @@ import (
 	"gearbox/host"
 	"gearbox/only"
 	"log"
+	"path/filepath"
 )
 
 type JsonFileScope string
@@ -154,19 +155,19 @@ func (me *Gearbox) GetProjectDir(hostname string, basedirs ...string) (basedir s
 		if err != nil {
 			break
 		}
-		basedir = fmt.Sprintf("%s/%s", bd, hostname)
+		basedir = filepath.FromSlash(fmt.Sprintf("%s/%s", bd, hostname))
 	}
 	return basedir, err
 }
 
-func (me *Gearbox) GetProjectFilepath(hostname string, basedirs ...string) (basedir string, err error) {
+func (me *Gearbox) GetProjectFilepath(hostname string, basedirs ...string) (pfp string, err error) {
 	for range only.Once {
 		var pd string
 		pd, err = me.GetProjectDir(hostname, getFirstBasedir(basedirs))
 		if err != nil {
 			break
 		}
-		basedir = fmt.Sprintf("%s/%s", pd, ProjectFilename)
+		pfp = filepath.FromSlash(fmt.Sprintf("%s/%s", pd, ProjectFilename))
 	}
-	return basedir, err
+	return pfp, err
 }

@@ -39,8 +39,7 @@ func (me *Candidate) GetHostBasedir() (string, error) {
 
 func (me *Candidate) IsProject() bool {
 	bd, err := me.GetHostBasedir()
-	fp := fmt.Sprintf("%s/%s/%s", bd, me.Path, ProjectFilename)
-	fp = filepath.FromSlash(fp)
+	fp := filepath.FromSlash(fmt.Sprintf("%s/%s/%s", bd, me.Path, ProjectFilename))
 	return err == nil && util.FileExists(fp)
 }
 

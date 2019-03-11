@@ -72,6 +72,37 @@ func (me *ProjectFile) Unmarshal(j []byte) (status Status) {
 	return status
 }
 
+func (me *ProjectFile) FixupStack() (status Status) {
+	for role, item := range me.StackBag {
+		sr := NewStackRole()
+		status = sr.Parse(RoleName(role))
+		if status.IsError() {
+			break
+		}
+		var service *Service
+		service, status = me.FixupStackItem(item, role)
+		if status.IsError() {
+			break
+		}
+		service.StackRole = sr
+		me.ServiceMap[role] = service
+	}
+	if !status.IsError() {
+		status = NewOkStatus("stack fixup for '%s' complete", me.Hostname)
+	}
+	return status
+}
+
+//
+// This processes stack items (services) to allow a service to be specified as any of:
+//
+//		1. A service ID string
+//		2. An array of service ID strings
+//		3. A service object
+//		4. An array of service objects
+//
+// Stacks are loaded as a map[string]interface{} to enable this type of processing.
+//
 func (me *ProjectFile) FixupStackItem(item interface{}, role RoleName) (*Service, Status) {
 	var status Status
 	service := NewService(&ServiceArgs{
@@ -133,25 +164,4 @@ func (me *ProjectFile) FixupStackItem(item interface{}, role RoleName) (*Service
 		}
 	}
 	return service, status
-}
-
-func (me *ProjectFile) FixupStackMap() (status Status) {
-	for role, item := range me.StackBag {
-		sr := NewStackRole()
-		status = sr.Parse(RoleName(role))
-		if status.IsError() {
-			break
-		}
-		var service *Service
-		service, status = me.FixupStackItem(item, role)
-		if status.IsError() {
-			break
-		}
-		service.StackRole = sr
-		me.ServiceMap[role] = service
-	}
-	if !status.IsError() {
-		status = NewOkStatus("stack fixup for '%s' complete", me.Hostname)
-	}
-	return status
 }

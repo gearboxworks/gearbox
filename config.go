@@ -71,24 +71,24 @@ func (me *Config) Initialize() (status Status) {
 }
 
 func (me *Config) GetBasedirNicknames() (nns []string) {
-	nns = make([]string,len(me.Basedirs))
+	nns = make([]string, len(me.Basedirs))
 	i := 0
-	for nn,_ := range me.Basedirs {
+	for nn, _ := range me.Basedirs {
 		nns[i] = nn
 		i++
 	}
 	return nns
 }
 
-func (me *Config) GetHostBasedir(nickname string) (basedir string,err error) {
+func (me *Config) GetHostBasedir(nickname string) (basedir string, err error) {
 	bd, ok := me.Basedirs[nickname]
 	if ok {
 		basedir = bd.HostDir
 	} else {
 		err = util.AddHelpToError(
-			fmt.Errorf("basedir nickname '%s' is not valid",basedir),
+			fmt.Errorf("basedir nickname '%s' is not valid", basedir),
 			fmt.Sprintf("Add '%s' as a new basedir, or use one of these valid nicknames: %s",
-				util.OxfordComma(me.GetBasedirNicknames(),&util.OxfordCommaArgs{
+				util.OxfordComma(me.GetBasedirNicknames(), &util.OxfordCommaArgs{
 					SingleQuote: true,
 					Conjunction: "or",
 				}),
@@ -96,7 +96,7 @@ func (me *Config) GetHostBasedir(nickname string) (basedir string,err error) {
 			),
 		)
 	}
-	return basedir,err
+	return basedir, err
 }
 
 func (me *Config) GetHostBasedirs() map[string]string {
@@ -119,7 +119,7 @@ func (me *Config) GetDir() string {
 }
 
 func (me *Config) GetFilepath() string {
-	return fmt.Sprintf("%s/config.json", me.HostConnector.GetUserConfigDir())
+	return filepath.FromSlash(fmt.Sprintf("%s/config.json", me.HostConnector.GetUserConfigDir()))
 }
 
 func (me *Config) Write() (status Status) {
