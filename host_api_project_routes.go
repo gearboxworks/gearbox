@@ -12,7 +12,7 @@ func (me *HostApi) addProjectRoutes() {
 	_api.GET("/projects", "projects", func(rt string, ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Projects)
 	})
-	_api.GET("/projects/:hostname", "project", func(rt string, ctx echo.Context) error {
+	_api.GET("/projects/:hostname", "project-details", func(rt string, ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, rt, me.getProject(ctx, rt))
 	})
 	_api.GET("/projects/enabled", "projects-enabled", func(rt string, ctx echo.Context) error {

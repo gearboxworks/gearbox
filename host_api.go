@@ -175,7 +175,7 @@ func (me *HostApi) addStackRoutes() {
 		return me.jsonMarshalHandler(_api, ctx, rt, me.Gearbox.Stacks)
 	})
 
-	_api.GET("/stacks/:stack", "stack", func(rt string, ctx echo.Context) error {
+	_api.GET("/stacks/:stack", "stack-details", func(rt string, ctx echo.Context) error {
 		response := me.getStackResponse(ctx)
 		if _, ok := response.(*api.Status); !ok {
 			response = response.(*Stack).CloneSansServices()
