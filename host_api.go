@@ -59,7 +59,7 @@ func (me *HostApi) getStackResponse(ctx echo.Context) interface{} {
 	for range only.Once {
 		sn := me.getStackName(ctx)
 		var ok bool
-		response, ok = me.Gearbox.Stacks[StackName(sn)]
+		response, ok = me.Gearbox.Stacks[RoleName(sn)]
 		if !ok {
 			response = &api.Status{
 				StatusCode: http.StatusNotFound,
@@ -88,7 +88,7 @@ func (me *HostApi) getServicesResponse(ctx echo.Context) interface{} {
 			}
 			break
 		}
-		response = stack.GetServiceMap()
+		response = stack.GetRoleMap()
 	}
 	return response
 }
@@ -110,12 +110,12 @@ func (me *HostApi) getServiceResponse(ctx echo.Context) interface{} {
 			}
 			break
 		}
-		service, ok := serviceMap[me.getServiceName(ctx)]
+		service, ok := serviceMap[me.getRoleName(ctx)]
 		if !ok {
 			response = &api.Status{
 				StatusCode: http.StatusInternalServerError,
 				Error: fmt.Errorf("unexpected: service map '%s' for stack '%s' not found",
-					me.getServiceName(ctx),
+					me.getRoleName(ctx),
 					me.getStackName(ctx),
 				),
 			}
@@ -130,8 +130,8 @@ func (me *HostApi) getStackName(ctx echo.Context) StackName {
 	return StackName(ctx.Param("stack"))
 }
 
-func (me *HostApi) getServiceName(ctx echo.Context) ServiceName {
-	return ServiceName(ctx.Param("service"))
+func (me *HostApi) getRoleName(ctx echo.Context) RoleName {
+	return RoleName(ctx.Param("service"))
 }
 
 func (me *HostApi) addRoutes() {
@@ -200,45 +200,6 @@ func (me *HostApi) addStackRoutes() {
 	})
 }
 
-func (me *HostApi) addProjectRoutes() {
-	_api := me.Api
-	_api.GET("/projects", "projects", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Projects)
-	})
-	_api.GET("/projects/:hostname", "project", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getProject(ctx, rt))
-	})
-	_api.GET("/projects/enabled", "projects-enabled", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Projects.GetEnabled())
-	})
-	_api.GET("/projects/disabled", "projects-disabled", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Projects.GetDisabled())
-	})
-	_api.GET("/projects/candidates", "project-candidates", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Candidates)
-	})
-
-	_api.POST("/projects/new", "project-add", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      fmt.Errorf("the 'project-add' method has not been implemented yet"),
-		})
-	})
-
-	_api.POST("/projects/:hostname", "project-update", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      fmt.Errorf("the 'project-update' method has not been implemented yet"),
-		})
-	})
-
-	_api.DELETE("/projects/:hostname", "project-delete", func(rt string, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      fmt.Errorf("the 'project-delete' method has not been implemented yet"),
-		})
-	})
-}
 func (me *HostApi) addBasedirRoutes() {
 	_api := me.Api
 

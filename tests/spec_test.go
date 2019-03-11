@@ -16,46 +16,46 @@ func (me *SpecTest) GetData() test.Table {
 			Label: "Host and Role w/invalid Namespace",
 			In:    "@github.com/gearboxworks/dbserver",
 			Out: test.Out{
-				getSpec:      test.Args{Fail: true, Want: "invalid host '@github.com' in '@github.com/gearboxworks/dbserver'"},
+				getSpec: test.Args{Fail: true, Want: "invalid host '@github.com' in '@github.com/gearboxworks/dbserver'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
 			Label: "Host and Role w/invalid Namespace",
 			In:    "github.com/gearbox.works/dbserver",
 			Out: test.Out{
-				getSpec:      test.Args{Fail: true, Want: "invalid namespace 'gearbox.works' in spec 'github.com/gearbox.works/dbserver'"},
+				getSpec: test.Args{Fail: true, Want: "invalid namespace 'gearbox.works' in spec 'github.com/gearbox.works/dbserver'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
 			Label: "Namespace w/invalid Role",
 			In:    "gearboxworks/@dbserver",
 			Out: test.Out{
-				getSpec:      test.Args{Fail: true, Want: "invalid role '@dbserver' in 'gearboxworks/@dbserver'"},
+				getSpec: test.Args{Fail: true, Want: "invalid role '@dbserver' in 'gearboxworks/@dbserver'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
 			Label: "invalid Namespace w/Role",
 			In:    "gearbox#works/dbserver",
 			Out: test.Out{
-				getSpec:      test.Args{Fail: true, Want: "invalid namespace 'gearbox#works' in spec 'gearbox#works/dbserver'"},
+				getSpec: test.Args{Fail: true, Want: "invalid namespace 'gearbox#works' in spec 'gearbox#works/dbserver'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Namespace/Role/Version w/invalid Host",
+			Label: "Namespace/Role/Revision w/invalid Host",
 			In:    "github!/gearboxworks/dbserver:2",
 			Out: test.Out{
-				getSpec:      test.Args{Fail: true, Want: "invalid namespace 'github!/gearboxworks' in spec 'github!/gearboxworks/dbserver:2'"},
+				getSpec: test.Args{Fail: true, Want: "invalid namespace 'github!/gearboxworks' in spec 'github!/gearboxworks/dbserver:2'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Namespace/Role w/invalid Version",
+			Label: "Namespace/Role w/invalid Revision",
 			In:    "gearboxworks/dbserver:1a",
 			Out: test.Out{
-				getSpec:      test.Args{Fail: true, Want: "invalid version in 'gearboxworks/dbserver:1a'"},
+				getSpec: test.Args{Fail: true, Want: "invalid version in 'gearboxworks/dbserver:1a'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Namespace/Role/Version",
+			Label: "Namespace/Role/Revision",
 			In:    "gearboxworks/dbserver:2",
 			Out: test.Out{
 				getSpec:      test.Args{Fail: false, Want: "gearboxworks/dbserver:2"},
@@ -67,7 +67,7 @@ func (me *SpecTest) GetData() test.Table {
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Host/Namespace/Role/Version",
+			Label: "Host/Namespace/Role/Revision",
 			In:    "github.com/gearboxworks/dbserver:2",
 			Out: test.Out{
 				getSpec:      test.Args{Fail: false, Want: "github.com/gearboxworks/dbserver:2"},

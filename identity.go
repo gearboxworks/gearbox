@@ -8,43 +8,48 @@ import (
 )
 
 type Identity struct {
-	raw          string
-	group        string
-	_type        string
-	name         string
-	version      *DottedVersion
+	raw     string
+	Org     string         `json:"org,omitempty"`
+	Type    string         `json:"type,omitempty"`
+	Program string         `json:"program,omitempty"`
+	Version *DottedVersion `json:"version,omitempty"`
 }
+
 func NewIdentity() (id *Identity) {
 	return &Identity{}
 }
 
 func (me *Identity) Parse(identity string) (err error) {
 	const sharedHelp = "identities can take the form of either " +
-		"<group>/<type>/<name>:<version> or just " +
-		"<group>/<name>:<version>. Examples might include " +
+		"<org>/<type>/<program>:<version> or just " +
+		"<org>/<program>:<version>. Examples might include " +
 		"'google/flutter:1.3.8' or 'wordpress/plugins/akismet:4.1.1'"
 
 	var parts []string
 	var g string
 	var t string
-	var n string
+	var p string
 	for range only.Once {
 		v := NewDottedVersion()
 		err = v.Parse(util.After(identity, ":"))
 		if err != nil {
 			break
 		}
-		parts = strings.Split(util.Before(identity, ":"), "/")
+		before := util.Before(identity, ":")
+		if before == "" {
+			before = identity
+		}
+		parts = strings.Split(before, "/")
 		switch len(parts) {
 		case 1:
-			n = parts[0]
+			p = parts[0]
 		case 2:
 			g = parts[0]
-			n = parts[1]
+			p = parts[1]
 		case 3:
 			g = parts[0]
 			t = parts[1]
-			n = parts[2]
+			p = parts[2]
 		default:
 			err = util.AddHelpToError(
 				fmt.Errorf("too many slashes ('/') in identity '%s'", identity),
@@ -52,9 +57,9 @@ func (me *Identity) Parse(identity string) (err error) {
 			)
 			break
 		}
-		if n == "" {
+		if p == "" {
 			err = util.AddHelpToError(
-				fmt.Errorf("name is empty in identity '%s'", identity),
+				fmt.Errorf("program is empty in identity '%s'", identity),
 				fmt.Sprintf("%s. So you must have a 'name' such as 'flutter' or 'akismet' in the examples.",
 					sharedHelp,
 				),
@@ -62,10 +67,10 @@ func (me *Identity) Parse(identity string) (err error) {
 			break
 		}
 		me.raw = identity
-		me.group = g
-		me._type = t
-		me.name = n
-		me.version = v
+		me.Org = g
+		me.Type = t
+		me.Program = p
+		me.Version = v
 	}
 	return err
 }
@@ -79,34 +84,34 @@ func (me *Identity) GetRaw() string {
 }
 
 func (me *Identity) GetGroup() string {
-	return me.group
+	return me.Org
 }
 
 func (me *Identity) GetType() string {
-	return me._type
+	return me.Type
 }
 
 func (me *Identity) GetName() string {
-	return me.name
+	return me.Program
 }
 
 func (me *Identity) GetVersion() *DottedVersion {
-	if me.version == nil {
-		me.version = NewDottedVersion()
+	if me.Version == nil {
+		me.Version = NewDottedVersion()
 	}
-	return me.version
+	return me.Version
 }
 
 func (me *Identity) String() (id string) {
-	id = me.name
-	if me._type != "" {
-		id = fmt.Sprintf("%s/%s", me._type, id)
+	id = me.Program
+	if me.Type != "" {
+		id = fmt.Sprintf("%s/%s", me.Type, id)
 	}
-	if me.group != "" {
-		id = fmt.Sprintf("%s/%s", me.group, id)
+	if me.Org != "" {
+		id = fmt.Sprintf("%s/%s", me.Org, id)
 	}
-	if me.version != nil && me.version.GetRaw() != "" {
-		id = fmt.Sprintf("%s:%s", id, me.version.String())
+	if me.Version != nil && me.Version.GetRaw() != "" {
+		id = fmt.Sprintf("%s:%s", id, me.Version.String())
 	}
 	return id
 }

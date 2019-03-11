@@ -9,6 +9,13 @@ import (
 	"log"
 )
 
+type JsonFileScope string
+
+const (
+	ProjectScope   JsonFileScope = "project"
+	ContainerScope JsonFileScope = "container"
+)
+
 var Instance *Gearbox
 
 type Gearbox struct {
@@ -17,7 +24,7 @@ type Gearbox struct {
 	Stacks        StackMap
 	RequestType   string
 	Options       *GlobalOptions
-	hostApi 	  *HostApi
+	hostApi       *HostApi
 }
 
 type GearboxArgs Gearbox
@@ -132,7 +139,7 @@ func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery
 }
 
 func getFirstBasedir(basedirs []string) (basedir string) {
-	if len(basedirs)==0 {
+	if len(basedirs) == 0 {
 		basedir = PrimaryBasedirNickname
 	} else {
 		basedir = basedirs[0]
@@ -143,23 +150,23 @@ func getFirstBasedir(basedirs []string) (basedir string) {
 func (me *Gearbox) GetProjectDir(hostname string, basedirs ...string) (basedir string, err error) {
 	for range only.Once {
 		var bd string
-		bd,err = me.Config.GetHostBasedir(getFirstBasedir(basedirs))
+		bd, err = me.Config.GetHostBasedir(getFirstBasedir(basedirs))
 		if err != nil {
 			break
 		}
-		basedir = fmt.Sprintf("%s/%s",bd,hostname)
+		basedir = fmt.Sprintf("%s/%s", bd, hostname)
 	}
-	return basedir,err
+	return basedir, err
 }
 
 func (me *Gearbox) GetProjectFilepath(hostname string, basedirs ...string) (basedir string, err error) {
 	for range only.Once {
 		var pd string
-		pd,err = me.GetProjectDir(hostname,getFirstBasedir(basedirs))
+		pd, err = me.GetProjectDir(hostname, getFirstBasedir(basedirs))
 		if err != nil {
 			break
 		}
-		basedir = fmt.Sprintf("%s/%s",pd,ProjectFilename)
+		basedir = fmt.Sprintf("%s/%s", pd, ProjectFilename)
 	}
-	return basedir,err
+	return basedir, err
 }

@@ -8,16 +8,16 @@ import (
 
 type Stacks []*Stack
 
-type StackMap map[StackName]*Stack
+type StackMap map[RoleName]*Stack
 
-type StackBag map[StackName]interface{}
+type StackBag map[RoleName]interface{}
 
 type StackName string
 
 type Stack struct {
-	Name       StackName  `json:"name"`
-	Label      string     `json:"label"`
-	ServiceMap ServiceMap `json:"services,omitempty"`
+	Name    StackName `json:"name"`
+	Label   string    `json:"label"`
+	RoleMap RoleMap   `json:"services,omitempty"`
 }
 
 func (me *Stack) String() string {
@@ -31,19 +31,19 @@ func (me *Stack) CloneSansServices() *Stack {
 	return &s
 }
 
-func (me *Stack) GetServiceMap() ServiceMap {
-	mm := make(ServiceMap, len(me.ServiceMap))
+func (me *Stack) GetRoleMap() RoleMap {
+	mm := make(RoleMap, len(me.RoleMap))
 	ren := regexp.QuoteMeta(string(me.Label))
-	for mt, st := range me.ServiceMap {
-		sl := regexp.MustCompile(fmt.Sprintf("^%s", ren)).ReplaceAllString(st.Label, "")
-		mm[mt] = &Service{
-			Name:        ServiceName(fmt.Sprintf("%s/%s", me.Name, mt)),
+	for mt, r := range me.RoleMap {
+		sl := regexp.MustCompile(fmt.Sprintf("^%s", ren)).ReplaceAllString(r.Label, "")
+		mm[mt] = &StackRole{
+			Role:        RoleName(fmt.Sprintf("%s/%s", me.Name, mt)),
 			StackName:   me.Name,
 			ServiceType: string(mt),
-			Label:       st.Label,
+			Label:       r.Label,
 			ShortLabel:  strings.Trim(sl, " "),
-			Examples:    st.Examples,
-			Optional:    st.Optional,
+			Examples:    r.Examples,
+			Optional:    r.Optional,
 		}
 	}
 	return mm
@@ -54,20 +54,20 @@ func GetStackMap() StackMap {
 		"wordpress": &Stack{
 			Name:  "wordpress",
 			Label: "WordPress",
-			ServiceMap: ServiceMap{
-				"webserver": &Service{
+			RoleMap: RoleMap{
+				"webserver": &StackRole{
 					Label:    "WordPress Web Server",
 					Examples: []string{"Apache", "Nginx", "Caddy", "Lighttpd"},
 				},
-				"processvm": &Service{
+				"processvm": &StackRole{
 					Label:    "WordPress Process VM",
 					Examples: []string{"PHP", "HHVM"},
 				},
-				"dbserver": &Service{
+				"dbserver": &StackRole{
 					Label:    "WordPress Database Server",
 					Examples: []string{"MySQL", "MariaDB", "Percona"},
 				},
-				"cacheserver": &Service{
+				"cacheserver": &StackRole{
 					Label:    "WordPress Cache Server",
 					Examples: []string{"Redis", "Memcached"},
 					Optional: true,

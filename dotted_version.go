@@ -11,13 +11,13 @@ import (
 
 type DottedVersion struct {
 	raw        string
-	major      string
-	minor      string
-	patch      string
-	prerelease string
-	metadata   string
-	revision   string
-	Error      error
+	Major      string `json:"major,omitempty"`
+	Minor      string `json:"minor,omitempty"`
+	Patch      string `json:"patch,omitempty"`
+	Prerelease string `json:"prerelease,omitempty"`
+	Metadata   string `json:"metadata,omitempty"`
+	Revision   string `json:"revision,omitempty"`
+	Error      error  `json:"error,omitempty"`
 }
 
 func NewDottedVersion() *DottedVersion {
@@ -39,8 +39,8 @@ func (me *DottedVersion) Parse(ver string) (err error) {
 				err = fmt.Errorf("revision following '~' in '%s' must begin with 'r'", ver)
 				break
 			}
-			tmp.revision = parts[1][1:]
-			_, err = strconv.Atoi(tmp.revision)
+			tmp.Revision = parts[1][1:]
+			_, err = strconv.Atoi(tmp.Revision)
 			if err != nil {
 				err = fmt.Errorf("revision following '~r' in '%s' must be and integer", ver)
 				break
@@ -103,7 +103,7 @@ func (me *DottedVersion) Parse(ver string) (err error) {
 				)
 				break
 			}
-			tmp.prerelease = string(prerelease)
+			tmp.Prerelease = string(prerelease)
 		}
 		if s == '+' {
 			if metadata == "" {
@@ -117,7 +117,7 @@ func (me *DottedVersion) Parse(ver string) (err error) {
 				)
 				break
 			}
-			tmp.metadata = metadata
+			tmp.Metadata = metadata
 		}
 
 	}
@@ -133,23 +133,23 @@ func (me *DottedVersion) captureMMP(ver string, pos int, buf []byte) (int, error
 	var err error
 	switch pos {
 	case 0:
-		me.major = string(buf)
+		me.Major = string(buf)
 	case 1:
-		if me.major == "" {
+		if me.Major == "" {
 			err = fmt.Errorf("version '%s' contains minor version but no major version", ver)
 			break
 		}
-		me.minor = string(buf)
+		me.Minor = string(buf)
 	case 2:
-		if me.minor == "" {
+		if me.Minor == "" {
 			err = fmt.Errorf("version '%s' contains patch but no minor version", ver)
 			break
 		}
-		if me.major == "" {
+		if me.Major == "" {
 			err = fmt.Errorf("version '%s' contains patch but no major version", ver)
 			break
 		}
-		me.patch = string(buf)
+		me.Patch = string(buf)
 	}
 	pos++
 	return pos, err
@@ -169,28 +169,28 @@ func (me *DottedVersion) String() string {
 	for i := dvRelease; i >= dvMajor; i-- {
 		switch i {
 		case dvRelease:
-			if me.revision != "" {
-				ver = fmt.Sprintf("~r%s", me.revision)
+			if me.Revision != "" {
+				ver = fmt.Sprintf("~r%s", me.Revision)
 			}
 		case dvMetadata:
-			if me.metadata != "" {
-				ver = fmt.Sprintf("+%s%s", me.metadata, ver)
+			if me.Metadata != "" {
+				ver = fmt.Sprintf("+%s%s", me.Metadata, ver)
 			}
 		case dvPrerelease:
-			if me.prerelease != "" {
-				ver = fmt.Sprintf("-%s%s", me.prerelease, ver)
+			if me.Prerelease != "" {
+				ver = fmt.Sprintf("-%s%s", me.Prerelease, ver)
 			}
 		case dvPatch:
-			if me.patch != "" {
-				ver = fmt.Sprintf(".%s%s", me.patch, ver)
+			if me.Patch != "" {
+				ver = fmt.Sprintf(".%s%s", me.Patch, ver)
 			}
 		case dvMinor:
-			if me.minor != "" {
-				ver = fmt.Sprintf(".%s%s", me.minor, ver)
+			if me.Minor != "" {
+				ver = fmt.Sprintf(".%s%s", me.Minor, ver)
 			}
 		case dvMajor:
-			if me.major != "" {
-				ver = fmt.Sprintf("%s%s", me.major, ver)
+			if me.Major != "" {
+				ver = fmt.Sprintf("%s%s", me.Major, ver)
 			}
 		}
 	}
@@ -203,36 +203,36 @@ func (me *DottedVersion) GetRaw() string {
 
 func (me *DottedVersion) GetMajor() string {
 	me.checkParsed("Major")
-	return me.major
+	return me.Major
 }
 
 func (me *DottedVersion) GetMinor() string {
 	me.checkParsed("Minor")
-	return me.minor
+	return me.Minor
 }
 
 func (me *DottedVersion) GetPatch() string {
 	me.checkParsed("Patch")
-	return me.patch
+	return me.Patch
 }
 
 func (me *DottedVersion) GetPrerelease() string {
 	me.checkParsed("Prerelease")
-	return me.prerelease
+	return me.Prerelease
 }
 
 func (me *DottedVersion) GetMetadata() string {
 	me.checkParsed("Metadata")
-	return me.metadata
+	return me.Metadata
 }
 
 func (me *DottedVersion) GetMajorMinor() string {
 	me.checkParsed("MajorMinor")
 	var mm string
-	if me.minor == "" {
-		mm = me.major
+	if me.Minor == "" {
+		mm = me.Major
 	} else {
-		mm = fmt.Sprintf("%s.%s", me.major, me.minor)
+		mm = fmt.Sprintf("%s.%s", me.Major, me.Minor)
 	}
 	return mm
 }
@@ -244,7 +244,7 @@ func (me *DottedVersion) GetVersion() string {
 
 func (me *DottedVersion) GetRevision() string {
 	me.checkParsed("Revision")
-	return me.revision
+	return me.Revision
 }
 
 func (me *DottedVersion) checkParsed(f string) {

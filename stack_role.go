@@ -1,5 +1,11 @@
 package gearbox
 
+import (
+	"gearbox/only"
+	"gearbox/util"
+	"net/http"
+)
+
 const StackRoleHelpUrl = "https://docs.gearbox.works/roles/"
 
 //
@@ -9,33 +15,41 @@ const StackRoleHelpUrl = "https://docs.gearbox.works/roles/"
 //
 
 type RoleName string
+type RoleMap map[RoleName]*StackRole
 
 type StackRole struct {
+	Label       string    `json:"label,omitempty"`
+	Role        RoleName  `json:"stack_role"`
+	ShortLabel  string    `json:"short_label,omitempty"`
+	Examples    []string  `json:"examples,omitempty"`
+	StackName   StackName `json:"stack,omitempty"`
+	ServiceType string    `json:"service_type,omitempty"`
+	Optional    bool      `json:"optional,omitempty"`
 	*Spec
 }
 type StackRoleArgs StackRole
 
-type StackRoleDefaultGetter interface {
-	DefaultHostGetter
-	DefaultNamespaceGetter
-}
-type DefaultHostGetter interface {
-	GetDefaultHost() string
-}
-type DefaultNamespaceGetter interface {
-	GetDefaultNamespace() string
-}
-type DefaultRoleGetter interface {
-	GetDefaultRole() string
-}
-var _ DefaultHostGetter = (*StackRole)(nil)
-var _ DefaultNamespaceGetter = (*StackRole)(nil)
-
-func (me *StackRole) GetDefaultHost() string {
-	return "github.com"
+func NewStackRole() *StackRole {
+	return &StackRole{
+		Spec: NewSpec(),
+	}
 }
 
-func (me *StackRole) GetDefaultNamespace() string {
-	return "gearboxworks"
+func (me *StackRole) NeedsParse() bool {
+	return me.Role == "" || me.Spec.Role == ""
 }
 
+func (me *StackRole) Parse(name RoleName) (status Status) {
+	for range only.Once {
+		me.Role = name
+		err := me.Spec.Parse(string(me.Role))
+		if err != nil {
+			status = NewStatus(&StatusArgs{
+				HelpfulError: err.(util.HelpfulError),
+				HttpStatus:   http.StatusBadRequest,
+			})
+		}
+		status = NewOkStatus("stack role '%s' successfully parsed", name)
+	}
+	return status
+}

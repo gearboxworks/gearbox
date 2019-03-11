@@ -14,12 +14,13 @@ type ProjectMap map[string]*Project
 type Projects []*Project
 
 type Project struct {
-	Hostname string                 `json:"-"`
-	Enabled  bool                   `json:"enabled"`
-	Basedir  string                 `json:"base_dir"`
-	Notes    string                 `json:"notes"`
-	Path     string                 `json:"path"`
-	Gearbox  *Gearbox               `json:"-"`
+	Hostname string   `json:"hostname"`
+	Scope    string   `json:"scope"`
+	Enabled  bool     `json:"enabled"`
+	Basedir  string   `json:"basedir"`
+	Notes    string   `json:"notes"`
+	Path     string   `json:"path"`
+	Gearbox  *Gearbox `json:"-"`
 	*projectDetails
 }
 
@@ -32,22 +33,24 @@ func NewProject(gb *Gearbox, path string) *Project {
 }
 
 type ProjectResponse struct {
-	Hostname   string   `json:"hostname"`
-	Enabled    bool     `json:"enabled"`
-	Basedir    string   `json:"basedir"`
-	Notes      string   `json:"notes"`
-	ProjectDir string   `json:"project_dir"`
-	Aliases    Aliases  `json:"aliases"`
-	StackMap   StackMap `json:"stack"`
+	Hostname   string     `json:"hostname"`
+	Scope      string     `json:"scope"`
+	Enabled    bool       `json:"enabled"`
+	Basedir    string     `json:"basedir"`
+	Notes      string     `json:"notes"`
+	ProjectDir string     `json:"project_dir"`
+	Aliases    Aliases    `json:"aliases"`
+	ServiceMap ServiceMap `json:"stack"`
 }
 
 func NewProjectResponse(p *Project) *ProjectResponse {
 	return &ProjectResponse{
 		Hostname:   p.Hostname,
+		Scope:      p.Scope,
 		Basedir:    p.Basedir,
 		Notes:      p.Notes,
 		Aliases:    p.Aliases,
-		StackMap:   p.StackMap,
+		ServiceMap: p.ServiceMap,
 		ProjectDir: filepath.Dir(p.projectDetails.Filepath),
 	}
 }
@@ -63,8 +66,8 @@ func (me *Project) LoadProjectFile() (status Status) {
 		fp, err = me.GetProjectFilepath()
 		if err != nil {
 			status = NewStatus(&StatusArgs{
-				Success:    false,
-				HttpStatus: http.StatusInternalServerError,
+				Success:      false,
+				HttpStatus:   http.StatusInternalServerError,
 				HelpfulError: err.(util.HelpfulError),
 			})
 			break
@@ -74,11 +77,11 @@ func (me *Project) LoadProjectFile() (status Status) {
 		if status.IsError() {
 			break
 		}
-		pf := ProjectFile{Filepath: fp}
+		pf := NewProjectFile(fp)
 		if len(j) > 0 {
 			status = pf.Unmarshal(j)
 		}
-		pf.FixupStackMap()
+		status = pf.FixupStackMap()
 		if status.IsError() {
 			break
 		}
