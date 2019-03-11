@@ -2,8 +2,6 @@ package docker
 
 import (
 	"encoding/json"
-	"github.com/wplib/go-lib/docker"
-	"github.com/wplib/go-lib/docker/api"
 	"io/ioutil"
 	"net/url"
 )
