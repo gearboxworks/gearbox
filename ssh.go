@@ -225,11 +225,10 @@ func (me *Ssh) StartSsh() error {
 	return nil
 }
 
-
+// StatusLineWorker() - handles the actual updates to the status line
 func (me *Ssh) StatusLineWorker() {
 
 	me.setView()
-	defer me.resetView()
 	// w := gob.NewEncoder(me.Session)
 	// c := make(chan os.Signal, 1)
 	// signal.Notify(c, syscall.SIGWINCH)
@@ -258,6 +257,7 @@ func (me *Ssh) SetStatusLine(text string) {
 
 	me.SshStatusLine = text
 }
+
 
 func (me *Ssh) displayStatusLine() {
 	const savePos = "\033[s"
