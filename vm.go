@@ -2,13 +2,16 @@ package gearbox
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"gearbox/box/vm"
 	"gearbox/util"
 	"github.com/apcera/libretto/ssh"
 	"github.com/apcera/libretto/virtualmachine/virtualbox"
+	lvm "github.com/apcera/libretto/virtualmachine"
 	"net"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -42,7 +45,7 @@ type VmArgs Vm
 const VmDefaultName = "Gearbox"
 const VmDefaultOvaFileName = "box/vm/Gearbox.ova"
 const VmDefaultWaitDelay = time.Second
-const VmDefaultWaitRetries = 30
+const VmDefaultWaitRetries = 90
 const VmDefaultConsoleHost = "127.0.0.1"
 const VmDefaultConsolePort = "2023"
 const VmDefaultConsoleOkString = "Gearbox Heartbeat"
@@ -405,7 +408,8 @@ func (me *Vm) StopVm() error {
 		return nil
 	}
 
-	err = me.Instance.Halt()
+	//err = me.Instance.Halt()
+	err = me.ReplacementVmHalt()
 	if err != nil {
 		return err
 	}
@@ -425,6 +429,54 @@ func (me *Vm) StopVm() error {
 
 	return nil
 }
+
+var runner virtualbox.Runner
+
+// This is here because it's not implemented in libretto.
+func (me *Vm) ReplacementVmHalt() error {
+
+	_, err := me.RunCombinedError("controlvm", me.VmName, "acpipowerbutton")
+	if err != nil {
+		return lvm.WrapErrors(lvm.ErrStoppingVM, err)
+	}
+	return nil
+}
+
+// Run runs a VBoxManage command.
+func (me *Vm) Run(args ...string) (string, string, error) {
+	var vboxManagePath string
+	// If vBoxManage is not found in the system path, fall back to the
+	// hard coded path.
+	if path, err := exec.LookPath("VBoxManage"); err == nil {
+		vboxManagePath = path
+	} else {
+		vboxManagePath = virtualbox.VBOXMANAGE
+	}
+	cmd := exec.Command(vboxManagePath, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+	err := cmd.Run()
+	return stdout.String(), stderr.String(), err
+}
+
+// RunCombinedError runs a VBoxManage command.  The output is stdout and the the
+// combined err/stderr from the command.
+func (me *Vm) RunCombinedError(args ...string) (string, error) {
+	wout, werr, err := me.Run(args...)
+	if err != nil {
+		if werr != "" {
+			return wout, fmt.Errorf("%s: %s", err, werr)
+		}
+		return wout, err
+	}
+
+	return wout, nil
+}
+
 
 func (me *Vm) RestartVm() error {
 
