@@ -2,6 +2,7 @@ package gearbox
 
 import (
 	"fmt"
+	"gearbox/api"
 	"gearbox/only"
 	"gearbox/util"
 	"net/http"
@@ -9,13 +10,10 @@ import (
 	"strings"
 )
 
-type ProjectMap map[string]*Project
-
 type Projects []*Project
 
 type Project struct {
 	Hostname string   `json:"hostname"`
-	Scope    string   `json:"scope"`
 	Enabled  bool     `json:"enabled"`
 	Basedir  string   `json:"basedir"`
 	Notes    string   `json:"notes"`
@@ -25,36 +23,61 @@ type Project struct {
 }
 
 func NewProject(gb *Gearbox, path string) *Project {
-	return &Project{
-		Gearbox:  gb,
-		Path:     path,
-		Hostname: GetHostnameFromPath(path),
-	}
+	p := Project{}
+	p.Renew(gb, path)
+	return &p
 }
 
-type ProjectResponse struct {
-	Hostname   string     `json:"hostname"`
-	Scope      string     `json:"scope"`
-	Enabled    bool       `json:"enabled"`
-	Basedir    string     `json:"basedir"`
-	Notes      string     `json:"notes"`
-	Path       string     `json:"path"`
-	ProjectDir string     `json:"project_dir"`
-	Aliases    Aliases    `json:"aliases"`
-	ServiceMap ServiceMap `json:"stack"`
+func (me *Project) Renew(gb *Gearbox, path string) {
+	me.Gearbox = gb
+	me.Path = path
+	if me.Hostname == "" {
+		me.Hostname = me.GetHostname()
+	}
+	return
 }
 
-func NewProjectResponse(p *Project) *ProjectResponse {
-	return &ProjectResponse{
-		Hostname:   p.Hostname,
-		Scope:      p.Scope,
-		Basedir:    p.Basedir,
-		Notes:      p.Notes,
-		Path:       p.Path,
-		Aliases:    p.Aliases,
-		ServiceMap: p.ServiceMap,
-		ProjectDir: filepath.Dir(p.ProjectDetails.Filepath),
+func (me *Project) GetAliases() (aliases Aliases) {
+	if me.ProjectDetails != nil {
+		aliases = me.Aliases
 	}
+	return aliases
+}
+
+func (me *Project) GetServiceMap() (svcmap ServiceMap) {
+	if me.ProjectDetails != nil {
+		svcmap = me.ServiceMap
+	}
+	return svcmap
+}
+
+func (me *Project) GetProjectDir() (dir string) {
+	if me.ProjectDetails != nil {
+		dir = filepath.Dir(me.ProjectDetails.Filepath)
+	} else {
+		fp, err := me.GetProjectFilepath()
+		if err == nil {
+			dir = filepath.Dir(fp)
+		} else {
+			msg := []byte(fmt.Sprintf("failed to get filepath for project '%s'", me.Hostname))
+			_, _ = me.Gearbox.errorLog.Write(msg)
+		}
+	}
+	return dir
+}
+
+func (me *Project) GetApiSelfLink(name ...api.ResourceName) string {
+	var rn api.ResourceName
+	if len(name) == 0 {
+		rn = ProjectDetailsResource
+	} else {
+		rn = name[0]
+	}
+	return me.Gearbox.GetApiSelfLink(rn,
+		api.UriTemplateVars{
+			HostnameResourceVar: me.Hostname,
+		},
+	)
 }
 
 func (me *Project) ClearDetails() {
@@ -111,66 +134,12 @@ func (me *Project) Fullpath() (fp string) {
 	return fp
 }
 
-func (me ProjectMap) GetProjectResponse(gb *Gearbox, hostname string) (pr *ProjectResponse, status Status) {
-	for range only.Once {
-		var p *Project
-		p, status = me.GetProject(gb, hostname)
-		if status.IsError() {
-			break
-		}
-		status = p.LoadProjectFile()
-		if status.IsError() {
-			break
-		}
-		pr = NewProjectResponse(p)
-		status = NewOkStatus("got response for project '%s'", hostname)
+func (me *Project) GetHostname() string {
+	hostname := me.Path
+	if !strings.Contains(hostname, ".") {
+		hostname = fmt.Sprintf("%s.local", hostname)
 	}
-	return pr, status
-}
-
-func (me ProjectMap) GetProject(gb *Gearbox, hostname string) (p *Project, status Status) {
-	var ok bool
-	p, ok = me[hostname]
-	if ok {
-		// The next two
-		p.Gearbox = gb
-		p.Hostname = hostname
-		status = NewOkStatus("got project '%s'", hostname)
-	} else {
-		status = NewStatus(&StatusArgs{
-			Failed:     true,
-			Message:    fmt.Sprintf("project hostname '%s' does not exist", hostname),
-			HttpStatus: http.StatusBadRequest,
-			ApiHelp:    GetApiDocsUrl(gb.RequestType),
-		})
-	}
-	return p, status
-}
-
-func (me ProjectMap) ProjectExists(hostname string) (ok bool) {
-	_, ok = me[hostname]
-	return ok
-}
-
-func (me ProjectMap) GetEnabled() Projects {
-	enabled := make(Projects, 0)
-	for _, p := range me {
-		if !p.Enabled {
-			continue
-		}
-		enabled = append(enabled, p)
-	}
-	return enabled
-}
-func (me ProjectMap) GetDisabled() Projects {
-	disabled := make(Projects, 0)
-	for _, p := range me {
-		if p.Enabled {
-			continue
-		}
-		disabled = append(disabled, p)
-	}
-	return disabled
+	return strings.ToLower(hostname)
 }
 
 func ValidateProjectHostname(hostname string, args ...*validateArgs) (status Status) {
@@ -218,36 +187,4 @@ func ValidateProjectHostname(hostname string, args ...*validateArgs) (status Sta
 
 	}
 	return status
-}
-
-func GetHostnameFromPath(path string) string {
-	hostname := path
-	if !strings.Contains(hostname, ".") {
-		hostname = fmt.Sprintf("%s.local", hostname)
-	}
-	return strings.ToLower(hostname)
-}
-
-func (me ProjectMap) FindProject(basedir, path string) (p *Project) {
-	var hn string
-	var _p *Project
-	for hn, _p = range me {
-		if path == hn {
-			p = _p
-			break
-		}
-		if path != _p.Path {
-			continue
-		}
-		if basedir != _p.Basedir {
-			continue
-		}
-		p = _p
-		break
-	}
-	if p != nil {
-		p.Hostname = hn
-		p.Path = path
-	}
-	return p
 }

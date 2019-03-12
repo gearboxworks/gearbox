@@ -29,9 +29,9 @@ func NewProjectFile(filepath string) *ProjectFile {
 }
 
 type ProjectDetails struct {
+	Filepath   string     `json:"filepath"`
 	Aliases    Aliases    `json:"aliases"`
 	ServiceMap ServiceMap `json:"stack"`
-	Filepath   string     `json:"filepath"`
 }
 
 type JsonMeta struct {

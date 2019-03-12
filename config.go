@@ -299,7 +299,7 @@ func (me *Config) LoadProjects() (status Status) {
 					if p == nil {
 						p = NewProject(me.Gearbox, c.Path)
 					} else {
-						p.Gearbox = me.Gearbox
+						p.Renew(me.Gearbox, c.Path)
 					}
 					p.Basedir = bdnn
 					me.Projects[p.Hostname] = p
