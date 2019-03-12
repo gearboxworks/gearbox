@@ -21,7 +21,7 @@ type Project struct {
 	Notes    string   `json:"notes"`
 	Path     string   `json:"path"`
 	Gearbox  *Gearbox `json:"-"`
-	*projectDetails
+	*ProjectDetails
 }
 
 func NewProject(gb *Gearbox, path string) *Project {
@@ -53,8 +53,22 @@ func NewProjectResponse(p *Project) *ProjectResponse {
 		Path:       p.Path,
 		Aliases:    p.Aliases,
 		ServiceMap: p.ServiceMap,
-		ProjectDir: filepath.Dir(p.projectDetails.Filepath),
+		ProjectDir: filepath.Dir(p.ProjectDetails.Filepath),
 	}
+}
+
+func (me *Project) ClearDetails() {
+	me.ProjectDetails = nil
+}
+
+func (me *Project) MaybeLoadDetails() (status Status) {
+	for range only.Once {
+		if me.ProjectDetails != nil {
+			break
+		}
+		status = me.LoadProjectFile()
+	}
+	return status
 }
 
 func (me *Project) GetProjectFilepath() (fp string, err error) {
@@ -68,7 +82,7 @@ func (me *Project) LoadProjectFile() (status Status) {
 		fp, err = me.GetProjectFilepath()
 		if err != nil {
 			status = NewStatus(&StatusArgs{
-				Success:      false,
+				Failed:       true,
 				HttpStatus:   http.StatusInternalServerError,
 				HelpfulError: err.(util.HelpfulError),
 			})
@@ -87,7 +101,7 @@ func (me *Project) LoadProjectFile() (status Status) {
 		if status.IsError() {
 			break
 		}
-		me.projectDetails = pf.ExportProjectDetails()
+		me.ProjectDetails = pf.ExportProjectDetails()
 	}
 	return status
 }
@@ -124,7 +138,7 @@ func (me ProjectMap) GetProject(gb *Gearbox, hostname string) (p *Project, statu
 		status = NewOkStatus("got project '%s'", hostname)
 	} else {
 		status = NewStatus(&StatusArgs{
-			Success:    false,
+			Failed:     true,
 			Message:    fmt.Sprintf("project hostname '%s' does not exist", hostname),
 			HttpStatus: http.StatusBadRequest,
 			ApiHelp:    GetApiDocsUrl(gb.RequestType),
@@ -174,7 +188,7 @@ func ValidateProjectHostname(hostname string, args ...*validateArgs) (status Sta
 
 		if _args.MustNotBeEmpty && hostname == "" {
 			status = NewStatus(&StatusArgs{
-				Success:    false,
+				Failed:     true,
 				Message:    "project hostname is empty",
 				HttpStatus: http.StatusBadRequest,
 				ApiHelp:    apiHelp,
@@ -184,7 +198,7 @@ func ValidateProjectHostname(hostname string, args ...*validateArgs) (status Sta
 		hnExists := _args.Gearbox.ProjectExists(hostname)
 		if _args.MustExist && !hnExists {
 			status = NewStatus(&StatusArgs{
-				Success:    false,
+				Failed:     true,
 				Message:    fmt.Sprintf("no project exists with hostname '%s'", hostname),
 				HttpStatus: http.StatusBadRequest,
 				ApiHelp:    apiHelp,
@@ -193,7 +207,7 @@ func ValidateProjectHostname(hostname string, args ...*validateArgs) (status Sta
 		}
 		if _args.MustNotExist && hnExists {
 			status = NewStatus(&StatusArgs{
-				Success:    false,
+				Failed:     true,
 				Message:    fmt.Sprintf("project hostname '%s' already exists", hostname),
 				HttpStatus: http.StatusBadRequest,
 				ApiHelp:    apiHelp,

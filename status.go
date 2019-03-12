@@ -15,7 +15,7 @@ var _ api.SuccessInspector = StatusInstance
 var IsStatusError = errors.New("")
 
 type Status struct {
-	Success    bool
+	Failed     bool
 	Message    string `json:"message,omitempty"`
 	Help       string `json:"-"`
 	ApiHelp    string `json:"api_help,omitempty"`
@@ -25,7 +25,7 @@ type Status struct {
 }
 
 type StatusArgs struct {
-	Success    bool
+	Failed     bool
 	Message    string
 	Help       string
 	ApiHelp    string
@@ -37,7 +37,7 @@ type StatusArgs struct {
 
 func NewOkStatus(msg string, args ...interface{}) Status {
 	return Status{
-		Success:    true,
+		Failed:     false,
 		Message:    fmt.Sprintf(msg, args...),
 		HttpStatus: http.StatusOK,
 	}
@@ -53,7 +53,7 @@ func NewSuccessStatus(code int, msg ...string) (status Status) {
 				code,
 			)
 			status = NewStatus(&StatusArgs{
-				Success:    false,
+				Failed:     true,
 				HttpStatus: http.StatusInternalServerError,
 				Message:    m,
 				Error:      errors.New(m),
@@ -79,7 +79,7 @@ func NewStatus(args *StatusArgs) (status Status) {
 				args.Message,
 			)
 			status = Status{
-				Success:    false,
+				Failed:     true,
 				HttpStatus: http.StatusInternalServerError,
 				Message:    m,
 				Error:      errors.New(m),
@@ -89,7 +89,7 @@ func NewStatus(args *StatusArgs) (status Status) {
 		}
 
 		status = Status{
-			Success:    args.Success,
+			Failed:     args.Failed,
 			Message:    args.Message,
 			Help:       args.Help,
 			ApiHelp:    args.ApiHelp,
@@ -107,7 +107,7 @@ func NewStatus(args *StatusArgs) (status Status) {
 		if status.Error == IsStatusError {
 			status.Error = errors.New(status.Message)
 		}
-		if !status.Success && status.Error == nil {
+		if status.Failed && status.Error == nil {
 			status.Error = errors.New(status.Message)
 		}
 		if status.Help != "" {
@@ -118,7 +118,7 @@ func NewStatus(args *StatusArgs) (status Status) {
 				status.CliHelp = status.Help
 			}
 		}
-		status.Success = status.Error == nil
+		status.Failed = status.Error != nil
 	}
 	return status
 }
@@ -128,7 +128,7 @@ func NewStatus(args *StatusArgs) (status Status) {
 //
 func (me Status) Finalize() {
 	if me.HttpStatus == 0 {
-		me.Success = true
+		me.Failed = false
 		me.HttpStatus = http.StatusOK
 	}
 }
@@ -138,7 +138,7 @@ func (me *Status) IsError() bool {
 }
 
 func (me *Status) IsSuccess() bool {
-	return me.Success || me.HttpStatus == 0
+	return !me.Failed || me.HttpStatus == 0
 }
 
 func (me *Status) NotYetFinalized() bool {
