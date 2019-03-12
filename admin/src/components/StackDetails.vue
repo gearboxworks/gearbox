@@ -2,20 +2,33 @@
   <div class="stack-details">
     <h1>Stack Details</h1>
     <h2>{{ stack.label }}</h2>
-    <el-tabs type="border-card">
-      <el-tab-pane label="Web">
-        <StackMemberWeb :member="stack.members.webserver" />
-      </el-tab-pane>
-      <el-tab-pane label="Database">
-        <StackMemberDB :member="stack.members.dbserver" />
-      </el-tab-pane>
-      <el-tab-pane label="Cache">
-        <StackMemberCache :member="stack.members.cacheserver" />
-      </el-tab-pane>
-      <el-tab-pane label="Process">
-        <StackMemberWorker :member="stack.members.processvm" />
-      </el-tab-pane>
-    </el-tabs>
+
+    <el-row>
+      <el-col :span="4">
+        <el-card class="box-card" label="Web">
+          <StackMemberWeb :member="stack.members.webserver"/>
+        </el-card>
+      </el-col>
+
+      <el-col :span="4">
+        <el-card label="Database">
+          <StackMemberDB :member="stack.members.dbserver"/>
+        </el-card>
+      </el-col>
+
+      <el-col :span="4">
+        <el-card label="Cache">
+          <StackMemberCache :member="stack.members.cacheserver"/>
+        </el-card>
+      </el-col>
+
+      <el-col :span="4">
+        <el-card label="Process">
+          <StackMemberWorker :member="stack.members.processvm"/>
+        </el-card>
+      </el-col>
+    </el-row>
+
   </div>
 </template>
 

@@ -21,21 +21,74 @@ export default new Vuex.Store({
     connectionStatus: {
       networkError: null,
       remainingRetries: 5
-    }
+    },
+    baseDirs: []
   },
   getters: {
     projectByName: (state) => (projectName) => {
       return state.projects.find(p => p.name === projectName)
+    },
+    projectBy: (state) => (fieldName, fieldValue) => {
+      return state.projects.find(p => p[fieldName] === fieldValue)
     }
   },
   actions: {
-    retryHTTPRequest (url) {
-
-    },
-    loadProjects ({ commit }) {
+    loadBaseDirs ({ commit }) {
       try {
         HTTP.get(
-          'projects',
+          'basedirs',
+          {
+            crossDomain: true,
+            raxConfig: {
+              // You can detect when a retry is happening, and figure out how many
+              // retry attempts have been made
+              onRetryAttempt: (err) => {
+                const cfg = raxConfig(err)
+                commit('SET_NETWORK_ERROR', err.message)
+                commit('SET_REMAINING_RETRIES', cfg.retry - cfg.currentRetryAttempt)
+              }
+            }
+          }
+        ).catch((error, config) => {
+          // handle error
+          // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
+          console.log('rejected', error)
+          // if (error.message === 'Network Error') {
+          //   commit('SET_NETWORK_ERROR', error.message)
+          // }
+        })
+          .then(r => r ? r.data.data : null)
+          .then((basedirs) => {
+            if (basedirs) {
+            // console.log(projects)
+
+              const bd = []
+
+              for (const dir in basedirs) {
+                if (!basedirs.hasOwnProperty(dir)) {
+                  continue
+                }
+
+                bd.push(
+                  {
+                    name: dir,
+                    path: basedirs[dir]
+                  }
+                )
+              }
+
+              commit('SET_BASEDIRS', bd)
+            // this.dispatch('loadProjectDetails')
+            }
+          })
+      } catch (e) {
+        console.log(e)
+      }
+    },
+    loadProjectHeaders ({ commit }) {
+      try {
+        HTTP.get(
+          'projects/with-details',
           {
             crossDomain: true,
             raxConfig: {
@@ -62,28 +115,75 @@ export default new Vuex.Store({
               // console.log(projects)
 
               const p = []
-              for (const projectName in projects) {
-                if (!projects.hasOwnProperty(projectName)) {
+
+              for (const hostname in projects) {
+                if (!projects.hasOwnProperty(hostname)) {
                   continue
                 }
-                let project = projects[projectName]
+                let project = projects[hostname]
+                let data = project.data
+
                 p.push(
                   {
-                    name: projectName,
-                    baseDir: project.base_dir,
-                    notes: project.notes,
-                    path: project.path,
-                    enabled: project.enabled
+                    baseDir: data.basedir,
+                    path: data.path,
+                    hostname: data.hostname,
+                    fullPath: data.project_dir,
+                    enabled: data.enabled,
+                    notes: data.notes,
+                    aliases: data.aliases,
+                    stack: data.stack
                   }
                 )
               }
 
               commit('SET_PROJECTS', p)
+              // this.dispatch('loadProjectDetails')
             }
           })
       } catch (e) {
         console.log(e)
       }
+    },
+    loadProjectDetails ({ commit }) {
+      this.state.projects.forEach((project, index) => {
+        try {
+          HTTP.get(
+            'projects/' + project.hostname,
+            {
+              crossDomain: true,
+              raxConfig: {
+                // You can detect when a retry is happening, and figure out how many
+                // retry attempts have been made
+                onRetryAttempt: (err) => {
+                  const cfg = raxConfig(err)
+                  commit('SET_NETWORK_ERROR', err.message)
+                  commit('SET_REMAINING_RETRIES', cfg.retry - cfg.currentRetryAttempt)
+                }
+              }
+            }
+          ).catch((error, config) => {
+            // handle error
+            // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
+            console.log('rejected', error)
+            // if (error.message === 'Network Error') {
+            //   commit('SET_NETWORK_ERROR', error.message)
+            // }
+          })
+            .then(r => r ? r.data.data : null)
+            .then((p) => {
+              // console.log(projects)
+
+              const project = {
+                path: p.hostname,
+                enabled: p.enabled
+              }
+              commit('SET_PROJECT_DETAILS', project)
+            })
+        } catch (e) {
+          console.log(e)
+        }
+      })
     },
     loadStacks ({ commit }) {
       HTTP.get(
@@ -160,6 +260,10 @@ export default new Vuex.Store({
     SET_PROJECTS (state, projects) {
       state.projects = projects
     },
+    SET_PROJECT_DETAILS (state, project) {
+      const p = this.getters.projectBy('path', project.path)
+      p.enabled = project.enabled
+    },
     SET_STACKS (state, stacks) {
       state.stacks = stacks
     },
@@ -167,12 +271,13 @@ export default new Vuex.Store({
       state.gears = gears
     },
     UPDATE_PROJECT (state, args) {
-      const { projectName, project } = args
-      const p = this.getters.projectByName(projectName)
-      p.name = project.name
+      const { hostname, project } = args
+      const p = this.getters.projectBy('hostname', hostname)
+      p.hostname = project.hostname
       p.notes = project.notes
-      p.path = project.path
       p.baseDir = project.baseDir
+      p.path = project.path
+      p.fullPath = project.fullPath
       p.enabled = project.enabled
     },
     SET_NETWORK_ERROR (state, message) {
@@ -183,6 +288,9 @@ export default new Vuex.Store({
     },
     SET_REMAINING_RETRIES (state, remainingRetries) {
       state.connectionStatus.remainingRetries = remainingRetries
+    },
+    SET_BASEDIRS (state, basedirs) {
+      state.baseDirs = basedirs
     }
   }
 
