@@ -277,23 +277,6 @@ func (me *HostApi) deleteNamedBasedir(gb *Gearbox, ctx echo.Context, requestType
 	return me.Gearbox.DeleteNamedBasedir(getBasedirNickname(ctx))
 }
 
-func (me *HostApi) getProject(ctx echo.Context, requestType string) (response interface{}) {
-	for range only.Once {
-		me.Gearbox.RequestType = requestType
-		pr, status := me.Gearbox.GetProjectResponse(getProjectHostname(ctx))
-		if status.IsError() {
-			response = status
-			break
-		}
-		response = pr
-	}
-	return response
-}
-
-func getProjectHostname(ctx echo.Context) string {
-	return ctx.Param("hostname")
-}
-
 func getBasedirNickname(ctx echo.Context) string {
 	return ctx.Param("nickname")
 }

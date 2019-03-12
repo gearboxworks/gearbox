@@ -28,7 +28,7 @@ func NewProjectFile(filepath string) *ProjectFile {
 	}
 }
 
-type projectDetails struct {
+type ProjectDetails struct {
 	Aliases    Aliases    `json:"aliases"`
 	ServiceMap ServiceMap `json:"stack"`
 	Filepath   string     `json:"filepath"`
@@ -42,8 +42,8 @@ type JsonMeta struct {
 	Readme      []string `json:"readme"`
 }
 
-func (me *ProjectFile) ExportProjectDetails() *projectDetails {
-	return &projectDetails{
+func (me *ProjectFile) ExportProjectDetails() *ProjectDetails {
+	return &ProjectDetails{
 		Aliases:    me.Aliases,
 		ServiceMap: me.ServiceMap,
 		Filepath:   me.Filepath,
@@ -73,6 +73,7 @@ func (me *ProjectFile) Unmarshal(j []byte) (status Status) {
 }
 
 func (me *ProjectFile) FixupStack() (status Status) {
+	me.ServiceMap = make(ServiceMap, len(me.StackBag))
 	for role, item := range me.StackBag {
 		sr := NewStackRole()
 		status = sr.Parse(RoleName(role))
@@ -88,6 +89,7 @@ func (me *ProjectFile) FixupStack() (status Status) {
 		me.ServiceMap[role] = service
 	}
 	if !status.IsError() {
+		me.StackBag = nil
 		status = NewOkStatus("stack fixup for '%s' complete", me.Hostname)
 	}
 	return status
