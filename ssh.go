@@ -14,6 +14,7 @@ import (
 
 type Ssh struct {
 	Instance *ssh.Client
+	Session *ssh.Session
 
 	//	// Status polling delays.
 	//	NoWait        bool
@@ -93,36 +94,6 @@ func NewSsh(gb Gearbox, args ...SshArgs) (*Ssh, error) {
 		_args.SshPort = SshDefaultSshPort
 	}
 
-	sshConfig := &ssh.ClientConfig{}
-
-	// Try SSH key file first.
-	keyfile, err := readPublicKeyFile(_args.SshPublicKey)
-	if err == nil && keyfile != nil {
-		// Authenticate using SSH key.
-		authenticate := []ssh.AuthMethod{keyfile}
-		sshConfig = &ssh.ClientConfig{
-			User: _args.SshUsername,
-			Auth: authenticate,
-			// HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-			Timeout:         time.Second * 10,
-		}
-	} else {
-		sshConfig = &ssh.ClientConfig{
-			User: _args.SshUsername,
-			Auth: []ssh.AuthMethod{ssh.Password(_args.SshPassword)},
-			// HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-			Timeout:         time.Second * 10,
-		}
-	}
-
-	_args.Instance, err = ssh.Dial("tcp", fmt.Sprintf("%s:%s", _args.SshHost, _args.SshPort), sshConfig)
-	if err != nil {
-		fmt.Printf("Gearbox SSH error: %s\n", err)
-		return nil, err
-	}
-
 	sshClient := &Ssh{}
 	*sshClient = Ssh(_args)
 
@@ -151,13 +122,45 @@ func readPublicKeyFile(file string) (ssh.AuthMethod, error) {
 
 func (me *Ssh) StartSsh() error {
 
-	if me == nil || me.Instance == nil {
+	var err error
+
+	if me == nil {
 		// Throw software error.
 		return nil
 	}
 
-	session, err := me.Instance.NewSession()
-	defer session.Close()
+	sshConfig := &ssh.ClientConfig{}
+
+	// Try SSH key file first.
+	keyfile, err := readPublicKeyFile(me.SshPublicKey)
+	if err == nil && keyfile != nil {
+		// Authenticate using SSH key.
+		authenticate := []ssh.AuthMethod{keyfile}
+		sshConfig = &ssh.ClientConfig{
+			User: me.SshUsername,
+			Auth: authenticate,
+			// HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			Timeout:         time.Second * 10,
+		}
+	} else {
+		sshConfig = &ssh.ClientConfig{
+			User: me.SshUsername,
+			Auth: []ssh.AuthMethod{ssh.Password(me.SshPassword)},
+			// HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			Timeout:         time.Second * 10,
+		}
+	}
+
+	me.Instance, err = ssh.Dial("tcp", fmt.Sprintf("%s:%s", me.SshHost, me.SshPort), sshConfig)
+	if err != nil {
+		fmt.Printf("Gearbox SSH error: %s\n", err)
+		return err
+	}
+
+	me.Session, err = me.Instance.NewSession()
+	defer me.Session.Close()
 	defer me.Instance.Close()
 	if err != nil {
 		log.Println(err)
@@ -165,10 +168,10 @@ func (me *Ssh) StartSsh() error {
 	}
 
 	// Set IO
-	session.Stdout = os.Stdout
-	session.Stderr = os.Stderr
-	session.Stdin = os.Stdin
-	//	in, _ := session.StdinPipe()
+	me.Session.Stdout = os.Stdout
+	me.Session.Stderr = os.Stderr
+	me.Session.Stdin = os.Stdin
+	//	in, _ := me.Session.StdinPipe()
 
 	// Set up terminal modes
 	modes := ssh.TerminalModes{
@@ -192,7 +195,7 @@ func (me *Ssh) StartSsh() error {
 		}
 
 		// xterm-256color
-		err = session.RequestPty("xterm-256color", me.SshTermHeight, me.SshTermWidth, modes)
+		err = me.Session.RequestPty("xterm-256color", me.SshTermHeight, me.SshTermWidth, modes)
 		if err != nil {
 			return nil
 		}
@@ -203,7 +206,7 @@ func (me *Ssh) StartSsh() error {
 	go me.exampleHostWorker()
 
 	// Start remote shell
-	err = session.Shell()
+	err = me.Session.Shell()
 	if err != nil {
 		fmt.Printf("Gearbox SSH error: %s\n", err)
 	}
@@ -216,7 +219,7 @@ func (me *Ssh) StartSsh() error {
 			fmt.Fprint(in, str)
 		}
 	*/
-	session.Wait()
+	me.Session.Wait()
 	me.resetView()
 
 	return nil
@@ -227,9 +230,23 @@ func (me *Ssh) StatusLineWorker() {
 
 	me.setView()
 	defer me.resetView()
+	// w := gob.NewEncoder(me.Session)
+	// c := make(chan os.Signal, 1)
+	// signal.Notify(c, syscall.SIGWINCH)
 
 	for ; me.SshTerminateFlag == false; {
-		me.displayStatusLine()
+		// Handle terminal windows size changes properly.
+		fileDescriptor := int(os.Stdin.Fd())
+		width, height, _ := terminal.GetSize(fileDescriptor)
+		if (me.SshTermWidth != width) || (me.SshTermHeight != height) {
+			me.SshTermWidth = width
+			me.SshTermHeight = height
+			// me.Session.Signal(syscall.SIGWINCH)
+			me.Session.WindowChange(height, width)
+		} else {
+			// Only update if we haven't seen a SIGWINCH - just to wait for things to settle.
+			me.displayStatusLine()
+		}
 
 		time.Sleep(me.StatusLineUpdateDelay)
 	}
