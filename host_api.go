@@ -6,6 +6,7 @@ import (
 	"gearbox/api"
 	"gearbox/dockerhub"
 	"gearbox/only"
+	"gearbox/util"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -40,6 +41,32 @@ func NewHostApi(gearbox *Gearbox) *HostApi {
 	ha.Api.Port = Port
 	ha.addRoutes()
 	return ha
+}
+
+func (me *HostApi) GetApiSelfLink(resourceType api.ResourceName) (url string, status Status) {
+	for range only.Once {
+		if me.Api == nil {
+			status = NewStatus(&StatusArgs{
+				HttpStatus: http.StatusInternalServerError,
+				Help:       ContactSupportHelp(),
+				Message: fmt.Sprintf("accessing host api when internal api property is nil for resource type '%s'",
+					resourceType,
+				),
+			})
+		}
+		var err error
+		url, err = me.Api.GetApiSelfLink(resourceType)
+		if err != nil {
+			status = NewStatus(&StatusArgs{
+				HttpStatus:   http.StatusInternalServerError,
+				HelpfulError: err.(util.HelpfulError),
+				Message: fmt.Sprintf("the Api property is nil when accessing host api for resource type '%s'",
+					resourceType,
+				),
+			})
+		}
+	}
+	return url, status
 }
 
 func (me *HostApi) Url() string {
@@ -137,7 +164,7 @@ func (me *HostApi) getRoleName(ctx echo.Context) RoleName {
 func (me *HostApi) addRoutes() {
 
 	_api := me.Api
-	_api.GET("/", "root", func(rt string, ctx echo.Context) error {
+	_api.GET("/", api.LinksResource, func(rt api.ResourceName, ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, rt, nil)
 	})
 
@@ -147,7 +174,7 @@ func (me *HostApi) addRoutes() {
 
 }
 
-func (me *HostApi) jsonMarshalHandler(_api *api.Api, ctx echo.Context, requestType string, value interface{}) error {
+func (me *HostApi) jsonMarshalHandler(_api *api.Api, ctx echo.Context, requestType api.ResourceName, value interface{}) error {
 	var apiError *api.Status
 	for range only.Once {
 		status, ok := value.(Status)
@@ -171,11 +198,11 @@ func (me *HostApi) jsonMarshalHandler(_api *api.Api, ctx echo.Context, requestTy
 
 func (me *HostApi) addStackRoutes() {
 	_api := me.Api
-	_api.GET("/stacks", "stacks", func(rt string, ctx echo.Context) error {
+	_api.GET("/stacks", "stacks", func(rt api.ResourceName, ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, rt, me.Gearbox.Stacks)
 	})
 
-	_api.GET("/stacks/:stack", "stack-details", func(rt string, ctx echo.Context) error {
+	_api.GET("/stacks/:stack", "stack-details", func(rt api.ResourceName, ctx echo.Context) error {
 		response := me.getStackResponse(ctx)
 		if _, ok := response.(*api.Status); !ok {
 			response = response.(*Stack).CloneSansServices()
@@ -183,17 +210,17 @@ func (me *HostApi) addStackRoutes() {
 		return me.jsonMarshalHandler(_api, ctx, rt, response)
 	})
 
-	_api.GET("/stacks/:stack/services", "stack-services", func(rt string, ctx echo.Context) error {
+	_api.GET("/stacks/:stack/services", "stack-services", func(rt api.ResourceName, ctx echo.Context) error {
 		response := me.getServicesResponse(ctx)
 		return me.jsonMarshalHandler(_api, ctx, rt, response)
 	})
 
-	_api.GET("/stacks/:stack/services/:service", "stack-service", func(rt string, ctx echo.Context) error {
+	_api.GET("/stacks/:stack/services/:service", "stack-service", func(rt api.ResourceName, ctx echo.Context) error {
 		response := me.getServiceResponse(ctx)
 		return me.jsonMarshalHandler(_api, ctx, rt, response)
 	})
 
-	_api.GET("/stacks/:stack/services/:service/options", "stack-service-options", func(rt string, ctx echo.Context) error {
+	_api.GET("/stacks/:stack/services/:service/options", "stack-service-options", func(rt api.ResourceName, ctx echo.Context) error {
 		response := me.getServiceResponse(ctx)
 		response = me.Gearbox.RequestAvailableContainers(&dockerhub.ContainerQuery{})
 		return me.jsonMarshalHandler(_api, ctx, rt, response)
@@ -203,25 +230,25 @@ func (me *HostApi) addStackRoutes() {
 func (me *HostApi) addBasedirRoutes() {
 	_api := me.Api
 
-	_api.GET("/basedirs", "basedirs", func(rt string, ctx echo.Context) error {
+	_api.GET("/basedirs", "basedirs", func(rt api.ResourceName, ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.GetHostBasedirs())
 	})
 
-	_api.POST("/basedirs/new", "basedir-add", func(rt string, ctx echo.Context) error {
+	_api.POST("/basedirs/new", "basedir-add", func(rt api.ResourceName, ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(me.Gearbox, ctx, rt))
 	})
 
-	_api.PUT("/basedirs/:nickname", "basedir-update", func(rt string, ctx echo.Context) error {
+	_api.PUT("/basedirs/:nickname", "basedir-update", func(rt api.ResourceName, ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(me.Gearbox, ctx, rt))
 	})
 
-	_api.DELETE("/basedirs/:nickname", "basedir-delete", func(rt string, ctx echo.Context) error {
+	_api.DELETE("/basedirs/:nickname", "basedir-delete", func(rt api.ResourceName, ctx echo.Context) error {
 		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(me.Gearbox, ctx, rt))
 	})
 
 }
 
-func readBasedirFromRequest(name string, ctx echo.Context, bd *Basedir) (status Status) {
+func readBasedirFromRequest(name api.ResourceName, ctx echo.Context, bd *Basedir) (status Status) {
 	for range only.Once {
 		apiHelp := GetApiHelp(name)
 		defer api.CloseRequestBody(ctx)
@@ -253,7 +280,7 @@ func readBasedirFromRequest(name string, ctx echo.Context, bd *Basedir) (status 
 	return status
 }
 
-func (me *HostApi) addBasedir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
+func (me *HostApi) addBasedir(gb *Gearbox, ctx echo.Context, requestType api.ResourceName) (status Status) {
 	bd := Basedir{}
 	status = readBasedirFromRequest(requestType, ctx, &bd)
 	if !status.IsError() {
@@ -262,7 +289,7 @@ func (me *HostApi) addBasedir(gb *Gearbox, ctx echo.Context, requestType string)
 	}
 	return status
 }
-func (me *HostApi) updateBasedir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
+func (me *HostApi) updateBasedir(gb *Gearbox, ctx echo.Context, requestType api.ResourceName) (status Status) {
 	bd := Basedir{}
 	status = readBasedirFromRequest(requestType, ctx, &bd)
 	if !status.IsError() {
@@ -272,7 +299,7 @@ func (me *HostApi) updateBasedir(gb *Gearbox, ctx echo.Context, requestType stri
 	return status
 }
 
-func (me *HostApi) deleteNamedBasedir(gb *Gearbox, ctx echo.Context, requestType string) (status Status) {
+func (me *HostApi) deleteNamedBasedir(gb *Gearbox, ctx echo.Context, requestType api.ResourceName) (status Status) {
 	me.Gearbox.RequestType = requestType
 	return me.Gearbox.DeleteNamedBasedir(getBasedirNickname(ctx))
 }
@@ -281,9 +308,9 @@ func getBasedirNickname(ctx echo.Context) string {
 	return ctx.Param("nickname")
 }
 
-func GetApiDocsUrl(topic string) string {
+func GetApiDocsUrl(topic api.ResourceName) string {
 	return fmt.Sprintf("%s/%s", ApiDocsBaseUrl, topic)
 }
-func GetApiHelp(topic string) string {
+func GetApiHelp(topic api.ResourceName) string {
 	return fmt.Sprintf("see %s", GetApiDocsUrl(topic))
 }

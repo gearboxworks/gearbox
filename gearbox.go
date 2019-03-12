@@ -3,6 +3,7 @@ package gearbox
 import (
 	"encoding/json"
 	"fmt"
+	"gearbox/api"
 	"gearbox/dockerhub"
 	"gearbox/host"
 	"gearbox/only"
@@ -23,9 +24,10 @@ type Gearbox struct {
 	Config        *Config
 	HostConnector host.Connector
 	Stacks        StackMap
-	RequestType   string
+	RequestType   api.ResourceName
 	Options       *GlobalOptions
 	hostApi       *HostApi
+	errorLog      *ErrorLog
 }
 
 type GearboxArgs Gearbox
@@ -40,6 +42,7 @@ func NewGearbox(args *GearboxArgs) *Gearbox {
 		Options:       args.Options,
 		Config:        args.Config,
 		Stacks:        GetStackMap(),
+		errorLog:      &ErrorLog{},
 	}
 	if args.Config == nil {
 		gb.Config = NewConfig(&gb)
@@ -49,6 +52,15 @@ func NewGearbox(args *GearboxArgs) *Gearbox {
 	}
 	gb.hostApi = NewHostApi(&gb)
 	return &gb
+}
+
+func (me *Gearbox) GetApiSelfLink(name api.ResourceName, vars api.UriTemplateVars) string {
+	t, status := me.hostApi.GetApiSelfLink(name)
+	if status.IsError() {
+		// @TODO consider handling this with Status
+		panic(status.Message)
+	}
+	return api.ExpandUriTemplate(t, vars)
 }
 
 func (me *Gearbox) GetProjectResponse(hostname string) (pr *ProjectResponse, status Status) {
