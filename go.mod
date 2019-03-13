@@ -14,6 +14,7 @@ require (
 	github.com/labstack/gommon v0.2.8
 	github.com/mattn/go-colorable v0.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
+	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/projectcfg/projectcfg v0.0.0-20190212041003-5f3eb31cd1ea
 	github.com/spf13/cobra v0.0.3
@@ -25,4 +26,5 @@ require (
 	github.com/zserge/webview v0.0.0-20190123072648-16c93bcaeaeb
 	golang.org/x/crypto v0.0.0-20190211182817-74369b46fc67
 	google.golang.org/grpc v1.18.0
+	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
 )
