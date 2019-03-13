@@ -33,7 +33,8 @@ func (me *HostApi) getHostBasedirs(ctx echo.Context, resource api.ResourceName) 
 	return me.Config.GetHostBasedirs()
 }
 
-func (me *HostApi) addBasedir(ctx echo.Context, resource api.ResourceName) (status Status) {
+func (me *HostApi) addBasedir(ctx echo.Context, resource api.ResourceName) interface{} {
+	var status Status
 	for range only.Once {
 		bd := Basedir{}
 		err := api.UnmarshalFromRequest(resource, ctx, &bd)
@@ -52,7 +53,8 @@ func (me *HostApi) addBasedir(ctx echo.Context, resource api.ResourceName) (stat
 	}
 	return status
 }
-func (me *HostApi) updateBasedir(ctx echo.Context, resource api.ResourceName) (status Status) {
+func (me *HostApi) updateBasedir(ctx echo.Context, resource api.ResourceName) interface{} {
+	var status Status
 	for range only.Once {
 		bd := Basedir{}
 		err := api.UnmarshalFromRequest(resource, ctx, &bd)
@@ -71,7 +73,7 @@ func (me *HostApi) updateBasedir(ctx echo.Context, resource api.ResourceName) (s
 	}
 	return status
 }
-func (me *HostApi) deleteNamedBasedir(ctx echo.Context, resource api.ResourceName) (status Status) {
+func (me *HostApi) deleteNamedBasedir(ctx echo.Context, resource api.ResourceName) interface{} {
 	me.Gearbox.RequestType = resource
 	return me.Gearbox.DeleteNamedBasedir(getBasedirNickname(ctx))
 }
