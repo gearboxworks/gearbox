@@ -2,19 +2,31 @@ package gearbox
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"gearbox/box/vm"
 	"gearbox/util"
+	"github.com/apcera/libretto/ssh"
+	lvm "github.com/apcera/libretto/virtualmachine"
 	"github.com/apcera/libretto/virtualmachine/virtualbox"
 	"net"
+	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"time"
 )
 
 type Box struct {
-	Name     string
+	BoxName  string
 	Instance virtualbox.VM
 	Status   string
+	OvaFile  string
+
+	// SSH related - Need to fix this. It's used within CreateBox()
+	SshUsername  string
+	SshPassword  string
+	SshPublicKey string
 
 	// Status polling delays.
 	NoWait      bool
@@ -31,21 +43,23 @@ type Box struct {
 type BoxArgs Box
 
 const BoxDefaultName = "Gearbox"
+const BoxDefaultOvaFileName = "box/vm/Gearbox.ova"
 const BoxDefaultWaitDelay = time.Second
-const BoxDefaultWaitRetries = 30
+const BoxDefaultWaitRetries = 90
 const BoxDefaultConsoleHost = "127.0.0.1"
 const BoxDefaultConsolePort = "2023"
-const BoxDefaultConsoleOkString = "GearBox API"
+const BoxDefaultConsoleOkString = "GearBox Heartbeat"
 const BoxDefaultShowConsole = false
 const BoxDefaultConsoleReadWait = time.Second * 5
 
 const BoxError = "error"
 const BoxUnknown = "unknown"
+const BoxAbsent = "absent"
 const BoxHalted = "halted"
 const BoxRunning = "running"
 const BoxStarted = "started"
-const BoxOK = "ok"
-const BoxNOK = "nok"
+const BoxGearBoxOK = "ok"
+const BoxGearBoxNOK = "nok"
 
 // //////////////////////////////////////////////////////////////////////////////
 // Gearbox related
@@ -53,7 +67,7 @@ func (me *Gearbox) StartBox(boxArgs BoxArgs) error {
 
 	box := NewBox(*me, boxArgs)
 
-	err := box.Start()
+	err := box.StartBox()
 
 	return err
 }
@@ -62,7 +76,7 @@ func (me *Gearbox) StopBox(boxArgs BoxArgs) error {
 
 	box := NewBox(*me, boxArgs)
 
-	err := box.Stop()
+	err := box.StopBox()
 
 	return err
 }
@@ -71,7 +85,7 @@ func (me *Gearbox) RestartBox(boxArgs BoxArgs) error {
 
 	box := NewBox(*me, boxArgs)
 
-	err := box.Restart()
+	err := box.RestartBox()
 
 	return err
 }
@@ -80,7 +94,7 @@ func (me *Gearbox) GetBoxStatus(boxArgs BoxArgs) (string, error) {
 
 	box := NewBox(*me, boxArgs)
 
-	err := box.GetStatus()
+	err := box.GetBoxStatus()
 	if err != nil {
 		return box.Status, err
 	}
@@ -92,23 +106,43 @@ func (me *Gearbox) GetBoxStatus(boxArgs BoxArgs) (string, error) {
 
 	switch box.Status {
 	case BoxUnknown:
-		fmt.Printf("\r👎 %s: BOX & API in an unknown state.\n", me.Config.BoxName)
+		fmt.Printf("\r👎 %s: Box status: VM & Heartbeat in an unknown state.\n", me.Config.BoxName)
 
 	case BoxHalted:
-		fmt.Printf("\r👎 %s: BOX halted. API halted.\n", me.Config.BoxName)
+		fmt.Printf("\r👎 %s: Box status VM & Heartbeat halted.\n", me.Config.BoxName)
 
 	case BoxRunning:
-		fmt.Printf("\r👎 %s: BOX running. API halted.\n", me.Config.BoxName)
+		fmt.Printf("\r👎 %s: Box status: VM running, Heartbeat halted.\n", me.Config.BoxName)
 
 	case BoxStarted:
-		fmt.Printf("\r👎 %s: BOX running. API halted.\n", me.Config.BoxName)
+		fmt.Printf("\r👎 %s: Box status: VM running, Heartbeat halted.\n", me.Config.BoxName)
 
-	case BoxOK:
-		fmt.Printf("\r👍 %s: BOX running. API running.\n", me.Config.BoxName)
+	case BoxGearBoxNOK:
+		fmt.Printf("\r👎 %s: Box status: VM running, Heartbeat halted.\n", me.Config.BoxName)
 
-	case BoxNOK:
-		fmt.Printf("\r👎 %s: BOX running. API halted.\n", me.Config.BoxName)
+	case BoxGearBoxOK:
+		fmt.Printf("\r👍 %s: Box status: VM running, Heartbeat running.\n", me.Config.BoxName)
+
 	}
+
+	return box.Status, err
+}
+
+func (me *Gearbox) CreateBox(boxArgs BoxArgs) (string, error) {
+
+	box := NewBox(*me, boxArgs)
+
+	err := box.CreateBox()
+	if err != nil {
+		return box.Status, err
+	}
+
+	err = box.GetApiStatus()
+	if err != nil {
+		return box.Status, err
+	}
+
+	fmt.Printf("\r👎 %s: Box status: VM & Heartbeat in an unknown state.\n", me.Config.BoxName)
 
 	return box.Status, err
 }
@@ -121,8 +155,27 @@ func NewBox(gb Gearbox, args ...BoxArgs) *Box {
 		_args = args[0]
 	}
 
-	if _args.Name == "" {
-		_args.Name = BoxDefaultName
+	if _args.BoxName == "" {
+		_args.BoxName = BoxDefaultName
+	}
+
+	if _args.OvaFile == "" {
+
+		// The '/' will become a problem on Windows
+		_args.OvaFile = gb.HostConnector.GetUserConfigDir() + "/" + BoxDefaultOvaFileName
+		// The OvaFile is created from an export from within VirtualBox.
+		// VBoxManage export Gearbox -o Gearbox.ova --options manifest
+		// This was the best way to create a base template, avoiding too much code bloat.
+		// And allows multiple VM frameworks to be used with libretto.
+		// It doesn't include the ISO image yet as it is too large.
+		// Once the ISO image size has been reduced, we can do this:
+		// VBoxManage export Gearbox -o Gearbox.ova --options iso,manifest
+		if _, err := os.Stat(_args.OvaFile); os.IsNotExist(err) {
+			err := vm.RestoreAssets(gb.HostConnector.GetUserConfigDir(), BoxDefaultOvaFileName)
+			if err != nil {
+				fmt.Printf("\r👎 %s: VM OVA file cannot be created in %s.\n", _args.BoxName, _args.OvaFile)
+			}
+		}
 	}
 
 	if _args.WaitDelay == 0 {
@@ -149,8 +202,27 @@ func NewBox(gb Gearbox, args ...BoxArgs) *Box {
 		_args.ConsoleReadWait = BoxDefaultConsoleReadWait
 	}
 
+	if _args.SshUsername == "" {
+		_args.SshUsername = SshDefaultUsername
+	}
+
+	if _args.SshPassword == "" {
+		_args.SshPassword = SshDefaultPassword
+	}
+
+	if _args.SshPublicKey == "" {
+		_args.SshPublicKey = SshDefaultKeyFile
+	}
+
 	_args.Instance = virtualbox.VM{
-		Name: _args.Name,
+		Name: _args.BoxName,
+		Src:  _args.OvaFile,
+		Credentials: ssh.Credentials{
+			// Need a way of obtaining this.
+			SSHUser:       _args.SshUsername,
+			SSHPassword:   _args.SshPassword,
+			SSHPrivateKey: _args.SshPublicKey,
+		},
 	}
 
 	box := &Box{}
@@ -174,7 +246,7 @@ func (me *Box) WaitForBoxState(waitForState string, displayString string) error 
 	spinner.Start()
 
 	for waitCount = 0; waitCount < me.WaitRetries; waitCount++ {
-		err := me.GetStatus()
+		err := me.GetBoxStatus()
 		if err != nil {
 			spinner.Stop(false)
 			return err
@@ -198,7 +270,7 @@ func (me *Box) WaitForConsole(displayString string, waitFor time.Duration) error
 		return nil
 	}
 
-	err := me.GetStatus()
+	err := me.GetBoxStatus()
 	if err != nil {
 		return err
 	}
@@ -239,7 +311,7 @@ func (me *Box) WaitForConsole(displayString string, waitFor time.Duration) error
 			// readBuffer, err := bufio.NewReader(conn).ReadString('\n')
 			// bytesRead := len(readBuffer)
 			if err != nil {
-				me.Status = BoxNOK
+				me.Status = BoxGearBoxNOK
 				if displaySpinner == true {
 					spinner.Stop(false)
 				}
@@ -256,9 +328,9 @@ func (me *Box) WaitForConsole(displayString string, waitFor time.Duration) error
 					match, _ := regexp.MatchString(me.ConsoleOkString, apiSplit[1])
 					if match == true {
 						if apiSplit[2] == "OK" {
-							me.Status = BoxOK
+							me.Status = BoxGearBoxOK
 						} else {
-							me.Status = BoxNOK
+							me.Status = BoxGearBoxNOK
 						}
 						if displaySpinner == true {
 							spinner.Stop(true)
@@ -282,14 +354,14 @@ func (me *Box) WaitForConsole(displayString string, waitFor time.Duration) error
 	return nil
 }
 
-func (me *Box) Start() error {
+func (me *Box) StartBox() error {
 
 	if me == nil {
 		// Throw software error.
 		return nil
 	}
 
-	err := me.GetStatus()
+	err := me.GetBoxStatus()
 	if err != nil {
 		return err
 	}
@@ -302,13 +374,13 @@ func (me *Box) Start() error {
 		return err
 	}
 	if me.NoWait == false {
-		err := me.WaitForBoxState(BoxRunning, me.Name+" BOX: Starting")
+		err := me.WaitForBoxState(BoxRunning, me.BoxName+" Box (VM): Starting")
 		if err != nil {
 			return err
 		}
 
 		// Check final state of the system from the top down.
-		err = me.WaitForConsole(me.Name+" : Starting", 30)
+		err = me.WaitForConsole(me.BoxName+" : Starting", 30)
 		if err != nil {
 			return err
 		}
@@ -317,14 +389,14 @@ func (me *Box) Start() error {
 	return nil
 }
 
-func (me *Box) Stop() error {
+func (me *Box) StopBox() error {
 
 	if me == nil {
 		// Throw software error.
 		return nil
 	}
 
-	err := me.GetStatus()
+	err := me.GetBoxStatus()
 	if err != nil {
 		return err
 	}
@@ -338,13 +410,13 @@ func (me *Box) Stop() error {
 	}
 
 	if me.NoWait == false {
-		err := me.WaitForBoxState(BoxHalted, me.Name+" BOX: Stopping")
+		err := me.WaitForBoxState(BoxHalted, me.BoxName+" Box (VM): Stopping")
 		if err != nil {
 			return err
 		}
 
 		// Check final state of the system from the top down.
-		err = me.WaitForConsole(me.Name+" : Stopping", 30)
+		err = me.WaitForConsole(me.BoxName+" : Stopping", 30)
 		if err != nil {
 			return err
 		}
@@ -353,7 +425,54 @@ func (me *Box) Stop() error {
 	return nil
 }
 
-func (me *Box) Restart() error {
+var runner virtualbox.Runner
+
+// This is here because it's not implemented in libretto.
+func (me *Box) ReplacementBoxHalt() error {
+
+	_, err := me.RunCombinedError("controlvm", me.BoxName, "acpipowerbutton")
+	if err != nil {
+		return lvm.WrapErrors(lvm.ErrStoppingVM, err)
+	}
+	return nil
+}
+
+// Run runs a VBoxManage command.
+func (me *Box) Run(args ...string) (string, string, error) {
+	var vboxManagePath string
+	// If vBoxManage is not found in the system path, fall back to the
+	// hard coded path.
+	if path, err := exec.LookPath("VBoxManage"); err == nil {
+		vboxManagePath = path
+	} else {
+		vboxManagePath = virtualbox.VBOXMANAGE
+	}
+	cmd := exec.Command(vboxManagePath, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+	err := cmd.Run()
+	return stdout.String(), stderr.String(), err
+}
+
+// RunCombinedError runs a VBoxManage command.  The output is stdout and the the
+// combined err/stderr from the command.
+func (me *Box) RunCombinedError(args ...string) (string, error) {
+	wout, werr, err := me.Run(args...)
+	if err != nil {
+		if werr != "" {
+			return wout, fmt.Errorf("%s: %s", err, werr)
+		}
+		return wout, err
+	}
+
+	return wout, nil
+}
+
+func (me *Box) RestartBox() error {
 
 	var err error
 
@@ -362,30 +481,30 @@ func (me *Box) Restart() error {
 		return nil
 	}
 
-	err = me.GetStatus()
+	err = me.GetBoxStatus()
 	if err != nil {
 		return err
 	}
 
 	switch me.Status {
-	case BoxOK:
+	case BoxGearBoxOK:
 		fallthrough
-	case BoxNOK:
+	case BoxGearBoxNOK:
 		fallthrough
 	case BoxRunning:
 		fallthrough
 	case BoxStarted:
-		err := me.Stop()
+		err := me.StopBox()
 		if err != nil {
 			return err
 		}
-		err = me.Start()
+		err = me.StartBox()
 		if err != nil {
 			return err
 		}
 
 	case BoxHalted:
-		err := me.Start()
+		err := me.StartBox()
 		if err != nil {
 			return err
 		}
@@ -401,7 +520,7 @@ func (me *Box) Restart() error {
 	return err
 }
 
-func (me *Box) GetStatus() error {
+func (me *Box) GetBoxStatus() error {
 
 	if me == nil {
 		// Throw software error.
@@ -436,21 +555,50 @@ func (me *Box) GetApiStatus() error {
 	return nil
 }
 
-/*
-func scanForAPI(text string) bool {
+func (me *Box) CreateBox() error {
 
-	r, err := regexp.Compile("^.*%$")
-	// r, err := regexp.Compile("Welcome to GearBox.*")
-	if err == nil {
-		if r.MatchString(text) {
-
-			switch {
-				case text == "Welcome to GearBox":
-					return true
-			}
-		}
+	if me == nil {
+		// Throw software error.
+		me.Status = BoxUnknown
+		return nil
 	}
 
-	return false
+	// Check if the VM is already there.
+	state, err := me.Instance.GetState()
+	if err != nil {
+		// Doesn't exist - great!
+		if _, err := os.Stat(me.OvaFile); os.IsNotExist(err) {
+			fmt.Printf("\r👎 %s: VM OVA file does not exist in %s.\n", me.BoxName, me.OvaFile)
+			return err
+		}
+
+		err = me.Instance.Provision()
+		if err != nil {
+			me.Status = BoxError
+		}
+	} else {
+		// Already created!
+		fmt.Printf("\r👎 %s: Cannot create. VM already exists and is in state %s.\n", me.BoxName, state)
+	}
+
+	return err
 }
-*/
+
+func (me *Box) ValidateBox() error {
+
+	if me == nil {
+		// Throw software error.
+		me.Status = BoxUnknown
+		return nil
+	}
+	/*
+		state, err := me.Instance.Provision()
+		if err != nil {
+			me.Status = BoxError
+		} else {
+			me.Status = state
+		}
+		return err
+	*/
+	return nil
+}

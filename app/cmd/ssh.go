@@ -21,7 +21,7 @@ var sshCmd = &cobra.Command{
 	},
 }
 
-var sshArgs gearbox.SshArgs
+var sshArgs gearbox.SSHArgs
 
 func init() {
 

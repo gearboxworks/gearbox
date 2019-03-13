@@ -21,7 +21,7 @@ var boxCmd = &cobra.Command{
 }
 
 func init() {
-	var vmArgs gearbox.BoxArgs
+	var boxArgs gearbox.BoxArgs
 
 	RootCmd.AddCommand(boxCmd)
 	boxCmd.AddCommand(&cobra.Command{
@@ -44,7 +44,7 @@ func init() {
 			"that VirtualBox start the ISO containing GearboxOS. Finally, once Gearbox OS is running and ready to serve " +
 			"web requests `gearbox start` will tell the user that Gearbox is ready for use.",
 		Run: func(cmd *cobra.Command, args []string) {
-			err := gearbox.Instance.StartBox(vmArgs)
+			err := gearbox.Instance.StartBox(boxArgs)
 			if err != nil {
 				panic(err)
 			}
@@ -65,7 +65,7 @@ func init() {
 		Long: "The `gearbox stop` command contact VirtualBox and requests that it shutdown the GearboxOS " +
 			"virtual machine that should be running within VirtualBox.",
 		Run: func(cmd *cobra.Command, args []string) {
-			err := gearbox.Instance.StopBox(vmArgs)
+			err := gearbox.Instance.StopBox(boxArgs)
 			if err != nil {
 				panic(err)
 			}
@@ -76,7 +76,7 @@ func init() {
 		Use:   "status",
 		Short: "Display the current status of the Gearbox VM.",
 		Run: func(cmd *cobra.Command, args []string) {
-			_, err := gearbox.Instance.GetBoxStatus(vmArgs)
+			_, err := gearbox.Instance.GetBoxStatus(boxArgs)
 			if err != nil {
 				panic(err)
 			}
@@ -95,22 +95,37 @@ func init() {
 			"\n" +
 			"\nThis is equivalent to running `gearbox vm stop` and then `gearbox vm start`.",
 		Run: func(cmd *cobra.Command, args []string) {
-			err := gearbox.Instance.RestartBox(vmArgs)
+			err := gearbox.Instance.RestartBox(boxArgs)
 			if err != nil {
 				panic(err)
 			}
 		},
 	})
 
-	boxCmd.PersistentFlags().BoolVarP(&vmArgs.NoWait, "no-wait", "", false, "Don't wait for VM operation to complete.")
-	boxCmd.PersistentFlags().IntVarP(&vmArgs.WaitRetries, "wait-delay", "", gearbox.BoxDefaultWaitRetries, "VM operation wait retries.")
-	boxCmd.PersistentFlags().DurationVarP(&vmArgs.WaitDelay, "wait-retries", "", gearbox.BoxDefaultWaitDelay, "VM operation wait delay between retries.")
-	boxCmd.PersistentFlags().StringVarP(&vmArgs.ConsoleHost, "console-host", "", gearbox.BoxDefaultConsoleHost, "VM console host name.")
-	boxCmd.PersistentFlags().StringVarP(&vmArgs.ConsolePort, "console-port", "", gearbox.BoxDefaultConsolePort, "VM console port number.")
-	boxCmd.PersistentFlags().BoolVarP(&vmArgs.ShowConsole, "show-console", "", gearbox.BoxDefaultShowConsole, "Show VM console output.")
-	boxCmd.PersistentFlags().StringVarP(&vmArgs.Name, "name", "", gearbox.BoxDefaultName, "Gearbox VM name.")
+	boxCmd.AddCommand(&cobra.Command{
+		Use: "create",
+		SuggestFor: []string{
+			"new",
+		},
+		Short: "Create a new instance of the Gearbox VM.",
+		Run: func(cmd *cobra.Command, args []string) {
+			_, err := gearbox.Instance.CreateBox(boxArgs)
+			if err != nil {
+				panic(err)
+			}
+		},
+	})
 
-	// boxCmd.PersistentFlags().BoolP("no-wait", "w", false, "Don't wait for VM operation to complete.")
+	boxCmd.PersistentFlags().BoolVarP(&boxArgs.NoWait, "no-wait", "", false, "Don't wait for Box (VM) operation to complete.")
+	boxCmd.PersistentFlags().IntVarP(&boxArgs.WaitRetries, "wait-delay", "", gearbox.BoxDefaultWaitRetries, "Box (VM) operation wait retries.")
+	boxCmd.PersistentFlags().DurationVarP(&boxArgs.WaitDelay, "wait-retries", "", gearbox.BoxDefaultWaitDelay, "Box (VM) operation wait delay between retries.")
+	boxCmd.PersistentFlags().StringVarP(&boxArgs.ConsoleHost, "console-host", "", gearbox.BoxDefaultConsoleHost, "Box (VM) console host name.")
+	boxCmd.PersistentFlags().StringVarP(&boxArgs.ConsolePort, "console-port", "", gearbox.BoxDefaultConsolePort, "Box (VM) console port number.")
+	boxCmd.PersistentFlags().BoolVarP(&boxArgs.ShowConsole, "show-console", "", gearbox.BoxDefaultShowConsole, "Show Box (VM) console output.")
+	boxCmd.PersistentFlags().StringVarP(&boxArgs.BoxName, "name", "", gearbox.BoxDefaultName, "Gearbox Box (VM) name.")
 
-	// boxCmd.Flag("no-wait")
+	// Mike will not like this bit.
+	boxCmd.PersistentFlags().StringVarP(&boxArgs.Instance.Credentials.SSHUser, "user", "u", gearbox.SshDefaultUsername, "Alternate Gearbox SSH username.") // boxCmd.PersistentFlags().BoolP("no-wait", "w", false, "Don't wait for Box (VM) operation to complete.")
+	boxCmd.PersistentFlags().StringVarP(&boxArgs.Instance.Credentials.SSHPassword, "password", "p", gearbox.SshDefaultPassword, "Alternate Gearbox SSH password.")
+	boxCmd.PersistentFlags().StringVarP(&boxArgs.Instance.Credentials.SSHPassword, "key-file", "k", gearbox.SshDefaultKeyFile, "Gearbox SSH public key file.") // boxCmd.Flag("no-wait")
 }
