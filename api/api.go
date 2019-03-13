@@ -20,6 +20,8 @@ const Port = "9999"
 type ResourceVarName string
 type ResourceName string
 
+const DocsBaseUrl = "https://docs.gearbox.works/api"
+
 const SelfResource ResourceName = "self"
 const LinksResource ResourceName = "links"
 
@@ -138,9 +140,13 @@ type StatusResponse struct {
 }
 
 func (me *Status) ToResponse() *StatusResponse {
+	var msg string
+	if me.Error != nil {
+		msg = me.Error.Error()
+	}
 	return &StatusResponse{
 		Help:  me.Help,
-		Error: me.Error.Error(),
+		Error: msg,
 	}
 }
 
@@ -317,4 +323,36 @@ func ExpandUriTemplate(template string, vars UriTemplateVars) string {
 		url = strings.Replace(url, fmt.Sprintf("{%s}", vn), val, -1)
 	}
 	return url
+}
+
+func UnmarshalFromRequest(requestType ResourceName, ctx echo.Context, obj interface{}) (err error) {
+	for range only.Once {
+		apiHelp := GetApiHelp(requestType)
+		defer CloseRequestBody(ctx)
+		b, err := ReadRequestBody(ctx)
+		if err != nil {
+			err = util.AddHelpToError(
+				errors.New("could not read request body"),
+				apiHelp,
+			)
+			break
+		}
+		err = json.Unmarshal(b, &obj)
+		if err != nil {
+			err = util.AddHelpToError(
+				fmt.Errorf("unexpected format for request body: '%s'", string(b)),
+				apiHelp,
+			)
+			break
+		}
+	}
+	return err
+}
+
+func GetApiDocsUrl(topic ResourceName) string {
+	return fmt.Sprintf("%s/%s", DocsBaseUrl, topic)
+}
+
+func GetApiHelp(topic ResourceName) string {
+	return fmt.Sprintf("see %s", GetApiDocsUrl(topic))
 }

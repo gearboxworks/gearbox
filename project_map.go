@@ -2,6 +2,7 @@ package gearbox
 
 import (
 	"fmt"
+	"gearbox/api"
 	"gearbox/only"
 	"net/http"
 )
@@ -38,7 +39,7 @@ func (me ProjectMap) GetProject(gb *Gearbox, hostname string) (p *Project, statu
 			Failed:     true,
 			Message:    fmt.Sprintf("project hostname '%s' does not exist", hostname),
 			HttpStatus: http.StatusBadRequest,
-			ApiHelp:    GetApiDocsUrl(gb.RequestType),
+			ApiHelp:    api.GetApiDocsUrl(gb.RequestType),
 		})
 	}
 	return p, status

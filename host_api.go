@@ -11,8 +11,6 @@ import (
 
 const Port = "9999"
 
-const ApiDocsBaseUrl = "https://docs.gearbox.works/api"
-
 type HostApi struct {
 	Config  *Config
 	Api     *api.Api
@@ -93,31 +91,23 @@ func (me *HostApi) addRoutes() {
 }
 
 func (me *HostApi) jsonMarshalHandler(_api *api.Api, ctx echo.Context, requestType api.ResourceName, value interface{}) error {
-	var apiError *api.Status
+	var apiStatus *api.Status
 	for range only.Once {
 		status, ok := value.(Status)
 		if ok && status.IsError() {
-			apiError = &api.Status{
+			apiStatus = &api.Status{
 				Error:      status.Error,
 				StatusCode: status.HttpStatus,
 				Help:       status.ApiHelp,
 			}
-			apiError = _api.JsonMarshalHandler(ctx, requestType, apiError)
+			apiStatus = _api.JsonMarshalHandler(ctx, requestType, apiStatus)
 			break
 		}
 		status.Finalize()
 		if ok {
 			ctx.Response().Status = status.HttpStatus
 		}
-		apiError = _api.JsonMarshalHandler(ctx, requestType, value)
+		apiStatus = _api.JsonMarshalHandler(ctx, requestType, value)
 	}
-	return apiError.Error
-}
-
-func GetApiDocsUrl(topic api.ResourceName) string {
-	return fmt.Sprintf("%s/%s", ApiDocsBaseUrl, topic)
-}
-
-func GetApiHelp(topic api.ResourceName) string {
-	return fmt.Sprintf("see %s", GetApiDocsUrl(topic))
+	return apiStatus.Error
 }

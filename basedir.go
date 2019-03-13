@@ -3,6 +3,7 @@ package gearbox
 import (
 	"errors"
 	"fmt"
+	"gearbox/api"
 	"gearbox/only"
 	"github.com/mitchellh/go-homedir"
 	"net/http"
@@ -41,7 +42,7 @@ func ExpandHostBasedirPath(gb *Gearbox, nickname string, path string) (fp string
 	status = gb.ValidateBasedirNickname(nickname, &validateArgs{
 		MustNotBeEmpty: true,
 		MustExist:      true,
-		ApiHelpUrl:     GetApiDocsUrl(gb.RequestType),
+		ApiHelpUrl:     api.GetApiDocsUrl(gb.RequestType),
 	})
 	if !status.IsError() {
 		bd, _ := gb.Config.GetHostBasedir(nickname)
@@ -84,7 +85,7 @@ func (me *Basedir) Initialize() (status Status) {
 				Error:      me.Error,
 				Message:    me.Error.Error(),
 				HttpStatus: http.StatusBadRequest,
-				ApiHelp:    fmt.Sprintf("see %s", GetApiDocsUrl("basedirs")),
+				ApiHelp:    fmt.Sprintf("see %s", api.GetApiDocsUrl("basedirs")),
 			})
 			break
 		}
@@ -133,7 +134,7 @@ func (me BasedirMap) DeleteNamedBasedir(gb *Gearbox, nickname string) (status St
 		status = gb.ValidateBasedirNickname(nickname, &validateArgs{
 			MustNotBeEmpty: true,
 			MustExist:      true,
-			ApiHelpUrl:     GetApiDocsUrl(gb.RequestType),
+			ApiHelpUrl:     api.GetApiDocsUrl(gb.RequestType),
 		})
 		if status.IsError() {
 			break
@@ -155,7 +156,7 @@ func (me BasedirMap) UpdateBasedir(gb *Gearbox, nickname string, dir string) (st
 		status = gb.ValidateBasedirNickname(nickname, &validateArgs{
 			MustNotBeEmpty: true,
 			MustExist:      true,
-			ApiHelpUrl:     GetApiDocsUrl(gb.RequestType),
+			ApiHelpUrl:     api.GetApiDocsUrl(gb.RequestType),
 		})
 		if status.IsError() {
 			break
@@ -189,7 +190,7 @@ func (me BasedirMap) AddBasedir(gb *Gearbox, dir string, nickname ...string) (st
 		status = gb.ValidateBasedirNickname(nn, &validateArgs{
 			MustNotBeEmpty: true,
 			MustNotExist:   true,
-			ApiHelpUrl:     GetApiDocsUrl(gb.RequestType),
+			ApiHelpUrl:     api.GetApiDocsUrl(gb.RequestType),
 		})
 		if status.IsError() {
 			break
@@ -255,6 +256,9 @@ func ValidateBasedirNickname(nickname string, args *validateArgs) (status Status
 			break
 		}
 		status = NewOkStatus("nickname '%s' validated", nickname)
+	}
+	if status.IsError() {
+		status.Error = errors.New(status.Message)
 	}
 	return status
 }

@@ -16,27 +16,19 @@ func (me *HostApi) addStackRoutes() {
 	})
 
 	_api.GET("/stacks/:stack", "stack-details", func(rt api.ResourceName, ctx echo.Context) error {
-		response := me.getStackResponse(ctx)
-		if _, ok := response.(*api.Status); !ok {
-			response = response.(*Stack).CloneSansServices()
-		}
-		return me.jsonMarshalHandler(_api, ctx, rt, response)
+		return me.jsonMarshalHandler(_api, ctx, rt, me.getStackResponse(ctx, rt))
 	})
 
 	_api.GET("/stacks/:stack/services", "stack-services", func(rt api.ResourceName, ctx echo.Context) error {
-		response := me.getServicesResponse(ctx)
-		return me.jsonMarshalHandler(_api, ctx, rt, response)
+		return me.jsonMarshalHandler(_api, ctx, rt, me.getServicesResponse(ctx, rt))
 	})
 
 	_api.GET("/stacks/:stack/services/:service", "stack-service", func(rt api.ResourceName, ctx echo.Context) error {
-		response := me.getServiceResponse(ctx)
-		return me.jsonMarshalHandler(_api, ctx, rt, response)
+		return me.jsonMarshalHandler(_api, ctx, rt, me.getServiceResponse(ctx, rt))
 	})
 
 	_api.GET("/stacks/:stack/services/:service/options", "stack-service-options", func(rt api.ResourceName, ctx echo.Context) error {
-		response := me.getServiceResponse(ctx)
-		response = me.Gearbox.RequestAvailableContainers(&dockerhub.ContainerQuery{})
-		return me.jsonMarshalHandler(_api, ctx, rt, response)
+		return me.jsonMarshalHandler(_api, ctx, rt, me.getServiceResponse(ctx, rt))
 	})
 }
 
@@ -47,10 +39,10 @@ func (me *HostApi) getRoleName(ctx echo.Context) RoleName {
 	return RoleName(ctx.Param("service"))
 }
 
-func (me *HostApi) getServicesResponse(ctx echo.Context) interface{} {
+func (me *HostApi) getServicesResponse(ctx echo.Context, requestType api.ResourceName) interface{} {
 	var response interface{}
 	for range only.Once {
-		response = me.getStackResponse(ctx)
+		response = me.getStackResponse(ctx, requestType)
 		if _, ok := response.(api.Status); ok {
 			break
 		}
@@ -67,12 +59,17 @@ func (me *HostApi) getServicesResponse(ctx echo.Context) interface{} {
 		response = stack.GetRoleMap()
 	}
 	return response
+
 }
 
-func (me *HostApi) getServiceResponse(ctx echo.Context) interface{} {
+func (me *HostApi) getServiceResponseOptions(ctx echo.Context, requestType api.ResourceName) interface{} {
+	return me.Gearbox.RequestAvailableContainers(&dockerhub.ContainerQuery{})
+}
+
+func (me *HostApi) getServiceResponse(ctx echo.Context, requestType api.ResourceName) interface{} {
 	var response interface{}
 	for range only.Once {
-		response := me.getServicesResponse(ctx)
+		response := me.getServicesResponse(ctx, requestType)
 		if _, ok := response.(api.Status); ok {
 			break
 		}
@@ -102,7 +99,7 @@ func (me *HostApi) getServiceResponse(ctx echo.Context) interface{} {
 	return response
 }
 
-func (me *HostApi) getStackResponse(ctx echo.Context) interface{} {
+func (me *HostApi) getStackResponse(ctx echo.Context, requestType api.ResourceName) interface{} {
 	var response interface{}
 	for range only.Once {
 		sn := me.getStackName(ctx)
@@ -114,6 +111,9 @@ func (me *HostApi) getStackResponse(ctx echo.Context) interface{} {
 				Error:      fmt.Errorf("'%s' is not a valid stack", sn),
 			}
 			break
+		}
+		if _, ok := response.(*api.Status); !ok {
+			response = response.(*Stack).CloneSansServices()
 		}
 	}
 	return response

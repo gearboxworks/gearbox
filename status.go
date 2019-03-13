@@ -61,12 +61,15 @@ func NewSuccessStatus(code int, msg ...string) (status Status) {
 			})
 			break
 		}
-		msg = msg[1:]
-		is := make([]interface{}, len(msg))
-		for i, m := range msg {
-			is[i] = m
+		_msg := msg[0]
+		var params []interface{}
+		if len(msg) > 1 {
+			params = make([]interface{}, len(msg)-1)
+			for i, param := range msg[1:] {
+				params[i] = param
+			}
 		}
-		status := NewOkStatus(msg[0], is...)
+		status = NewOkStatus(_msg, params...)
 		status.HttpStatus = code
 	}
 	return status

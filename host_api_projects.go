@@ -34,15 +34,15 @@ func (me *HostApi) addProjectRoutes() {
 	})
 
 	_api.GET("/projects/enabled", "projects-enabled", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Projects.GetEnabled())
+		return me.jsonMarshalHandler(_api, ctx, rt, me.getEnabledProjectsResponse(ctx, rt))
 	})
 
 	_api.GET("/projects/disabled", "projects-disabled", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Projects.GetDisabled())
+		return me.jsonMarshalHandler(_api, ctx, rt, me.getDisabledProjectsResponse(ctx, rt))
 	})
 
 	_api.GET("/projects/candidates", "project-candidates", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Candidates)
+		return me.jsonMarshalHandler(_api, ctx, rt, me.getCandidateProjectsResponse(ctx, rt))
 	})
 
 	_api.GET("/projects/:hostname/services", ProjectServicesResource, func(rt api.ResourceName, ctx echo.Context) error {
@@ -97,6 +97,18 @@ func (me *HostApi) addProjectRoutes() {
 			Error:      fmt.Errorf("the 'project-delete' method has not been implemented yet"),
 		})
 	})
+}
+
+func (me *HostApi) getCandidateProjectsResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+	return me.Config.Projects.GetEnabled()
+}
+
+func (me *HostApi) getEnabledProjectsResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+	return me.Config.Projects.GetEnabled()
+}
+
+func (me *HostApi) getDisabledProjectsResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+	return me.Config.Projects.GetDisabled()
 }
 
 func (me *HostApi) getProjectsResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
