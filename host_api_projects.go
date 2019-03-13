@@ -54,27 +54,27 @@ func (me *HostApi) addProjectRoutes() {
 	})
 
 	_api.POST("/projects/:hostname/aliases/new", "project-alias-add", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(me.Gearbox, ctx, rt))
+		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(ctx, rt))
 	})
 
 	_api.PUT("/projects/:hostname/aliases/:alias", "project-alias-update", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(me.Gearbox, ctx, rt))
+		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(ctx, rt))
 	})
 
 	_api.DELETE("/projects/:hostname/aliases/:alias", "project-alias-delete", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(me.Gearbox, ctx, rt))
+		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(ctx, rt))
 	})
 
 	_api.POST("/projects/:hostname/services/new", "project-service-add", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(me.Gearbox, ctx, rt))
+		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(ctx, rt))
 	})
 
 	_api.PUT("/projects/:hostname/services/:service", "project-service-update", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(me.Gearbox, ctx, rt))
+		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(ctx, rt))
 	})
 
 	_api.DELETE("/projects/:hostname/services/:service", "project-service-delete", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(me.Gearbox, ctx, rt))
+		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(ctx, rt))
 	})
 
 	_api.POST("/projects/new", "project-add", func(rt api.ResourceName, ctx echo.Context) error {
