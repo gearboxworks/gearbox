@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import ProjectMenu from './ProjectMenu.vue'
+import ProjectMenu from '../views/Projects.vue'
 import StackMenu from './StackMenu.vue'
 
 export default {

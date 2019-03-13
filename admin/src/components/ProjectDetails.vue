@@ -1,73 +1,96 @@
 <template>
   <div>
     <h1>Project Details</h1>
-    <el-form
-      v-if="project"
-      label-width="120px"
-    >
-      <h2>{{ project.name }}</h2>
+    <b-form v-if="project">
+      <h2>{{ project.hostname }}</h2>
 
-      <el-form-item label="Base Dir">
-        <i class="el-icon-info" />
-        <el-input
-          placeholder="Please input"
+      <b-form-group
+        id="basedirGroup1"
+        label="Base Dir:"
+        label-for="basedirInput"
+        description="Base dir"
+      >
+        <b-form-input
+          id="basedirInput"
+          type="text"
           v-model="baseDir"
-        />
-      </el-form-item>
+          required
+          placeholder="Enter base dir" />
+      </b-form-group>
 
-      <el-form-item label="Path">
-        <i class="el-icon-info" />
-        <el-input
-          placeholder="Please input"
+      <b-form-group
+        id="pathGroup"
+        label="Dir Name:"
+        label-for="dirNameInput"
+        description=""
+      >
+        <b-form-input
+          id="dirNameInput"
+          type="text"
           v-model="path"
-        />
-      </el-form-item>
+          required
+          placeholder="" />
+      </b-form-group>
 
-      <el-form-item label="Hostname">
-        <i class="el-icon-info" />
-        <el-input
-          placeholder="Please input"
-          v-model="name"
-        />
-      </el-form-item>
+      <b-form-group
+        id="fullPathGroup"
+        label="Full path:"
+        label-for="fullPathInput"
+        description=""
+      >
+        <b-form-input
+          id="fullPathInput"
+          type="text"
+          v-model="fullPath"
+          required
+          placeholder="" />
+      </b-form-group>
 
-      <el-form-item label="Notes">
-        <i class="el-icon-info" />
-        <el-input
-          placeholder="Please input"
+      <b-form-group
+        id="hostnameGroup"
+        label="Hostname:"
+        label-for="hostnameInput"
+        description=""
+      >
+        <b-form-input
+          id="hostnameInput"
+          type="text"
+          v-model="hostname"
+          required
+          placeholder="" />
+      </b-form-group>
+
+      <b-form-group
+        id="notesGroup"
+        label="Notes:"
+        label-for="notesInput"
+        description=""
+      >
+        <b-form-textarea
+          id="textarea"
           v-model="notes"
-          type="textarea"
-          :rows="2"
+          placeholder="Enter something..."
+          rows="3"
+          max-rows="6"
         />
-      </el-form-item>
+      </b-form-group>
 
-      <el-form-item label="Enabled">
-        <i class="el-icon-info" />
-        <el-switch
-          v-model="enabled"
-          active-color="#13ce66"
-          inactive-color="#ff4949"
-        />
-      </el-form-item>
-
-      <el-form-item>
-        <el-button
-          type="primary"
-          @click="onSubmit"
-        >
-          Submit
-        </el-button>
-        <el-button disabled>
-          Reset
-        </el-button>
-      </el-form-item>
-    </el-form>
+      <b-form-group
+        id="enabledGroup"
+        label="Status:"
+        label-for="enabledInput"
+        description=""
+      >
+        <b-form-radio value="true" v-model="enabled" name="enabledInput">Enabled</b-form-radio>
+        <b-form-radio value="false" v-model="enabled" name="enabledInput">Disabled</b-form-radio>
+      </b-form-group>
+    </b-form>
 
     <div
       v-else
       class="project-details"
     >
-      <h2>{{ this.$route.params.projectName }}</h2>
+      <h2>{{ this.$route.params.hostname }}</h2>
       <p>This is a dummy project with no actual data!</p>
     </div>
   </div>
@@ -81,24 +104,28 @@ export default {
   name: 'ProjectDetails',
   data () {
     return {
-      name: '',
+      hostname: '',
       notes: '',
       baseDir: '',
       path: '',
-      enabled: null
+      fullPath: '',
+      enabled: null,
+      stack: {}
     }
   },
   watch: {
-    '$route.params.projectName': {
-      handler: function (projectName) {
-        const p = this.projectByName(projectName)
+    '$route.params.hostname': {
+      handler: function (hostname) {
+        const p = this.projectBy('hostname', hostname)
         if (p) {
           // console.log(projectName, p.baseDir)
-          this.name = p.name
+          this.hostname = p.hostname
           this.notes = p.notes
           this.baseDir = p.baseDir
           this.path = p.path
+          this.fullPath = p.fullPath
           this.enabled = p.enabled
+          this.stack = p.stack
         }
       },
       deep: true,
@@ -107,10 +134,11 @@ export default {
   },
   computed: {
     ...mapGetters([
+      'projectBy',
       'projectByName'
     ]),
     project () {
-      return this.projectByName(this.$route.params.projectName)
+      return this.projectBy('hostname', this.$route.params.hostname)
     }
   },
   methods: {
@@ -118,17 +146,18 @@ export default {
       this.$store.dispatch(
         'updateProject',
         {
-          'projectName': this.project.name,
+          'hostname': this.project.hostname,
           'project': {
-            'name': this.name,
+            'hostname': this.hostname,
             'notes': this.notes,
             'baseDir': this.baseDir,
             'path': this.path,
-            'enabled': this.enabled
+            'enabled': this.enabled,
+            'fullPath': this.fullPath
           }
         }
       ).then(() => {
-        this.$router.push('/project/' + this.name)
+        this.$router.push('/project/' + this.hostname)
       })
     }
   }
