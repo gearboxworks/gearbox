@@ -10,6 +10,14 @@ type ServiceId string
 
 type ServiceMap map[RoleName]*Service
 
+func (me ServiceMap) GetStackNames() StackNames {
+	names := util.NewUniqueStrings(len(me))
+	for _, s := range me {
+		names[s.GetStackName()] = true
+	}
+	return names.ToSlice()
+}
+
 type Services []*Service
 
 type Service struct {
@@ -33,6 +41,13 @@ func NewService(args ...*ServiceArgs) *Service {
 	svc := Service{}
 	svc = Service(*_args)
 	return &svc
+}
+
+func (me *Service) GetStackName() (name string) {
+	if me.StackRole != nil {
+		name = me.StackRole.GetStackName()
+	}
+	return name
 }
 
 func (me *Service) Parse(id string) (status Status) {

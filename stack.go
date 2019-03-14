@@ -14,6 +14,8 @@ type StackBag map[RoleName]interface{}
 
 type StackName string
 
+type StackNames []string
+
 type Stack struct {
 	Name    StackName `json:"name"`
 	Label   string    `json:"label"`

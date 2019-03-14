@@ -92,13 +92,13 @@ func (me *HostApi) POST(path string, name api.ResourceName, handler HandlerFunc)
 }
 
 func (me *HostApi) PUT(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
-	return me.Api.GET(path, name, func(rc *api.RequestContext) error {
+	return me.Api.PUT(path, name, func(rc *api.RequestContext) error {
 		return me.jsonMarshalHandler(rc, handler(rc))
 	})
 }
 
 func (me *HostApi) DELETE(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
-	return me.Api.GET(path, name, func(rc *api.RequestContext) error {
+	return me.Api.DELETE(path, name, func(rc *api.RequestContext) error {
 		return me.jsonMarshalHandler(rc, handler(rc))
 	})
 }

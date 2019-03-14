@@ -33,6 +33,10 @@ func init() {
 	re["ns_or_r"] = regexp.MustCompile("[^A-Za-z0-9/]")
 }
 
+func (me *Spec) GetStackName() (name string) {
+	return me.Namespace
+}
+
 func (me *Spec) Parse(spec string) (err error) {
 	tmp := Spec{raw: spec}
 	for range only.Once {

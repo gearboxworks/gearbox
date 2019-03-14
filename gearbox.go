@@ -63,8 +63,8 @@ func (me *Gearbox) GetApiSelfLink(name api.ResourceName, vars api.UriTemplateVar
 	return api.ExpandUriTemplate(t, vars)
 }
 
-func (me *Gearbox) GetProjectResponse(hostname string) (pr *ProjectResponse, status Status) {
-	return me.Config.Projects.GetProjectResponse(me, hostname)
+func (me *Gearbox) FindProjectWithDetails(hostname string) (p *Project, status Status) {
+	return me.Config.Projects.FindProjectWithDetails(me, hostname)
 }
 
 func (me *Gearbox) GetProject(hostname string) (p *Project, status Status) {

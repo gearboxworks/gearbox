@@ -35,6 +35,13 @@ func NewStackRole() *StackRole {
 	}
 }
 
+func (me *StackRole) GetStackName() (name string) {
+	if me.Spec != nil {
+		name = me.Spec.GetStackName()
+	}
+	return name
+}
+
 func (me *StackRole) NeedsParse() bool {
 	return me.Role == "" || me.Spec.Role == ""
 }

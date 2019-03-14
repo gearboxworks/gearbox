@@ -89,7 +89,7 @@ func (me *Project) MaybeLoadDetails() (status Status) {
 		if me.ProjectDetails != nil {
 			break
 		}
-		status = me.LoadProjectFile()
+		status = me.LoadProjectDetails()
 	}
 	return status
 }
@@ -98,7 +98,7 @@ func (me *Project) GetProjectFilepath() (fp string, err error) {
 	return me.Gearbox.GetProjectFilepath(me.Path, me.Basedir)
 }
 
-func (me *Project) LoadProjectFile() (status Status) {
+func (me *Project) LoadProjectDetails() (status Status) {
 	var err error
 	for range only.Once {
 		var fp string

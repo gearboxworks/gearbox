@@ -9,21 +9,19 @@ import (
 
 type ProjectMap map[string]*Project
 
-func (me ProjectMap) GetProjectResponse(gb *Gearbox, hostname string) (pr *ProjectResponse, status Status) {
+func (me ProjectMap) FindProjectWithDetails(gb *Gearbox, hostname string) (p *Project, status Status) {
 	for range only.Once {
-		var p *Project
 		p, status = me.GetProject(gb, hostname)
 		if status.IsError() {
 			break
 		}
-		status = p.LoadProjectFile()
+		status = p.LoadProjectDetails()
 		if status.IsError() {
 			break
 		}
-		pr = NewProjectResponse(p)
-		status = NewOkStatus("got response for project '%s'", hostname)
+		status = NewOkStatus("got project '%s'", hostname)
 	}
-	return pr, status
+	return p, status
 }
 
 func (me ProjectMap) GetProject(gb *Gearbox, hostname string) (p *Project, status Status) {
