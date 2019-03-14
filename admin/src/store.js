@@ -30,6 +30,19 @@ export default new Vuex.Store({
     },
     projectBy: (state) => (fieldName, fieldValue) => {
       return state.projects.find(p => p[fieldName] === fieldValue)
+    },
+    baseDirsAsOptions: (state) => {
+      const options = []
+      for (const baseDirName in state.baseDirs) {
+        if (!state.baseDirs.hasOwnProperty(baseDirName)) {
+          continue
+        }
+        options.push({
+          value: baseDirName,
+          text: state.baseDirs[baseDirName].text
+        })
+      }
+      return options
     }
   },
   actions: {
@@ -58,23 +71,18 @@ export default new Vuex.Store({
           // }
         })
           .then(r => r ? r.data.data : null)
-          .then((basedirs) => {
-            if (basedirs) {
-            // console.log(projects)
-
-              const bd = []
-
-              for (const dir in basedirs) {
-                if (!basedirs.hasOwnProperty(dir)) {
+          .then((baseDirs) => {
+            if (baseDirs) {
+              const bd = {}
+              for (const dirName in baseDirs) {
+                if (!baseDirs.hasOwnProperty(dirName)) {
                   continue
                 }
 
-                bd.push(
-                  {
-                    name: dir,
-                    path: basedirs[dir]
-                  }
-                )
+                bd[dirName] = {
+                  'value': dirName,
+                  'text': baseDirs[dirName]
+                }
               }
 
               commit('SET_BASEDIRS', bd)
@@ -236,17 +244,36 @@ export default new Vuex.Store({
       //   });
     },
     updateProject ({ commit }, payload) {
-      const { projectName, project } = payload
+      const { hostname, project } = payload
 
-      commit('UPDATE_PROJECT', { projectName, project })
+      commit('UPDATE_PROJECT', { hostname, project })
 
       HTTP({
         method: 'post',
-        url: 'project/' + projectName,
+        url: 'project/' + hostname,
         data: project
       }).then(r => r.data).then((project) => {
         // move commit here
         // resolve()
+      }).catch((error) => {
+        console.log('rejected', error)
+        // resolve();
+      })
+    },
+    addBaseDir ({ commit }, payload) {
+      const { name, path } = payload
+      commit('ADD_BASEDIR', {
+        value: name,
+        text: path
+      })
+      HTTP({
+        method: 'post',
+        url: 'basedirs/new',
+        data: payload
+      }).then(r => r.data).then((project) => {
+        // move commit here
+        // resolve()
+        //commit('ADD_BASEDIR', payload)
       }).catch((error) => {
         console.log('rejected', error)
         // resolve();
@@ -272,6 +299,7 @@ export default new Vuex.Store({
     },
     UPDATE_PROJECT (state, args) {
       const { hostname, project } = args
+      console.log(args)
       const p = this.getters.projectBy('hostname', hostname)
       p.hostname = project.hostname
       p.notes = project.notes
@@ -289,8 +317,11 @@ export default new Vuex.Store({
     SET_REMAINING_RETRIES (state, remainingRetries) {
       state.connectionStatus.remainingRetries = remainingRetries
     },
-    SET_BASEDIRS (state, basedirs) {
-      state.baseDirs = basedirs
+    SET_BASEDIRS (state, baseDirs) {
+      state.baseDirs = baseDirs
+    },
+    ADD_BASEDIR (state, baseDir) {
+      state.baseDirs[baseDir.value] = baseDir
     }
   }
 

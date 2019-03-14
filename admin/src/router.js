@@ -31,11 +31,12 @@ export default new Router({
       path: '/projects',
       name: 'projects',
       component: () => import(/* webpackChunkName: "project" */ './views/Projects.vue')
-    },
-    {
-      path: '/projects/:hostname',
-      name: 'project',
-      component: () => import(/* webpackChunkName: "project" */ './components/ProjectDetails.vue')
+      // children: [
+      //   {
+      //     path: ':hostname',
+      //     component: () => import(/* webpackChunkName: "project" */ './components/ProjectDetails.vue')
+      //   }
+      // ]
     },
     {
       path: '/stack/:stackName',
