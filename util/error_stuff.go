@@ -14,15 +14,23 @@ import (
 //}
 
 type HelpfulError struct {
-	error
-	Help string
+	ErrorObj error
+	Help     string
 }
 
 func AddHelpToError(err error, help string) HelpfulError {
 	return HelpfulError{
-		error: err,
-		Help:  help,
+		ErrorObj: err,
+		Help:     help,
 	}
+}
+
+func (me HelpfulError) IsNil() bool {
+	return me.ErrorObj == nil
+}
+
+func (me HelpfulError) Error() string {
+	return me.ErrorObj.Error()
 }
 
 func Error(msg interface{}, args ...interface{}) {

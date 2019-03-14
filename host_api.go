@@ -80,8 +80,13 @@ func (me *HostApi) Stop() {
 type HandlerFunc func(rc *api.RequestContext) interface{}
 
 func (me *HostApi) GET(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
-	return me.Api.GET(path, name, func(rc *api.RequestContext) error {
-		return me.jsonMarshalHandler(rc, handler(rc))
+	return me.Api.GET(path, name, func(rc *api.RequestContext) (err error) {
+		if handler != nil {
+			err = me.jsonMarshalHandler(rc, handler(rc))
+		} else {
+			err = me.jsonMarshalHandler(rc, nil)
+		}
+		return err
 	})
 }
 

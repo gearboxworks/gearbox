@@ -101,17 +101,22 @@ func NewStatus(args *StatusArgs) (status Status) {
 			Error:      args.Error,
 		}
 
-		if status.Error == nil {
+		if status.Error == nil && !args.HelpfulError.IsNil() {
 			status.Error = args.HelpfulError
-		}
-		if status.Help == "" && args.HelpfulError.Help != "" {
-			status.Help = args.HelpfulError.Help
 		}
 		if status.Error == IsStatusError {
 			status.Error = errors.New(status.Message)
 		}
-		if status.Failed && status.Error == nil {
+		he, ok := status.Error.(util.HelpfulError)
+		if status.Error == nil && ok && he.IsNil() {
 			status.Error = errors.New(status.Message)
+		}
+		if status.Error == nil && status.Failed {
+			status.Error = errors.New(status.Message)
+		}
+
+		if status.Help == "" && args.HelpfulError.Help != "" {
+			status.Help = args.HelpfulError.Help
 		}
 		if status.Help != "" {
 			if status.ApiHelp == "" {
