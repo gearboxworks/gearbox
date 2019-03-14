@@ -13,7 +13,7 @@ func TestIdentity(t *testing.T) {
 func (me *IdTest) GetData() test.Table {
 	return test.Table{
 		test.NewFixture(&test.Fixture{
-			Label: "No Org",
+			Label: "No OrgName",
 			In:    "php:7",
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "php:7"},
@@ -37,7 +37,7 @@ func (me *IdTest) GetData() test.Table {
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Org/Type/Program/Version",
+			Label: "OrgName/Type/Program/Version",
 			In:    "wordpress/plugins/akismet:4.1.1",
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "wordpress/plugins/akismet:4.1.1"},
@@ -90,7 +90,7 @@ func (me *IdTest) GetData() test.Table {
 const (
 	getId      = "GetId"
 	getRaw     = "GetRaw"
-	getGroup   = "GetGroup"
+	getOrgName = "GetOrgName"
 	getType    = "GetType"
 	getName    = "GetName"
 	getVersion = "GetVersion"
@@ -118,8 +118,8 @@ func (me *IdTest) GetOutput(f *test.Fixture) (got string) {
 	case getId:
 		got = id.String()
 
-	case getGroup:
-		got = id.GetGroup()
+	case getOrgName:
+		got = string(id.GetOrgName())
 
 	case getType:
 		got = id.GetType()

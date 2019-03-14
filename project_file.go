@@ -75,7 +75,7 @@ func (me *ProjectFile) FixupStack() (status Status) {
 	me.ServiceMap = make(ServiceMap, len(me.StackBag))
 	for role, item := range me.StackBag {
 		sr := NewStackRole()
-		status = sr.Parse(RoleName(role))
+		status = sr.Parse(RoleSpec(role))
 		if status.IsError() {
 			break
 		}
@@ -104,14 +104,14 @@ func (me *ProjectFile) FixupStack() (status Status) {
 //
 // Stacks are loaded as a map[string]interface{} to enable this type of processing.
 //
-func (me *ProjectFile) FixupStackItem(item interface{}, role RoleName) (*Service, Status) {
+func (me *ProjectFile) FixupStackItem(item interface{}, role RoleSpec) (*Service, Status) {
 	var status Status
 	service := NewService(&ServiceArgs{
 		StackRole: NewStackRole(),
 	})
 	for range only.Once {
 		if svc, ok := item.(string); ok {
-			status = service.Parse(svc)
+			status = service.Parse(ServiceId(svc))
 			if status.IsError() {
 				break
 			}
@@ -121,8 +121,8 @@ func (me *ProjectFile) FixupStackItem(item interface{}, role RoleName) (*Service
 					break
 				}
 			}
-			if service.Org == "" {
-				service.Org = "gearboxworks"
+			if service.OrgName == "" {
+				service.OrgName = "gearboxworks"
 			}
 		} else if roles, ok := item.([]interface{}); ok {
 			services := make(Services, len(roles))

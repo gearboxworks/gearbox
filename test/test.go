@@ -98,7 +98,7 @@ func StructMethodsTest(smt StructMethodTester) {
 //func HandleError(f *Fixture, err error) {
 //	if err != nil {
 //		f.T.Errorf("testing %s for %s failed: %s",
-//			f.Role,
+//			f.Type,
 //			f.Label,
 //			err.Error(),
 //		)

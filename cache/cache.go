@@ -20,7 +20,7 @@ type Cache struct {
 
 type Wrapper struct {
 	Expires string `json:"expires"`
-	Data    []byte `json:"data"`
+	Data    string `json:"data"`
 }
 
 func NewCache(dir string) *Cache {
@@ -33,7 +33,7 @@ func (me *Cache) Close(f *os.File) {
 	_ = f.Close()
 }
 
-func (me *Cache) Get(key string) (data []byte, err error) {
+func (me *Cache) Get(key string) (data []byte, ok bool, err error) {
 	for range only.Once {
 		if me.Disable {
 			break
@@ -73,9 +73,10 @@ func (me *Cache) Get(key string) (data []byte, err error) {
 			break
 		}
 
-		data = w.Data
+		ok = true
+		data = []byte(w.Data)
 	}
-	return data, err
+	return data, ok, err
 }
 
 func (me *Cache) Set(key string, b []byte, duration string) (err error) {
@@ -86,7 +87,7 @@ func (me *Cache) Set(key string, b []byte, duration string) (err error) {
 		}
 		w := &Wrapper{
 			Expires: time.Now().Add(dur).Format(time.RFC3339),
-			Data:    b,
+			Data:    string(b),
 		}
 		b, err := json.Marshal(w)
 		if err != nil {

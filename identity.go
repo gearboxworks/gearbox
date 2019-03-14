@@ -7,9 +7,10 @@ import (
 	"strings"
 )
 
+type OrgName string
 type Identity struct {
 	raw     string
-	Org     string         `json:"org,omitempty"`
+	OrgName OrgName        `json:"org,omitempty"`
 	Type    string         `json:"type,omitempty"`
 	Program string         `json:"program,omitempty"`
 	Version *DottedVersion `json:"version,omitempty"`
@@ -26,10 +27,13 @@ func (me *Identity) Parse(identity string) (err error) {
 		"'google/flutter:1.3.8' or 'wordpress/plugins/akismet:4.1.1'"
 
 	var parts []string
-	var g string
+	var on OrgName
 	var t string
 	var p string
 	for range only.Once {
+		if me == nil {
+			panic("identity.Parse() called when 'identity' is nil.")
+		}
 		v := NewDottedVersion()
 		err = v.Parse(util.After(identity, ":"))
 		if err != nil {
@@ -44,10 +48,10 @@ func (me *Identity) Parse(identity string) (err error) {
 		case 1:
 			p = parts[0]
 		case 2:
-			g = parts[0]
+			on = OrgName(parts[0])
 			p = parts[1]
 		case 3:
-			g = parts[0]
+			on = OrgName(parts[0])
 			t = parts[1]
 			p = parts[2]
 		default:
@@ -67,7 +71,7 @@ func (me *Identity) Parse(identity string) (err error) {
 			break
 		}
 		me.raw = identity
-		me.Org = g
+		me.OrgName = on
 		me.Type = t
 		me.Program = p
 		me.Version = v
@@ -75,16 +79,16 @@ func (me *Identity) Parse(identity string) (err error) {
 	return err
 }
 
-func (me *Identity) GetId() string {
-	return me.String()
+func (me *Identity) GetId() ServiceId {
+	return ServiceId(me.String())
 }
 
 func (me *Identity) GetRaw() string {
 	return me.raw
 }
 
-func (me *Identity) GetGroup() string {
-	return me.Org
+func (me *Identity) GetOrgName() OrgName {
+	return me.OrgName
 }
 
 func (me *Identity) GetType() string {
@@ -107,8 +111,8 @@ func (me *Identity) String() (id string) {
 	if me.Type != "" {
 		id = fmt.Sprintf("%s/%s", me.Type, id)
 	}
-	if me.Org != "" {
-		id = fmt.Sprintf("%s/%s", me.Org, id)
+	if me.OrgName != "" {
+		id = fmt.Sprintf("%s/%s", me.OrgName, id)
 	}
 	if me.Version != nil && me.Version.GetRaw() != "" {
 		id = fmt.Sprintf("%s:%s", id, me.Version.String())

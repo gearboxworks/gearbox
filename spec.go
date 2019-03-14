@@ -9,12 +9,15 @@ import (
 	"strings"
 )
 
+type AuthorityDomain string
+type Authorities []AuthorityDomain
+
 type Spec struct {
-	raw       string
-	Host      string `json:"host,omitempty"`
-	Namespace string `json:"named_stack,omitempty"`
-	Role      string `json:"role"`
-	Revision  string `json:"revision,omitempty"`
+	raw         string
+	Authority   AuthorityDomain `json:"authority,omitempty"`
+	StackName   StackName       `json:"stack,omitempty"`
+	ServiceType string          `json:"type,omitempty"`
+	Revision    string          `json:"revision,omitempty"`
 }
 
 type SpecArgs Spec
@@ -33,13 +36,12 @@ func init() {
 	re["ns_or_r"] = regexp.MustCompile("[^A-Za-z0-9/]")
 }
 
-func (me *Spec) GetStackName() (name string) {
-	return me.Namespace
-}
-
 func (me *Spec) Parse(spec string) (err error) {
 	tmp := Spec{raw: spec}
 	for range only.Once {
+		if me == nil {
+			panic("spec.Parse() called when 'spec' is nil.")
+		}
 		*me = Spec{}
 		parts := strings.Split(spec, ":")
 		if len(parts) > 1 {
@@ -58,14 +60,14 @@ func (me *Spec) Parse(spec string) (err error) {
 		}
 		sharedHelp := " can only contain letters [a-z], numbers [0-9], dashes ('-')%s or slashes ('/')"
 		parts = strings.Split(parts[0], "/")
-		tmp.Role = parts[len(parts)-1]
+		tmp.ServiceType = parts[len(parts)-1]
 		if strings.Contains(parts[0], ".") {
-			tmp.Host = parts[0]
-			if re["host"].MatchString(tmp.Host) {
+			tmp.Authority = AuthorityDomain(parts[0])
+			if re["host"].MatchString(string(tmp.Authority)) {
 				err = util.AddHelpToError(
-					fmt.Errorf("invalid host '%s' in '%s'", tmp.Host, spec),
+					fmt.Errorf("invalid host '%s' in '%s'", tmp.Authority, spec),
 					fmt.Sprintf("host '%s' in '%s'%s",
-						tmp.Host,
+						tmp.Authority,
 						spec,
 						fmt.Sprintf(sharedHelp, ", dots ('.')"),
 					),
@@ -73,22 +75,22 @@ func (me *Spec) Parse(spec string) (err error) {
 				break
 			}
 			if len(parts) >= 2 {
-				tmp.Namespace = strings.Join(parts[1:len(parts)-1], "/")
+				tmp.StackName = StackName(strings.Join(parts[1:len(parts)-1], "/"))
 			}
 		} else if len(parts) > 1 {
-			tmp.Namespace = strings.Join(parts[:len(parts)-1], "/")
+			tmp.StackName = StackName(strings.Join(parts[:len(parts)-1], "/"))
 		}
-		if re["ns_or_r"].MatchString(tmp.Namespace) {
+		if re["ns_or_r"].MatchString(string(tmp.StackName)) {
 			err = util.AddHelpToError(
-				fmt.Errorf("invalid namespace '%s' in spec '%s'", tmp.Namespace, spec),
-				fmt.Sprintf("namespace '%s'%s", tmp.Namespace, fmt.Sprintf(sharedHelp, "")),
+				fmt.Errorf("invalid stack name '%s' in spec '%s'", tmp.StackName, spec),
+				fmt.Sprintf("stack name '%s'%s", tmp.StackName, fmt.Sprintf(sharedHelp, "")),
 			)
 			break
 		}
-		if re["ns_or_r"].MatchString(tmp.Role) {
+		if re["ns_or_r"].MatchString(tmp.ServiceType) {
 			err = util.AddHelpToError(
-				fmt.Errorf("invalid role '%s' in '%s'", tmp.Role, spec),
-				fmt.Sprintf("role '%s'%s", tmp.Role, fmt.Sprintf(sharedHelp, "")),
+				fmt.Errorf("invalid role '%s' in '%s'", tmp.ServiceType, spec),
+				fmt.Sprintf("role '%s'%s", tmp.ServiceType, fmt.Sprintf(sharedHelp, "")),
 			)
 			break
 		}
@@ -101,18 +103,18 @@ func (me *Spec) Parse(spec string) (err error) {
 
 func (me *Spec) String() string {
 	var s string
-	if me.Host == "" && me.Namespace == "" && me.Revision == "" {
-		s = me.Role
-	} else if me.Host == "" && me.Revision == "" {
-		s = fmt.Sprintf("%s/%s", me.Namespace, me.Role)
-	} else if me.Host == "" && me.Namespace == "" {
-		s = fmt.Sprintf("%s:%s", me.Role, me.Revision)
-	} else if me.Host == "" {
-		s = fmt.Sprintf("%s/%s:%s", me.Namespace, me.Role, me.Revision)
+	if me.Authority == "" && me.StackName == "" && me.Revision == "" {
+		s = me.ServiceType
+	} else if me.Authority == "" && me.Revision == "" {
+		s = fmt.Sprintf("%s/%s", me.StackName, me.ServiceType)
+	} else if me.Authority == "" && me.StackName == "" {
+		s = fmt.Sprintf("%s:%s", me.ServiceType, me.Revision)
+	} else if me.Authority == "" {
+		s = fmt.Sprintf("%s/%s:%s", me.StackName, me.ServiceType, me.Revision)
 	} else if me.Revision == "" {
-		s = fmt.Sprintf("%s/%s/%s", me.Host, me.Namespace, me.Role)
+		s = fmt.Sprintf("%s/%s/%s", me.Authority, me.StackName, me.ServiceType)
 	} else {
-		s = fmt.Sprintf("%s/%s/%s:%s", me.Host, me.Namespace, me.Role, me.Revision)
+		s = fmt.Sprintf("%s/%s/%s:%s", me.Authority, me.StackName, me.ServiceType, me.Revision)
 	}
 	return s
 }
@@ -125,16 +127,16 @@ func (me *Spec) GetSpec() string {
 	return me.String()
 }
 
-func (me *Spec) GetHost() string {
-	return me.Host
+func (me *Spec) GetAuthority() AuthorityDomain {
+	return me.Authority
 }
 
-func (me *Spec) GetNamespace() string {
-	return me.Namespace
+func (me *Spec) GetStackName() StackName {
+	return me.StackName
 }
 
-func (me *Spec) GetRole() string {
-	return me.Role
+func (me *Spec) GetType() string {
+	return me.ServiceType
 }
 
 func (me *Spec) GetVersion() string {

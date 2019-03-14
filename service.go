@@ -9,12 +9,12 @@ import (
 type ServiceIds []ServiceId
 type ServiceId string
 
-type ServiceMap map[RoleName]*Service
+type ServiceMap map[RoleSpec]*Service
 
 func (me ServiceMap) GetStackNames() StackNames {
 	names := util.NewUniqueStrings(len(me))
 	for _, s := range me {
-		names[s.GetStackName()] = true
+		names[string(s.GetStackName())] = true
 	}
 	return names.ToSlice()
 }
@@ -44,23 +44,70 @@ func NewService(args ...*ServiceArgs) *Service {
 	return &svc
 }
 
-func (me *Service) GetStackName() (name string) {
+func (me *Service) Assign(serviceId ServiceId, defaultService *Service) {
+	me.Parse(serviceId)
+	svcId := me.Identity
+	for range only.Once {
+		if svcId.OrgName == "" {
+			if defaultService != nil && defaultService.Identity.OrgName != "" {
+				svcId.OrgName = defaultService.Identity.OrgName
+			} else {
+				svcId.OrgName = me.OrgName
+			}
+		}
+		if defaultService == nil {
+			break
+		}
+		defaultId := defaultService.Identity
+		if svcId.Program == "" {
+			svcId.Program = defaultId.Program
+		}
+		if svcId.Type == "" {
+			svcId.Type = defaultId.Type
+		}
+		defaultVersion := defaultId.Version
+		if defaultVersion == nil {
+			break
+		}
+		serviceVersion := svcId.Version
+		if serviceVersion.Revision == "" {
+			serviceVersion.Revision = defaultVersion.Revision
+			if serviceVersion.Patch == "" {
+				serviceVersion.Patch = defaultVersion.Patch
+				if serviceVersion.Minor == "" {
+					serviceVersion.Minor = defaultVersion.Minor
+					if serviceVersion.Major == "" {
+						serviceVersion.Major = defaultVersion.Major
+					}
+				}
+			}
+		}
+	}
+	svcId.raw = string(svcId.GetId())
+	me.Id = ServiceId(svcId.raw)
+	me.Identity = svcId
+}
+
+func (me *Service) GetStackName() (name StackName) {
 	if me.StackRole != nil {
 		name = me.StackRole.GetStackName()
 	}
 	return name
 }
 
-func (me *Service) Parse(id string) (status Status) {
+func (me *Service) Parse(id ServiceId) (status Status) {
 	for range only.Once {
-		me.Id = ServiceId(id)
-		err := me.Identity.Parse(id)
+		if me.Identity == nil {
+			me.Identity = &Identity{}
+		}
+		err := me.Identity.Parse(string(id))
 		if err != nil {
 			status = NewStatus(&StatusArgs{
 				HelpfulError: err.(util.HelpfulError),
 				HttpStatus:   http.StatusBadRequest,
 			})
 		}
+		me.Id = ServiceId(me.GetId())
 		status = NewOkStatus("service id '%s' successfully parsed", id)
 
 	}
@@ -68,5 +115,5 @@ func (me *Service) Parse(id string) (status Status) {
 }
 
 func (me *Service) String() string {
-	return string(me.Id)
+	return string(me.GetId())
 }

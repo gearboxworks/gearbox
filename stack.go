@@ -8,9 +8,9 @@ import (
 
 type Stacks []*Stack
 
-type StackMap map[RoleName]*Stack
+type StackMap map[RoleSpec]*Stack
 
-type StackBag map[RoleName]interface{}
+type StackBag map[RoleSpec]interface{}
 
 type StackName string
 
@@ -39,13 +39,15 @@ func (me *Stack) GetRoleMap() RoleMap {
 	for mt, r := range me.RoleMap {
 		sl := regexp.MustCompile(fmt.Sprintf("^%s", ren)).ReplaceAllString(r.Label, "")
 		mm[mt] = &StackRole{
-			Role:        RoleName(fmt.Sprintf("%s/%s", me.Name, mt)),
-			StackName:   me.Name,
-			ServiceType: string(mt),
-			Label:       r.Label,
-			ShortLabel:  strings.Trim(sl, " "),
-			Examples:    r.Examples,
-			Optional:    r.Optional,
+			RoleSpec:   RoleSpec(fmt.Sprintf("%s/%s", me.Name, mt)),
+			Label:      r.Label,
+			ShortLabel: strings.Trim(sl, " "),
+			Examples:   r.Examples,
+			Optional:   r.Optional,
+			Spec: &Spec{
+				StackName:   me.Name,
+				ServiceType: string(mt),
+			},
 		}
 	}
 	return mm

@@ -14,8 +14,11 @@ const OptionsKey = "options"
 const OptionsJsonUrl = "https://raw.githubusercontent.com/gearboxworks/gearbox/master/assets/options.json"
 
 type Options struct {
-	Gearbox *Gearbox       `json:"-"`
-	Stacks  StackOptionMap `json:"stacks"`
+	Gearbox       *Gearbox      `json:"-"`
+	Authorities   Authorities   `json:"authorities"`
+	StackNames    StackNames    `json:"stacks"`
+	RoleMap       RoleMap       `json:"roles"`
+	RoleOptionMap RoleOptionMap `json:"role_options"`
 }
 
 func NewOptions(gb *Gearbox) *Options {
@@ -27,17 +30,45 @@ func NewOptions(gb *Gearbox) *Options {
 
 type StackOptionMap map[StackName]*StackOption
 type StackOption struct {
-	Authority string             `json:"authority"`
-	Roles     StackRoleOptionMap `json:"roles"`
+	Roles RoleOptionMap `json:"roles"`
 }
 
-type StackRoleOptionMap map[RoleName]*StackRoleOption
-type StackRoleOption struct {
-	Required bool       `json:"required"`
-	Minimum  int        `json:"min"`
-	Maximum  int        `json:"max"`
-	Default  ServiceId  `json:"default"`
-	Options  ServiceIds `json:"options"`
+type RoleOptionMap map[RoleSpec]*RoleOption
+type RoleOption struct {
+	*StackRole
+	OrgName        OrgName    `json:"org,omitempty"`
+	Default        ServiceId  `json:"default,omitempty"`
+	Options        ServiceIds `json:"options,omitempty"`
+	DefaultService *Service   `json:"-"`
+	ServiceOptions Services   `json:"-"`
+}
+
+func (me *RoleOption) Fixup(stackRole *StackRole) {
+	if me.Default != "" {
+		me.DefaultService = me.FixupService(stackRole, me.Default)
+	}
+	me.Default = ""
+	me.ServiceOptions = make(Services, len(me.Options))
+	for i, o := range me.Options {
+		me.ServiceOptions[i] = me.FixupService(stackRole, o)
+	}
+	me.Options = nil
+}
+
+func (me *RoleOption) FixupService(stackRole *StackRole, serviceId ServiceId) (service *Service) {
+	service = &Service{
+		StackRole: stackRole,
+	}
+	if me.DefaultService == nil {
+		me.DefaultService = &Service{
+			StackRole: stackRole,
+			Identity: &Identity{
+				OrgName: me.OrgName,
+			},
+		}
+	}
+	service.Assign(serviceId, me.DefaultService)
+	return service
 }
 
 func (me *Options) Refresh() (err error) {
@@ -46,9 +77,9 @@ func (me *Options) Refresh() (err error) {
 		store := cache.NewCache(me.Gearbox.HostConnector.GetCacheDir())
 
 		store.Disable = me.Gearbox.NoCache()
-
-		b, err = store.Get(OptionsKey)
-		if err == nil {
+		var ok bool
+		b, ok, err = store.Get(OptionsKey)
+		if ok {
 			break
 		}
 		var sc int
@@ -74,6 +105,17 @@ func (me *Options) Refresh() (err error) {
 				OptionsJsonUrl, // @TODO Provide a link to upgrade in text above
 			),
 		)
+	}
+	for rs, sr := range me.RoleMap {
+		sr.Fixup(rs)
+	}
+	for rs, ro := range me.RoleOptionMap {
+		sr, ok := me.RoleMap[rs]
+		if !ok {
+			// @TODO Log error here and communicate back to home base
+			continue
+		}
+		ro.Fixup(sr)
 	}
 	return err
 }

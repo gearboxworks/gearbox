@@ -21,8 +21,8 @@ func (me *HostApi) getStackName(rc *api.RequestContext) StackName {
 	return StackName(rc.Param("stack"))
 }
 
-func (me *HostApi) getRoleName(rc *api.RequestContext) RoleName {
-	return RoleName(rc.Param("service"))
+func (me *HostApi) getRoleSpec(rc *api.RequestContext) RoleSpec {
+	return RoleSpec(rc.Param("service"))
 }
 
 func (me *HostApi) getStacksResponse(rc *api.RequestContext) interface{} {
@@ -73,12 +73,12 @@ func (me *HostApi) getServiceResponse(rc *api.RequestContext) interface{} {
 			}
 			break
 		}
-		service, ok := serviceMap[me.getRoleName(rc)]
+		service, ok := serviceMap[me.getRoleSpec(rc)]
 		if !ok {
 			response = &api.Status{
 				StatusCode: http.StatusInternalServerError,
 				Error: fmt.Errorf("unexpected: service map '%s' for stack '%s' not found",
-					me.getRoleName(rc),
+					me.getRoleSpec(rc),
 					me.getStackName(rc),
 				),
 			}
@@ -94,7 +94,7 @@ func (me *HostApi) getStackResponse(rc *api.RequestContext) interface{} {
 	for range only.Once {
 		sn := me.getStackName(rc)
 		var ok bool
-		response, ok = me.Gearbox.Stacks[RoleName(sn)]
+		response, ok = me.Gearbox.Stacks[RoleSpec(sn)]
 		if !ok {
 			response = &api.Status{
 				StatusCode: http.StatusNotFound,
