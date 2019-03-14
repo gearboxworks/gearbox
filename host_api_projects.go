@@ -158,7 +158,7 @@ func (me *HostApi) getProjectsResponse(rc *api.RequestContext) (response interfa
 }
 
 func (me *HostApi) getCandidateProjectsResponse(rc *api.RequestContext) (response interface{}) {
-	return me.Config.Projects.GetEnabled()
+	return me.Config.Candidates
 }
 
 func (me *HostApi) getEnabledProjectsResponse(rc *api.RequestContext) (response interface{}) {
