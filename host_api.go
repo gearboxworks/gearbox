@@ -77,20 +77,33 @@ func (me *HostApi) Stop() {
 	me.Api.Stop()
 }
 
-func (me *HostApi) addRoutes() {
+type HandlerFunc func(rc *api.RequestContext) interface{}
 
-	_api := me.Api
-	_api.GET("/", api.LinksResource, func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, nil)
+func (me *HostApi) GET(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
+	return me.Api.GET(path, name, func(rc *api.RequestContext) error {
+		return me.jsonMarshalHandler(rc, handler(rc))
 	})
-
-	me.addBasedirRoutes()
-	me.addProjectRoutes()
-	me.addStackRoutes()
-
 }
 
-func (me *HostApi) jsonMarshalHandler(_api *api.Api, ctx echo.Context, requestType api.ResourceName, value interface{}) error {
+func (me *HostApi) POST(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
+	return me.Api.POST(path, name, func(rc *api.RequestContext) error {
+		return me.jsonMarshalHandler(rc, handler(rc))
+	})
+}
+
+func (me *HostApi) PUT(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
+	return me.Api.GET(path, name, func(rc *api.RequestContext) error {
+		return me.jsonMarshalHandler(rc, handler(rc))
+	})
+}
+
+func (me *HostApi) DELETE(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
+	return me.Api.GET(path, name, func(rc *api.RequestContext) error {
+		return me.jsonMarshalHandler(rc, handler(rc))
+	})
+}
+
+func (me *HostApi) jsonMarshalHandler(rc *api.RequestContext, value interface{}) error {
 	var apiStatus *api.Status
 	for range only.Once {
 		status, ok := value.(Status)
@@ -100,14 +113,14 @@ func (me *HostApi) jsonMarshalHandler(_api *api.Api, ctx echo.Context, requestTy
 				StatusCode: status.HttpStatus,
 				Help:       status.ApiHelp,
 			}
-			apiStatus = _api.JsonMarshalHandler(ctx, requestType, apiStatus)
+			apiStatus = rc.JsonMarshalHandler(apiStatus)
 			break
 		}
 		status.Finalize()
 		if ok {
-			ctx.Response().Status = status.HttpStatus
+			rc.Context.Response().Status = status.HttpStatus
 		}
-		apiStatus = _api.JsonMarshalHandler(ctx, requestType, value)
+		apiStatus = rc.JsonMarshalHandler(value)
 	}
 	return apiStatus.Error
 }

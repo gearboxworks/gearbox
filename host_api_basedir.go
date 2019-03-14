@@ -4,80 +4,70 @@ import (
 	"fmt"
 	"gearbox/api"
 	"gearbox/only"
-	"github.com/labstack/echo"
 	"net/http"
 )
 
 func (me *HostApi) addBasedirRoutes() {
-	_api := me.Api
 
-	_api.GET("/basedirs", "basedirs", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getHostBasedirs(ctx, rt))
-	})
+	me.GET("/basedirs", "basedirs", me.getHostBasedirsResponse)
 
-	_api.POST("/basedirs/new", "basedir-add", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(ctx, rt))
-	})
+	me.POST("/basedirs/new", "basedir-add", me.addBasedir)
 
-	_api.PUT("/basedirs/:nickname", "basedir-update", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(ctx, rt))
-	})
+	me.PUT("/basedirs/:nickname", "basedir-update", me.updateBasedir)
 
-	_api.DELETE("/basedirs/:nickname", "basedir-delete", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(ctx, rt))
-	})
+	me.DELETE("/basedirs/:nickname", "basedir-delete", me.deleteNamedBasedir)
 
 }
 
-func (me *HostApi) getHostBasedirs(ctx echo.Context, resource api.ResourceName) interface{} {
+func (me *HostApi) getHostBasedirsResponse(rc *api.RequestContext) interface{} {
 	return me.Config.GetHostBasedirs()
 }
 
-func (me *HostApi) addBasedir(ctx echo.Context, resource api.ResourceName) interface{} {
+func (me *HostApi) addBasedir(rc *api.RequestContext) interface{} {
 	var status Status
 	for range only.Once {
 		bd := Basedir{}
-		err := api.UnmarshalFromRequest(resource, ctx, &bd)
+		err := rc.UnmarshalFromRequest(&bd)
 		if err != nil {
 			status = NewStatus(&StatusArgs{
 				Failed:     true,
 				Message:    "Unable to add basedir.",
 				HttpStatus: http.StatusBadRequest,
-				ApiHelp:    fmt.Sprintf("verify that API request is in the correct format: %s", api.GetApiDocsUrl(resource)),
+				ApiHelp:    fmt.Sprintf("verify that API request is in the correct format: %s", api.GetApiDocsUrl(rc.ResourceName)),
 				Error:      err,
 			})
 			break
 		}
-		me.Gearbox.RequestType = resource
+		me.Gearbox.RequestType = rc.ResourceName
 		status = me.Gearbox.AddBasedir(bd.HostDir, bd.Nickname)
 	}
 	return status
 }
-func (me *HostApi) updateBasedir(ctx echo.Context, resource api.ResourceName) interface{} {
+func (me *HostApi) updateBasedir(rc *api.RequestContext) interface{} {
 	var status Status
 	for range only.Once {
 		bd := Basedir{}
-		err := api.UnmarshalFromRequest(resource, ctx, &bd)
+		err := rc.UnmarshalFromRequest(&bd)
 		if err != nil {
 			status = NewStatus(&StatusArgs{
 				Failed:     true,
 				Message:    "Unable to update basedir.",
 				HttpStatus: http.StatusBadRequest,
-				ApiHelp:    fmt.Sprintf("verify that API request is in the correct format: %s", api.GetApiDocsUrl(resource)),
+				ApiHelp:    fmt.Sprintf("verify that API request is in the correct format: %s", api.GetApiDocsUrl(rc.ResourceName)),
 				Error:      err,
 			})
 			break
 		}
-		me.Gearbox.RequestType = resource
+		me.Gearbox.RequestType = rc.ResourceName
 		status = me.Gearbox.UpdateBasedir(bd.Nickname, bd.HostDir)
 	}
 	return status
 }
-func (me *HostApi) deleteNamedBasedir(ctx echo.Context, resource api.ResourceName) interface{} {
-	me.Gearbox.RequestType = resource
-	return me.Gearbox.DeleteNamedBasedir(getBasedirNickname(ctx))
+func (me *HostApi) deleteNamedBasedir(rc *api.RequestContext) interface{} {
+	me.Gearbox.RequestType = rc.ResourceName
+	return me.Gearbox.DeleteNamedBasedir(getBasedirNickname(rc))
 }
 
-func getBasedirNickname(ctx echo.Context) string {
-	return ctx.Param("nickname")
+func getBasedirNickname(rc *api.RequestContext) string {
+	return rc.Param("nickname")
 }

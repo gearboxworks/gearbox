@@ -5,44 +5,34 @@ import (
 	"gearbox/api"
 	"gearbox/dockerhub"
 	"gearbox/only"
-	"github.com/labstack/echo"
 	"net/http"
 )
 
 func (me *HostApi) addStackRoutes() {
-	_api := me.Api
-	_api.GET("/stacks", "stacks", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.Gearbox.Stacks)
-	})
 
-	_api.GET("/stacks/:stack", "stack-details", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getStackResponse(ctx, rt))
-	})
-
-	_api.GET("/stacks/:stack/services", "stack-services", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getServicesResponse(ctx, rt))
-	})
-
-	_api.GET("/stacks/:stack/services/:service", "stack-service", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getServiceResponse(ctx, rt))
-	})
-
-	_api.GET("/stacks/:stack/services/:service/options", "stack-service-options", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getServiceResponse(ctx, rt))
-	})
+	me.GET("/stacks", "stacks", me.getStacksResponse)
+	me.GET("/stacks/:stack", "stack-details", me.getStackResponse)
+	me.GET("/stacks/:stack/services", "stack-services", me.getServicesResponse)
+	me.GET("/stacks/:stack/services/:service", "stack-service", me.getServiceResponse)
+	me.GET("/stacks/:stack/services/:service/options", "stack-service-options", me.getServiceResponse)
 }
 
-func (me *HostApi) getStackName(ctx echo.Context) StackName {
-	return StackName(ctx.Param("stack"))
-}
-func (me *HostApi) getRoleName(ctx echo.Context) RoleName {
-	return RoleName(ctx.Param("service"))
+func (me *HostApi) getStackName(rc *api.RequestContext) StackName {
+	return StackName(rc.Param("stack"))
 }
 
-func (me *HostApi) getServicesResponse(ctx echo.Context, requestType api.ResourceName) interface{} {
+func (me *HostApi) getRoleName(rc *api.RequestContext) RoleName {
+	return RoleName(rc.Param("service"))
+}
+
+func (me *HostApi) getStacksResponse(rc *api.RequestContext) interface{} {
+	return me.Gearbox.Stacks
+}
+
+func (me *HostApi) getServicesResponse(rc *api.RequestContext) interface{} {
 	var response interface{}
 	for range only.Once {
-		response = me.getStackResponse(ctx, requestType)
+		response = me.getStackResponse(rc)
 		if _, ok := response.(api.Status); ok {
 			break
 		}
@@ -51,7 +41,7 @@ func (me *HostApi) getServicesResponse(ctx echo.Context, requestType api.Resourc
 			response = &api.Status{
 				StatusCode: http.StatusInternalServerError,
 				Error: fmt.Errorf("unexpected: stack '%s' not found",
-					me.getStackName(ctx),
+					me.getStackName(rc),
 				),
 			}
 			break
@@ -62,14 +52,14 @@ func (me *HostApi) getServicesResponse(ctx echo.Context, requestType api.Resourc
 
 }
 
-func (me *HostApi) getServiceResponseOptions(ctx echo.Context, requestType api.ResourceName) interface{} {
+func (me *HostApi) getServiceResponseOptions(rc *api.RequestContext) interface{} {
 	return me.Gearbox.RequestAvailableContainers(&dockerhub.ContainerQuery{})
 }
 
-func (me *HostApi) getServiceResponse(ctx echo.Context, requestType api.ResourceName) interface{} {
+func (me *HostApi) getServiceResponse(rc *api.RequestContext) interface{} {
 	var response interface{}
 	for range only.Once {
-		response := me.getServicesResponse(ctx, requestType)
+		response := me.getServicesResponse(rc)
 		if _, ok := response.(api.Status); ok {
 			break
 		}
@@ -78,18 +68,18 @@ func (me *HostApi) getServiceResponse(ctx echo.Context, requestType api.Resource
 			response = &api.Status{
 				StatusCode: http.StatusInternalServerError,
 				Error: fmt.Errorf("unexpected: service map for stack '%s' not found",
-					me.getStackName(ctx),
+					me.getStackName(rc),
 				),
 			}
 			break
 		}
-		service, ok := serviceMap[me.getRoleName(ctx)]
+		service, ok := serviceMap[me.getRoleName(rc)]
 		if !ok {
 			response = &api.Status{
 				StatusCode: http.StatusInternalServerError,
 				Error: fmt.Errorf("unexpected: service map '%s' for stack '%s' not found",
-					me.getRoleName(ctx),
-					me.getStackName(ctx),
+					me.getRoleName(rc),
+					me.getStackName(rc),
 				),
 			}
 			break
@@ -99,10 +89,10 @@ func (me *HostApi) getServiceResponse(ctx echo.Context, requestType api.Resource
 	return response
 }
 
-func (me *HostApi) getStackResponse(ctx echo.Context, requestType api.ResourceName) interface{} {
+func (me *HostApi) getStackResponse(rc *api.RequestContext) interface{} {
 	var response interface{}
 	for range only.Once {
-		sn := me.getStackName(ctx)
+		sn := me.getStackName(rc)
 		var ok bool
 		response, ok = me.Gearbox.Stacks[RoleName(sn)]
 		if !ok {

@@ -1,11 +1,9 @@
 package gearbox
 
 import (
-	"fmt"
 	"gearbox/api"
 	"gearbox/only"
 	"github.com/labstack/echo"
-	"net/http"
 )
 
 const ProjectDetailsResource api.ResourceName = "project-details"
@@ -19,103 +17,59 @@ func getProjectHostname(ctx echo.Context) string {
 }
 
 func (me *HostApi) addProjectRoutes() {
-	_api := me.Api
 
-	_api.GET("/projects", "projects", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getProjectsResponse(ctx, rt))
-	})
+	me.GET("/projects", "projects", me.getProjectsResponse)
 
-	_api.GET("/projects/with-details", ProjectsWithDetailsResource, func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getProjectsResponse(ctx, rt))
-	})
+	me.GET("/projects/with-details", ProjectsWithDetailsResource, me.getProjectsResponse)
 
-	_api.GET("/projects/:hostname", ProjectDetailsResource, func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getProjectResponse(ctx, rt))
-	})
+	me.GET("/projects/:hostname", ProjectDetailsResource, me.getProjectResponse)
 
-	_api.GET("/projects/enabled", "projects-enabled", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getEnabledProjectsResponse(ctx, rt))
-	})
+	me.GET("/projects/enabled", "projects-enabled", me.getEnabledProjectsResponse)
 
-	_api.GET("/projects/disabled", "projects-disabled", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getDisabledProjectsResponse(ctx, rt))
-	})
+	me.GET("/projects/disabled", "projects-disabled", me.getDisabledProjectsResponse)
 
-	_api.GET("/projects/candidates", "project-candidates", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getCandidateProjectsResponse(ctx, rt))
-	})
+	me.GET("/projects/candidates", "project-candidates", me.getCandidateProjectsResponse)
 
-	_api.GET("/projects/:hostname/services", ProjectServicesResource, func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getProjectServicesResponse(ctx, rt))
-	})
+	me.GET("/projects/:hostname/services", ProjectServicesResource, me.getProjectServicesResponse)
 
-	_api.GET("/projects/:hostname/aliases", ProjectAliasesResource, func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.getProjectAliasesResponse(ctx, rt))
-	})
+	me.GET("/projects/:hostname/aliases", ProjectAliasesResource, me.getProjectAliasesResponse)
 
-	_api.POST("/projects/:hostname/aliases/new", "project-alias-add", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(ctx, rt))
-	})
+	me.POST("/projects/:hostname/aliases/new", "project-alias-add", me.addBasedir)
 
-	_api.PUT("/projects/:hostname/aliases/:alias", "project-alias-update", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(ctx, rt))
-	})
+	me.PUT("/projects/:hostname/aliases/:alias", "project-alias-update", me.updateBasedir)
 
-	_api.DELETE("/projects/:hostname/aliases/:alias", "project-alias-delete", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(ctx, rt))
-	})
+	me.DELETE("/projects/:hostname/aliases/:alias", "project-alias-delete", me.deleteNamedBasedir)
 
-	_api.POST("/projects/:hostname/services/new", "project-service-add", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(ctx, rt))
-	})
+	me.POST("/projects/:hostname/services/new", "project-service-add", me.addBasedir)
 
-	_api.PUT("/projects/:hostname/services/:service", "project-service-update", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(ctx, rt))
-	})
+	me.PUT("/projects/:hostname/services/:service", "project-service-update", me.updateBasedir)
 
-	_api.DELETE("/projects/:hostname/services/:service", "project-service-delete", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(ctx, rt))
-	})
+	me.DELETE("/projects/:hostname/services/:service", "project-service-delete", me.deleteNamedBasedir)
 
-	_api.POST("/projects/new", "project-add", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      fmt.Errorf("the 'project-add' method has not been implemented yet"),
-		})
-	})
+	me.POST("/projects/new", "project-add", me.Api.NotYetImplemented)
 
-	_api.POST("/projects/:hostname", "project-update", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      fmt.Errorf("the 'project-update' method has not been implemented yet"),
-		})
-	})
+	me.POST("/projects/:hostname", "project-update", me.Api.NotYetImplemented)
 
-	_api.DELETE("/projects/:hostname", "project-delete", func(rt api.ResourceName, ctx echo.Context) error {
-		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
-			StatusCode: http.StatusMethodNotAllowed,
-			Error:      fmt.Errorf("the 'project-delete' method has not been implemented yet"),
-		})
-	})
+	me.DELETE("/projects/:hostname", "project-delete", me.Api.NotYetImplemented)
 }
 
-func (me *HostApi) getCandidateProjectsResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+func (me *HostApi) getCandidateProjectsResponse(rc *api.RequestContext) (response interface{}) {
 	return me.Config.Projects.GetEnabled()
 }
 
-func (me *HostApi) getEnabledProjectsResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+func (me *HostApi) getEnabledProjectsResponse(rc *api.RequestContext) (response interface{}) {
 	return me.Config.Projects.GetEnabled()
 }
 
-func (me *HostApi) getDisabledProjectsResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+func (me *HostApi) getDisabledProjectsResponse(rc *api.RequestContext) (response interface{}) {
 	return me.Config.Projects.GetDisabled()
 }
 
-func (me *HostApi) getProjectsResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+func (me *HostApi) getProjectsResponse(rc *api.RequestContext) (response interface{}) {
 	for range only.Once {
-		me.Gearbox.RequestType = requestType
+		me.Gearbox.RequestType = rc.ResourceName
 		prs := make(api.ListItemResponseMap, len(me.Config.Projects))
-		withDetails := requestType == "projects-with-details"
+		withDetails := rc.ResourceName == "projects-with-details"
 		for _, p := range me.Config.Projects {
 			if withDetails {
 				p.MaybeLoadDetails()
@@ -129,10 +83,10 @@ func (me *HostApi) getProjectsResponse(ctx echo.Context, requestType api.Resourc
 	return response
 }
 
-func (me *HostApi) getProjectAliasesResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+func (me *HostApi) getProjectAliasesResponse(rc *api.RequestContext) (response interface{}) {
 	for range only.Once {
-		me.Gearbox.RequestType = requestType
-		pr, status := me.Gearbox.GetProjectResponse(getProjectHostname(ctx))
+		me.Gearbox.RequestType = rc.ResourceName
+		pr, status := me.Gearbox.GetProjectResponse(getProjectHostname(rc.Context))
 		if status.IsError() {
 			response = status
 			break
@@ -142,10 +96,10 @@ func (me *HostApi) getProjectAliasesResponse(ctx echo.Context, requestType api.R
 	return response
 }
 
-func (me *HostApi) getProjectServicesResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+func (me *HostApi) getProjectServicesResponse(rc *api.RequestContext) (response interface{}) {
 	for range only.Once {
-		me.Gearbox.RequestType = requestType
-		pr, status := me.Gearbox.GetProjectResponse(getProjectHostname(ctx))
+		me.Gearbox.RequestType = rc.ResourceName
+		pr, status := me.Gearbox.GetProjectResponse(getProjectHostname(rc.Context))
 		if status.IsError() {
 			response = status
 			break
@@ -155,10 +109,10 @@ func (me *HostApi) getProjectServicesResponse(ctx echo.Context, requestType api.
 	return response
 }
 
-func (me *HostApi) getProjectResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+func (me *HostApi) getProjectResponse(rc *api.RequestContext) (response interface{}) {
 	for range only.Once {
-		me.Gearbox.RequestType = requestType
-		pr, status := me.Gearbox.GetProjectResponse(getProjectHostname(ctx))
+		me.Gearbox.RequestType = rc.ResourceName
+		pr, status := me.Gearbox.GetProjectResponse(getProjectHostname(rc.Context))
 		if status.IsError() {
 			response = status
 			break
