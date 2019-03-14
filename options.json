@@ -1,0 +1,60 @@
+{
+   "stacks": {
+      "wordpress": {
+         "authority": "gearbox.works",
+         "roles": {
+            "webserver": {
+               "required": true,
+               "cardinality": "one",
+               "default": "gearboxworks/nginx",
+               "options": [
+                  "gearboxworks/apache/2.4",
+                  "gearboxworks/nginx/1.12",
+                  "gearboxworks/nginx/1.13",
+                  "gearboxworks/nginx/1.14",
+                  "gearboxworks/nginx/1.15"
+               ]
+            },
+            "dbserver": {
+               "required": true,
+               "cardinality": "one",
+               "default": "gearboxworks/mariadb",
+               "options": [
+                  "gearboxworks/mariadb/5.5",
+                  "gearboxworks/mariadb/10.0",
+                  "gearboxworks/mariadb/10.1",
+                  "gearboxworks/mariadb/10.2",
+                  "gearboxworks/mariadb/10.3",
+                  "gearboxworks/mysql/5.5",
+                  "gearboxworks/mysql/5.6",
+                  "gearboxworks/mysql/5.7",
+                  "gearboxworks/mysql/8.0"
+               ]
+            },
+            "processvm": {
+               "required": true,
+               "cardinality": "one",
+               "default": "gearboxworks/php",
+               "options": [
+                  "gearboxworks/php/5.2",
+                  "gearboxworks/php/5.6",
+                  "gearboxworks/php/7.0",
+                  "gearboxworks/php/7.1",
+                  "gearboxworks/php/7.2"
+               ]
+            },
+            "cacheserver": {
+               "required": false,
+               "cardinality": "one",
+               "default": "",
+               "options": [
+                  "gearboxworks/memcached/1.5",
+                  "gearboxworks/redis/3.2",
+                  "gearboxworks/redis/4.0"
+               ]
+            }
+         }
+      }
+   }
+}
+
