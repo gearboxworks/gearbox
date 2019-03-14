@@ -3,59 +3,111 @@
       "scope": "options",
       "schema": "v1"
    },
-   "stacks": {
-      "wordpress": {
+   "authorities": [
+      "gearbox.works"
+   ],
+   "stacks": [
+      "gearbox.works/wordpress"
+   ],
+   "roles": {
+      "gearbox.works/wordpress/webserver": {
+         "label": "Web server for WordPress",
+         "short_label": "Web server",
+         "examples": [
+            "Apache",
+            "Nginx",
+            "Caddy",
+            "Lighttpd"
+         ],
          "authority": "gearbox.works",
-         "roles": {
-            "webserver": {
-               "required": true,
-               "default": "gearboxworks/nginx",
-               "options": [
-                  "gearboxworks/apache/2.4",
-                  "gearboxworks/nginx/1.12",
-                  "gearboxworks/nginx/1.13",
-                  "gearboxworks/nginx/1.14",
-                  "gearboxworks/nginx/1.15"
-               ]
-            },
-            "dbserver": {
-               "required": true,
-               "default": "gearboxworks/mariadb",
-               "options": [
-                  "gearboxworks/mariadb/5.5",
-                  "gearboxworks/mariadb/10.0",
-                  "gearboxworks/mariadb/10.1",
-                  "gearboxworks/mariadb/10.2",
-                  "gearboxworks/mariadb/10.3",
-                  "gearboxworks/mysql/5.5",
-                  "gearboxworks/mysql/5.6",
-                  "gearboxworks/mysql/5.7",
-                  "gearboxworks/mysql/8.0"
-               ]
-            },
-            "processvm": {
-               "required": true,
-               "default": "gearboxworks/php",
-               "options": [
-                  "gearboxworks/php/5.2",
-                  "gearboxworks/php/5.6",
-                  "gearboxworks/php/7.0",
-                  "gearboxworks/php/7.1",
-                  "gearboxworks/php/7.2"
-               ]
-            },
-            "cacheserver": {
-               "required": false,
-               "max": 1,
-               "default": "",
-               "options": [
-                  "gearboxworks/memcached/1.5",
-                  "gearboxworks/redis/3.2",
-                  "gearboxworks/redis/4.0"
-               ]
-            }
-         }
+         "stack": "wordpress",
+         "type": "webserver"
+      },
+      "gearbox.works/wordpress/dbserver": {
+         "label": "Database server for WordPress",
+         "short_label": "DB server",
+         "examples": [
+            "MySQL",
+            "MariaDB",
+            "Percona"
+         ],
+         "authority": "gearbox.works",
+         "stack": "wordpress",
+         "type": "dbserver"
+      },
+      "gearbox.works/wordpress/processvm": {
+         "label": "ProcessVM (PHP) for WordPress",
+         "short_label": "PHP",
+         "examples": [
+            "PHP",
+            "HHVM"
+         ],
+         "authority": "gearbox.works",
+         "stack": "wordpress",
+         "type": "processvm"
+      },
+      "gearbox.works/wordpress/cacheserver": {
+         "label": "Cache server for WordPress",
+         "short_label": "Cache server",
+         "examples": [
+            "Redis",
+            "Memcached"
+         ],
+         "optional": true,
+         "max": 1,
+         "authority": "gearbox.works",
+         "stack": "wordpress",
+         "type": "cacheserver"
+      }
+   },
+   "role_options": {
+      "gearbox.works/wordpress/webserver": {
+         "org": "gearboxworks",
+         "default": "nginx",
+         "options": [
+            "apache/2.4",
+            "nginx/1.12",
+            "nginx/1.13",
+            "nginx/1.14",
+            "nginx/1.15"
+         ]
+      },
+      "gearbox.works/wordpress/dbserver": {
+         "org": "gearboxworks",
+         "default": "mariadb",
+         "options": [
+            "mariadb/5.5",
+            "mariadb/10.0",
+            "mariadb/10.1",
+            "mariadb/10.2",
+            "mariadb/10.3",
+            "mysql/5.5",
+            "mysql/5.6",
+            "mysql/5.7",
+            "mysql/8.0"
+         ]
+      },
+      "gearbox.works/wordpress/processvm": {
+         "org": "gearboxworks",
+         "default": "php",
+         "options": [
+            "php/5.2",
+            "php/5.6",
+            "php/7.0",
+            "php/7.1",
+            "php/7.2"
+         ]
+      },
+      "gearbox.works/wordpress/cacheserver": {
+         "org": "gearboxworks",
+         "default": "",
+         "options": [
+            "memcached/1.5",
+            "redis/3.2",
+            "redis/4.0"
+         ]
       }
    }
 }
+
 
