@@ -14,5 +14,7 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	GlobalOptions = &gearbox.GlobalOptions{}
-	RootCmd.PersistentFlags().BoolVarP(&GlobalOptions.IsDebug, "debug", "", false, "Debug mode")
+	pf := RootCmd.PersistentFlags()
+	pf.BoolVarP(&GlobalOptions.IsDebug, "debug", "", false, "Debug mode")
+	pf.BoolVarP(&GlobalOptions.NoCache, "no-cache", "", false, "Disable caching")
 }

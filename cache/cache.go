@@ -14,7 +14,8 @@ import (
 const ErrCacheMiss = "cache key '%s' not found"
 
 type Cache struct {
-	Dir string
+	Dir     string
+	Disable bool
 }
 
 type Wrapper struct {
@@ -34,6 +35,9 @@ func (me *Cache) Close(f *os.File) {
 
 func (me *Cache) Get(key string) (data []byte, err error) {
 	for range only.Once {
+		if me.Disable {
+			break
+		}
 		fn := filepath.FromSlash(fmt.Sprintf("%s/%s.json", me.Dir, key))
 		var f *os.File
 		f, err = os.Open(fn)
