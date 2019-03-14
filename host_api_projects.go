@@ -63,30 +63,6 @@ func (me *HostApi) addProjectRoutes() {
 
 }
 
-//===[ Project Details ]========================
-
-func (me *HostApi) getProjectDetailsResponse(rc *api.RequestContext) (response interface{}) {
-	for range only.Once {
-		me.Gearbox.RequestType = rc.ResourceName
-		p, status := me.Gearbox.FindProjectWithDetails(getProjectHostname(rc))
-		if status.IsError() {
-			response = status
-			break
-		}
-		response = NewProjectResponse(p)
-	}
-	return response
-}
-func (me *HostApi) addProjectDetails(rc *api.RequestContext) (response interface{}) {
-	return nil
-}
-func (me *HostApi) updateProjectDetails(rc *api.RequestContext) (response interface{}) {
-	return nil
-}
-func (me *HostApi) deleteProjectDetails(rc *api.RequestContext) (response interface{}) {
-	return nil
-}
-
 //===[ Project Stacks ]========================
 
 func (me *HostApi) getProjectStacksResponse(rc *api.RequestContext) (response interface{}) {
@@ -102,13 +78,14 @@ func (me *HostApi) getProjectStacksResponse(rc *api.RequestContext) (response in
 	return response
 }
 func (me *HostApi) addProjectStack(rc *api.RequestContext) (response interface{}) {
-	return nil
+	// @TODO to implement this we'll first need source for default services for a named stack
+	return me.Api.NotYetImplemented(rc)
 }
 func (me *HostApi) updateProjectStack(rc *api.RequestContext) (response interface{}) {
-	return nil
+	return me.Api.NotYetImplemented(rc)
 }
 func (me *HostApi) deleteProjectStack(rc *api.RequestContext) (response interface{}) {
-	return nil
+	return me.Api.NotYetImplemented(rc)
 }
 
 //===[ Project Services ]========================
@@ -126,13 +103,13 @@ func (me *HostApi) getProjectServicesResponse(rc *api.RequestContext) (response 
 	return response
 }
 func (me *HostApi) addProjectService(rc *api.RequestContext) (response interface{}) {
-	return nil
+	return me.Api.NotYetImplemented(rc)
 }
 func (me *HostApi) updateProjectService(rc *api.RequestContext) (response interface{}) {
-	return nil
+	return me.Api.NotYetImplemented(rc)
 }
 func (me *HostApi) deleteProjectService(rc *api.RequestContext) (response interface{}) {
-	return nil
+	return me.Api.NotYetImplemented(rc)
 }
 
 //===[ Project Aliases ]========================
@@ -151,13 +128,13 @@ func (me *HostApi) getProjectAliasesResponse(rc *api.RequestContext) (response i
 }
 
 func (me *HostApi) addProjectAlias(rc *api.RequestContext) (response interface{}) {
-	return nil
+	return me.Api.NotYetImplemented(rc)
 }
 func (me *HostApi) updateProjectAlias(rc *api.RequestContext) (response interface{}) {
-	return nil
+	return me.Api.NotYetImplemented(rc)
 }
 func (me *HostApi) deleteProjectAlias(rc *api.RequestContext) (response interface{}) {
-	return nil
+	return me.Api.NotYetImplemented(rc)
 }
 
 //===[ Projects Aliases ]========================
@@ -190,4 +167,28 @@ func (me *HostApi) getEnabledProjectsResponse(rc *api.RequestContext) (response 
 
 func (me *HostApi) getDisabledProjectsResponse(rc *api.RequestContext) (response interface{}) {
 	return me.Config.Projects.GetDisabled()
+}
+
+//===[ Project Details ]========================
+
+func (me *HostApi) getProjectDetailsResponse(rc *api.RequestContext) (response interface{}) {
+	for range only.Once {
+		me.Gearbox.RequestType = rc.ResourceName
+		p, status := me.Gearbox.FindProjectWithDetails(getProjectHostname(rc))
+		if status.IsError() {
+			response = status
+			break
+		}
+		response = NewProjectResponse(p)
+	}
+	return response
+}
+func (me *HostApi) addProjectDetails(rc *api.RequestContext) (response interface{}) {
+	return me.Api.NotYetImplemented(rc)
+}
+func (me *HostApi) updateProjectDetails(rc *api.RequestContext) (response interface{}) {
+	return me.Api.NotYetImplemented(rc)
+}
+func (me *HostApi) deleteProjectDetails(rc *api.RequestContext) (response interface{}) {
+	return me.Api.NotYetImplemented(rc)
 }
