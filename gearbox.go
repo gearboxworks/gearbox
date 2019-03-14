@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 )
 
+const RepoRawBaseUrl = "https://raw.githubusercontent.com/gearboxworks/gearbox"
+
 type JsonFileScope string
 
 const (

@@ -6,11 +6,11 @@ import (
 )
 
 const ProjectsResource api.ResourceName = "projects"
+const ProjectsWithDetailsResource api.ResourceName = ProjectsResource + "-with-details"
 const ProjectDetailsResource api.ResourceName = "project-details"
-const ProjectEnabledResource api.ResourceName = "project-enabled"
-const ProjectDisabledResource api.ResourceName = "project-disabled"
+const ProjectEnabledResource api.ResourceName = ProjectsResource + "-enabled"
+const ProjectDisabledResource api.ResourceName = ProjectsResource + "-disabled"
 const ProjectCandidatesResource api.ResourceName = "project-candidates"
-const ProjectsWithDetailsResource api.ResourceName = "projects-with-details"
 
 const ProjectAliasesResource api.ResourceName = "project-aliases"
 const ProjectAliasAdd api.ResourceName = ProjectAliasesResource + "-add"
