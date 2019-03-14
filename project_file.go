@@ -36,8 +36,7 @@ type ProjectDetails struct {
 
 type JsonMeta struct {
 	Scope       string   `json:"scope"`
-	JsonVersion string   `json:"json"`
-	Version     string   `json:"version"`
+	JsonVersion string   `json:"schema"`
 	Website     string   `json:"website"`
 	Readme      []string `json:"readme"`
 }
