@@ -1,11 +1,14 @@
 {
+   "gearbox": {
+      "scope": "options",
+      "schema": "v1"
+   },
    "stacks": {
       "wordpress": {
          "authority": "gearbox.works",
          "roles": {
             "webserver": {
                "required": true,
-               "cardinality": "one",
                "default": "gearboxworks/nginx",
                "options": [
                   "gearboxworks/apache/2.4",
@@ -17,7 +20,6 @@
             },
             "dbserver": {
                "required": true,
-               "cardinality": "one",
                "default": "gearboxworks/mariadb",
                "options": [
                   "gearboxworks/mariadb/5.5",
@@ -33,7 +35,6 @@
             },
             "processvm": {
                "required": true,
-               "cardinality": "one",
                "default": "gearboxworks/php",
                "options": [
                   "gearboxworks/php/5.2",
@@ -45,7 +46,7 @@
             },
             "cacheserver": {
                "required": false,
-               "cardinality": "one",
+               "max": 1,
                "default": "",
                "options": [
                   "gearboxworks/memcached/1.5",

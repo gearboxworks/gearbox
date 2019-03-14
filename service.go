@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+type ServiceIds []ServiceId
 type ServiceId string
 
 type ServiceMap map[RoleName]*Service
