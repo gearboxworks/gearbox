@@ -10,8 +10,8 @@ import (
 	"net/http"
 )
 
+const OptionsJsonUrl = RepoRawBaseUrl + "/master/assets/options.json"
 const OptionsKey = "options"
-const OptionsJsonUrl = "https://raw.githubusercontent.com/gearboxworks/gearbox/master/assets/options.json"
 
 type Options struct {
 	Gearbox       *Gearbox      `json:"-"`

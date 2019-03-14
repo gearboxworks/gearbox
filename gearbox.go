@@ -30,13 +30,13 @@ type Gearbox struct {
 	errorLog      *ErrorLog
 }
 
-type GearboxArgs Gearbox
+type Args Gearbox
 
 func (me *Gearbox) Initialize() (status Status) {
 	return me.Config.Initialize()
 }
 
-func NewGearbox(args *GearboxArgs) *Gearbox {
+func NewGearbox(args *Args) *Gearbox {
 	gb := Gearbox{
 		HostConnector: args.HostConnector,
 		Options:       args.Options,

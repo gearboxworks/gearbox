@@ -11,7 +11,7 @@ import (
 //go:generate go-bindata -dev -o assets.go -pkg gearbox admin/dist/...
 
 func main() {
-	gearbox.Instance = gearbox.NewGearbox(&gearbox.GearboxArgs{
+	gearbox.Instance = gearbox.NewGearbox(&gearbox.Args{
 		HostConnector: host.GetConnector(),
 		Options:       cmd.GlobalOptions,
 	})
