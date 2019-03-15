@@ -2,8 +2,8 @@ package gearbox
 
 import (
 	"gearbox/only"
+	"gearbox/stat"
 	"gearbox/util"
-	"net/http"
 )
 
 type ServiceIds []ServiceId
@@ -16,7 +16,11 @@ func (me ServiceMap) GetStackNames() StackNames {
 	for _, s := range me {
 		names[string(s.GetStackName())] = true
 	}
-	return names.ToSlice()
+	stackNames := make(StackNames, len(names))
+	for _, s := range names.ToSlice() {
+		stackNames = append(stackNames, StackName(s))
+	}
+	return stackNames
 }
 
 type Services []*Service
@@ -95,20 +99,17 @@ func (me *Service) GetStackName() (name StackName) {
 	return name
 }
 
-func (me *Service) Parse(id ServiceId) (status Status) {
+func (me *Service) Parse(id ServiceId) (status stat.Status) {
 	for range only.Once {
 		if me.Identity == nil {
 			me.Identity = &Identity{}
 		}
-		err := me.Identity.Parse(string(id))
-		if err != nil {
-			status = NewStatus(&StatusArgs{
-				HelpfulError: err.(util.HelpfulError),
-				HttpStatus:   http.StatusBadRequest,
-			})
+		status := me.Identity.Parse(string(id))
+		if status.IsError() {
+			break
 		}
 		me.Id = ServiceId(me.GetId())
-		status = NewOkStatus("service id '%s' successfully parsed", id)
+		status = stat.NewOkStatus("service id '%s' successfully parsed", id)
 
 	}
 	return status

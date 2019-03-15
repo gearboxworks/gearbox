@@ -2,10 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gearbox/only"
-	"gearbox/util"
+	"gearbox/stat"
 	"github.com/labstack/echo"
 	"io/ioutil"
 	"net/http"
@@ -38,8 +37,17 @@ func (me *RequestContext) WrapHandler(next HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func (me *RequestContext) ReadRequestBody() ([]byte, error) {
-	return ioutil.ReadAll(me.Context.Request().Body)
+func (me *RequestContext) ReadRequestBody() (b []byte, status stat.Status) {
+	b, err := ioutil.ReadAll(me.Context.Request().Body)
+	if err != nil {
+		status = stat.NewFailedStatus(&stat.Args{
+			Error:      err,
+			Message:    fmt.Sprintf("failed to read request body for '%s'", me.ResourceName),
+			HttpStatus: http.StatusInternalServerError,
+			Help:       ContactSupportHelp(),
+		})
+	}
+	return b, status
 }
 
 func (me *RequestContext) CloseRequestBody() {
@@ -63,28 +71,25 @@ func (me *RequestContext) GetApiSelfLink() (path string) {
 	return path
 }
 
-func (me *RequestContext) UnmarshalFromRequest(obj interface{}) (err error) {
+func (me *RequestContext) UnmarshalFromRequest(obj interface{}) (status stat.Status) {
 	for range only.Once {
-		apiHelp := GetApiHelp(me.ResourceName)
-		defer me.CloseRequestBody()
-		b, err := me.ReadRequestBody()
-		if err != nil {
-			err = util.AddHelpToError(
-				errors.New("could not read request body"),
-				apiHelp,
-			)
+		b, status := me.ReadRequestBody()
+		if status.IsError() {
 			break
 		}
-		err = json.Unmarshal(b, &obj)
+		err := json.Unmarshal(b, &obj)
 		if err != nil {
-			err = util.AddHelpToError(
-				fmt.Errorf("unexpected format for request body: '%s'", string(b)),
-				apiHelp,
-			)
+			status = stat.NewFailedStatus(&stat.Args{
+				Error:      err,
+				Message:    fmt.Sprintf("unexpected format for request body: '%s'", string(b)),
+				HttpStatus: http.StatusBadRequest,
+				Help:       GetApiHelp(me.ResourceName),
+			})
 			break
 		}
 	}
-	return err
+	me.CloseRequestBody()
+	return status
 }
 
 // @TODO Add ?format=yes to pretty print JSON
@@ -121,7 +126,7 @@ func (me *RequestContext) JsonMarshalHandler(js interface{}) (status *Status) {
 		r.Meta.Resource = me.ResourceName
 		r.StatusCode = httpStatus
 		r.Success = success
-		if si, ok := js.(SuccessInspector); ok {
+		if si, ok := js.(stat.SuccessInspector); ok {
 			r.Success = si.IsSuccess()
 		}
 		var j []byte

@@ -1,9 +1,9 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"gearbox/only"
+	"gearbox/stat"
 	"gearbox/util"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -50,23 +50,21 @@ func ContactSupportHelp() string {
 	return "contact support"
 }
 
-func (me *Api) GetApiSelfLink(resourceType ResourceName) (url string, err error) {
+func (me *Api) GetApiSelfLink(resourceType ResourceName) (url string, status stat.Status) {
 	for range only.Once {
 		if me.Defaults == nil {
-			err = util.AddHelpToError(
-				errors.New(fmt.Sprintf("the Defaults property is nil when accessing api for resource type '%s'",
+			status = stat.NewFailedStatus(&stat.Args{
+				Message: fmt.Sprintf("the Defaults property is nil when accessing api for resource type '%s'",
 					resourceType,
-				)),
-				ContactSupportHelp(),
-			)
+				),
+				Help:  ContactSupportHelp(),
+				Error: stat.IsStatusError,
+			})
+			break
 		}
-		url, err = me.Defaults.GetApiSelfLink(resourceType)
+		url, status = me.Defaults.GetApiSelfLink(resourceType)
 	}
-	return url, err
-}
-
-type SuccessInspector interface {
-	IsSuccess() bool
+	return url, status
 }
 
 type ResponseDataGetter interface {

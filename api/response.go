@@ -2,10 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gearbox/only"
-	"gearbox/util"
+	"gearbox/stat"
 )
 
 type ResourceType string
@@ -25,18 +24,19 @@ type Response struct {
 	Data       interface{}  `json:"data,omitempty"`
 }
 
-func (me *Response) GetApiSelfLink(resourceType ResourceName) (url string, err error) {
+func (me *Response) GetApiSelfLink(resourceType ResourceName) (url string, status stat.Status) {
 	for range only.Once {
 		var ok bool
 		url, ok = me.Links[resourceType]
 		if !ok {
-			err = util.AddHelpToError(
-				errors.New(fmt.Sprintf("no '%s' in resource links", resourceType)),
-				ContactSupportHelp(),
-			)
+			status = stat.NewFailedStatus(&stat.Args{
+				Message: fmt.Sprintf("no '%s' in resource links", resourceType),
+				Error:   stat.IsStatusError,
+				Help:    ContactSupportHelp(),
+			})
 		}
 	}
-	return url, err
+	return url, status
 }
 
 func (me *Response) Clone() *Response {

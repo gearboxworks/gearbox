@@ -3,8 +3,10 @@ package util
 import (
 	"fmt"
 	"gearbox/only"
+	"gearbox/stat"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -20,6 +22,7 @@ func GetExecutableFilepath() string {
 	}
 	return fp
 }
+
 //func GetProjectDir() string {
 //	return filepath.Dir(GetExecutableDir())
 //}
@@ -28,20 +31,25 @@ func ErrorIsFileDoesNotExist(err error) bool {
 	return ok && pe.Op == "open" && pe.Err == syscall.ENOENT
 }
 
-func ReadBytes(filepath string) (b []byte, err error) {
+func ReadBytes(filepath string) (b []byte, status stat.Status) {
 	for range only.Once {
 		var err error
 		b, err = ioutil.ReadFile(filepath)
 		if err != nil && ErrorIsFileDoesNotExist(err) {
-			err = nil
+			status = stat.NewOkStatus("read %d bytes from '%s'",
+				len(b),
+				filepath,
+			)
 		}
 		if err != nil {
-			err = AddHelpToError(
-				fmt.Errorf("cannot read from '%s' file", filepath),
-				fmt.Sprintf("confirm file '%s' is readable", filepath),
-			)
+			status = stat.NewFailedStatus(&stat.Args{
+				Error:      err,
+				Message:    fmt.Sprintf("cannot read from '%s' file", filepath),
+				HttpStatus: http.StatusInternalServerError,
+				Help:       fmt.Sprintf("confirm file '%s' is readable", filepath),
+			})
 			break
 		}
 	}
-	return b, err
+	return b, status
 }

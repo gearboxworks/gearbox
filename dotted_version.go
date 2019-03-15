@@ -3,7 +3,7 @@ package gearbox
 import (
 	"fmt"
 	"gearbox/only"
-	"gearbox/util"
+	"gearbox/stat"
 	"regexp"
 	"strconv"
 	"strings"
@@ -24,7 +24,9 @@ func NewDottedVersion() *DottedVersion {
 	return &DottedVersion{}
 }
 
-func (me *DottedVersion) Parse(ver string) (err error) {
+func (me *DottedVersion) Parse(ver string) (status stat.Status) {
+	var msg, hlp string
+	var err error
 	newBuf := true
 	parts := strings.Split(ver, "~")
 	tmp := DottedVersion{raw: ver}
@@ -32,17 +34,17 @@ func (me *DottedVersion) Parse(ver string) (err error) {
 	for range only.Once {
 		if len(parts) >= 2 {
 			if len(parts[1]) == 0 {
-				err = fmt.Errorf("revision following '~' in '%s' is empty", ver)
+				msg = fmt.Sprintf("revision following '~' in '%s' is empty", ver)
 				break
 			}
 			if parts[1][0] != 'r' {
-				err = fmt.Errorf("revision following '~' in '%s' must begin with 'r'", ver)
+				msg = fmt.Sprintf("revision following '~' in '%s' must begin with 'r'", ver)
 				break
 			}
 			tmp.Revision = parts[1][1:]
 			_, err = strconv.Atoi(tmp.Revision)
 			if err != nil {
-				err = fmt.Errorf("revision following '~r' in '%s' must be and integer", ver)
+				msg = fmt.Sprintf("revision following '~r' in '%s' must be and integer", ver)
 				break
 			}
 		}
@@ -54,8 +56,8 @@ func (me *DottedVersion) Parse(ver string) (err error) {
 		for i, s = range []byte(parts[0]) {
 			if newBuf {
 				newBuf = false
-				pos, err = tmp.captureMMP(ver, pos, buf)
-				if err != nil {
+				pos, status = tmp.captureMMP(ver, pos, buf)
+				if status.IsError() {
 					break
 				}
 				buf = buf[0:0]
@@ -69,7 +71,7 @@ func (me *DottedVersion) Parse(ver string) (err error) {
 				done = true
 				break
 			default:
-				err = fmt.Errorf("non-integer %s version in '%s'",
+				msg = fmt.Sprintf("non-integer %s version in '%s'",
 					[]string{"major", "minor", "patch"}[pos],
 					ver,
 				)
@@ -82,8 +84,8 @@ func (me *DottedVersion) Parse(ver string) (err error) {
 		if err != nil {
 			break
 		}
-		_, err = tmp.captureMMP(ver, pos, buf)
-		if err != nil {
+		_, status = tmp.captureMMP(ver, pos, buf)
+		if status.IsError() {
 			break
 		}
 		metadata := ""
@@ -97,10 +99,8 @@ func (me *DottedVersion) Parse(ver string) (err error) {
 				s = '+'
 			}
 			if re.MatchString(prerelease) {
-				err = util.AddHelpToError(
-					fmt.Errorf("pre-release in '%s' is invalid semver", ver),
-					fmt.Sprintf("pre-release %s#spec-item-10", sharedHelp),
-				)
+				msg = fmt.Sprintf("pre-release in '%s' is invalid semver", ver)
+				hlp = fmt.Sprintf("pre-release %s#spec-item-10", sharedHelp)
 				break
 			}
 			tmp.Prerelease = string(prerelease)
@@ -111,48 +111,59 @@ func (me *DottedVersion) Parse(ver string) (err error) {
 				metadata = ver[i+1:]
 			}
 			if re.MatchString(metadata) {
-				err = util.AddHelpToError(
-					fmt.Errorf("build metadata in '%s' is not valid semver", ver),
-					fmt.Sprintf("build metadata %s#spec-item-10", sharedHelp),
-				)
+				msg = fmt.Sprintf("build metadata in '%s' is not valid semver", ver)
+				hlp = fmt.Sprintf("build metadata %s#spec-item-10", sharedHelp)
 				break
 			}
 			tmp.Metadata = metadata
 		}
 
 	}
+	if msg != "" {
+		status = stat.NewFailedStatus(&stat.Args{
+			Message: msg,
+			Help:    hlp,
+			Error:   stat.IsStatusError,
+		})
+	}
 	if err != nil {
 		me.Error = err
 	} else {
 		*me = tmp
 	}
-	return err
+	return status
 }
 
-func (me *DottedVersion) captureMMP(ver string, pos int, buf []byte) (int, error) {
-	var err error
+func (me *DottedVersion) captureMMP(ver string, pos int, buf []byte) (newpos int, status stat.Status) {
+	var msg string
 	switch pos {
 	case 0:
 		me.Major = string(buf)
 	case 1:
 		if me.Major == "" {
-			err = fmt.Errorf("version '%s' contains minor version but no major version", ver)
+			msg = fmt.Sprintf("version '%s' contains minor version but no major version", ver)
 			break
 		}
 		me.Minor = string(buf)
 	case 2:
 		if me.Minor == "" {
-			err = fmt.Errorf("version '%s' contains patch but no minor version", ver)
+			msg = fmt.Sprintf("version '%s' contains patch but no minor version", ver)
 			break
 		}
 		if me.Major == "" {
-			err = fmt.Errorf("version '%s' contains patch but no major version", ver)
+			msg = fmt.Sprintf("version '%s' contains patch but no major version", ver)
 			break
 		}
 		me.Patch = string(buf)
 	}
-	pos++
-	return pos, err
+	if msg != "" {
+		status = stat.NewFailedStatus(&stat.Args{
+			Message: msg,
+			Error:   stat.IsStatusError,
+		})
+	}
+	newpos = pos + 1
+	return newpos, status
 }
 
 const (

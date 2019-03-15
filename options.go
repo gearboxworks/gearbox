@@ -5,20 +5,23 @@ import (
 	"fmt"
 	"gearbox/cache"
 	"gearbox/only"
+	"gearbox/stat"
 	"gearbox/util"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const OptionsJsonUrl = RepoRawBaseUrl + "/master/assets/options.json"
 const OptionsKey = "options"
 
 type Options struct {
-	Gearbox       *Gearbox      `json:"-"`
-	Authorities   Authorities   `json:"authorities"`
-	StackNames    StackNames    `json:"stacks"`
-	RoleMap       RoleMap       `json:"roles"`
-	RoleOptionMap RoleOptionMap `json:"role_options"`
+	Gearbox     *Gearbox    `json:"-"`
+	Authorities Authorities `json:"authorities"`
+	StackNames  StackNames  `json:"stacks"`
+	RoleMap     RoleMap     `json:"roles"`
+	OptionsMap  OptionsMap  `json:"role_options"`
+	refreshed   bool
 }
 
 func NewOptions(gb *Gearbox) *Options {
@@ -30,7 +33,7 @@ func NewOptions(gb *Gearbox) *Options {
 
 type StackOptionMap map[StackName]*StackOption
 type StackOption struct {
-	Roles RoleOptionMap `json:"roles"`
+	Roles OptionsMap `json:"roles"`
 }
 
 type ShareableChoices string
@@ -41,7 +44,25 @@ const (
 	YesShareable    ShareableChoices = "yes"
 )
 
-type RoleOptionMap map[RoleSpec]*RoleOption
+type OptionsMap map[RoleSpec]*RoleOption
+
+func (me OptionsMap) GetStackOptionsMap(stackName StackName) (om OptionsMap, status stat.Status) {
+	for range only.Once {
+		om = make(OptionsMap, 0)
+		for rs, o := range me {
+			stackName, status = GetFullStackName(stackName)
+			if status.IsError() {
+				break
+			}
+			if !strings.HasPrefix(string(rs), string(stackName)) {
+				continue
+			}
+			om[rs] = o
+		}
+	}
+	return om, status
+}
+
 type RoleOption struct {
 	*StackRole
 	OrgName        OrgName          `json:"org,omitempty"`
@@ -50,6 +71,17 @@ type RoleOption struct {
 	Options        ServiceIds       `json:"options,omitempty"`
 	DefaultService *Service         `json:"-"`
 	ServiceOptions Services         `json:"-"`
+}
+
+func (me *Options) GetStackRoleMap(stackName StackName) RoleMap {
+	srs := make(RoleMap, 0)
+	for i, r := range me.RoleMap {
+		if r.GetStackName() != stackName {
+			continue
+		}
+		srs[i] = r
+	}
+	return srs
 }
 
 func (me *RoleOption) Fixup(stackRole *StackRole) {
@@ -80,14 +112,23 @@ func (me *RoleOption) FixupService(stackRole *StackRole, serviceId ServiceId) (s
 	return service
 }
 
-func (me *Options) Refresh() (err error) {
+func (me *Options) NeedsRefresh() bool {
+	return !me.refreshed
+}
+
+func (me *Options) Refresh() (status stat.Status) {
 	var b []byte
+	var err error
+	if !me.NeedsRefresh() {
+		return status
+	}
 	for range only.Once {
-		store := cache.NewCache(me.Gearbox.HostConnector.GetCacheDir())
+		cacheDir := me.Gearbox.HostConnector.GetCacheDir()
+		store := cache.NewCache(cacheDir)
 
 		store.Disable = me.Gearbox.NoCache()
 		var ok bool
-		b, ok, err = store.Get(OptionsKey)
+		b, ok, status = store.Get(OptionsKey)
 		if ok {
 			break
 		}
@@ -96,43 +137,33 @@ func (me *Options) Refresh() (err error) {
 		if err != nil || sc != http.StatusOK { // @TODO Bundle these as Assets so we will always have some options
 			log.Fatal("Could not download 'options.json' and no options have previously been stored.")
 		}
-		err = store.Set(OptionsKey, b, "15m")
-		if err != nil {
-			msg := fmt.Sprintf("could not cache downloaded 'options.json': %s", err.Error())
-			log.Printf(msg)
-			err = util.AddHelpToError(
-				fmt.Errorf(msg),
-				fmt.Sprintf("Ensure you have permissions to write to the cache directory '%s' and/or you have not run out of disk space.",
-					me.Gearbox.HostConnector.GetCacheDir(),
-				),
-			)
+		status = store.Set(OptionsKey, b, "15m")
+		if status.IsError() {
+			log.Printf(status.Message)
+			break
 		}
 	}
-	err = me.Unmarshal(b)
-	if err != nil {
-		msg := fmt.Sprintf("Your Gearbox is probably not compatible with the current JSON schema for 'options' at %s. Your Gearbox may need to be updated. Internal error: %s",
-			OptionsJsonUrl, // @TODO Provide a link to upgrade in text above
-			err.Error(),
-		)
-		// @TODO: This needs to become a lot more robust
-		//        We should be able to process older versions
-		err = util.AddHelpToError(
-			fmt.Errorf(msg),
-			fmt.Sprintf(msg),
-		)
-	}
-	for rs, sr := range me.RoleMap {
-		sr.Fixup(rs)
-	}
-	for rs, ro := range me.RoleOptionMap {
-		sr, ok := me.RoleMap[rs]
-		if !ok {
-			// @TODO Log error here and communicate back to home base
-			continue
+	for range only.Once {
+		if status.IsError() {
+			break
 		}
-		ro.Fixup(sr)
+		status = me.Unmarshal(b)
+		if status.IsError() {
+			break
+		}
+		for rs, sr := range me.RoleMap {
+			sr.Fixup(rs)
+		}
+		for rs, ro := range me.OptionsMap {
+			sr, ok := me.RoleMap[rs]
+			if !ok {
+				continue // @TODO Log error here and communicate back to home base
+			}
+			ro.Fixup(sr)
+		}
+		me.refreshed = true
 	}
-	return err
+	return status
 }
 
 func (me *Options) String() string {
@@ -147,6 +178,18 @@ func (me *Options) Bytes() []byte {
 	return bytes
 }
 
-func (me *Options) Unmarshal(b []byte) (err error) {
-	return json.Unmarshal(b, &me)
+func (me *Options) Unmarshal(b []byte) (status stat.Status) {
+	err := json.Unmarshal(b, &me)
+	if err != nil {
+		// @TODO Provide a link to upgrade once we have that established
+		status = stat.NewFailedStatus(&stat.Args{
+			HttpStatus: http.StatusInternalServerError,
+			Message:    "failed to unmarshal json from 'options.json'",
+			Help: fmt.Sprintf("Your Gearbox is probably not compatible with the current JSON schema for 'options' at %s. Your Gearbox may need to be updated.",
+				OptionsJsonUrl,
+			),
+			Error: err,
+		})
+	}
+	return status
 }

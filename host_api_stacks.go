@@ -26,7 +26,7 @@ func (me *HostApi) getRoleSpec(rc *api.RequestContext) RoleSpec {
 }
 
 func (me *HostApi) getStacksResponse(rc *api.RequestContext) interface{} {
-	return me.Gearbox.Stacks
+	return me.Gearbox.StackMap
 }
 
 func (me *HostApi) getServicesResponse(rc *api.RequestContext) interface{} {
@@ -94,7 +94,7 @@ func (me *HostApi) getStackResponse(rc *api.RequestContext) interface{} {
 	for range only.Once {
 		sn := me.getStackName(rc)
 		var ok bool
-		response, ok = me.Gearbox.Stacks[RoleSpec(sn)]
+		response, ok = me.Gearbox.StackMap[RoleSpec(sn)]
 		if !ok {
 			response = &api.Status{
 				StatusCode: http.StatusNotFound,

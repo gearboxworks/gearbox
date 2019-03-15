@@ -3,6 +3,7 @@ package gearbox
 import (
 	"fmt"
 	"gearbox/only"
+	"gearbox/stat"
 	"gearbox/util"
 	"strings"
 )
@@ -20,7 +21,7 @@ func NewIdentity() (id *Identity) {
 	return &Identity{}
 }
 
-func (me *Identity) Parse(identity string) (err error) {
+func (me *Identity) Parse(identity string) (status stat.Status) {
 	const sharedHelp = "identities can take the form of either " +
 		"<org>/<type>/<program>:<version> or just " +
 		"<org>/<program>:<version>. Examples might include " +
@@ -30,13 +31,15 @@ func (me *Identity) Parse(identity string) (err error) {
 	var on OrgName
 	var t string
 	var p string
+	var msg string
+	var hlp string
 	for range only.Once {
 		if me == nil {
 			panic("identity.Parse() called when 'identity' is nil.")
 		}
 		v := NewDottedVersion()
-		err = v.Parse(util.After(identity, ":"))
-		if err != nil {
+		status = v.Parse(util.After(identity, ":"))
+		if status.IsError() {
 			break
 		}
 		before := util.Before(identity, ":")
@@ -55,18 +58,14 @@ func (me *Identity) Parse(identity string) (err error) {
 			t = parts[1]
 			p = parts[2]
 		default:
-			err = util.AddHelpToError(
-				fmt.Errorf("too many slashes ('/') in identity '%s'", identity),
-				sharedHelp,
-			)
+			msg = fmt.Sprintf("too many slashes ('/') in identity '%s'", identity)
+			hlp = sharedHelp
 			break
 		}
 		if p == "" {
-			err = util.AddHelpToError(
-				fmt.Errorf("program is empty in identity '%s'", identity),
-				fmt.Sprintf("%s. So you must have a 'name' such as 'flutter' or 'akismet' in the examples.",
-					sharedHelp,
-				),
+			msg = fmt.Sprintf("program is empty in identity '%s'", identity)
+			hlp = fmt.Sprintf("%s. So you must have a 'name' such as 'flutter' or 'akismet' in the examples.",
+				sharedHelp,
 			)
 			break
 		}
@@ -76,7 +75,14 @@ func (me *Identity) Parse(identity string) (err error) {
 		me.Program = p
 		me.Version = v
 	}
-	return err
+	if msg != "" {
+		status = stat.NewFailedStatus(&stat.Args{
+			Message: msg,
+			Help:    hlp,
+			Error:   stat.IsStatusError,
+		})
+	}
+	return status
 }
 
 func (me *Identity) GetId() ServiceId {

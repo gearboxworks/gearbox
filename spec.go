@@ -3,7 +3,7 @@ package gearbox
 import (
 	"fmt"
 	"gearbox/only"
-	"gearbox/util"
+	"gearbox/stat"
 	"regexp"
 	"strconv"
 	"strings"
@@ -36,7 +36,8 @@ func init() {
 	re["ns_or_r"] = regexp.MustCompile("[^A-Za-z0-9/]")
 }
 
-func (me *Spec) Parse(spec string) (err error) {
+func (me *Spec) Parse(spec string) (status stat.Status) {
+	var err error
 	tmp := Spec{raw: spec}
 	for range only.Once {
 		if me == nil {
@@ -47,13 +48,13 @@ func (me *Spec) Parse(spec string) (err error) {
 		if len(parts) > 1 {
 			_, err = strconv.Atoi(parts[1])
 			if err != nil {
-				err = util.AddHelpToError(
-					fmt.Errorf("invalid version in '%s'", spec),
-					fmt.Sprintf(
-						"version must be integer after a colon (':') at end of '%s'",
+				status = stat.NewFailedStatus(&stat.Args{
+					Error:   err,
+					Message: fmt.Sprintf("invalid version in '%s'", spec),
+					Help: fmt.Sprintf("version must be integer after a colon (':') at end of '%s'",
 						spec,
 					),
-				)
+				})
 				break
 			}
 			tmp.Revision = parts[1]
@@ -64,14 +65,15 @@ func (me *Spec) Parse(spec string) (err error) {
 		if strings.Contains(parts[0], ".") {
 			tmp.Authority = AuthorityDomain(parts[0])
 			if re["host"].MatchString(string(tmp.Authority)) {
-				err = util.AddHelpToError(
-					fmt.Errorf("invalid host '%s' in '%s'", tmp.Authority, spec),
-					fmt.Sprintf("host '%s' in '%s'%s",
+				status = stat.NewFailedStatus(&stat.Args{
+					Error:   stat.IsStatusError,
+					Message: fmt.Sprintf("invalid host '%s' in '%s'", tmp.Authority, spec),
+					Help: fmt.Sprintf("host '%s' in '%s'%s",
 						tmp.Authority,
 						spec,
 						fmt.Sprintf(sharedHelp, ", dots ('.')"),
 					),
-				)
+				})
 				break
 			}
 			if len(parts) >= 2 {
@@ -81,24 +83,41 @@ func (me *Spec) Parse(spec string) (err error) {
 			tmp.StackName = StackName(strings.Join(parts[:len(parts)-1], "/"))
 		}
 		if re["ns_or_r"].MatchString(string(tmp.StackName)) {
-			err = util.AddHelpToError(
-				fmt.Errorf("invalid stack name '%s' in spec '%s'", tmp.StackName, spec),
-				fmt.Sprintf("stack name '%s'%s", tmp.StackName, fmt.Sprintf(sharedHelp, "")),
-			)
+			status = stat.NewFailedStatus(&stat.Args{
+				Error: stat.IsStatusError,
+				Message: fmt.Sprintf("invalid stack name '%s' in spec '%s'",
+					tmp.StackName,
+					spec,
+				),
+				Help: fmt.Sprintf("stack name '%s'%s",
+					tmp.StackName,
+					fmt.Sprintf(sharedHelp, ""),
+				),
+			})
 			break
 		}
 		if re["ns_or_r"].MatchString(tmp.ServiceType) {
-			err = util.AddHelpToError(
-				fmt.Errorf("invalid role '%s' in '%s'", tmp.ServiceType, spec),
-				fmt.Sprintf("role '%s'%s", tmp.ServiceType, fmt.Sprintf(sharedHelp, "")),
-			)
+			status = stat.NewFailedStatus(&stat.Args{
+				Error: stat.IsStatusError,
+				Message: fmt.Sprintf("invalid role '%s' in '%s'",
+					tmp.ServiceType,
+					spec,
+				),
+				Help: fmt.Sprintf("role '%s'%s",
+					tmp.ServiceType,
+					fmt.Sprintf(sharedHelp, ""),
+				),
+			})
 			break
+		}
+		if tmp.Authority == "" {
+			tmp.Authority = DefaultAuthority
 		}
 	}
 	if err == nil {
 		*me = tmp
 	}
-	return err
+	return status
 }
 
 func (me *Spec) String() string {
@@ -123,8 +142,8 @@ func (me *Spec) GetRaw() string {
 	return me.raw
 }
 
-func (me *Spec) GetSpec() string {
-	return me.String()
+func (me *Spec) GetSpec() RoleSpec {
+	return RoleSpec(me.String())
 }
 
 func (me *Spec) GetAuthority() AuthorityDomain {
@@ -141,4 +160,35 @@ func (me *Spec) GetType() string {
 
 func (me *Spec) GetVersion() string {
 	return me.Revision
+}
+
+func (me *Spec) GetFullStackname() StackName {
+	var s StackName
+	if me.Authority == "" {
+		s = me.StackName
+	} else {
+		s = StackName(fmt.Sprintf("%s/%s", me.Authority, me.StackName))
+	}
+	return s
+}
+
+func (me *Spec) SetFullStackname(stackName StackName) (status stat.Status) {
+	tmp := Spec{raw: string(stackName)}
+	if me == nil {
+		panic("spec.SetFullStackname() called when 'spec' is nil.")
+	}
+	parts := strings.Split(string(stackName), "/")
+	switch len(parts) {
+	case 1:
+		tmp.StackName = stackName
+	default:
+		tmp.Authority = AuthorityDomain(parts[0])
+		tmp.StackName = StackName(parts[1])
+	}
+	if tmp.Authority == "" {
+		tmp.Authority = DefaultAuthority
+	}
+	*me = tmp
+	status = stat.NewOkStatus("full stack name '%s' set", me.GetFullStackname())
+	return status
 }

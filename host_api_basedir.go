@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gearbox/api"
 	"gearbox/only"
+	"gearbox/stat"
 	"net/http"
 )
 
@@ -24,18 +25,17 @@ func (me *HostApi) getHostBasedirsResponse(rc *api.RequestContext) interface{} {
 }
 
 func (me *HostApi) addBasedir(rc *api.RequestContext) interface{} {
-	var status Status
+	var status stat.Status
 	for range only.Once {
 		bd := Basedir{}
-		err := rc.UnmarshalFromRequest(&bd)
-		if err != nil {
-			status = NewStatus(&StatusArgs{
-				Failed:     true,
-				Message:    "Unable to add basedir.",
-				HttpStatus: http.StatusBadRequest,
-				ApiHelp:    fmt.Sprintf("verify that API request is in the correct format: %s", api.GetApiDocsUrl(rc.ResourceName)),
-				Error:      err,
-			})
+		status = rc.UnmarshalFromRequest(&bd)
+		if status.IsError() {
+			status.Status = status
+			status.Message = "Unable to add basedir."
+			status.HttpStatus = http.StatusBadRequest
+			status.ApiHelp = fmt.Sprintf("verify that API request is in the correct format: %s",
+				api.GetApiDocsUrl(rc.ResourceName),
+			)
 			break
 		}
 		me.Gearbox.RequestType = rc.ResourceName
@@ -44,18 +44,17 @@ func (me *HostApi) addBasedir(rc *api.RequestContext) interface{} {
 	return status
 }
 func (me *HostApi) updateBasedir(rc *api.RequestContext) interface{} {
-	var status Status
+	var status stat.Status
 	for range only.Once {
 		bd := Basedir{}
-		err := rc.UnmarshalFromRequest(&bd)
-		if err != nil {
-			status = NewStatus(&StatusArgs{
-				Failed:     true,
-				Message:    "Unable to update basedir.",
-				HttpStatus: http.StatusBadRequest,
-				ApiHelp:    fmt.Sprintf("verify that API request is in the correct format: %s", api.GetApiDocsUrl(rc.ResourceName)),
-				Error:      err,
-			})
+		status = rc.UnmarshalFromRequest(&bd)
+		if status.IsError() {
+			status.Status = status
+			status.Message = "Unable to update basedir."
+			status.HttpStatus = http.StatusBadRequest
+			status.ApiHelp = fmt.Sprintf("verify that API request is in the correct format: %s",
+				api.GetApiDocsUrl(rc.ResourceName),
+			)
 			break
 		}
 		me.Gearbox.RequestType = rc.ResourceName

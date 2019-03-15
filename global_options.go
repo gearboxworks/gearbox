@@ -6,8 +6,8 @@ type GlobalOptions struct {
 }
 
 func (me *Gearbox) IsDebug() bool {
-	return me.Options.IsDebug
+	return me.GlobalOptions.IsDebug
 }
 func (me *Gearbox) NoCache() bool {
-	return me.Options.NoCache
+	return me.GlobalOptions.NoCache
 }

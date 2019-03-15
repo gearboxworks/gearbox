@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gearbox/api"
 	"gearbox/only"
+	"gearbox/stat"
 	"gearbox/util"
 	"net/http"
 	"path/filepath"
@@ -52,16 +53,18 @@ func (me *Project) GetServiceMap() (svcmap ServiceMap) {
 }
 
 func (me *Project) GetProjectDir() (dir string) {
-	if me.ProjectDetails != nil {
-		dir = filepath.Dir(me.ProjectDetails.Filepath)
-	} else {
-		fp, err := me.GetProjectFilepath()
-		if err == nil {
-			dir = filepath.Dir(fp)
-		} else {
+	for range only.Once {
+		if me.ProjectDetails != nil {
+			dir = filepath.Dir(me.ProjectDetails.Filepath)
+			break
+		}
+		fp, status := me.GetProjectFilepath()
+		if status.IsError() {
 			msg := []byte(fmt.Sprintf("failed to get filepath for project '%s'", me.Hostname))
 			_, _ = me.Gearbox.errorLog.Write(msg)
+			break
 		}
+		dir = filepath.Dir(fp)
 	}
 	return dir
 }
@@ -84,7 +87,7 @@ func (me *Project) ClearDetails() {
 	me.ProjectDetails = nil
 }
 
-func (me *Project) MaybeLoadDetails() (status Status) {
+func (me *Project) MaybeLoadDetails() (status stat.Status) {
 	for range only.Once {
 		if me.ProjectDetails != nil {
 			break
@@ -94,25 +97,19 @@ func (me *Project) MaybeLoadDetails() (status Status) {
 	return status
 }
 
-func (me *Project) GetProjectFilepath() (fp string, err error) {
+func (me *Project) GetProjectFilepath() (fp string, status stat.Status) {
 	return me.Gearbox.GetProjectFilepath(me.Path, me.Basedir)
 }
 
-func (me *Project) LoadProjectDetails() (status Status) {
-	var err error
+func (me *Project) LoadProjectDetails() (status stat.Status) {
 	for range only.Once {
 		var fp string
-		fp, err = me.GetProjectFilepath()
-		if err != nil {
-			status = NewStatus(&StatusArgs{
-				Failed:       true,
-				HttpStatus:   http.StatusInternalServerError,
-				HelpfulError: err.(util.HelpfulError),
-			})
+		fp, status = me.GetProjectFilepath()
+		if status.IsError() {
 			break
 		}
 		var j []byte
-		j, err = util.ReadBytes(fp)
+		j, status = util.ReadBytes(fp)
 		if status.IsError() {
 			break
 		}
@@ -150,16 +147,34 @@ func (me *Project) GetHostname() string {
 	return strings.ToLower(hostname)
 }
 
-func (me *Project) AddNamedStack(stackName StackName) (status Status) {
+func (me *Project) AddNamedStack(stackName StackName) (status stat.Status) {
 	for range only.Once {
-		var svcmap ServiceMap
-		svcmap, status = me.GetDefaultServices(stackName)
-		fmt.Printf("%+v", svcmap)
+		var stack *Stack
+		stack, status = FindNamedStack(me.Gearbox, stackName)
+		if status.IsError() {
+			break
+		}
+		var sm ServiceMap
+		sm, status = stack.GetDefaultServices()
+		if status.IsError() {
+			break
+		}
+		for gs, s := range sm {
+			me.ServiceMap[gs] = s
+		}
+		status = me.WriteJson()
+		if status.IsError() {
+			break
+		}
 	}
 	return status
 }
 
-func (me *Project) GetDefaultServices(stackName StackName) (svcmap ServiceMap, status Status) {
+func (me *Project) WriteJson() (status stat.Status) {
+	return
+}
+
+func (me *Project) GetStuff(stackName StackName) (stuff interface{}, status stat.Status) {
 	for range only.Once {
 		if me.NeedsDetails() {
 			status = me.LoadProjectDetails()
@@ -167,24 +182,11 @@ func (me *Project) GetDefaultServices(stackName StackName) (svcmap ServiceMap, s
 				break
 			}
 		}
-		options := NewOptions(me.Gearbox)
-		err := options.Refresh()
-		if err != nil {
-			status = NewStatusFromHelpfulError(err, &StatusArgs{
-				HttpStatus: http.StatusBadRequest,
-			})
-			break
-		}
-		//stack := options.GetNamedStack(sn)
-		//roles = stack.GetRequiredRoles()
-		for _, r := range options.RoleOptionMap {
-			print(r)
-		}
 	}
-	return svcmap, status
+	return stuff, status
 }
 
-func ValidateProjectHostname(hostname string, args ...*validateArgs) (status Status) {
+func ValidateProjectHostname(hostname string, args ...*validateArgs) (status stat.Status) {
 	for range only.Once {
 		var apiHelp string
 		var _args *validateArgs
@@ -198,7 +200,7 @@ func ValidateProjectHostname(hostname string, args ...*validateArgs) (status Sta
 		}
 
 		if _args.MustNotBeEmpty && hostname == "" {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				Failed:     true,
 				Message:    "project hostname is empty",
 				HttpStatus: http.StatusBadRequest,
@@ -208,7 +210,7 @@ func ValidateProjectHostname(hostname string, args ...*validateArgs) (status Sta
 		}
 		hnExists := _args.Gearbox.ProjectExists(hostname)
 		if _args.MustExist && !hnExists {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				Failed:     true,
 				Message:    fmt.Sprintf("no project exists with hostname '%s'", hostname),
 				HttpStatus: http.StatusBadRequest,
@@ -217,7 +219,7 @@ func ValidateProjectHostname(hostname string, args ...*validateArgs) (status Sta
 			break
 		}
 		if _args.MustNotExist && hnExists {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				Failed:     true,
 				Message:    fmt.Sprintf("project hostname '%s' already exists", hostname),
 				HttpStatus: http.StatusBadRequest,
@@ -225,7 +227,7 @@ func ValidateProjectHostname(hostname string, args ...*validateArgs) (status Sta
 			})
 			break
 		}
-		status = NewOkStatus("validated project hostname '%s'", hostname)
+		status = stat.NewOkStatus("validated project hostname '%s'", hostname)
 
 	}
 	return status

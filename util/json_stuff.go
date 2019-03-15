@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/only"
+	"gearbox/stat"
+	"net/http"
 )
-
-
 
 type FilepathHelpUrlGetter interface {
 	FilepathGetter
@@ -21,20 +21,21 @@ type HelpUrlGetter interface {
 	GetHelpUrl() string
 }
 
-func UnmarshalJson(j []byte,obj FilepathHelpUrlGetter) (err error) {
+func UnmarshalJson(j []byte, obj FilepathHelpUrlGetter) (status stat.Status) {
 	for range only.Once {
 		err := json.Unmarshal(j, &obj)
 		if err != nil {
-			err = AddHelpToError(
-				fmt.Errorf("unable to load config file '%s'", obj.GetFilepath()),
-				fmt.Sprintf("ensure '%s' is in correct format per %s",
+			status = stat.NewFailedStatus(&stat.Args{
+				Error:      err,
+				Message:    fmt.Sprintf("failed to unmarshal JSON for '%s'", obj.GetFilepath()),
+				HttpStatus: http.StatusInternalServerError,
+				Help: fmt.Sprintf("ensure '%s' is in correct format per %s",
 					obj.GetFilepath(),
-					obj.GetHelpUrl(),
+					obj.GetHelpUrl(), // @TODO Improve the accuracy of this help once we have docs online
 				),
-			)
+			})
 			break
 		}
 	}
-	return err
+	return status
 }
-

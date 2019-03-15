@@ -2,6 +2,7 @@ package tests
 
 import (
 	"gearbox"
+	"gearbox/stat"
 	"gearbox/test"
 	"testing"
 )
@@ -136,10 +137,10 @@ func (me *SpecTest) GetT() *testing.T {
 	return me.T
 }
 
-func (me *SpecTest) MakeNewObject(f *test.Fixture) (obj interface{}, err error) {
+func (me *SpecTest) MakeNewObject(f *test.Fixture) (obj interface{}, status stat.Status) {
 	spec := gearbox.NewSpec()
-	err = spec.Parse(f.In)
-	return spec, err
+	status = spec.Parse(f.In)
+	return spec, status
 }
 
 func (me *SpecTest) GetOutput(f *test.Fixture) (got string) {
@@ -152,7 +153,7 @@ func (me *SpecTest) GetOutput(f *test.Fixture) (got string) {
 		got = string(spec.GetAuthority())
 
 	case getStackName:
-		got = spec.GetStackName()
+		got = string(spec.GetStackName())
 
 	case getServiceType:
 		got = spec.GetType()

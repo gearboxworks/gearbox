@@ -1,30 +1,33 @@
-package gearbox
+package stat
 
 import (
 	"errors"
 	"fmt"
-	"gearbox/api"
 	"gearbox/only"
-	"gearbox/util"
 	"net/http"
 )
 
-var StatusInstance = (*Status)(nil)
-var _ api.SuccessInspector = StatusInstance
+var Instance = (*Status)(nil)
+var _ SuccessInspector = Instance
 
 var IsStatusError = errors.New("")
 
-type Status struct {
-	Failed     bool
-	Message    string `json:"message,omitempty"`
-	Help       string `json:"-"`
-	ApiHelp    string `json:"api_help,omitempty"`
-	CliHelp    string `json:"-"`
-	HttpStatus int    `json:"-"`
-	Error      error  `json:"-"`
+type SuccessInspector interface {
+	IsSuccess() bool
 }
 
-type StatusArgs struct {
+type Status struct {
+	Failed     bool
+	Message    string      `json:"message,omitempty"`
+	Help       string      `json:"-"`
+	ApiHelp    string      `json:"api_help,omitempty"`
+	CliHelp    string      `json:"-"`
+	HttpStatus int         `json:"-"`
+	Error      error       `json:"-"`
+	Status     interface{} // Yes, this is a recursive def!!!
+}
+
+type Args struct {
 	Failed     bool
 	Message    string
 	Help       string
@@ -32,7 +35,6 @@ type StatusArgs struct {
 	CliHelp    string
 	HttpStatus int
 	Error      error
-	util.HelpfulError
 }
 
 func NewOkStatus(msg string, args ...interface{}) Status {
@@ -52,7 +54,7 @@ func NewSuccessStatus(code int, msg ...string) (status Status) {
 			m := fmt.Sprintf("NewSuccessStatus(%d) called with no msg parameter",
 				code,
 			)
-			status = NewStatus(&StatusArgs{
+			status = NewStatus(&Args{
 				Failed:     true,
 				HttpStatus: http.StatusInternalServerError,
 				Message:    m,
@@ -75,23 +77,12 @@ func NewSuccessStatus(code int, msg ...string) (status Status) {
 	return status
 }
 
-func NewStatusFromHelpfulError(helpfulError error, args *StatusArgs) (status Status) {
-	var help string
-	var err error
-	if he, ok := helpfulError.(util.HelpfulError); ok {
-		help = he.Help
-		err = he.ErrorObj
-	}
-	return NewStatus(&StatusArgs{
-		Failed:     true,
-		Message:    err.Error(),
-		HttpStatus: args.HttpStatus,
-		Help:       help,
-		Error:      err,
-	})
+func NewFailedStatus(args *Args) (status Status) {
+	args.Failed = true
+	return NewStatus(args)
 }
 
-func NewStatus(args *StatusArgs) (status Status) {
+func NewStatus(args *Args) (status Status) {
 	for range only.Once {
 		if args.HttpStatus == 0 {
 			m := fmt.Sprintf("NewStatus() called with no HttpStatus for %s",
@@ -117,23 +108,14 @@ func NewStatus(args *StatusArgs) (status Status) {
 			Error:      args.Error,
 		}
 
-		if status.Error == nil && !args.HelpfulError.IsNil() {
-			status.Error = args.HelpfulError
-		}
 		if status.Error == IsStatusError {
 			status.Error = errors.New(status.Message)
 		}
-		he, ok := status.Error.(util.HelpfulError)
-		if status.Error == nil && ok && he.IsNil() {
-			status.Error = errors.New(status.Message)
-		}
-		if status.Error == nil && status.Failed {
+
+		if status.Failed && status.Error == nil {
 			status.Error = errors.New(status.Message)
 		}
 
-		if status.Help == "" && args.HelpfulError.Help != "" {
-			status.Help = args.HelpfulError.Help
-		}
 		if status.Help != "" {
 			if status.ApiHelp == "" {
 				status.ApiHelp = status.Help

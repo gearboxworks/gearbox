@@ -1,6 +1,7 @@
 package test
 
 import (
+	"gearbox/stat"
 	"testing"
 )
 
@@ -29,8 +30,8 @@ func NewFixture(args *Fixture) *Fixture {
 
 type Table []*Fixture
 
-func NoFailWrongOutput(t *testing.T, label string, name string, input string, got string, want Args, err error) bool {
-	if !want.Fail && err == nil {
+func NoFailWrongOutput(t *testing.T, label string, name string, input string, got string, want Args, status stat.Status) bool {
+	if !want.Fail && !status.IsError() {
 		if got != want.Want {
 			t.Errorf("nofail: %s.%s, want: %s, got: %s, input: %s", label, name, want.Want, got, input)
 		}
@@ -39,10 +40,10 @@ func NoFailWrongOutput(t *testing.T, label string, name string, input string, go
 	return false
 }
 
-func FailWrongError(t *testing.T, label string, name string, input string, want Args, err error) bool {
+func FailWrongError(t *testing.T, label string, name string, input string, want Args, status stat.Status) bool {
 	if want.Fail {
-		if err != nil && err.Error() != want.Want {
-			t.Errorf("fail: %s.%s, want: %s, got: %s, input: %s", label, name, want.Want, err.Error(), input)
+		if status.IsError() && status.Message != want.Want {
+			t.Errorf("fail: %s.%s, want: %s, got: %s, input: %s", label, name, want.Want, status.Message, input)
 		}
 		return true
 	}
@@ -51,7 +52,7 @@ func FailWrongError(t *testing.T, label string, name string, input string, want 
 }
 
 type StructMethodTester interface {
-	MakeNewObject(f *Fixture) (obj interface{}, err error)
+	MakeNewObject(f *Fixture) (obj interface{}, status stat.Status)
 	GetOutput(f *Fixture) string
 	GetT() *testing.T
 	GetData() Table
@@ -59,7 +60,7 @@ type StructMethodTester interface {
 
 func StructMethodsTest(smt StructMethodTester) {
 	var got string
-	var err error
+	var status stat.Status
 	for _, fixture := range smt.GetData() {
 		fixture.T = smt.GetT()
 		if fixture.Label == "" {
@@ -68,7 +69,7 @@ func StructMethodsTest(smt StructMethodTester) {
 		t := fixture.T
 		for name, out := range fixture.Out {
 			fixture.Name = name
-			fixture.Obj, err = smt.MakeNewObject(fixture)
+			fixture.Obj, status = smt.MakeNewObject(fixture)
 
 			//fmt.Printf("Testing '%s'.%s\n", fixture.Label, name)
 
@@ -76,20 +77,25 @@ func StructMethodsTest(smt StructMethodTester) {
 				t.Skipf("no object created; test '%s' for '%s' skipped", name, fixture.Label)
 				continue
 			}
-			if err == nil {
+			if status.IsError() {
 				got = smt.GetOutput(fixture)
 			}
 
-			if NoFailWrongOutput(t, fixture.Label, name, fixture.In, got, out, err) {
+			if NoFailWrongOutput(t, fixture.Label, name, fixture.In, got, out, status) {
 				continue
 			}
 
-			if FailWrongError(t, fixture.Label, name, fixture.In, out, err) {
+			if FailWrongError(t, fixture.Label, name, fixture.In, out, status) {
 				continue
 			}
 
-			if err != nil {
-				t.Errorf("error for '%s' test '%s' w/input '%s': %s", fixture.Label, name, fixture.In, err.Error())
+			if status.IsError() {
+				t.Errorf("error for '%s' test '%s' w/input '%s': %s",
+					fixture.Label,
+					name,
+					fixture.In,
+					status.Message,
+				)
 			}
 		}
 	}

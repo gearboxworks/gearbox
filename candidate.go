@@ -2,6 +2,7 @@ package gearbox
 
 import (
 	"fmt"
+	"gearbox/stat"
 	"gearbox/util"
 	"path/filepath"
 	"strings"
@@ -33,14 +34,14 @@ func (me *Candidate) GetPotentialHostname() string {
 	return strings.ToLower(hostname)
 }
 
-func (me *Candidate) GetHostBasedir() (string, error) {
+func (me *Candidate) GetHostBasedir() (string, stat.Status) {
 	return me.Config.GetHostBasedir(me.Basedir)
 }
 
 func (me *Candidate) IsProject() bool {
-	bd, err := me.GetHostBasedir()
+	bd, status := me.GetHostBasedir()
 	fp := filepath.FromSlash(fmt.Sprintf("%s/%s/%s", bd, me.Path, ProjectFilename))
-	return err == nil && util.FileExists(fp)
+	return status.IsSuccess() && util.FileExists(fp)
 }
 
 func (me *Candidate) GetFullPath() (fp string) {

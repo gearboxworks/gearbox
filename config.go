@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gearbox/host"
 	"gearbox/only"
+	"gearbox/stat"
 	"gearbox/util"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -62,7 +63,7 @@ func NewConfig(gb *Gearbox) *Config {
 	return c
 }
 
-func (me *Config) Initialize() (status Status) {
+func (me *Config) Initialize() (status stat.Status) {
 	status = me.Load()
 	if !status.IsError() {
 		status = me.Write()
@@ -80,23 +81,26 @@ func (me *Config) GetBasedirNicknames() (nns []string) {
 	return nns
 }
 
-func (me *Config) GetHostBasedir(nickname string) (basedir string, err error) {
+func (me *Config) GetHostBasedir(nickname string) (basedir string, status stat.Status) {
 	bd, ok := me.Basedirs[nickname]
 	if ok {
 		basedir = bd.HostDir
+		status = stat.NewOkStatus("hostdir found for nickname '%s'", nickname)
 	} else {
-		err = util.AddHelpToError(
-			fmt.Errorf("basedir nickname '%s' is not valid", basedir),
-			fmt.Sprintf("Add '%s' as a new basedir, or use one of these valid nicknames: %s",
+		status = stat.NewFailedStatus(&stat.Args{
+			Error:      stat.IsStatusError,
+			Message:    fmt.Sprintf("basedir nickname '%s' is not valid", basedir),
+			HttpStatus: http.StatusBadRequest,
+			Help: fmt.Sprintf("Add '%s' as a new basedir, or use one of these valid nicknames: %s",
 				util.OxfordComma(me.GetBasedirNicknames(), &util.OxfordCommaArgs{
 					SingleQuote: true,
 					Conjunction: "or",
 				}),
 				basedir,
 			),
-		)
+		})
 	}
-	return basedir, err
+	return basedir, status
 }
 
 func (me *Config) GetHostBasedirs() map[string]string {
@@ -122,13 +126,13 @@ func (me *Config) GetFilepath() string {
 	return filepath.FromSlash(fmt.Sprintf("%s/config.json", me.HostConnector.GetUserConfigDir()))
 }
 
-func (me *Config) Write() (status Status) {
+func (me *Config) Write() (status stat.Status) {
 	for range only.Once {
 		j, err := json.MarshalIndent(me, "", "    ")
 		if err != nil {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				Message:    fmt.Sprintf("unable to marhsal config"),
-				Help:       ContactSupportHelp(),
+				Help:       stat.ContactSupportHelp(),
 				HttpStatus: http.StatusInternalServerError,
 				Error:      err,
 			})
@@ -140,7 +144,7 @@ func (me *Config) Write() (status Status) {
 		}
 		err = ioutil.WriteFile(me.GetFilepath(), j, os.ModePerm)
 		if err != nil {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				Message:    fmt.Sprintf("unable to write to config file '%s'", me.GetFilepath()),
 				Help:       fmt.Sprintf("check '%s' for write permissions", filepath.Dir(me.GetFilepath())),
 				HttpStatus: http.StatusInternalServerError,
@@ -148,19 +152,19 @@ func (me *Config) Write() (status Status) {
 			})
 			break
 		}
-		status = NewOkStatus("project config file written")
+		status = stat.NewOkStatus("project config file written")
 	}
 	return status
 }
 
-func (me *Config) MaybeMakeDir(dir string, mode os.FileMode) (status Status) {
+func (me *Config) MaybeMakeDir(dir string, mode os.FileMode) (status stat.Status) {
 	for range only.Once {
 		err := util.MaybeMakeDir(dir, mode)
 		if err == nil {
-			status = NewOkStatus("directory '%s' created", dir)
+			status = stat.NewOkStatus("directory '%s' created", dir)
 			break
 		}
-		status = NewStatus(&StatusArgs{
+		status = stat.NewStatus(&stat.Args{
 			Message:    fmt.Sprintf("failed to create directory '%s'", dir),
 			Help:       fmt.Sprintf("confirm directory '%s' is readable", filepath.Dir(dir)),
 			HttpStatus: http.StatusInternalServerError,
@@ -171,22 +175,14 @@ func (me *Config) MaybeMakeDir(dir string, mode os.FileMode) (status Status) {
 	return status
 }
 
-func (me *Config) ReadBytes() (b []byte, status Status) {
+func (me *Config) ReadBytes() (b []byte, status stat.Status) {
 	for range only.Once {
-		var err error
 		fp := me.GetFilepath()
-		b, err = util.ReadBytes(fp)
-		if err != nil {
-			he := err.(util.HelpfulError)
-			status = NewStatus(&StatusArgs{
-				Message:    he.Error(),
-				Help:       he.Help,
-				HttpStatus: http.StatusInternalServerError,
-				Error:      err,
-			})
+		b, status = util.ReadBytes(fp)
+		if status.IsError() {
 			break
 		}
-		status = NewOkStatus("read %d bytes from file '%s'.", len(b), fp)
+		status = stat.NewOkStatus("read %d bytes from file '%s'.", len(b), fp)
 	}
 	return b, status
 }
@@ -195,21 +191,17 @@ func (me *Config) GetHelpUrl() string {
 	return ConfigHelpUrl
 }
 
-func (me *Config) Unmarshal(j []byte) (status Status) {
+func (me *Config) Unmarshal(j []byte) (status stat.Status) {
 	for range only.Once {
-		err := util.UnmarshalJson(j, me)
-		if err != nil {
-			status = NewStatus(&StatusArgs{
-				HelpfulError: err.(util.HelpfulError),
-				HttpStatus:   http.StatusInternalServerError,
-			})
+		status := util.UnmarshalJson(j, me)
+		if status.IsError() {
 			break
 		}
-		status = NewOkStatus("bytes unmarshalled")
+		status = stat.NewOkStatus("bytes unmarshalled")
 	}
 	return status
 }
-func (me *Config) Load() (status Status) {
+func (me *Config) Load() (status stat.Status) {
 	for range only.Once {
 		var j []byte
 		j, status = me.ReadBytes()
@@ -227,7 +219,7 @@ func (me *Config) Load() (status Status) {
 	return status
 }
 
-func (me *Config) LoadProjectsAndWrite() (status Status) {
+func (me *Config) LoadProjectsAndWrite() (status stat.Status) {
 	status = me.LoadProjects()
 	if !status.IsError() {
 		status = me.Write()
@@ -243,15 +235,15 @@ func (me *Config) GetProjectMap() ProjectMap {
 	return pm
 }
 
-func (me *Config) LoadProjects() (status Status) {
+func (me *Config) LoadProjects() (status stat.Status) {
 	for range only.Once {
 		if len(me.Basedirs) == 0 {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				Message:    fmt.Sprintf("no project roots found in %s", me.GetFilepath()),
 				CliHelp:    fmt.Sprintf("Add with the '%s <dir>' command", ProjectRootAddCmd.CommandPath()),
 				ApiHelp:    fmt.Sprintf("Add by POSTing JSON to 'add-basedir' resource"),
 				HttpStatus: http.StatusInternalServerError,
-				Error:      IsStatusError,
+				Error:      stat.IsStatusError,
 			})
 			break
 		}
@@ -264,7 +256,7 @@ func (me *Config) LoadProjects() (status Status) {
 			if !util.DirExists(bd.HostDir) {
 				err := os.Mkdir(bd.HostDir, 0777)
 				if err != nil {
-					status = NewStatus(&StatusArgs{
+					status = stat.NewStatus(&stat.Args{
 						Message:    fmt.Sprintf("unable to make directory '%s'", bd.HostDir),
 						HttpStatus: http.StatusInternalServerError,
 						Error:      err,
@@ -274,7 +266,7 @@ func (me *Config) LoadProjects() (status Status) {
 			}
 			files, err := ioutil.ReadDir(bd.HostDir)
 			if err != nil {
-				status = NewStatus(&StatusArgs{
+				status = stat.NewStatus(&stat.Args{
 					Message:    fmt.Sprintf("unable to read directory %s", bd.HostDir),
 					HttpStatus: http.StatusInternalServerError,
 					Error:      err,
@@ -320,7 +312,7 @@ func (me *Config) LoadProjects() (status Status) {
 		}
 
 		if status.NotYetFinalized() {
-			status = NewOkStatus("projects loaded for basedirs: %s",
+			status = stat.NewOkStatus("projects loaded for basedirs: %s",
 				strings.Join(baseDirs, ", "),
 			)
 		}

@@ -2,8 +2,8 @@ package gearbox
 
 import (
 	"gearbox/only"
-	"gearbox/util"
-	"net/http"
+	"gearbox/stat"
+	"strings"
 )
 
 const StackRoleHelpUrl = "https://docs.gearbox.works/roles/"
@@ -17,6 +17,23 @@ const MaxServicesPerRole = 10
 
 type RoleSpec string
 type RoleMap map[RoleSpec]*StackRole
+
+func (me RoleMap) GetStackRoleMap(stackName StackName) (rm RoleMap, status stat.Status) {
+	for range only.Once {
+		rm = make(RoleMap, 0)
+		for rs, r := range me {
+			stackName, status = GetFullStackName(stackName)
+			if status.IsError() {
+				break
+			}
+			if !strings.HasPrefix(string(rs), string(stackName)) {
+				continue
+			}
+			rm[rs] = r
+		}
+	}
+	return rm, status
+}
 
 type StackRole struct {
 	RoleSpec   RoleSpec `json:"-"` //  `json:"rolespec"`
@@ -60,20 +77,17 @@ func (me *StackRole) NeedsParse() bool {
 	return me.RoleSpec == "" || me.Spec.ServiceType == ""
 }
 
-func (me *StackRole) Parse(name RoleSpec) (status Status) {
+func (me *StackRole) Parse(name RoleSpec) (status stat.Status) {
 	for range only.Once {
 		me.RoleSpec = name
 		if me.Spec == nil {
 			me.Spec = &Spec{}
 		}
-		err := me.Spec.Parse(string(me.RoleSpec))
-		if err != nil {
-			status = NewStatus(&StatusArgs{
-				HelpfulError: err.(util.HelpfulError),
-				HttpStatus:   http.StatusBadRequest,
-			})
+		status := me.Spec.Parse(string(me.RoleSpec))
+		if status.IsError() {
+			break
 		}
-		status = NewOkStatus("stack role '%s' successfully parsed", name)
+		status = stat.NewOkStatus("stack role '%s' successfully parsed", name)
 	}
 	return status
 }

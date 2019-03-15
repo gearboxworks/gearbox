@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"gearbox/api"
 	"gearbox/only"
+	"gearbox/stat"
 	"net/http"
 )
 
 type ProjectMap map[string]*Project
 
-func (me ProjectMap) FindProjectWithDetails(gb *Gearbox, hostname string) (p *Project, status Status) {
+func (me ProjectMap) FindProjectWithDetails(gb *Gearbox, hostname string) (p *Project, status stat.Status) {
 	for range only.Once {
 		p, status = me.GetProject(gb, hostname)
 		if status.IsError() {
@@ -20,22 +21,22 @@ func (me ProjectMap) FindProjectWithDetails(gb *Gearbox, hostname string) (p *Pr
 		if status.IsError() {
 			break
 		}
-		status = NewOkStatus("got project '%s'", hostname)
+		status = stat.NewOkStatus("got project '%s'", hostname)
 	}
 	return p, status
 }
 
-func (me ProjectMap) GetProject(gb *Gearbox, hostname string) (p *Project, status Status) {
+func (me ProjectMap) GetProject(gb *Gearbox, hostname string) (p *Project, status stat.Status) {
 	var ok bool
 	p, ok = me[hostname]
 	if ok {
 		// The next two
 		p.Gearbox = gb
 		p.Hostname = hostname
-		status = NewOkStatus("got project '%s'", hostname)
+		status = stat.NewOkStatus("got project '%s'", hostname)
 	} else {
 		msg := fmt.Sprintf("project hostname '%s' does not exist", hostname)
-		status = NewStatus(&StatusArgs{
+		status = stat.NewStatus(&stat.Args{
 			Failed:     true,
 			Message:    msg,
 			HttpStatus: http.StatusBadRequest,

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gearbox/api"
 	"gearbox/only"
+	"gearbox/stat"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -32,15 +33,15 @@ const ProjectStackDelete api.ResourceName = ProjectStacksResource + "-delete"
 
 const HostnameResourceVar api.ResourceVarName = "hostname"
 
-func getProjectHostname(rc *api.RequestContext) (hn string, status Status) {
+func getProjectHostname(rc *api.RequestContext) (hn string, status stat.Status) {
 	for range only.Once {
 		hn = rc.Param("hostname")
 		if hn == "" {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				Message:    "hostname is empty",
 				Help:       api.GetApiHelp("hostname"),
 				HttpStatus: http.StatusBadRequest,
-				Error:      IsStatusError,
+				Error:      stat.IsStatusError,
 			})
 			break
 		}
@@ -81,7 +82,7 @@ func (me *HostApi) addProjectRoutes() {
 //===[ Project Stacks ]========================
 
 func (me *HostApi) getProjectStacksResponse(rc *api.RequestContext) (response interface{}) {
-	var status Status
+	var status stat.Status
 	for range only.Once {
 		hn, status := getProjectHostname(rc)
 		if status.IsError() {
@@ -99,43 +100,40 @@ func (me *HostApi) getProjectStacksResponse(rc *api.RequestContext) (response in
 	return response
 }
 
-func getStackName(rc *api.RequestContext) (sn StackName, status Status) {
+func getStackName(rc *api.RequestContext) (sn StackName, status stat.Status) {
 	for range only.Once {
 		if rc.Context.Request().Method == echo.GET {
 			sn = StackName(rc.Param("stack"))
-		} else {
-			snr := StackNameRequest{}
-			err := rc.UnmarshalFromRequest(&snr)
-			if err != nil {
-				status = NewStatus(&StatusArgs{
-					Failed:     true,
-					Message:    fmt.Sprintf("invalid request format for '%s' resource", rc.ResourceName),
-					HttpStatus: http.StatusBadRequest,
-					Help:       api.GetApiHelp("rc.ResourceName", "correct request format"),
-				})
-				break
-			}
-			sn = snr.StackName
-		}
-		if sn == "" {
-			status = NewStatus(&StatusArgs{
-				Message:    "stack name is empty",
-				Help:       api.GetApiHelp(rc.ResourceName),
-				HttpStatus: http.StatusBadRequest,
-				Error:      IsStatusError,
-			})
 			break
 		}
+		snr := StackNameRequest{}
+		status := rc.UnmarshalFromRequest(&snr)
+		if status.IsError() {
+			status.Status = status
+			status.Message = fmt.Sprintf("invalid request format for '%s' resource", rc.ResourceName)
+			status.HttpStatus = http.StatusBadRequest
+			status.ApiHelp = api.GetApiHelp("rc.ResourceName", "correct request format")
+			break
+		}
+		sn = snr.StackName
+	}
+	if sn == "" {
+		status = stat.NewStatus(&stat.Args{
+			Message:    "stack name is empty",
+			Help:       api.GetApiHelp(rc.ResourceName),
+			HttpStatus: http.StatusBadRequest,
+			Error:      stat.IsStatusError,
+		})
 	}
 	return sn, status
 }
 
 type StackNameRequest struct {
-	StackName StackName `json:"stack_name"`
+	StackName StackName `json:"stack"`
 }
 
 func (me *HostApi) addProjectStack(rc *api.RequestContext) (response interface{}) {
-	var status Status
+	var status stat.Status
 	for range only.Once {
 		var hn string
 		hn, status = getProjectHostname(rc)
@@ -168,7 +166,7 @@ func (me *HostApi) deleteProjectStack(rc *api.RequestContext) (response interfac
 //===[ Project Services ]========================
 
 func (me *HostApi) getProjectServicesResponse(rc *api.RequestContext) (response interface{}) {
-	var status Status
+	var status stat.Status
 	for range only.Once {
 		var hn string
 		hn, status := getProjectHostname(rc)
@@ -200,7 +198,7 @@ func (me *HostApi) deleteProjectService(rc *api.RequestContext) (response interf
 //===[ Project Aliases ]========================
 
 func (me *HostApi) getProjectAliasesResponse(rc *api.RequestContext) (response interface{}) {
-	var status Status
+	var status stat.Status
 	for range only.Once {
 		var hn string
 		hn, status := getProjectHostname(rc)
@@ -263,7 +261,7 @@ func (me *HostApi) getDisabledProjectsResponse(rc *api.RequestContext) (response
 //===[ Project Details ]========================
 
 func (me *HostApi) getProjectDetailsResponse(rc *api.RequestContext) (response interface{}) {
-	var status Status
+	var status stat.Status
 	for range only.Once {
 		var hn string
 		hn, status := getProjectHostname(rc)

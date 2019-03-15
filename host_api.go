@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"gearbox/api"
 	"gearbox/only"
-	"gearbox/util"
+	"gearbox/stat"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -39,27 +39,24 @@ func NewHostApi(gearbox *Gearbox) *HostApi {
 	return ha
 }
 
-func (me *HostApi) GetApiSelfLink(resourceType api.ResourceName) (url string, status Status) {
+func (me *HostApi) GetApiSelfLink(resourceType api.ResourceName) (url string, status stat.Status) {
 	for range only.Once {
 		if me.Api == nil {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				HttpStatus: http.StatusInternalServerError,
-				Help:       ContactSupportHelp(),
+				Help:       stat.ContactSupportHelp(),
 				Message: fmt.Sprintf("accessing host api when internal api property is nil for resource type '%s'",
 					resourceType,
 				),
 			})
+			break
 		}
-		var err error
-		url, err = me.Api.GetApiSelfLink(resourceType)
-		if err != nil {
-			status = NewStatus(&StatusArgs{
-				HttpStatus:   http.StatusInternalServerError,
-				HelpfulError: err.(util.HelpfulError),
-				Message: fmt.Sprintf("the Api property is nil when accessing host api for resource type '%s'",
-					resourceType,
-				),
-			})
+		url, status = me.Api.GetApiSelfLink(resourceType)
+		if status.IsError() {
+			status.Message = fmt.Sprintf("the Api property is nil when accessing host api for resource type '%s'",
+				resourceType,
+			)
+			break
 		}
 	}
 	return url, status
@@ -112,7 +109,7 @@ func (me *HostApi) DELETE(path string, name api.ResourceName, handler HandlerFun
 func (me *HostApi) jsonMarshalHandler(rc *api.RequestContext, value interface{}) error {
 	var apiStatus *api.Status
 	for range only.Once {
-		status, ok := value.(Status)
+		status, ok := value.(stat.Status)
 		if ok && status.IsError() {
 			apiStatus = &api.Status{
 				Error:      status.Error,

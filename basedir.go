@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gearbox/api"
 	"gearbox/only"
+	"gearbox/stat"
 	"github.com/mitchellh/go-homedir"
 	"net/http"
 	"path/filepath"
@@ -38,7 +39,7 @@ func NewBasedir(hostDir string, args ...*BasedirArgs) *Basedir {
 	return &bd
 }
 
-func ExpandHostBasedirPath(gb *Gearbox, nickname string, path string) (fp string, status Status) {
+func ExpandHostBasedirPath(gb *Gearbox, nickname string, path string) (fp string, status stat.Status) {
 	status = gb.ValidateBasedirNickname(nickname, &validateArgs{
 		MustNotBeEmpty: true,
 		MustExist:      true,
@@ -51,13 +52,13 @@ func ExpandHostBasedirPath(gb *Gearbox, nickname string, path string) (fp string
 	return fp, status
 }
 
-func (me *Basedir) MaybeExpandDir() (status Status) {
+func (me *Basedir) MaybeExpandDir() (status stat.Status) {
 	for range only.Once {
 		origDir := me.HostDir
 		if strings.HasPrefix(me.HostDir, "~") {
 			dir, err := homedir.Expand(me.HostDir)
 			if err != nil {
-				status = NewStatus(&StatusArgs{
+				status = stat.NewStatus(&stat.Args{
 					Error:      err,
 					HttpStatus: http.StatusInternalServerError,
 					Message: fmt.Sprintf("could not expand dir '%s' for '%s'",
@@ -69,7 +70,7 @@ func (me *Basedir) MaybeExpandDir() (status Status) {
 			}
 			me.HostDir = dir
 		}
-		status = NewOkStatus("directory expanded from '%s' to '%s'",
+		status = stat.NewOkStatus("directory expanded from '%s' to '%s'",
 			origDir,
 			me.HostDir,
 		)
@@ -77,11 +78,11 @@ func (me *Basedir) MaybeExpandDir() (status Status) {
 	return status
 }
 
-func (me *Basedir) Initialize() (status Status) {
+func (me *Basedir) Initialize() (status stat.Status) {
 	for range only.Once {
 		if me.HostDir == "" {
 			me.Error = errors.New("Basedir.HostDir has no value")
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				Error:      me.Error,
 				Message:    me.Error.Error(),
 				HttpStatus: http.StatusBadRequest,
@@ -129,7 +130,7 @@ func (me BasedirMap) GetNamedBasedir(nickname string) *Basedir {
 	return bd
 }
 
-func (me BasedirMap) DeleteNamedBasedir(gb *Gearbox, nickname string) (status Status) {
+func (me BasedirMap) DeleteNamedBasedir(gb *Gearbox, nickname string) (status stat.Status) {
 	for range only.Once {
 		status = gb.ValidateBasedirNickname(nickname, &validateArgs{
 			MustNotBeEmpty: true,
@@ -141,7 +142,7 @@ func (me BasedirMap) DeleteNamedBasedir(gb *Gearbox, nickname string) (status St
 		}
 		bd := me.GetNamedBasedir(nickname)
 		delete(me, nickname)
-		status = NewSuccessStatus(
+		status = stat.NewSuccessStatus(
 			http.StatusOK,
 			"named base dir '%s' ('%s') deleted",
 			nickname,
@@ -151,7 +152,7 @@ func (me BasedirMap) DeleteNamedBasedir(gb *Gearbox, nickname string) (status St
 	return status
 }
 
-func (me BasedirMap) UpdateBasedir(gb *Gearbox, nickname string, dir string) (status Status) {
+func (me BasedirMap) UpdateBasedir(gb *Gearbox, nickname string, dir string) (status stat.Status) {
 	for range only.Once {
 		status = gb.ValidateBasedirNickname(nickname, &validateArgs{
 			MustNotBeEmpty: true,
@@ -171,7 +172,7 @@ func (me BasedirMap) UpdateBasedir(gb *Gearbox, nickname string, dir string) (st
 		if status.IsError() {
 			break
 		}
-		status = NewSuccessStatus(
+		status = stat.NewSuccessStatus(
 			http.StatusOK,
 			"named base dir '%s' updated to: '%s'",
 			nickname,
@@ -181,7 +182,7 @@ func (me BasedirMap) UpdateBasedir(gb *Gearbox, nickname string, dir string) (st
 	return status
 }
 
-func (me BasedirMap) AddBasedir(gb *Gearbox, dir string, nickname ...string) (status Status) {
+func (me BasedirMap) AddBasedir(gb *Gearbox, dir string, nickname ...string) (status stat.Status) {
 	for range only.Once {
 		var nn string
 		if len(nickname) > 0 {
@@ -200,7 +201,7 @@ func (me BasedirMap) AddBasedir(gb *Gearbox, dir string, nickname ...string) (st
 			Nickname: nn,
 		})
 		if bd.Error != nil {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				HttpStatus: http.StatusBadRequest,
 				Error:      bd.Error,
 			})
@@ -212,7 +213,7 @@ func (me BasedirMap) AddBasedir(gb *Gearbox, dir string, nickname ...string) (st
 			break
 		}
 		me[bd.Nickname] = bd
-		status = NewSuccessStatus(
+		status = stat.NewSuccessStatus(
 			http.StatusCreated,
 			"base dir '%s' added",
 			bd.HostDir,
@@ -221,14 +222,14 @@ func (me BasedirMap) AddBasedir(gb *Gearbox, dir string, nickname ...string) (st
 	return status
 }
 
-func ValidateBasedirNickname(nickname string, args *validateArgs) (status Status) {
+func ValidateBasedirNickname(nickname string, args *validateArgs) (status stat.Status) {
 	for range only.Once {
 		var apiHelp string
 		if args.ApiHelpUrl != "" {
 			apiHelp = fmt.Sprintf("see %s", args.ApiHelpUrl)
 		}
 		if args.MustNotBeEmpty && nickname == "" {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				Failed:     true,
 				Message:    "basedir nickname is empty",
 				HttpStatus: http.StatusBadRequest,
@@ -238,7 +239,7 @@ func ValidateBasedirNickname(nickname string, args *validateArgs) (status Status
 		}
 		nnExists := args.Gearbox.NamedBasedirExists(nickname)
 		if args.MustExist && !nnExists {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				Failed:     true,
 				Message:    fmt.Sprintf("nickname '%s' does not exist", nickname),
 				HttpStatus: http.StatusNotFound,
@@ -247,7 +248,7 @@ func ValidateBasedirNickname(nickname string, args *validateArgs) (status Status
 			break
 		}
 		if args.MustNotExist && nnExists {
-			status = NewStatus(&StatusArgs{
+			status = stat.NewStatus(&stat.Args{
 				Failed:     true,
 				Message:    fmt.Sprintf("nickname '%s' already exists", nickname),
 				HttpStatus: http.StatusInternalServerError,
@@ -255,7 +256,7 @@ func ValidateBasedirNickname(nickname string, args *validateArgs) (status Status
 			})
 			break
 		}
-		status = NewOkStatus("nickname '%s' validated", nickname)
+		status = stat.NewOkStatus("nickname '%s' validated", nickname)
 	}
 	if status.IsError() {
 		status.Error = errors.New(status.Message)

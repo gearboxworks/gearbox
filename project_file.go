@@ -3,6 +3,7 @@ package gearbox
 import (
 	"fmt"
 	"gearbox/only"
+	"gearbox/stat"
 	"gearbox/util"
 	"net/http"
 )
@@ -56,22 +57,18 @@ func (me *ProjectFile) GetHelpUrl() string {
 	return ProjectFileHelpUrl
 }
 
-func (me *ProjectFile) Unmarshal(j []byte) (status Status) {
+func (me *ProjectFile) Unmarshal(j []byte) (status stat.Status) {
 	for range only.Once {
-		err := util.UnmarshalJson(j, me)
-		if err != nil {
-			status = NewStatus(&StatusArgs{
-				HelpfulError: err.(util.HelpfulError),
-				HttpStatus:   http.StatusInternalServerError,
-			})
+		status := util.UnmarshalJson(j, me)
+		if status.IsError() {
 			break
 		}
-		status = NewOkStatus("bytes unmarshalled")
+		status = stat.NewOkStatus("bytes unmarshalled")
 	}
 	return status
 }
 
-func (me *ProjectFile) FixupStack() (status Status) {
+func (me *ProjectFile) FixupStack() (status stat.Status) {
 	me.ServiceMap = make(ServiceMap, len(me.StackBag))
 	for role, item := range me.StackBag {
 		sr := NewStackRole()
@@ -89,7 +86,7 @@ func (me *ProjectFile) FixupStack() (status Status) {
 	}
 	if !status.IsError() {
 		me.StackBag = nil
-		status = NewOkStatus("stack fixup for '%s' complete", me.Hostname)
+		status = stat.NewOkStatus("stack fixup for '%s' complete", me.Hostname)
 	}
 	return status
 }
@@ -104,8 +101,8 @@ func (me *ProjectFile) FixupStack() (status Status) {
 //
 // Stacks are loaded as a map[string]interface{} to enable this type of processing.
 //
-func (me *ProjectFile) FixupStackItem(item interface{}, role RoleSpec) (*Service, Status) {
-	var status Status
+func (me *ProjectFile) FixupStackItem(item interface{}, role RoleSpec) (*Service, stat.Status) {
+	var status stat.Status
 	service := NewService(&ServiceArgs{
 		StackRole: NewStackRole(),
 	})
@@ -138,7 +135,7 @@ func (me *ProjectFile) FixupStackItem(item interface{}, role RoleSpec) (*Service
 			if name, ok = props["name"].(string); ok {
 				service, status = me.FixupStackItem(name, role)
 			} else {
-				status = NewStatus(&StatusArgs{
+				status = stat.NewStatus(&stat.Args{
 					Message:    fmt.Sprintf("Property 'name' if not a string in '%s'", role),
 					HttpStatus: http.StatusBadRequest,
 				})
@@ -151,7 +148,7 @@ func (me *ProjectFile) FixupStackItem(item interface{}, role RoleSpec) (*Service
 					if ok {
 						// Capture the value
 					} else {
-						status = NewStatus(&StatusArgs{
+						status = stat.NewStatus(&stat.Args{
 							Message:    fmt.Sprintf("Property '%s' if not valid in '%s'", key, role),
 							HttpStatus: http.StatusBadRequest,
 						})
