@@ -56,6 +56,15 @@ func NewStackRole() *StackRole {
 	}
 }
 
+func (me *StackRole) FileRoleSpec() RoleSpec {
+	spec := Spec{}
+	spec = *me.Spec
+	if spec.Authority == DefaultAuthority {
+		spec.Authority = ""
+	}
+	return spec.GetSpec()
+}
+
 func (me *StackRole) Fixup(rolespec RoleSpec) {
 	me.Parse(rolespec)
 	if me.Minimum == 0 && !me.Optional {

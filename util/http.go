@@ -1,7 +1,9 @@
 package util
 
 import (
+	"fmt"
 	"gearbox/only"
+	"gearbox/stat"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,7 +19,7 @@ func CloseResponseBody(response *http.Response) {
 	}
 }
 
-func HttpGet(url string) (body []byte, statusCode int, err error) {
+func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -28,7 +30,11 @@ func HttpGet(url string) (body []byte, statusCode int, err error) {
 	for range only.Once {
 		request, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			log.Printf("# Error in HttpGet: '%s'\n", err)
+			status = stat.NewFailedStatus(&stat.Args{
+				Error:   err,
+				Message: fmt.Sprintf("invalid URL '%s'", url),
+				Help:    "if you provided this URL please correct it, otherwise " + stat.ContactSupportHelp(),
+			})
 			break
 		}
 		//request.SetBasicAuth(_api.User, _api.Password)
@@ -36,39 +42,82 @@ func HttpGet(url string) (body []byte, statusCode int, err error) {
 		cli := &http.Client{}
 		response, err := cli.Do(request)
 		statusCode = response.StatusCode
+		data := map[string]interface{}{
+			"status_code": statusCode,
+		}
 		if err != nil {
-			log.Printf("# Error in HttpGet: '%s'\n", err)
+			status = stat.NewFailedStatus(&stat.Args{
+				Error: err,
+				Message: fmt.Sprintf("http status code %d; unable to retrieve '%s': ",
+					statusCode,
+					url,
+				),
+				Help: "check your Internet connection",
+			})
 			break
 		}
 		defer CloseResponseBody(response)
 		body, err = ioutil.ReadAll(response.Body)
+		if err != nil {
+			status = stat.NewFailedStatus(&stat.Args{
+				Error: err,
+				Message: fmt.Sprintf("http status code %d; unable to retrieve '%s': ",
+					statusCode,
+					url,
+				),
+				Help: "check your Internet connection",
+			})
+			break
+		}
+		data["response_body"] = body
 		switch statusCode {
 		case 200:
-			// OK
-			// bodyBytes, err2 := ioutil.ReadAll(response.Body)
 			if err != nil {
-				log.Printf("# Api Get - Nothing returned for url: %s\n", url)
+				status = stat.NewFailedStatus(&stat.Args{
+					Error: err,
+					Message: fmt.Sprintf("http status code 200 but no content returned for '%s'",
+						url,
+					),
+					Help: stat.ContactSupportHelp(),
+					Data: data,
+				})
 				break
 			}
 
 		case 401:
-			// Invalid login.
-			log.Fatal("# Api Get - Requires correct API keys.\n")
+			status = stat.NewFailedStatus(&stat.Args{
+				Error: err,
+				Message: fmt.Sprintf("invalid credentials provided for '%s'",
+					url,
+				),
+				Help: stat.ContactSupportHelp(),
+				Data: data,
+			})
 			break
 
 		case 403:
-			// Permission denied?
-			log.Printf("# Api Get - Permission denied for url: %s\n", url)
-			log.Printf("# Api Get - Return page: '%s'\n", body)
+			status = stat.NewFailedStatus(&stat.Args{
+				Error: err,
+				Message: fmt.Sprintf("permission denied for '%s'",
+					url,
+				),
+				Help: stat.ContactSupportHelp(),
+				Data: data,
+			})
 			break
 
 		default:
-			// 404 error
-			log.Printf("# Api Get - HTML %d returned from url:%s.\n", response.StatusCode, url)
-			log.Printf("# Api Get - Return page: '%s'\n", body)
+			status = stat.NewFailedStatus(&stat.Args{
+				Error: err,
+				Message: fmt.Sprintf("permission denied for '%s'",
+					url,
+				),
+				Help: stat.ContactSupportHelp(),
+				Data: data,
+			})
 			break
 		}
 
 	}
-	return body, statusCode, err
+	return body, statusCode, status
 }

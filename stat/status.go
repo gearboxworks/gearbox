@@ -17,14 +17,15 @@ type SuccessInspector interface {
 }
 
 type Status struct {
-	Failed     bool
-	Message    string      `json:"message,omitempty"`
-	Help       string      `json:"-"`
-	ApiHelp    string      `json:"api_help,omitempty"`
-	CliHelp    string      `json:"-"`
-	HttpStatus int         `json:"-"`
-	Error      error       `json:"-"`
-	Status     interface{} // Yes, this is a recursive def!!!
+	Failed      bool
+	Message     string      `json:"message,omitempty"`
+	Help        string      `json:"-"`
+	ApiHelp     string      `json:"help,omitempty"`
+	CliHelp     string      `json:"-"`
+	HttpStatus  int         `json:"-"`
+	Err         error       `json:"-"`
+	PriorStatus string      `json:"-"`
+	Data        interface{} `json:"data,omitempty"`
 }
 
 type Args struct {
@@ -35,6 +36,7 @@ type Args struct {
 	CliHelp    string
 	HttpStatus int
 	Error      error
+	Data       interface{}
 }
 
 func NewOkStatus(msg string, args ...interface{}) Status {
@@ -92,15 +94,15 @@ func NewStatus(args *Args) (status Status) {
 			ApiHelp:    args.ApiHelp,
 			CliHelp:    args.CliHelp,
 			HttpStatus: args.HttpStatus,
-			Error:      args.Error,
+			Err:        args.Error,
 		}
 
-		if status.Error == IsStatusError {
-			status.Error = errors.New(status.Message)
+		if status.Err == IsStatusError {
+			status.Err = errors.New(status.Message)
 		}
 
-		if status.Failed && status.Error == nil {
-			status.Error = errors.New(status.Message)
+		if status.Failed && status.Err == nil {
+			status.Err = errors.New(status.Message)
 		}
 
 		if status.HttpStatus == 0 {
@@ -133,14 +135,26 @@ func (me Status) Finalize() {
 	}
 }
 
-func (me *Status) IsError() bool {
-	return me.Error != nil
+func (me Status) IsError() bool {
+	return me.Err != nil
 }
 
-func (me *Status) IsSuccess() bool {
+func (me Status) IsSuccess() bool {
 	return !me.Failed || me.HttpStatus == 0
 }
 
-func (me *Status) NotYetFinalized() bool {
+func (me Status) NotYetFinalized() bool {
 	return me.HttpStatus == 0
+}
+
+func (me Status) String() string {
+	s := me.Message
+	if me.Err != nil && me.Err.Error() != me.Message {
+		s = fmt.Sprintf("%s: %s", s, me.Err.Error())
+	}
+	return s
+}
+
+func (me Status) Error() string {
+	return me.Message
 }

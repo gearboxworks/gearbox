@@ -109,7 +109,7 @@ func getStackName(rc *api.RequestContext) (sn StackName, status stat.Status) {
 		snr := StackNameRequest{}
 		status := rc.UnmarshalFromRequest(&snr)
 		if status.IsError() {
-			status.Status = status
+			status.PriorStatus = status.String()
 			status.Message = fmt.Sprintf("invalid request format for '%s' resource", rc.ResourceName)
 			status.HttpStatus = http.StatusBadRequest
 			status.ApiHelp = api.GetApiHelp("rc.ResourceName", "correct request format")
@@ -121,7 +121,7 @@ func getStackName(rc *api.RequestContext) (sn StackName, status stat.Status) {
 		status = stat.NewStatus(&stat.Args{
 			Message:    "stack name is empty",
 			Help:       api.GetApiHelp(rc.ResourceName),
-			HttpStatus: http.StatusBadRequest,
+			HttpStatus: http.StatusNotFound,
 			Error:      stat.IsStatusError,
 		})
 	}

@@ -71,12 +71,12 @@ func NewGearbox(args *Args) *Gearbox {
 
 func (me *Gearbox) GetStackMap() (sm StackMap, status stat.Status) {
 	for range only.Once {
-		options := NewOptions(me)
-		status = options.Refresh()
+		gears := NewGears(me)
+		status = gears.Refresh()
 		if status.IsError() {
 			break
 		}
-		//options.RoleMap
+		//gears.RoleMap
 	}
 	return sm, status
 }
@@ -167,15 +167,18 @@ func (me *Gearbox) ValidateProjectHostname(hn string, args *validateArgs) stat.S
 	return ValidateProjectHostname(hn, args)
 }
 
-func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery) dockerhub.ContainerNames {
-	var _query *dockerhub.ContainerQuery
-	if len(query) == 0 {
-		_query = &dockerhub.ContainerQuery{}
-	} else {
-		_query = query[0]
+func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery) (names dockerhub.ContainerNames, status stat.Status) {
+	for range only.Once {
+		var _query *dockerhub.ContainerQuery
+		if len(query) == 0 {
+			_query = &dockerhub.ContainerQuery{}
+		} else {
+			_query = query[0]
+		}
+		dh := dockerhub.DockerHub{}
+		names, status = dh.RequestAvailableContainerNames(_query)
 	}
-	dh := dockerhub.DockerHub{}
-	return dh.RequestAvailableContainerNames(_query)
+	return names, status
 }
 
 func getFirstBasedir(basedirs []string) (basedir string) {

@@ -105,23 +105,15 @@ func (me *HostApi) DELETE(path string, name api.ResourceName, handler HandlerFun
 }
 
 func (me *HostApi) jsonMarshalHandler(rc *api.RequestContext, value interface{}) error {
-	var apiStatus *api.Status
+	var status stat.Status
 	for range only.Once {
 		status, ok := value.(stat.Status)
-		if ok && status.IsError() {
-			apiStatus = &api.Status{
-				Error:      status.Error,
-				StatusCode: status.HttpStatus,
-				Help:       status.ApiHelp,
-			}
-			apiStatus = rc.JsonMarshalHandler(apiStatus)
+		if ok {
+			status.Finalize()
+			rc.Context.Response().Status = status.HttpStatus
 			break
 		}
-		status.Finalize()
-		if ok {
-			rc.Context.Response().Status = status.HttpStatus
-		}
-		apiStatus = rc.JsonMarshalHandler(value)
+		status = rc.JsonMarshalHandler(value)
 	}
-	return apiStatus.Error
+	return status
 }

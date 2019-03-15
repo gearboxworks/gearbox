@@ -39,6 +39,9 @@ func NewApi(echo *echo.Echo, defaults *Response) *Api {
 	//See https://flaviocopes.com/golang-enable-cors/
 	//
 	echo.Use(middleware.CORS())
+	echo.Use(middleware.RemoveTrailingSlashWithConfig(middleware.TrailingSlashConfig{
+		RedirectCode: http.StatusMovedPermanently,
+	}))
 	echo.HideBanner = true
 	echo.HidePort = true
 	return &Api{
@@ -160,8 +163,8 @@ func GetApiHelp(topic ResourceName, more ...string) string {
 }
 
 func (me *Api) NotYetImplemented(rc *RequestContext) interface{} {
-	return &Status{
-		StatusCode: http.StatusMethodNotAllowed,
-		Error:      fmt.Errorf("the '%s' resource has not been implemented yet", rc.ResourceName),
-	}
+	return stat.NewFailedStatus(&stat.Args{
+		Message:    fmt.Sprintf("the '%s' resource has not been implemented yet", rc.ResourceName),
+		HttpStatus: http.StatusMethodNotAllowed,
+	})
 }

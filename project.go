@@ -113,7 +113,7 @@ func (me *Project) LoadProjectDetails() (status stat.Status) {
 		if status.IsError() {
 			break
 		}
-		pf := NewProjectFile(fp)
+		pf := NewProjectFile(me.Gearbox, fp)
 		if len(j) > 0 {
 			status = pf.Unmarshal(j)
 		}
@@ -176,7 +176,7 @@ func (me *Project) WriteFile() (status stat.Status) {
 		if status.IsError() {
 			break
 		}
-		pf := NewProjectFile(fp)
+		pf := NewProjectFile(me.Gearbox, fp)
 		pf.CaptureProject(me)
 		status = pf.WriteFile()
 		if status.IsError() {

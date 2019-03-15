@@ -92,18 +92,18 @@ func (me *RequestContext) UnmarshalFromRequest(obj interface{}) (status stat.Sta
 }
 
 // @TODO Add ?format=yes to pretty print JSON
-func (me *RequestContext) JsonMarshalHandler(js interface{}) (status *Status) {
+func (me *RequestContext) JsonMarshalHandler(js interface{}) (status stat.Status) {
 	var err error
 	ctx := me.Context
 	for range only.Once {
 		ctx.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		var ok bool
 		success := true
-		status, ok = js.(*Status)
+		status, ok = js.(stat.Status)
 		if ok {
 			success = false
-			js = status.ToResponse()
-			ctx.Response().Status = status.StatusCode
+			js = status
+			ctx.Response().Status = status.HttpStatus
 		}
 		httpStatus := ctx.Response().Status
 		r := *me.Api.Defaults.Clone()
@@ -131,20 +131,24 @@ func (me *RequestContext) JsonMarshalHandler(js interface{}) (status *Status) {
 		var j []byte
 		j, err = json.MarshalIndent(r, "", "   ")
 		if err != nil {
+			status = stat.NewFailedStatus(&stat.Args{
+				Error: err,
+				Message: fmt.Sprintf("unable to marshal output for resource '%s'",
+					me.ResourceName,
+				),
+			})
 			break
 		}
 		err = ctx.String(httpStatus, string(j))
-		status = &Status{StatusCode: httpStatus}
-	}
-	if status == nil && err != nil {
-		status = &Status{
-			StatusCode: http.StatusInternalServerError,
-			Error:      err,
+		if err != nil {
+			status = stat.NewFailedStatus(&stat.Args{
+				Error: err,
+				Message: fmt.Sprintf("error when sending output for '%s'",
+					me.ResourceName,
+				),
+			})
+			break
 		}
-	}
-	if status.Error != nil {
-		b, _ := json.Marshal(status.ToResponse())
-		_ = ctx.String(status.StatusCode, string(b))
 	}
 	return status
 }

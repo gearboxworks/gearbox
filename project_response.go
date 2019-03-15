@@ -23,7 +23,7 @@ func (me *ProjectResponse) GetApiSelfLink() string {
 }
 
 func NewProjectResponse(p *Project) *ProjectResponse {
-	return &ProjectResponse{
+	pr := ProjectResponse{
 		Hostname: p.Hostname,
 		Basedir:  p.Basedir,
 		Notes:    p.Notes,
@@ -34,8 +34,12 @@ func NewProjectResponse(p *Project) *ProjectResponse {
 		ProjectDir: p.GetProjectDir(),
 		Project:    p,
 	}
+	return &pr
 }
 
 func NewProjectListResponse(p *Project) *api.ListItemResponse {
-	return api.NewListItemResponse(p.GetApiSelfLink(), NewProjectResponse(p))
+	return api.NewListItemResponse(
+		p.GetApiSelfLink(),
+		NewProjectResponse(p),
+	)
 }

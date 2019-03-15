@@ -12,29 +12,29 @@ import (
 	"strings"
 )
 
-const OptionsJsonUrl = RepoRawBaseUrl + "/master/assets/options.json"
-const OptionsKey = "options"
+const GearsJsonUrl = RepoRawBaseUrl + "/master/assets/gears.json"
+const GearsKey = "gears"
 
-type Options struct {
-	Gearbox     *Gearbox    `json:"-"`
-	Authorities Authorities `json:"authorities"`
-	StackNames  StackNames  `json:"stacks"`
-	RoleMap     RoleMap     `json:"roles"`
-	OptionsMap  OptionsMap  `json:"role_options"`
-	refreshed   bool
+type Gears struct {
+	Gearbox         *Gearbox        `json:"-"`
+	Authorities     Authorities     `json:"authorities"`
+	StackNames      StackNames      `json:"stacks"`
+	RoleMap         RoleMap         `json:"roles"`
+	RoleServicesMap RoleServicesMap `json:"role_services"`
+	refreshed       bool
 }
 
-func NewOptions(gb *Gearbox) *Options {
-	o := Options{
+func NewGears(gb *Gearbox) *Gears {
+	o := Gears{
 		Gearbox: gb,
 	}
 	return &o
 }
 
-type StackOptionMap map[StackName]*StackOption
-type StackOption struct {
-	Roles OptionsMap `json:"roles"`
-}
+//type StackServiceMap map[StackName]*StackService
+//type StackService struct {
+//	Roles RoleServicesMap `json:"roles"`
+//}
 
 type ShareableChoices string
 
@@ -44,11 +44,11 @@ const (
 	YesShareable    ShareableChoices = "yes"
 )
 
-type OptionsMap map[RoleSpec]*RoleOption
+type RoleServicesMap map[RoleSpec]*RoleService
 
-func (me OptionsMap) GetStackOptionsMap(stackName StackName) (om OptionsMap, status stat.Status) {
+func (me RoleServicesMap) GetStackServicesMap(stackName StackName) (om RoleServicesMap, status stat.Status) {
 	for range only.Once {
-		om = make(OptionsMap, 0)
+		om = make(RoleServicesMap, 0)
 		for rs, o := range me {
 			stackName, status = GetFullStackName(stackName)
 			if status.IsError() {
@@ -63,17 +63,17 @@ func (me OptionsMap) GetStackOptionsMap(stackName StackName) (om OptionsMap, sta
 	return om, status
 }
 
-type RoleOption struct {
+type RoleService struct {
 	*StackRole
 	OrgName        OrgName          `json:"org,omitempty"`
 	Default        ServiceId        `json:"default,omitempty"`
 	Shareable      ShareableChoices `json:"shareable,omitempty"`
-	Options        ServiceIds       `json:"options,omitempty"`
+	ServiceIds     ServiceIds       `json:"options,omitempty"`
 	DefaultService *Service         `json:"-"`
 	ServiceOptions Services         `json:"-"`
 }
 
-func (me *Options) GetStackRoleMap(stackName StackName) RoleMap {
+func (me *Gears) GetStackRoleMap(stackName StackName) RoleMap {
 	srs := make(RoleMap, 0)
 	for i, r := range me.RoleMap {
 		if r.GetStackName() != stackName {
@@ -84,19 +84,19 @@ func (me *Options) GetStackRoleMap(stackName StackName) RoleMap {
 	return srs
 }
 
-func (me *RoleOption) Fixup(stackRole *StackRole) {
+func (me *RoleService) Fixup(stackRole *StackRole) {
 	if me.Default != "" {
 		me.DefaultService = me.FixupService(stackRole, me.Default)
 	}
 	me.Default = ""
-	me.ServiceOptions = make(Services, len(me.Options))
-	for i, o := range me.Options {
+	me.ServiceOptions = make(Services, len(me.ServiceIds))
+	for i, o := range me.ServiceIds {
 		me.ServiceOptions[i] = me.FixupService(stackRole, o)
 	}
-	me.Options = nil
+	me.ServiceIds = nil
 }
 
-func (me *RoleOption) FixupService(stackRole *StackRole, serviceId ServiceId) (service *Service) {
+func (me *RoleService) FixupService(stackRole *StackRole, serviceId ServiceId) (service *Service) {
 	service = &Service{
 		StackRole: stackRole,
 	}
@@ -112,13 +112,12 @@ func (me *RoleOption) FixupService(stackRole *StackRole, serviceId ServiceId) (s
 	return service
 }
 
-func (me *Options) NeedsRefresh() bool {
+func (me *Gears) NeedsRefresh() bool {
 	return !me.refreshed
 }
 
-func (me *Options) Refresh() (status stat.Status) {
+func (me *Gears) Refresh() (status stat.Status) {
 	var b []byte
-	var err error
 	if !me.NeedsRefresh() {
 		return status
 	}
@@ -128,16 +127,16 @@ func (me *Options) Refresh() (status stat.Status) {
 
 		store.Disable = me.Gearbox.NoCache()
 		var ok bool
-		b, ok, status = store.Get(OptionsKey)
+		b, ok, status = store.Get(GearsKey)
 		if ok {
 			break
 		}
 		var sc int
-		b, sc, err = util.HttpGet(OptionsJsonUrl)
-		if err != nil || sc != http.StatusOK { // @TODO Bundle these as Assets so we will always have some options
-			log.Fatal("Could not download 'options.json' and no options have previously been stored.")
+		b, sc, status = util.HttpGet(GearsJsonUrl)
+		if status.IsError() || sc != http.StatusOK { // @TODO Bundle these as Assets so we will always have some options
+			log.Fatal("Could not download 'gears.json' and no options have previously been stored.")
 		}
-		status = store.Set(OptionsKey, b, "15m")
+		status = store.Set(GearsKey, b, "15m")
 		if status.IsError() {
 			log.Printf(status.Message)
 			break
@@ -154,7 +153,7 @@ func (me *Options) Refresh() (status stat.Status) {
 		for rs, sr := range me.RoleMap {
 			sr.Fixup(rs)
 		}
-		for rs, ro := range me.OptionsMap {
+		for rs, ro := range me.RoleServicesMap {
 			sr, ok := me.RoleMap[rs]
 			if !ok {
 				continue // @TODO Log error here and communicate back to home base
@@ -166,26 +165,26 @@ func (me *Options) Refresh() (status stat.Status) {
 	return status
 }
 
-func (me *Options) String() string {
+func (me *Gears) String() string {
 	return string(me.Bytes())
 }
 
-func (me *Options) Bytes() []byte {
+func (me *Gears) Bytes() []byte {
 	bytes, err := json.Marshal(me)
 	if err != nil {
-		log.Fatal("Could not unserialize 'options.json' cache file.")
+		log.Fatal("Could not unserialize 'gears.json' cache file.")
 	}
 	return bytes
 }
 
-func (me *Options) Unmarshal(b []byte) (status stat.Status) {
+func (me *Gears) Unmarshal(b []byte) (status stat.Status) {
 	err := json.Unmarshal(b, &me)
 	if err != nil {
 		// @TODO Provide a link to upgrade once we have that established
 		status = stat.NewFailedStatus(&stat.Args{
-			Message: "failed to unmarshal json from 'options.json'",
+			Message: "failed to unmarshal json from 'gears.json'",
 			Help: fmt.Sprintf("Your Gearbox is probably not compatible with the current JSON schema for 'options' at %s. Your Gearbox may need to be updated.",
-				OptionsJsonUrl,
+				GearsJsonUrl,
 			),
 			Error: err,
 		})

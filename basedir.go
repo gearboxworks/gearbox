@@ -91,7 +91,7 @@ func (me *Basedir) Initialize() (status stat.Status) {
 		}
 		status := me.MaybeExpandDir()
 		if status.IsError() {
-			me.Error = status.Error
+			me.Error = status.Err
 			break
 		}
 		if me.Nickname == "" {
@@ -257,7 +257,7 @@ func ValidateBasedirNickname(nickname string, args *validateArgs) (status stat.S
 		status = stat.NewOkStatus("nickname '%s' validated", nickname)
 	}
 	if status.IsError() {
-		status.Error = errors.New(status.Message)
+		status.Err = errors.New(status.Message)
 	}
 	return status
 }

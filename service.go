@@ -30,6 +30,7 @@ type Service struct {
 	*StackRole
 	*Identity
 	Services `json:"services,omitempty"`
+	Gearbox  *Gearbox `json:"-"`
 }
 type ServiceArgs Service
 
@@ -40,6 +41,9 @@ func NewService(args ...*ServiceArgs) *Service {
 	} else {
 		_args = args[0]
 	}
+	if _args.StackRole == nil {
+		_args.StackRole = NewStackRole()
+	}
 	if _args.Identity == nil {
 		_args.Identity = NewIdentity()
 	}
@@ -49,13 +53,24 @@ func NewService(args ...*ServiceArgs) *Service {
 }
 
 func (me *Service) GetFileValue() interface{} {
-	return me.String()
+	// @TODO Flesh this out to write out the latest full version
+	id := Identity{}
+	id = *me.Identity
+	*id.Version = *me.Identity.Version
+	if id.OrgName == DefaultOrgName {
+		id.OrgName = ""
+	}
+	return id.GetId()
 }
 
 func (me *Service) Assign(serviceId ServiceId, defaultService *Service) {
-	me.Parse(serviceId)
-	svcId := me.Identity
+	var svcId *Identity
 	for range only.Once {
+		status := me.Parse(serviceId)
+		if status.IsError() {
+			break
+		}
+		svcId = me.Identity
 		if svcId.OrgName == "" {
 			if defaultService != nil && defaultService.Identity.OrgName != "" {
 				svcId.OrgName = defaultService.Identity.OrgName

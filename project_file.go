@@ -25,10 +25,12 @@ type ProjectFile struct {
 	ServiceBag ServiceBag `json:"stack"`
 	ServiceMap ServiceMap `json:"-"`
 	Filepath   string     `json:"-"`
+	Gearbox    *Gearbox   `json:"-"`
 }
 
-func NewProjectFile(filepath string) *ProjectFile {
+func NewProjectFile(gb *Gearbox, filepath string) *ProjectFile {
 	return &ProjectFile{
+		Gearbox:    gb,
 		Filepath:   filepath,
 		ServiceMap: make(ServiceMap, 0),
 	}
@@ -37,8 +39,8 @@ func NewProjectFile(filepath string) *ProjectFile {
 func (me *ProjectFile) GetServiceBag() (sb ServiceBag) {
 	sb = make(ServiceBag, len(me.ServiceMap))
 	for range only.Once {
-		for k, s := range me.ServiceMap {
-			sb[k] = s.GetFileValue()
+		for _, s := range me.ServiceMap {
+			sb[s.FileRoleSpec()] = s.GetFileValue()
 		}
 	}
 	return sb
@@ -158,6 +160,7 @@ func (me *ProjectFile) FixupStackItem(item interface{}, role RoleSpec) (*Service
 	var status stat.Status
 	service := NewService(&ServiceArgs{
 		StackRole: NewStackRole(),
+		Gearbox:   me.Gearbox,
 	})
 	for range only.Once {
 		if svc, ok := item.(string); ok {
@@ -243,7 +246,7 @@ func (me *JsonMetaLoader) Load() (status stat.Status) {
 		}
 		status = me.UnmarshalMeta(b)
 		if status.IsError() {
-			status.Status = status
+			status.PriorStatus = status.String()
 			status.Message = fmt.Sprintf("unable to unmarshal metadata in '%s'",
 				me.Filepath,
 			)

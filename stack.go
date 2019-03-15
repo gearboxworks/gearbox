@@ -18,11 +18,11 @@ type StackName string
 type StackNames []StackName
 
 type Stack struct {
-	Name       StackName  `json:"name"`
-	RoleMap    RoleMap    `json:"roles,omitempty"`
-	OptionsMap OptionsMap `json:"role_options,omitempty"`
-	Gearbox    *Gearbox   `json:"-"`
-	refreshed  bool
+	Name            StackName       `json:"name"`
+	RoleMap         RoleMap         `json:"roles,omitempty"`
+	RoleServicesMap RoleServicesMap `json:"role_services,omitempty"`
+	Gearbox         *Gearbox        `json:"-"`
+	refreshed       bool
 }
 
 func NewStack(gb *Gearbox, name StackName) *Stack {
@@ -36,7 +36,7 @@ func (me *Stack) String() string {
 	return string(me.Name)
 }
 
-func (me *Stack) CloneSansServices() *Stack {
+func (me *Stack) LightweightClone() *Stack {
 	return NewStack(me.Gearbox, me.Name)
 }
 
@@ -94,7 +94,7 @@ func GetStackMap() StackMap {
 func (me *Stack) GetDefaultServices() (sm ServiceMap, status stat.Status) {
 	sm = make(ServiceMap, 0)
 	me.Refresh()
-	for gs, s := range me.OptionsMap {
+	for gs, s := range me.RoleServicesMap {
 		if s.DefaultService == nil {
 			continue
 		}
@@ -112,24 +112,24 @@ func (me *Stack) Refresh() (status stat.Status) {
 		if !me.NeedsRefresh() {
 			break
 		}
-		options := NewOptions(me.Gearbox)
-		status := options.Refresh()
+		gears := NewGears(me.Gearbox)
+		status := gears.Refresh()
 		if status.IsError() {
 			break
 		}
 		var srm RoleMap
-		srm, status = options.RoleMap.GetStackRoleMap(me.Name)
+		srm, status = gears.RoleMap.GetStackRoleMap(me.Name)
 		if status.IsError() {
 			break
 		}
 		me.RoleMap = srm
 
-		var sro OptionsMap
-		sro, status = options.OptionsMap.GetStackOptionsMap(me.Name)
+		var sro RoleServicesMap
+		sro, status = gears.RoleServicesMap.GetStackServicesMap(me.Name)
 		if status.IsError() {
 			break
 		}
-		me.OptionsMap = sro
+		me.RoleServicesMap = sro
 		me.refreshed = true
 	}
 	if !status.IsError() {
@@ -181,26 +181,24 @@ func ValidateStackName(gb *Gearbox, stackName StackName) (status stat.Status) {
 		if status.IsError() {
 			break
 		}
-		options := NewOptions(gb)
-		status = options.Refresh()
+		gears := NewGears(gb)
+		status = gears.Refresh()
 		if status.IsError() {
 			break
 		}
 		stackName := spec.GetFullStackname()
 		var ok bool
-		for _, sn := range options.StackNames {
+		for _, sn := range gears.StackNames {
 			if sn == stackName {
 				ok = true
 				break
 			}
 		}
 		if !ok {
-			status = stat.NewStatus(&stat.Args{
-				Failed:     true,
+			status = stat.NewFailedStatus(&stat.Args{
 				Message:    fmt.Sprintf("stack '%s' not found", stackName),
-				HttpStatus: http.StatusBadRequest,
-				Help:       fmt.Sprintf("see valid stack names at %s", OptionsJsonUrl),
-				Error:      stat.IsStatusError,
+				HttpStatus: http.StatusNotFound,
+				Help:       fmt.Sprintf("see valid stack names at %s", GearsJsonUrl),
 			})
 		} else {
 			status = stat.NewOkStatus("validated stack name '%s'", stackName)

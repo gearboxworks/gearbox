@@ -30,7 +30,7 @@ func (me *HostApi) addBasedir(rc *api.RequestContext) interface{} {
 		bd := Basedir{}
 		status = rc.UnmarshalFromRequest(&bd)
 		if status.IsError() {
-			status.Status = status
+			status.PriorStatus = status.String()
 			status.Message = "Unable to add basedir."
 			status.HttpStatus = http.StatusBadRequest
 			status.ApiHelp = fmt.Sprintf("verify that API request is in the correct format: %s",
@@ -49,7 +49,7 @@ func (me *HostApi) updateBasedir(rc *api.RequestContext) interface{} {
 		bd := Basedir{}
 		status = rc.UnmarshalFromRequest(&bd)
 		if status.IsError() {
-			status.Status = status
+			status.PriorStatus = status.String()
 			status.Message = "Unable to update basedir."
 			status.HttpStatus = http.StatusBadRequest
 			status.ApiHelp = fmt.Sprintf("verify that API request is in the correct format: %s",
