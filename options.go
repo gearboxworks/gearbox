@@ -33,14 +33,23 @@ type StackOption struct {
 	Roles RoleOptionMap `json:"roles"`
 }
 
+type ShareableChoices string
+
+const (
+	NotShareable    ShareableChoices = "no"
+	InStackSharable ShareableChoices = "instack"
+	YesShareable    ShareableChoices = "yes"
+)
+
 type RoleOptionMap map[RoleSpec]*RoleOption
 type RoleOption struct {
 	*StackRole
-	OrgName        OrgName    `json:"org,omitempty"`
-	Default        ServiceId  `json:"default,omitempty"`
-	Options        ServiceIds `json:"options,omitempty"`
-	DefaultService *Service   `json:"-"`
-	ServiceOptions Services   `json:"-"`
+	OrgName        OrgName          `json:"org,omitempty"`
+	Default        ServiceId        `json:"default,omitempty"`
+	Shareable      ShareableChoices `json:"shareable,omitempty"`
+	Options        ServiceIds       `json:"options,omitempty"`
+	DefaultService *Service         `json:"-"`
+	ServiceOptions Services         `json:"-"`
 }
 
 func (me *RoleOption) Fixup(stackRole *StackRole) {
@@ -84,26 +93,32 @@ func (me *Options) Refresh() (err error) {
 		}
 		var sc int
 		b, sc, err = util.HttpGet(OptionsJsonUrl)
-		if err != nil || sc != http.StatusOK {
-			// @TODO Bundle these as Assets so we will always have some options
+		if err != nil || sc != http.StatusOK { // @TODO Bundle these as Assets so we will always have some options
 			log.Fatal("Could not download 'options.json' and no options have previously been stored.")
 		}
 		err = store.Set(OptionsKey, b, "15m")
 		if err != nil {
-			log.Printf("Could not cache downloaded 'options.json': %s",
-				err.Error(),
+			msg := fmt.Sprintf("could not cache downloaded 'options.json': %s", err.Error())
+			log.Printf(msg)
+			err = util.AddHelpToError(
+				fmt.Errorf(msg),
+				fmt.Sprintf("Ensure you have permissions to write to the cache directory '%s' and/or you have not run out of disk space.",
+					me.Gearbox.HostConnector.GetCacheDir(),
+				),
 			)
 		}
 	}
 	err = me.Unmarshal(b)
 	if err != nil {
+		msg := fmt.Sprintf("Your Gearbox is probably not compatible with the current JSON schema for 'options' at %s. Your Gearbox may need to be updated. Internal error: %s",
+			OptionsJsonUrl, // @TODO Provide a link to upgrade in text above
+			err.Error(),
+		)
 		// @TODO: This needs to become a lot more robust
 		//        We should be able to process older versions
 		err = util.AddHelpToError(
-			err,
-			fmt.Sprintf("Your Gearbox is not compatible with the current JSON schema for 'options' at %s. Chances are your Gearbox needs to be updated.",
-				OptionsJsonUrl, // @TODO Provide a link to upgrade in text above
-			),
+			fmt.Errorf(msg),
+			fmt.Sprintf(msg),
 		)
 	}
 	for rs, sr := range me.RoleMap {

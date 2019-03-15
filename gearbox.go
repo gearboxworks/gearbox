@@ -185,3 +185,19 @@ func (me *Gearbox) GetProjectFilepath(path string, basedirs ...string) (pfp stri
 	}
 	return pfp, err
 }
+
+func (me *Gearbox) AddNamedStackToProject(stackName StackName, hostname string) (status Status) {
+	for range only.Once {
+		var p *Project
+		p, status = me.FindProjectWithDetails(hostname)
+		if status.IsError() {
+			break
+		}
+		status = p.AddNamedStack(stackName)
+		if status.IsError() {
+			break
+		}
+		status = NewOkStatus("stack '%s' added to project '%s'", stackName, hostname)
+	}
+	return status
+}

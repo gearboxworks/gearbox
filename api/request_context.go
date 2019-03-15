@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 type RequestContext struct {
@@ -45,6 +46,23 @@ func (me *RequestContext) CloseRequestBody() {
 	_ = me.Context.Request().Body.Close()
 }
 
+func (me *RequestContext) GetApiSelfLink() (path string) {
+	path = me.Context.Path()
+	parts := strings.Split(path, "/")
+	for i, p := range parts {
+		if len(p) == 0 {
+			continue
+		}
+		if p[0] != ':' {
+			continue
+		}
+		p = p[1:]
+		parts[i] = me.Param(p)
+	}
+	path = strings.Join(parts, "/")
+	return path
+}
+
 func (me *RequestContext) UnmarshalFromRequest(obj interface{}) (err error) {
 	for range only.Once {
 		apiHelp := GetApiHelp(me.ResourceName)
@@ -70,9 +88,9 @@ func (me *RequestContext) UnmarshalFromRequest(obj interface{}) (err error) {
 }
 
 // @TODO Add ?format=yes to pretty print JSON
-func (rc *RequestContext) JsonMarshalHandler(js interface{}) (status *Status) {
+func (me *RequestContext) JsonMarshalHandler(js interface{}) (status *Status) {
 	var err error
-	ctx := rc.Context
+	ctx := me.Context
 	for range only.Once {
 		ctx.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		var ok bool
@@ -84,7 +102,7 @@ func (rc *RequestContext) JsonMarshalHandler(js interface{}) (status *Status) {
 			ctx.Response().Status = status.StatusCode
 		}
 		httpStatus := ctx.Response().Status
-		r := *rc.Api.Defaults.Clone()
+		r := *me.Api.Defaults.Clone()
 		if rdg, ok := js.(ResponseDataGetter); !ok {
 			r.Data = js
 		} else {
@@ -97,10 +115,10 @@ func (rc *RequestContext) JsonMarshalHandler(js interface{}) (status *Status) {
 		if slg, ok := js.(SelfLinkGetter); ok {
 			r.Links[SelfResource] = slg.GetApiSelfLink()
 		} else {
-			r.Links[SelfResource] = convertEchoPathToUriTemplatePath(path)
+			r.Links[SelfResource] = me.GetApiSelfLink()
 		}
-		r.Meta.DocsUrl = fmt.Sprintf("%s/%s", r.Meta.DocsUrl, string(rc.ResourceName))
-		r.Meta.Resource = rc.ResourceName
+		r.Meta.DocsUrl = fmt.Sprintf("%s/%s", r.Meta.DocsUrl, string(me.ResourceName))
+		r.Meta.Resource = me.ResourceName
 		r.StatusCode = httpStatus
 		r.Success = success
 		if si, ok := js.(SuccessInspector); ok {

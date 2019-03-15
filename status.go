@@ -75,6 +75,22 @@ func NewSuccessStatus(code int, msg ...string) (status Status) {
 	return status
 }
 
+func NewStatusFromHelpfulError(helpfulError error, args *StatusArgs) (status Status) {
+	var help string
+	var err error
+	if he, ok := helpfulError.(util.HelpfulError); ok {
+		help = he.Help
+		err = he.ErrorObj
+	}
+	return NewStatus(&StatusArgs{
+		Failed:     true,
+		Message:    err.Error(),
+		HttpStatus: args.HttpStatus,
+		Help:       help,
+		Error:      err,
+	})
+}
+
 func NewStatus(args *StatusArgs) (status Status) {
 	for range only.Once {
 		if args.HttpStatus == 0 {

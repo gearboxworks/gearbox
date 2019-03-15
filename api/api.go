@@ -153,8 +153,12 @@ func GetApiDocsUrl(topic ResourceName) string {
 	return fmt.Sprintf("%s/%s", DocsBaseUrl, topic)
 }
 
-func GetApiHelp(topic ResourceName) string {
-	return fmt.Sprintf("see %s", GetApiDocsUrl(topic))
+func GetApiHelp(topic ResourceName, more ...string) string {
+	var _more string
+	if len(more) > 0 {
+		_more = " " + more[0]
+	}
+	return fmt.Sprintf("see API docs for%s: %s", _more, GetApiDocsUrl(topic))
 }
 
 func (me *Api) NotYetImplemented(rc *RequestContext) interface{} {

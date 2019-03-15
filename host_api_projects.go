@@ -1,8 +1,11 @@
 package gearbox
 
 import (
+	"fmt"
 	"gearbox/api"
 	"gearbox/only"
+	"github.com/labstack/echo"
+	"net/http"
 )
 
 const ProjectsResource api.ResourceName = "projects"
@@ -29,8 +32,20 @@ const ProjectStackDelete api.ResourceName = ProjectStacksResource + "-delete"
 
 const HostnameResourceVar api.ResourceVarName = "hostname"
 
-func getProjectHostname(rc *api.RequestContext) string {
-	return rc.Param("hostname")
+func getProjectHostname(rc *api.RequestContext) (hn string, status Status) {
+	for range only.Once {
+		hn = rc.Param("hostname")
+		if hn == "" {
+			status = NewStatus(&StatusArgs{
+				Message:    "hostname is empty",
+				Help:       api.GetApiHelp("hostname"),
+				HttpStatus: http.StatusBadRequest,
+				Error:      IsStatusError,
+			})
+			break
+		}
+	}
+	return hn, status
 }
 
 func (me *HostApi) addProjectRoutes() {
@@ -57,30 +72,92 @@ func (me *HostApi) addProjectRoutes() {
 	me.DELETE("/projects/:hostname/services/:service", ProjectServicesDelete, me.deleteProjectService)
 
 	me.GET("/projects/:hostname/stacks", ProjectStacksResource, me.getProjectStacksResponse)
-	me.PUT("/projects/:hostname/stacks/:alias", ProjectStackUpdate, me.updateProjectStack)
+	me.PUT("/projects/:hostname/stacks/:stack", ProjectStackUpdate, me.updateProjectStack)
 	me.POST("/projects/:hostname/stacks/new", ProjectStackAdd, me.addProjectStack)
-	me.DELETE("/projects/:hostname/stacks/:alias", ProjectStackDelete, me.deleteProjectStack)
+	me.DELETE("/projects/:hostname/stacks/:stack", ProjectStackDelete, me.deleteProjectStack)
 
 }
 
 //===[ Project Stacks ]========================
 
 func (me *HostApi) getProjectStacksResponse(rc *api.RequestContext) (response interface{}) {
+	var status Status
 	for range only.Once {
-		me.Gearbox.RequestType = rc.ResourceName
-		p, status := me.Gearbox.FindProjectWithDetails(getProjectHostname(rc))
+		hn, status := getProjectHostname(rc)
 		if status.IsError() {
-			response = status
+			break
+		}
+		p, status := me.Gearbox.FindProjectWithDetails(hn)
+		if status.IsError() {
 			break
 		}
 		response = NewProjectStacksResponse(p)
 	}
+	if status.IsError() {
+		response = status
+	}
 	return response
 }
-func (me *HostApi) addProjectStack(rc *api.RequestContext) (response interface{}) {
-	// @TODO to implement this we'll first need source for default services for a named stack
-	return me.Api.NotYetImplemented(rc)
+
+func getStackName(rc *api.RequestContext) (sn StackName, status Status) {
+	for range only.Once {
+		if rc.Context.Request().Method == echo.GET {
+			sn = StackName(rc.Param("stack"))
+		} else {
+			snr := StackNameRequest{}
+			err := rc.UnmarshalFromRequest(&snr)
+			if err != nil {
+				status = NewStatus(&StatusArgs{
+					Failed:     true,
+					Message:    fmt.Sprintf("invalid request format for '%s' resource", rc.ResourceName),
+					HttpStatus: http.StatusBadRequest,
+					Help:       api.GetApiHelp("rc.ResourceName", "correct request format"),
+				})
+				break
+			}
+			sn = snr.StackName
+		}
+		if sn == "" {
+			status = NewStatus(&StatusArgs{
+				Message:    "stack name is empty",
+				Help:       api.GetApiHelp(rc.ResourceName),
+				HttpStatus: http.StatusBadRequest,
+				Error:      IsStatusError,
+			})
+			break
+		}
+	}
+	return sn, status
 }
+
+type StackNameRequest struct {
+	StackName StackName `json:"stack_name"`
+}
+
+func (me *HostApi) addProjectStack(rc *api.RequestContext) (response interface{}) {
+	var status Status
+	for range only.Once {
+		var hn string
+		hn, status = getProjectHostname(rc)
+		if status.IsError() {
+			break
+		}
+		var sn StackName
+		sn, status = getStackName(rc)
+		if status.IsError() {
+			break
+		}
+		status = me.Gearbox.AddNamedStackToProject(sn, hn)
+		if status.IsError() {
+			break
+		}
+	}
+	if status.IsError() {
+		response = status
+	}
+	return response
+}
+
 func (me *HostApi) updateProjectStack(rc *api.RequestContext) (response interface{}) {
 	return me.Api.NotYetImplemented(rc)
 }
@@ -91,14 +168,22 @@ func (me *HostApi) deleteProjectStack(rc *api.RequestContext) (response interfac
 //===[ Project Services ]========================
 
 func (me *HostApi) getProjectServicesResponse(rc *api.RequestContext) (response interface{}) {
+	var status Status
 	for range only.Once {
-		me.Gearbox.RequestType = rc.ResourceName
-		p, status := me.Gearbox.FindProjectWithDetails(getProjectHostname(rc))
+		var hn string
+		hn, status := getProjectHostname(rc)
+		if status.IsError() {
+			break
+		}
+		p, status := me.Gearbox.FindProjectWithDetails(hn)
 		if status.IsError() {
 			response = status
 			break
 		}
 		response = NewProjectServicesResponse(p.ServiceMap, p)
+	}
+	if status.IsError() {
+		response = status
 	}
 	return response
 }
@@ -115,14 +200,21 @@ func (me *HostApi) deleteProjectService(rc *api.RequestContext) (response interf
 //===[ Project Aliases ]========================
 
 func (me *HostApi) getProjectAliasesResponse(rc *api.RequestContext) (response interface{}) {
+	var status Status
 	for range only.Once {
-		me.Gearbox.RequestType = rc.ResourceName
-		p, status := me.Gearbox.FindProjectWithDetails(getProjectHostname(rc))
+		var hn string
+		hn, status := getProjectHostname(rc)
 		if status.IsError() {
-			response = status
+			break
+		}
+		p, status := me.Gearbox.FindProjectWithDetails(hn)
+		if status.IsError() {
 			break
 		}
 		response = NewProjectAliasesResponse(p.Aliases, p)
+	}
+	if status.IsError() {
+		response = status
 	}
 	return response
 }
@@ -141,7 +233,6 @@ func (me *HostApi) deleteProjectAlias(rc *api.RequestContext) (response interfac
 
 func (me *HostApi) getProjectsResponse(rc *api.RequestContext) (response interface{}) {
 	for range only.Once {
-		me.Gearbox.RequestType = rc.ResourceName
 		prs := make(api.ListItemResponseMap, len(me.Config.Projects))
 		withDetails := rc.ResourceName == ProjectsWithDetailsResource
 		for _, p := range me.Config.Projects {
@@ -172,15 +263,23 @@ func (me *HostApi) getDisabledProjectsResponse(rc *api.RequestContext) (response
 //===[ Project Details ]========================
 
 func (me *HostApi) getProjectDetailsResponse(rc *api.RequestContext) (response interface{}) {
+	var status Status
 	for range only.Once {
-		me.Gearbox.RequestType = rc.ResourceName
-		p, status := me.Gearbox.FindProjectWithDetails(getProjectHostname(rc))
+		var hn string
+		hn, status := getProjectHostname(rc)
 		if status.IsError() {
-			response = status
+			break
+		}
+		p, status := me.Gearbox.FindProjectWithDetails(hn)
+		if status.IsError() {
 			break
 		}
 		response = NewProjectResponse(p)
 	}
+	if status.IsError() {
+		response = status
+	}
+
 	return response
 }
 func (me *HostApi) addProjectDetails(rc *api.RequestContext) (response interface{}) {

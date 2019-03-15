@@ -129,6 +129,14 @@ func (me *Project) LoadProjectDetails() (status Status) {
 	return status
 }
 
+func (me *Project) HasDetails() bool {
+	return me.ProjectDetails != nil
+}
+
+func (me *Project) NeedsDetails() bool {
+	return me.ProjectDetails == nil
+}
+
 func (me *Project) Fullpath() (fp string) {
 	fp, _ = ExpandHostBasedirPath(me.Gearbox, me.Basedir, me.Path)
 	return fp
@@ -140,6 +148,40 @@ func (me *Project) GetHostname() string {
 		hostname = fmt.Sprintf("%s.local", hostname)
 	}
 	return strings.ToLower(hostname)
+}
+
+func (me *Project) AddNamedStack(stackName StackName) (status Status) {
+	for range only.Once {
+		var svcmap ServiceMap
+		svcmap, status = me.GetDefaultServices(stackName)
+		fmt.Printf("%+v", svcmap)
+	}
+	return status
+}
+
+func (me *Project) GetDefaultServices(stackName StackName) (svcmap ServiceMap, status Status) {
+	for range only.Once {
+		if me.NeedsDetails() {
+			status = me.LoadProjectDetails()
+			if status.IsError() {
+				break
+			}
+		}
+		options := NewOptions(me.Gearbox)
+		err := options.Refresh()
+		if err != nil {
+			status = NewStatusFromHelpfulError(err, &StatusArgs{
+				HttpStatus: http.StatusBadRequest,
+			})
+			break
+		}
+		//stack := options.GetNamedStack(sn)
+		//roles = stack.GetRequiredRoles()
+		for _, r := range options.RoleOptionMap {
+			print(r)
+		}
+	}
+	return svcmap, status
 }
 
 func ValidateProjectHostname(hostname string, args ...*validateArgs) (status Status) {
