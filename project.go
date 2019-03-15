@@ -58,7 +58,7 @@ func (me *Project) GetProjectDir() (dir string) {
 			dir = filepath.Dir(me.ProjectDetails.Filepath)
 			break
 		}
-		fp, status := me.GetProjectFilepath()
+		fp, status := me.GetFilepath()
 		if status.IsError() {
 			msg := []byte(fmt.Sprintf("failed to get filepath for project '%s'", me.Hostname))
 			_, _ = me.Gearbox.errorLog.Write(msg)
@@ -97,14 +97,14 @@ func (me *Project) MaybeLoadDetails() (status stat.Status) {
 	return status
 }
 
-func (me *Project) GetProjectFilepath() (fp string, status stat.Status) {
+func (me *Project) GetFilepath() (fp string, status stat.Status) {
 	return me.Gearbox.GetProjectFilepath(me.Path, me.Basedir)
 }
 
 func (me *Project) LoadProjectDetails() (status stat.Status) {
 	for range only.Once {
 		var fp string
-		fp, status = me.GetProjectFilepath()
+		fp, status = me.GetFilepath()
 		if status.IsError() {
 			break
 		}
@@ -162,7 +162,7 @@ func (me *Project) AddNamedStack(stackName StackName) (status stat.Status) {
 		for gs, s := range sm {
 			me.ServiceMap[gs] = s
 		}
-		status = me.WriteJson()
+		status = me.WriteFile()
 		if status.IsError() {
 			break
 		}
@@ -170,8 +170,20 @@ func (me *Project) AddNamedStack(stackName StackName) (status stat.Status) {
 	return status
 }
 
-func (me *Project) WriteJson() (status stat.Status) {
-	return
+func (me *Project) WriteFile() (status stat.Status) {
+	for range only.Once {
+		fp, status := me.GetFilepath()
+		if status.IsError() {
+			break
+		}
+		pf := NewProjectFile(fp)
+		pf.CaptureProject(me)
+		status = pf.WriteFile()
+		if status.IsError() {
+			break
+		}
+	}
+	return status
 }
 
 func (me *Project) GetStuff(stackName StackName) (stuff interface{}, status stat.Status) {

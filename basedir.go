@@ -59,8 +59,7 @@ func (me *Basedir) MaybeExpandDir() (status stat.Status) {
 			dir, err := homedir.Expand(me.HostDir)
 			if err != nil {
 				status = stat.NewStatus(&stat.Args{
-					Error:      err,
-					HttpStatus: http.StatusInternalServerError,
+					Error: err,
 					Message: fmt.Sprintf("could not expand dir '%s' for '%s'",
 						me.HostDir,
 						me.Nickname,
@@ -249,10 +248,9 @@ func ValidateBasedirNickname(nickname string, args *validateArgs) (status stat.S
 		}
 		if args.MustNotExist && nnExists {
 			status = stat.NewStatus(&stat.Args{
-				Failed:     true,
-				Message:    fmt.Sprintf("nickname '%s' already exists", nickname),
-				HttpStatus: http.StatusInternalServerError,
-				ApiHelp:    apiHelp,
+				Failed:  true,
+				Message: fmt.Sprintf("nickname '%s' already exists", nickname),
+				ApiHelp: apiHelp,
 			})
 			break
 		}

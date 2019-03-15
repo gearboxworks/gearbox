@@ -11,7 +11,7 @@ type Stacks []*Stack
 
 type StackMap map[RoleSpec]*Stack
 
-type StackBag map[RoleSpec]interface{}
+type ServiceBag map[RoleSpec]interface{}
 
 type StackName string
 

@@ -84,19 +84,6 @@ func NewFailedStatus(args *Args) (status Status) {
 
 func NewStatus(args *Args) (status Status) {
 	for range only.Once {
-		if args.HttpStatus == 0 {
-			m := fmt.Sprintf("NewStatus() called with no HttpStatus for %s",
-				args.Message,
-			)
-			status = Status{
-				Failed:     true,
-				HttpStatus: http.StatusInternalServerError,
-				Message:    m,
-				Error:      errors.New(m),
-				Help:       ContactSupportHelp(),
-			}
-			break
-		}
 
 		status = Status{
 			Failed:     args.Failed,
@@ -116,15 +103,22 @@ func NewStatus(args *Args) (status Status) {
 			status.Error = errors.New(status.Message)
 		}
 
-		if status.Help != "" {
-			if status.ApiHelp == "" {
-				status.ApiHelp = status.Help
-			}
-			if status.CliHelp == "" {
-				status.CliHelp = status.Help
-			}
+		if status.HttpStatus == 0 {
+			status.HttpStatus = http.StatusInternalServerError
 		}
-		status.Failed = status.Error != nil
+
+		if status.Help == "" {
+			status.Help = ContactSupportHelp()
+		}
+
+		if status.ApiHelp == "" {
+			status.ApiHelp = status.Help
+		}
+
+		if status.CliHelp == "" {
+			status.CliHelp = status.Help
+		}
+
 	}
 	return status
 }

@@ -6,7 +6,6 @@ import (
 	"gearbox/only"
 	"gearbox/stat"
 	"github.com/labstack/echo"
-	"net/http"
 )
 
 const Port = "9999"
@@ -43,11 +42,10 @@ func (me *HostApi) GetApiSelfLink(resourceType api.ResourceName) (url string, st
 	for range only.Once {
 		if me.Api == nil {
 			status = stat.NewStatus(&stat.Args{
-				HttpStatus: http.StatusInternalServerError,
-				Help:       stat.ContactSupportHelp(),
 				Message: fmt.Sprintf("accessing host api when internal api property is nil for resource type '%s'",
 					resourceType,
 				),
+				Help: stat.ContactSupportHelp(),
 			})
 			break
 		}

@@ -6,7 +6,6 @@ import (
 	"gearbox/stat"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -43,10 +42,9 @@ func ReadBytes(filepath string) (b []byte, status stat.Status) {
 		}
 		if err != nil {
 			status = stat.NewFailedStatus(&stat.Args{
-				Error:      err,
-				Message:    fmt.Sprintf("cannot read from '%s' file", filepath),
-				HttpStatus: http.StatusInternalServerError,
-				Help:       fmt.Sprintf("confirm file '%s' is readable", filepath),
+				Error:   err,
+				Message: fmt.Sprintf("cannot read from '%s' file", filepath),
+				Help:    fmt.Sprintf("confirm file '%s' is readable", filepath),
 			})
 			break
 		}

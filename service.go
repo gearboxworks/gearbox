@@ -48,6 +48,10 @@ func NewService(args ...*ServiceArgs) *Service {
 	return &svc
 }
 
+func (me *Service) GetFileValue() interface{} {
+	return me.String()
+}
+
 func (me *Service) Assign(serviceId ServiceId, defaultService *Service) {
 	me.Parse(serviceId)
 	svcId := me.Identity

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gearbox/only"
 	"gearbox/stat"
-	"net/http"
 )
 
 type FilepathHelpUrlGetter interface {
@@ -26,9 +25,8 @@ func UnmarshalJson(j []byte, obj FilepathHelpUrlGetter) (status stat.Status) {
 		err := json.Unmarshal(j, &obj)
 		if err != nil {
 			status = stat.NewFailedStatus(&stat.Args{
-				Error:      err,
-				Message:    fmt.Sprintf("failed to unmarshal JSON for '%s'", obj.GetFilepath()),
-				HttpStatus: http.StatusInternalServerError,
+				Error:   err,
+				Message: fmt.Sprintf("failed to unmarshal JSON for '%s'", obj.GetFilepath()),
 				Help: fmt.Sprintf("ensure '%s' is in correct format per %s",
 					obj.GetFilepath(),
 					obj.GetHelpUrl(), // @TODO Improve the accuracy of this help once we have docs online

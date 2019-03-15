@@ -41,10 +41,9 @@ func (me *RequestContext) ReadRequestBody() (b []byte, status stat.Status) {
 	b, err := ioutil.ReadAll(me.Context.Request().Body)
 	if err != nil {
 		status = stat.NewFailedStatus(&stat.Args{
-			Error:      err,
-			Message:    fmt.Sprintf("failed to read request body for '%s'", me.ResourceName),
-			HttpStatus: http.StatusInternalServerError,
-			Help:       ContactSupportHelp(),
+			Error:   err,
+			Message: fmt.Sprintf("failed to read request body for '%s'", me.ResourceName),
+			Help:    ContactSupportHelp(),
 		})
 	}
 	return b, status

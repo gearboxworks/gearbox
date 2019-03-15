@@ -66,7 +66,7 @@ func NewConfig(gb *Gearbox) *Config {
 func (me *Config) Initialize() (status stat.Status) {
 	status = me.Load()
 	if !status.IsError() {
-		status = me.Write()
+		status = me.WriteFile()
 	}
 	return status
 }
@@ -126,15 +126,14 @@ func (me *Config) GetFilepath() string {
 	return filepath.FromSlash(fmt.Sprintf("%s/config.json", me.HostConnector.GetUserConfigDir()))
 }
 
-func (me *Config) Write() (status stat.Status) {
+func (me *Config) WriteFile() (status stat.Status) {
 	for range only.Once {
 		j, err := json.MarshalIndent(me, "", "    ")
 		if err != nil {
 			status = stat.NewStatus(&stat.Args{
-				Message:    fmt.Sprintf("unable to marhsal config"),
-				Help:       stat.ContactSupportHelp(),
-				HttpStatus: http.StatusInternalServerError,
-				Error:      err,
+				Message: fmt.Sprintf("unable to marhsal config"),
+				Help:    stat.ContactSupportHelp(),
+				Error:   err,
 			})
 			break
 		}
@@ -145,10 +144,9 @@ func (me *Config) Write() (status stat.Status) {
 		err = ioutil.WriteFile(me.GetFilepath(), j, os.ModePerm)
 		if err != nil {
 			status = stat.NewStatus(&stat.Args{
-				Message:    fmt.Sprintf("unable to write to config file '%s'", me.GetFilepath()),
-				Help:       fmt.Sprintf("check '%s' for write permissions", filepath.Dir(me.GetFilepath())),
-				HttpStatus: http.StatusInternalServerError,
-				Error:      err,
+				Message: fmt.Sprintf("unable to write to config file '%s'", me.GetFilepath()),
+				Help:    fmt.Sprintf("check '%s' for write permissions", filepath.Dir(me.GetFilepath())),
+				Error:   err,
 			})
 			break
 		}
@@ -165,10 +163,9 @@ func (me *Config) MaybeMakeDir(dir string, mode os.FileMode) (status stat.Status
 			break
 		}
 		status = stat.NewStatus(&stat.Args{
-			Message:    fmt.Sprintf("failed to create directory '%s'", dir),
-			Help:       fmt.Sprintf("confirm directory '%s' is readable", filepath.Dir(dir)),
-			HttpStatus: http.StatusInternalServerError,
-			Error:      err,
+			Message: fmt.Sprintf("failed to create directory '%s'", dir),
+			Help:    fmt.Sprintf("confirm directory '%s' is readable", filepath.Dir(dir)),
+			Error:   err,
 		})
 
 	}
@@ -222,7 +219,7 @@ func (me *Config) Load() (status stat.Status) {
 func (me *Config) LoadProjectsAndWrite() (status stat.Status) {
 	status = me.LoadProjects()
 	if !status.IsError() {
-		status = me.Write()
+		status = me.WriteFile()
 	}
 	return status
 }
@@ -239,11 +236,10 @@ func (me *Config) LoadProjects() (status stat.Status) {
 	for range only.Once {
 		if len(me.Basedirs) == 0 {
 			status = stat.NewStatus(&stat.Args{
-				Message:    fmt.Sprintf("no project roots found in %s", me.GetFilepath()),
-				CliHelp:    fmt.Sprintf("Add with the '%s <dir>' command", ProjectRootAddCmd.CommandPath()),
-				ApiHelp:    fmt.Sprintf("Add by POSTing JSON to 'add-basedir' resource"),
-				HttpStatus: http.StatusInternalServerError,
-				Error:      stat.IsStatusError,
+				Message: fmt.Sprintf("no project roots found in %s", me.GetFilepath()),
+				CliHelp: fmt.Sprintf("Add with the '%s <dir>' command", ProjectRootAddCmd.CommandPath()),
+				ApiHelp: fmt.Sprintf("Add by POSTing JSON to 'add-basedir' resource"),
+				Error:   stat.IsStatusError,
 			})
 			break
 		}
@@ -257,9 +253,8 @@ func (me *Config) LoadProjects() (status stat.Status) {
 				err := os.Mkdir(bd.HostDir, 0777)
 				if err != nil {
 					status = stat.NewStatus(&stat.Args{
-						Message:    fmt.Sprintf("unable to make directory '%s'", bd.HostDir),
-						HttpStatus: http.StatusInternalServerError,
-						Error:      err,
+						Message: fmt.Sprintf("unable to make directory '%s'", bd.HostDir),
+						Error:   err,
 					})
 					break
 				}
@@ -267,9 +262,8 @@ func (me *Config) LoadProjects() (status stat.Status) {
 			files, err := ioutil.ReadDir(bd.HostDir)
 			if err != nil {
 				status = stat.NewStatus(&stat.Args{
-					Message:    fmt.Sprintf("unable to read directory %s", bd.HostDir),
-					HttpStatus: http.StatusInternalServerError,
-					Error:      err,
+					Message: fmt.Sprintf("unable to read directory %s", bd.HostDir),
+					Error:   err,
 				})
 				break
 			}

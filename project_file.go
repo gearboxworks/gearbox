@@ -1,11 +1,16 @@
 package gearbox
 
 import (
+	"encoding/json"
 	"fmt"
 	"gearbox/only"
 	"gearbox/stat"
 	"gearbox/util"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 const ProjectFilename = "gearbox.json"
@@ -17,7 +22,7 @@ type ProjectFile struct {
 	JsonMeta   JsonMeta   `json:"gearbox"`
 	Hostname   string     `json:"hostname"`
 	Aliases    Aliases    `json:"aliases"`
-	StackBag   StackBag   `json:"stack"`
+	ServiceBag ServiceBag `json:"stack"`
 	ServiceMap ServiceMap `json:"-"`
 	Filepath   string     `json:"-"`
 }
@@ -27,6 +32,54 @@ func NewProjectFile(filepath string) *ProjectFile {
 		Filepath:   filepath,
 		ServiceMap: make(ServiceMap, 0),
 	}
+}
+
+func (me *ProjectFile) GetServiceBag() (sb ServiceBag) {
+	sb = make(ServiceBag, len(me.ServiceMap))
+	for range only.Once {
+		for k, s := range me.ServiceMap {
+			sb[k] = s.GetFileValue()
+		}
+	}
+	return sb
+}
+
+func (me *ProjectFile) CaptureProject(project *Project) {
+	me.Hostname = project.Hostname
+	me.Aliases = project.Aliases
+	me.ServiceMap = project.ServiceMap
+	me.ServiceBag = me.GetServiceBag()
+}
+
+func (me *ProjectFile) WriteFile() (status stat.Status) {
+	for range only.Once {
+		fp := me.GetFilepath()
+		jml := NewJsonMetaLoader(fp)
+		status = jml.Load()
+		if status.IsError() {
+			break
+		}
+		me.JsonMeta = jml.JsonMeta
+		b, err := json.MarshalIndent(me, "", "    ")
+		if err != nil {
+			status = stat.NewFailedStatus(&stat.Args{
+				Error:   err,
+				Message: fmt.Sprintf("unable to generate JSON for project '%s'", me.Hostname),
+			})
+			break
+		}
+		fp = strings.Replace(fp, ".json", "2.json", -1)
+		err = ioutil.WriteFile(fp, b, os.ModePerm)
+		if err != nil {
+			status = stat.NewFailedStatus(&stat.Args{
+				Error:   err,
+				Message: fmt.Sprintf("unable to write to '%s'", fp),
+				Help:    fmt.Sprintf("ensure you have permissions to write to '%s' and you are not out of disk space", filepath.Dir(fp)),
+			})
+			break
+		}
+	}
+	return
 }
 
 type ProjectDetails struct {
@@ -69,8 +122,8 @@ func (me *ProjectFile) Unmarshal(j []byte) (status stat.Status) {
 }
 
 func (me *ProjectFile) FixupStack() (status stat.Status) {
-	me.ServiceMap = make(ServiceMap, len(me.StackBag))
-	for role, item := range me.StackBag {
+	me.ServiceMap = make(ServiceMap, len(me.ServiceBag))
+	for role, item := range me.ServiceBag {
 		sr := NewStackRole()
 		status = sr.Parse(RoleSpec(role))
 		if status.IsError() {
@@ -85,7 +138,7 @@ func (me *ProjectFile) FixupStack() (status stat.Status) {
 		me.ServiceMap[role] = service
 	}
 	if !status.IsError() {
-		me.StackBag = nil
+		me.ServiceBag = nil
 		status = stat.NewOkStatus("stack fixup for '%s' complete", me.Hostname)
 	}
 	return status
@@ -162,4 +215,58 @@ func (me *ProjectFile) FixupStackItem(item interface{}, role RoleSpec) (*Service
 		}
 	}
 	return service, status
+}
+
+type JsonMetaLoader struct {
+	JsonMeta JsonMeta `json:"gearbox"`
+	Filepath string   `json:"-"`
+}
+
+func NewJsonMetaLoader(filepath string) *JsonMetaLoader {
+	return &JsonMetaLoader{
+		Filepath: filepath,
+	}
+}
+
+func (me *JsonMetaLoader) Load() (status stat.Status) {
+	for range only.Once {
+		b, err := ioutil.ReadFile(me.Filepath)
+		if err != nil {
+			status = stat.NewFailedStatus(&stat.Args{
+				Error:   err,
+				Message: fmt.Sprintf("unable to read '%s'", me.Filepath),
+				Help: fmt.Sprintf("ensure you have permissions you read '%s'",
+					me.Filepath,
+				),
+			})
+			break
+		}
+		status = me.UnmarshalMeta(b)
+		if status.IsError() {
+			status.Status = status
+			status.Message = fmt.Sprintf("unable to unmarshal metadata in '%s'",
+				me.Filepath,
+			)
+			break
+		}
+	}
+	return status
+}
+
+func (me *JsonMetaLoader) UnmarshalMeta(j []byte) (status stat.Status) {
+	for range only.Once {
+		status := util.UnmarshalJson(j, me)
+		if status.IsError() {
+			break
+		}
+		status = stat.NewOkStatus("bytes unmarshalled")
+	}
+	return status
+}
+
+func (me *JsonMetaLoader) GetFilepath() string {
+	return me.Filepath
+}
+func (me *JsonMetaLoader) GetHelpUrl() string {
+	return ProjectFileHelpUrl
 }

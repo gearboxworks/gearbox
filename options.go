@@ -183,8 +183,7 @@ func (me *Options) Unmarshal(b []byte) (status stat.Status) {
 	if err != nil {
 		// @TODO Provide a link to upgrade once we have that established
 		status = stat.NewFailedStatus(&stat.Args{
-			HttpStatus: http.StatusInternalServerError,
-			Message:    "failed to unmarshal json from 'options.json'",
+			Message: "failed to unmarshal json from 'options.json'",
 			Help: fmt.Sprintf("Your Gearbox is probably not compatible with the current JSON schema for 'options' at %s. Your Gearbox may need to be updated.",
 				OptionsJsonUrl,
 			),
