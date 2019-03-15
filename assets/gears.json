@@ -1,6 +1,6 @@
 {
    "gearbox": {
-      "scope": "options",
+      "scope": "gears",
       "schema": "v1"
    },
    "authorities": [
@@ -101,7 +101,7 @@
          "max": 1
       }
    },
-   "role_options": {
+   "role_services": {
       "gearbox.works/elasticsearch/elasticsearch": {
          "org": "gearboxworks",
          "default": "elasticsearch",

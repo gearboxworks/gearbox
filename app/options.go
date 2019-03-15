@@ -12,12 +12,12 @@ func main() {
 		HostConnector: host.GetConnector(),
 	})
 
-	options := gearbox.NewOptions(gb)
-	err := options.Refresh()
-	if err != nil {
-		log.Fatal(err)
+	gears := gearbox.NewGears(gb)
+	status := gears.Refresh()
+	if status.IsError() {
+		log.Fatal(status.Message)
 	}
 
-	fmt.Println(options.String())
+	fmt.Println(gears.String())
 
 }
