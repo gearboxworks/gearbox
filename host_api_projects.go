@@ -1,11 +1,9 @@
 package gearbox
 
 import (
-	"fmt"
 	"gearbox/api"
 	"gearbox/only"
 	"gearbox/stat"
-	"github.com/labstack/echo"
 	"net/http"
 )
 
@@ -98,38 +96,6 @@ func (me *HostApi) getProjectStacksResponse(rc *api.RequestContext) (response in
 		response = status
 	}
 	return response
-}
-
-func getStackName(rc *api.RequestContext) (sn StackName, status stat.Status) {
-	for range only.Once {
-		if rc.Context.Request().Method == echo.GET {
-			sn = StackName(rc.Param("stack"))
-			break
-		}
-		snr := StackNameRequest{}
-		status := rc.UnmarshalFromRequest(&snr)
-		if status.IsError() {
-			status.PriorStatus = status.String()
-			status.Message = fmt.Sprintf("invalid request format for '%s' resource", rc.ResourceName)
-			status.HttpStatus = http.StatusBadRequest
-			status.ApiHelp = api.GetApiHelp("rc.ResourceName", "correct request format")
-			break
-		}
-		sn = snr.StackName
-	}
-	if sn == "" {
-		status = stat.NewStatus(&stat.Args{
-			Message:    "stack name is empty",
-			Help:       api.GetApiHelp(rc.ResourceName),
-			HttpStatus: http.StatusNotFound,
-			Error:      stat.IsStatusError,
-		})
-	}
-	return sn, status
-}
-
-type StackNameRequest struct {
-	StackName StackName `json:"stack"`
 }
 
 func (me *HostApi) addProjectStack(rc *api.RequestContext) (response interface{}) {
@@ -231,17 +197,26 @@ func (me *HostApi) deleteProjectAlias(rc *api.RequestContext) (response interfac
 
 func (me *HostApi) getProjectsResponse(rc *api.RequestContext) (response interface{}) {
 	for range only.Once {
+		var status stat.Status
 		prs := make(api.ListItemResponseMap, len(me.Config.Projects))
 		withDetails := rc.ResourceName == ProjectsWithDetailsResource
 		for _, p := range me.Config.Projects {
 			if withDetails {
-				p.MaybeLoadDetails()
+				status = p.MaybeLoadDetails()
+				if status.IsError() {
+					response = status
+					break
+				}
 			} else {
 				p.ClearDetails()
 			}
 			prs[p.Hostname] = NewProjectListResponse(p)
 		}
-		response = prs
+		if status.IsError() {
+			response = prs
+			break
+		}
+
 	}
 	return response
 }

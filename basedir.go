@@ -167,7 +167,7 @@ func (me BasedirMap) UpdateBasedir(gb *Gearbox, nickname string, dir string) (st
 		if status.IsError() {
 			break
 		}
-		bd.Initialize()
+		status = bd.Initialize()
 		if status.IsError() {
 			break
 		}
