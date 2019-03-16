@@ -212,7 +212,7 @@ func (me *HostApi) getProjectsResponse(rc *api.RequestContext) (response interfa
 			}
 			prs[p.Hostname] = NewProjectListResponse(p)
 		}
-		if status.IsError() {
+		if !status.IsError() {
 			response = prs
 			break
 		}
