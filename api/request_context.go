@@ -53,9 +53,9 @@ func (me *RequestContext) CloseRequestBody() {
 	_ = me.Context.Request().Body.Close()
 }
 
-func (me *RequestContext) GetApiSelfLink() (path string) {
-	path = me.Context.Path()
-	parts := strings.Split(path, "/")
+func (me *RequestContext) GetApiSelfLink() (path UriTemplate) {
+	path = UriTemplate(me.Context.Path())
+	parts := strings.Split(string(path), "/")
 	for i, p := range parts {
 		if len(p) == 0 {
 			continue
@@ -66,7 +66,7 @@ func (me *RequestContext) GetApiSelfLink() (path string) {
 		p = p[1:]
 		parts[i] = me.Param(p)
 	}
-	path = strings.Join(parts, "/")
+	path = UriTemplate(strings.Join(parts, "/"))
 	return path
 }
 
@@ -115,7 +115,10 @@ func (me *RequestContext) JsonMarshalHandler(js interface{}) (status stat.Status
 		path := ctx.Path()
 		if path != "/" {
 			r.Links = make(Links, 0)
+			mmg := me.Api.MethodMap[Method(http.MethodGet)]
 			r.Links[LinksResource] = "/"
+			r.Links[MetaEndpointsResource] = mmg[MetaEndpointsResource]
+			r.Links[MetaMethodsResource] = mmg[MetaMethodsResource]
 		}
 		if slg, ok := js.(UrlGetter); ok {
 			url, _ := slg.GetApiUrl()

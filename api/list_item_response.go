@@ -7,7 +7,7 @@ type ListItemResponse struct {
 	Data  interface{} `json:"data"`
 }
 
-func NewListItemResponse(link string, data interface{}) *ListItemResponse {
+func NewListItemResponse(link UriTemplate, data interface{}) *ListItemResponse {
 	return &ListItemResponse{
 		Links: Links{
 			SelfResource: link,

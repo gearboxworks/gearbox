@@ -142,7 +142,7 @@ func (me *GearboxObj) RequestAvailableContainers(...*dockerhub.ContainerQuery) (
 	panic("implement me")
 }
 
-func (me *GearboxObj) GetApiUrl(api.ResourceName, api.UriTemplateVars) (url string, status stat.Status) {
+func (me *GearboxObj) GetApiUrl(api.ResourceName, api.UriTemplateVars) (url api.UriTemplate, status stat.Status) {
 	panic("implement me")
 }
 

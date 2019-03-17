@@ -52,7 +52,7 @@ type Gearbox interface {
 	FindProjectWithDetails(string) (*Project, stat.Status)
 	AddNamedStackToProject(StackName, string) stat.Status
 	RequestAvailableContainers(...*dockerhub.ContainerQuery) (dockerhub.ContainerNames, stat.Status)
-	GetApiUrl(api.ResourceName, api.UriTemplateVars) (string, stat.Status)
+	GetApiUrl(api.ResourceName, api.UriTemplateVars) (api.UriTemplate, stat.Status)
 	GetProjectFilepath(string, string) (string, stat.Status)
 	WriteLog([]byte) (int, error)
 }
@@ -142,7 +142,7 @@ func (me *GearboxObj) GetStackMap() (sm StackMap, status stat.Status) {
 	return sm, status
 }
 
-func (me *GearboxObj) GetApiUrl(name api.ResourceName, vars api.UriTemplateVars) (url string, status stat.Status) {
+func (me *GearboxObj) GetApiUrl(name api.ResourceName, vars api.UriTemplateVars) (url api.UriTemplate, status stat.Status) {
 	return me.HostApi.GetUrl(name, vars)
 }
 

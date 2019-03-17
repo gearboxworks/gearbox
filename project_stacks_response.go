@@ -1,5 +1,7 @@
 package gearbox
 
+import "gearbox/api"
+
 type ProjectStacksResponse struct {
 	StackNames `json:"stacks"`
 	*Project   `json:"-"`
@@ -12,7 +14,7 @@ func NewProjectStacksResponse(p *Project) *ProjectStacksResponse {
 	}
 }
 
-func (me *ProjectStacksResponse) GetApiUrl() string {
+func (me *ProjectStacksResponse) GetApiUrl() api.UriTemplate {
 	url, _ := me.Project.GetApiUrl(ProjectStacksResource)
 	return url
 }

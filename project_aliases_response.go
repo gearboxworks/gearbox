@@ -1,5 +1,7 @@
 package gearbox
 
+import "gearbox/api"
+
 type ProjectAliasesResponse struct {
 	Aliases Aliases
 	Project *Project
@@ -12,7 +14,7 @@ func NewProjectAliasesResponse(aliases Aliases, proj *Project) *ProjectAliasesRe
 	}
 }
 
-func (me *ProjectAliasesResponse) GetApiSelfLink() string {
+func (me *ProjectAliasesResponse) GetApiSelfLink() api.UriTemplate {
 	url, _ := me.Project.GetApiUrl(ProjectAliasesResource)
 	return url
 }

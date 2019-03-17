@@ -1,5 +1,7 @@
 package gearbox
 
+import "gearbox/api"
+
 type ProjectServicesResponse struct {
 	ServiceMap ServiceMap
 	Project    *Project
@@ -12,7 +14,7 @@ func NewProjectServicesResponse(svcmap ServiceMap, proj *Project) *ProjectServic
 	}
 }
 
-func (me *ProjectServicesResponse) GetApiUrl() string {
+func (me *ProjectServicesResponse) GetApiUrl() api.UriTemplate {
 	url, _ := me.Project.GetApiUrl(ProjectServicesResource)
 	return url
 }

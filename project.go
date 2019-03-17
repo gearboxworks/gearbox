@@ -69,7 +69,7 @@ func (me *Project) GetProjectDir() (dir string) {
 	return dir
 }
 
-func (me *Project) GetApiUrl(name ...api.ResourceName) (url string, status stat.Status) {
+func (me *Project) GetApiUrl(name ...api.ResourceName) (url api.UriTemplate, status stat.Status) {
 	var rn api.ResourceName
 	if len(name) == 0 {
 		rn = ProjectDetailsResource

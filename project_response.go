@@ -19,7 +19,7 @@ type ProjectResponse struct {
 	Project    *Project   `json:"-"`
 }
 
-func (me *ProjectResponse) GetApiUrl(name ...api.ResourceName) (url string, status stat.Status) {
+func (me *ProjectResponse) GetApiUrl(name ...api.ResourceName) (url api.UriTemplate, status stat.Status) {
 	return me.Project.GetApiUrl(name...)
 }
 

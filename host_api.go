@@ -40,11 +40,11 @@ func (me *HostApi) GetBaseUrl() (url string) {
 	return me.Api.GetBaseUrl()
 }
 
-func (me *HostApi) GetUrl(name api.ResourceName, vars api.UriTemplateVars) (url string, status stat.Status) {
+func (me *HostApi) GetUrl(name api.ResourceName, vars api.UriTemplateVars) (url api.UriTemplate, status stat.Status) {
 	return me.Api.GetUrl(name, vars)
 }
 
-func (me *HostApi) GetUrlPathTemplate(name api.ResourceName) (url string, status stat.Status) {
+func (me *HostApi) GetUrlPathTemplate(name api.ResourceName) (url api.UriTemplate, status stat.Status) {
 	for range only.Once {
 		if me.Api == nil {
 			status = stat.NewStatus(&stat.Args{
@@ -77,7 +77,7 @@ func (me *HostApi) Stop() {
 
 type HandlerFunc func(rc *api.RequestContext) interface{}
 
-func (me *HostApi) GET(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
+func (me *HostApi) GET(path api.UriTemplate, name api.ResourceName, handler HandlerFunc) *echo.Route {
 	return me.Api.GET(path, name, func(rc *api.RequestContext) (err error) {
 		me.Gearbox.SetResourceName(rc.ResourceName)
 		if handler != nil {
@@ -89,19 +89,19 @@ func (me *HostApi) GET(path string, name api.ResourceName, handler HandlerFunc) 
 	})
 }
 
-func (me *HostApi) POST(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
+func (me *HostApi) POST(path api.UriTemplate, name api.ResourceName, handler HandlerFunc) *echo.Route {
 	return me.Api.POST(path, name, func(rc *api.RequestContext) error {
 		return me.jsonMarshalHandler(rc, handler(rc))
 	})
 }
 
-func (me *HostApi) PUT(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
+func (me *HostApi) PUT(path api.UriTemplate, name api.ResourceName, handler HandlerFunc) *echo.Route {
 	return me.Api.PUT(path, name, func(rc *api.RequestContext) error {
 		return me.jsonMarshalHandler(rc, handler(rc))
 	})
 }
 
-func (me *HostApi) DELETE(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
+func (me *HostApi) DELETE(path api.UriTemplate, name api.ResourceName, handler HandlerFunc) *echo.Route {
 	return me.Api.DELETE(path, name, func(rc *api.RequestContext) error {
 		return me.jsonMarshalHandler(rc, handler(rc))
 	})

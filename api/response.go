@@ -24,7 +24,7 @@ type Response struct {
 	Data       interface{}  `json:"data,omitempty"`
 }
 
-func (me *Response) GetUrlPathTemplate(resourceType ResourceName) (url string, status stat.Status) {
+func (me *Response) GetUrlPathTemplate(resourceType ResourceName) (url UriTemplate, status stat.Status) {
 	for range only.Once {
 		var ok bool
 		url, ok = me.Links[resourceType]
