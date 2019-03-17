@@ -193,14 +193,15 @@ func (me *HostApi) deleteProjectAlias(rc *api.RequestContext) (response interfac
 	return me.Api.NotYetImplemented(rc)
 }
 
-//===[ Projects Aliases ]========================
+//===[ ProjectMap Aliases ]========================
 
 func (me *HostApi) getProjectsResponse(rc *api.RequestContext) (response interface{}) {
 	for range only.Once {
 		var status stat.Status
-		prs := make(api.ListItemResponseMap, len(me.Config.Projects))
+		pm := me.Config.GetProjectMap()
+		prs := make(api.ListItemResponseMap, len(pm))
 		withDetails := rc.ResourceName == ProjectsWithDetailsResource
-		for _, p := range me.Config.Projects {
+		for _, p := range pm {
 			if withDetails {
 				status = p.MaybeLoadDetails()
 				if status.IsError() {
@@ -222,15 +223,15 @@ func (me *HostApi) getProjectsResponse(rc *api.RequestContext) (response interfa
 }
 
 func (me *HostApi) getCandidateProjectsResponse(rc *api.RequestContext) (response interface{}) {
-	return me.Config.Candidates
+	return me.Config.GetCandidates()
 }
 
 func (me *HostApi) getEnabledProjectsResponse(rc *api.RequestContext) (response interface{}) {
-	return me.Config.Projects.GetEnabled()
+	return me.Config.GetProjectMap().GetEnabled()
 }
 
 func (me *HostApi) getDisabledProjectsResponse(rc *api.RequestContext) (response interface{}) {
-	return me.Config.Projects.GetDisabled()
+	return me.Config.GetProjectMap().GetDisabled()
 }
 
 //===[ Project Details ]========================

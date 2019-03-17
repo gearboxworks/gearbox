@@ -48,7 +48,6 @@ func FailWrongError(t *testing.T, label string, name string, input string, want 
 		return true
 	}
 	return false
-
 }
 
 type StructMethodTester interface {
@@ -77,7 +76,7 @@ func StructMethodsTest(smt StructMethodTester) {
 				t.Skipf("no object created; test '%s' for '%s' skipped", name, fixture.Label)
 				continue
 			}
-			if status.IsError() {
+			if !status.IsError() {
 				got = smt.GetOutput(fixture)
 			}
 
@@ -106,7 +105,7 @@ func StructMethodsTest(smt StructMethodTester) {
 //		f.T.Errorf("testing %s for %s failed: %s",
 //			f.Type,
 //			f.Label,
-//			err.Error(),
+//			err.Err(),
 //		)
 //	}
 //}

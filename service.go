@@ -30,7 +30,7 @@ type Service struct {
 	*StackRole
 	*Identity
 	Services `json:"services,omitempty"`
-	Gearbox  *Gearbox `json:"-"`
+	Gearbox  Gearbox `json:"-"`
 }
 type ServiceArgs Service
 

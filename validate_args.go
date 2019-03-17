@@ -1,9 +1,9 @@
 package gearbox
 
-type validateArgs struct {
+type ValidateArgs struct {
 	MustNotBeEmpty bool
 	MustNotExist   bool
 	MustExist      bool
 	ApiHelpUrl     string
-	Gearbox        *Gearbox
+	Gearbox        Gearbox
 }

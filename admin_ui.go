@@ -49,7 +49,7 @@ type AdminUi struct {
 	ViewerType    ViewerType
 	webListener   net.Listener
 	HostConnector host.Connector
-	Gearbox       *Gearbox
+	Gearbox       Gearbox
 	webServer     *http.Server
 	api           *HostApi
 	Window        *UiWindow
@@ -81,10 +81,10 @@ func NewUiWindow(args *UiWindowArgs) *UiWindow {
 	}
 }
 
-func NewAdminUi(gearbox *Gearbox, viewer ViewerType) *AdminUi {
+func NewAdminUi(gearbox Gearbox, viewer ViewerType) *AdminUi {
 	ui := AdminUi{
 		Gearbox:       gearbox,
-		HostConnector: gearbox.HostConnector,
+		HostConnector: gearbox.GetHostConnector(),
 		ViewerType:    viewer,
 		Window: NewUiWindow(&UiWindowArgs{
 			Title: "%s - " + fmt.Sprintf("[%s]", viewer),
@@ -96,7 +96,7 @@ func NewAdminUi(gearbox *Gearbox, viewer ViewerType) *AdminUi {
 func (me *AdminUi) Initialize() {
 	me.webListener = me.GetWebListener()
 	me.webServer = me.GetWebServer()
-	me.api = me.Gearbox.hostApi
+	me.api = me.Gearbox.GetHostApi()
 	me.WriteAssetsToAdminWebRoot()
 	me.ErrorLog = &ErrorLog{Gearbox: me.Gearbox}
 	log.SetOutput(me.ErrorLog)
@@ -259,7 +259,7 @@ func (me *AdminUi) GetHostApi() *HostApi {
 		if me.api != nil {
 			break
 		}
-		me.api = me.Gearbox.hostApi
+		me.api = me.Gearbox.GetHostApi()
 	}
 	return me.api
 }

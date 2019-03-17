@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-const Port = "9999"
-
 type ResourceVarName string
 type ResourceName string
 
@@ -23,14 +21,21 @@ const LinksResource ResourceName = "links"
 
 type Links map[ResourceName]string
 
-type SelfLinkGetter interface {
-	GetApiSelfLink() string
+type UrlGetter interface {
+	GetApiUrl(...ResourceName) (string, stat.Status)
 }
 
+type MethodName string
+
+type MethodMap map[MethodName]EndpointMap
+type EndpointMap map[ResourceName]Endpoint
+type Endpoint string
+
 type Api struct {
-	Echo     *echo.Echo
-	Port     string
-	Defaults *Response
+	Echo      *echo.Echo
+	Port      string
+	Defaults  *Response
+	MethodMap MethodMap
 }
 
 func NewApi(echo *echo.Echo, defaults *Response) *Api {
@@ -47,25 +52,46 @@ func NewApi(echo *echo.Echo, defaults *Response) *Api {
 	return &Api{
 		Echo:     echo,
 		Defaults: defaults,
+		MethodMap: MethodMap{
+			http.MethodGet:     make(EndpointMap, 0),
+			http.MethodPut:     make(EndpointMap, 0),
+			http.MethodPost:    make(EndpointMap, 0),
+			http.MethodDelete:  make(EndpointMap, 0),
+			http.MethodOptions: make(EndpointMap, 0),
+		},
 	}
 }
-func ContactSupportHelp() string {
-	return "contact support"
+
+func (me *Api) GetBaseUrl() (url string) {
+	return fmt.Sprintf("http://127.0.0.1:%s", me.Port)
 }
 
-func (me *Api) GetApiSelfLink(resourceType ResourceName) (url string, status stat.Status) {
+func (me *Api) GetUrl(name ResourceName, vars UriTemplateVars) (url string, status stat.Status) {
+	var path string
+	for range only.Once {
+		path, status = me.GetUrlPathTemplate(name)
+		if status.IsError() {
+			break
+		}
+		path = convertEchoTemplateToUriTemplate(path)
+		path = ExpandUriTemplate(path, vars)
+	}
+	return fmt.Sprintf("http://127.0.0.1:%s/%s", me.Port, path), status
+}
+
+func (me *Api) GetUrlPathTemplate(name ResourceName) (url string, status stat.Status) {
 	for range only.Once {
 		if me.Defaults == nil {
 			status = stat.NewFailedStatus(&stat.Args{
 				Message: fmt.Sprintf("the Defaults property is nil when accessing api for resource type '%s'",
-					resourceType,
+					name,
 				),
 				Help:  ContactSupportHelp(),
 				Error: stat.IsStatusError,
 			})
 			break
 		}
-		url, status = me.Defaults.GetApiSelfLink(resourceType)
+		url, status = me.Defaults.GetUrlPathTemplate(name)
 	}
 	return url, status
 }
@@ -78,35 +104,47 @@ type HandlerFunc func(ctx *RequestContext) error
 
 //func (me *Api) GET(path string, rc *RequestContext, handler HandlerFunc) *echo.Route {
 //	me.Defaults.Meta.Resource = rc.ResourceName
-//	me.Defaults.Links[rc.ResourceName] = convertEchoPathToUriTemplatePath(path)
+//	me.Defaults.Links[rc.ResourceName] = convertEchoTemplateToUriTemplate(path)
 //	return me.Echo.GET(path, rc.WrapHandler(handler))
 //}
+
 func (me *Api) GET(path string, name ResourceName, handler HandlerFunc) *echo.Route {
 	rc := NewRequestContext(me, name)
 	me.Defaults.Meta.Resource = name
-	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
+	uriTemplate := convertEchoTemplateToUriTemplate(path)
+	me.Defaults.Links[name] = uriTemplate
+	me.MethodMap[http.MethodGet][name] = Endpoint(uriTemplate)
 	return me.Echo.GET(path, rc.WrapHandler(handler))
+}
+func (me *Api) PUT(path string, name ResourceName, handler HandlerFunc) *echo.Route {
+	rc := NewRequestContext(me, name)
+	me.Defaults.Meta.Resource = name
+	uriTemplate := convertEchoTemplateToUriTemplate(path)
+	me.Defaults.Links[name] = uriTemplate
+	me.MethodMap[http.MethodPut][name] = Endpoint(uriTemplate)
+	me.MethodMap[http.MethodOptions][name] = Endpoint(uriTemplate)
+	me.Echo.OPTIONS(path, optionsHandler)
+	return me.Echo.PUT(path, rc.WrapHandler(handler))
 }
 func (me *Api) POST(path string, name ResourceName, handler HandlerFunc) *echo.Route {
 	rc := NewRequestContext(me, name)
 	me.Defaults.Meta.Resource = name
-	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
+	uriTemplate := convertEchoTemplateToUriTemplate(path)
+	me.Defaults.Links[name] = uriTemplate
+	me.MethodMap[http.MethodPost][name] = Endpoint(uriTemplate)
+	me.MethodMap[http.MethodOptions][name] = Endpoint(uriTemplate)
 	me.Echo.OPTIONS(path, optionsHandler)
 	return me.Echo.POST(path, rc.WrapHandler(handler))
 }
 func (me *Api) DELETE(path string, name ResourceName, handler HandlerFunc) *echo.Route {
 	rc := NewRequestContext(me, name)
 	me.Defaults.Meta.Resource = name
-	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
+	uriTemplate := convertEchoTemplateToUriTemplate(path)
+	me.Defaults.Links[name] = uriTemplate
+	me.MethodMap[http.MethodDelete][name] = Endpoint(uriTemplate)
+	me.MethodMap[http.MethodOptions][name] = Endpoint(uriTemplate)
 	me.Echo.OPTIONS(path, optionsHandler)
 	return me.Echo.DELETE(path, rc.WrapHandler(handler))
-}
-func (me *Api) PUT(path string, name ResourceName, handler HandlerFunc) *echo.Route {
-	rc := NewRequestContext(me, name)
-	me.Defaults.Meta.Resource = name
-	me.Defaults.Links[name] = convertEchoPathToUriTemplatePath(path)
-	me.Echo.OPTIONS(path, optionsHandler)
-	return me.Echo.PUT(path, rc.WrapHandler(handler))
 }
 func optionsHandler(ctx echo.Context) error {
 	return nil
@@ -126,7 +164,14 @@ func (me *Api) Stop() {
 	}
 }
 
-func convertEchoPathToUriTemplatePath(url string) string {
+func (me *Api) NotYetImplemented(rc *RequestContext) interface{} {
+	return stat.NewFailedStatus(&stat.Args{
+		Message:    fmt.Sprintf("the '%s' resource has not been implemented yet", rc.ResourceName),
+		HttpStatus: http.StatusMethodNotAllowed,
+	})
+}
+
+func convertEchoTemplateToUriTemplate(url string) string {
 	parts := strings.Split(url, "/")
 	for i, p := range parts {
 		if len(p) == 0 {
@@ -162,9 +207,6 @@ func GetApiHelp(topic ResourceName, more ...string) string {
 	return fmt.Sprintf("see API docs for%s: %s", _more, GetApiDocsUrl(topic))
 }
 
-func (me *Api) NotYetImplemented(rc *RequestContext) interface{} {
-	return stat.NewFailedStatus(&stat.Args{
-		Message:    fmt.Sprintf("the '%s' resource has not been implemented yet", rc.ResourceName),
-		HttpStatus: http.StatusMethodNotAllowed,
-	})
+func ContactSupportHelp() string {
+	return "contact support"
 }

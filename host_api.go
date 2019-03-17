@@ -8,52 +8,55 @@ import (
 	"github.com/labstack/echo"
 )
 
-const Port = "9999"
-
 type HostApi struct {
-	Config  *Config
+	Config  Config
 	Api     *api.Api
-	Gearbox *Gearbox
+	Gearbox Gearbox
 }
 
 func apiResponseDefaults() *api.Response {
 	return &api.Response{
 		Meta: api.ResponseMeta{
-			Service: "GearBox API",
-			Version: "0.1",
-			DocsUrl: "https://docs.gearbox.works/api",
+			Service: HostAPIServiceName,
+			Version: HostAPIVersion,
+			DocsUrl: HostAPIDocsUrl,
 		},
 		Links: make(api.Links, 0),
 	}
 }
 
-func NewHostApi(gearbox *Gearbox) *HostApi {
+func NewHostApi(gearbox Gearbox) *HostApi {
 	ha := &HostApi{
-		Config:  gearbox.Config,
+		Config:  gearbox.GetConfig(),
 		Api:     api.NewApi(echo.New(), apiResponseDefaults()),
 		Gearbox: gearbox,
 	}
-	ha.Api.Port = Port
+	ha.Api.Port = HostApiPort
 	ha.addRoutes()
 	return ha
 }
 
-func (me *HostApi) GetApiSelfLink(resourceType api.ResourceName) (url string, status stat.Status) {
+func (me *HostApi) GetBaseUrl() (url string) {
+	return me.Api.GetBaseUrl()
+}
+
+func (me *HostApi) GetUrl(name api.ResourceName, vars api.UriTemplateVars) (url string, status stat.Status) {
+	return me.Api.GetUrl(name, vars)
+}
+
+func (me *HostApi) GetUrlPathTemplate(name api.ResourceName) (url string, status stat.Status) {
 	for range only.Once {
 		if me.Api == nil {
 			status = stat.NewStatus(&stat.Args{
 				Message: fmt.Sprintf("accessing host api when internal api property is nil for resource type '%s'",
-					resourceType,
+					name,
 				),
 				Help: stat.ContactSupportHelp(),
 			})
 			break
 		}
-		url, status = me.Api.GetApiSelfLink(resourceType)
+		url, status = me.Api.GetUrlPathTemplate(name)
 		if status.IsError() {
-			status.Message = fmt.Sprintf("the Api property is nil when accessing host api for resource type '%s'",
-				resourceType,
-			)
 			break
 		}
 	}
@@ -76,7 +79,7 @@ type HandlerFunc func(rc *api.RequestContext) interface{}
 
 func (me *HostApi) GET(path string, name api.ResourceName, handler HandlerFunc) *echo.Route {
 	return me.Api.GET(path, name, func(rc *api.RequestContext) (err error) {
-		me.Gearbox.RequestType = rc.ResourceName
+		me.Gearbox.SetResourceName(rc.ResourceName)
 		if handler != nil {
 			err = me.jsonMarshalHandler(rc, handler(rc))
 		} else {

@@ -11,7 +11,7 @@ import (
 
 type ProjectMap map[string]*Project
 
-func (me ProjectMap) FindProjectWithDetails(gb *Gearbox, hostname string) (p *Project, status stat.Status) {
+func (me ProjectMap) FindProjectWithDetails(gb Gearbox, hostname string) (p *Project, status stat.Status) {
 	for range only.Once {
 		p, status = me.GetProject(gb, hostname)
 		if status.IsError() {
@@ -26,7 +26,7 @@ func (me ProjectMap) FindProjectWithDetails(gb *Gearbox, hostname string) (p *Pr
 	return p, status
 }
 
-func (me ProjectMap) GetProject(gb *Gearbox, hostname string) (p *Project, status stat.Status) {
+func (me ProjectMap) GetProject(gb Gearbox, hostname string) (p *Project, status stat.Status) {
 	var ok bool
 	p, ok = me[hostname]
 	if ok {
@@ -40,7 +40,7 @@ func (me ProjectMap) GetProject(gb *Gearbox, hostname string) (p *Project, statu
 			Failed:     true,
 			Message:    msg,
 			HttpStatus: http.StatusBadRequest,
-			ApiHelp:    api.GetApiDocsUrl(gb.RequestType),
+			ApiHelp:    api.GetApiDocsUrl(gb.GetResourceName()),
 			Error:      errors.New(msg),
 		})
 	}

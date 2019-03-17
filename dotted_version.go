@@ -11,13 +11,13 @@ import (
 
 type DottedVersion struct {
 	raw        string
-	Major      string `json:"major,omitempty"`
-	Minor      string `json:"minor,omitempty"`
-	Patch      string `json:"patch,omitempty"`
-	Prerelease string `json:"prerelease,omitempty"`
-	Metadata   string `json:"metadata,omitempty"`
-	Revision   string `json:"revision,omitempty"`
-	Error      error  `json:"error,omitempty"`
+	Major      string      `json:"major,omitempty"`
+	Minor      string      `json:"minor,omitempty"`
+	Patch      string      `json:"patch,omitempty"`
+	Prerelease string      `json:"prerelease,omitempty"`
+	Metadata   string      `json:"metadata,omitempty"`
+	Revision   string      `json:"revision,omitempty"`
+	Status     stat.Status `json:"-"`
 }
 
 func NewDottedVersion() *DottedVersion {
@@ -26,7 +26,6 @@ func NewDottedVersion() *DottedVersion {
 
 func (me *DottedVersion) Parse(ver string) (status stat.Status) {
 	var msg, hlp string
-	var err error
 	newBuf := true
 	parts := strings.Split(ver, "~")
 	tmp := DottedVersion{raw: ver}
@@ -42,7 +41,7 @@ func (me *DottedVersion) Parse(ver string) (status stat.Status) {
 				break
 			}
 			tmp.Revision = parts[1][1:]
-			_, err = strconv.Atoi(tmp.Revision)
+			_, err := strconv.Atoi(tmp.Revision)
 			if err != nil {
 				msg = fmt.Sprintf("revision following '~r' in '%s' must be and integer", ver)
 				break
@@ -56,7 +55,7 @@ func (me *DottedVersion) Parse(ver string) (status stat.Status) {
 		for i, s = range []byte(parts[0]) {
 			if newBuf {
 				newBuf = false
-				pos, status = tmp.captureMMP(ver, pos, buf)
+				pos, msg = tmp.captureMMP(ver, pos, buf)
 				if status.IsError() {
 					break
 				}
@@ -77,15 +76,15 @@ func (me *DottedVersion) Parse(ver string) (status stat.Status) {
 				)
 				break
 			}
-			if err != nil || done {
+			if msg != "" || done {
 				break
 			}
 		}
-		if err != nil {
+		if msg != "" {
 			break
 		}
-		_, status = tmp.captureMMP(ver, pos, buf)
-		if status.IsError() {
+		_, msg = tmp.captureMMP(ver, pos, buf)
+		if msg != "" {
 			break
 		}
 		metadata := ""
@@ -126,16 +125,13 @@ func (me *DottedVersion) Parse(ver string) (status stat.Status) {
 			Error:   stat.IsStatusError,
 		})
 	}
-	if err != nil {
-		me.Error = err
-	} else {
+	if status.IsSuccess() {
 		*me = tmp
 	}
 	return status
 }
 
-func (me *DottedVersion) captureMMP(ver string, pos int, buf []byte) (newpos int, status stat.Status) {
-	var msg string
+func (me *DottedVersion) captureMMP(ver string, pos int, buf []byte) (newpos int, msg string) {
 	switch pos {
 	case 0:
 		me.Major = string(buf)
@@ -156,14 +152,8 @@ func (me *DottedVersion) captureMMP(ver string, pos int, buf []byte) (newpos int
 		}
 		me.Patch = string(buf)
 	}
-	if msg != "" {
-		status = stat.NewFailedStatus(&stat.Args{
-			Message: msg,
-			Error:   stat.IsStatusError,
-		})
-	}
 	newpos = pos + 1
-	return newpos, status
+	return newpos, msg
 }
 
 const (

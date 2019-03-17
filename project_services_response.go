@@ -12,8 +12,9 @@ func NewProjectServicesResponse(svcmap ServiceMap, proj *Project) *ProjectServic
 	}
 }
 
-func (me *ProjectServicesResponse) GetApiSelfLink() string {
-	return me.Project.GetApiSelfLink(ProjectServicesResource)
+func (me *ProjectServicesResponse) GetApiUrl() string {
+	url, _ := me.Project.GetApiUrl(ProjectServicesResource)
+	return url
 }
 func (me *ProjectServicesResponse) GetResponseData() interface{} {
 	return me.ServiceMap

@@ -21,11 +21,11 @@ type Stack struct {
 	Name            StackName       `json:"name"`
 	RoleMap         RoleMap         `json:"roles,omitempty"`
 	RoleServicesMap RoleServicesMap `json:"role_services,omitempty"`
-	Gearbox         *Gearbox        `json:"-"`
+	Gearbox         Gearbox         `json:"-"`
 	refreshed       bool
 }
 
-func NewStack(gb *Gearbox, name StackName) *Stack {
+func NewStack(gb Gearbox, name StackName) *Stack {
 	return &Stack{
 		Name:    name,
 		Gearbox: gb,
@@ -150,7 +150,7 @@ func GetFullStackName(stackName StackName) (fsn StackName, status stat.Status) {
 	return fsn, status
 }
 
-func FindNamedStack(gb *Gearbox, stackName StackName) (stack *Stack, status stat.Status) {
+func FindNamedStack(gb Gearbox, stackName StackName) (stack *Stack, status stat.Status) {
 	var tmp *Stack
 	for range only.Once {
 		status = ValidateStackName(gb, stackName)
@@ -174,7 +174,7 @@ func FindNamedStack(gb *Gearbox, stackName StackName) (stack *Stack, status stat
 	return stack, status
 }
 
-func ValidateStackName(gb *Gearbox, stackName StackName) (status stat.Status) {
+func ValidateStackName(gb Gearbox, stackName StackName) (status stat.Status) {
 	for range only.Once {
 		spec := NewSpec()
 		status := spec.SetFullStackname(stackName)

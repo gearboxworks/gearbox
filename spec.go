@@ -32,7 +32,7 @@ var re reMap
 
 func init() {
 	re = make(reMap, 2)
-	re["host"] = regexp.MustCompile("[^A-Za-z0-9/.]")
+	re["authority"] = regexp.MustCompile("[^A-Za-z0-9/.]")
 	re["ns_or_r"] = regexp.MustCompile("[^A-Za-z0-9/]")
 }
 
@@ -59,16 +59,24 @@ func (me *Spec) Parse(spec string) (status stat.Status) {
 			}
 			tmp.Revision = parts[1]
 		}
-		sharedHelp := " can only contain letters [a-z], numbers [0-9], dashes ('-')%s or slashes ('/')"
 		parts = strings.Split(parts[0], "/")
+		if len(parts) == 1 {
+			status = stat.NewFailedStatus(&stat.Args{
+				Error:   stat.IsStatusError,
+				Message: fmt.Sprintf("invalid spec '%s'", spec),
+				Help:    "specs must contain at least two (2) slash-seperated segments, i.e. {stack}/{role}",
+			})
+			break
+		}
 		tmp.ServiceType = parts[len(parts)-1]
+		sharedHelp := " can only contain letters [a-z], numbers [0-9], dashes ('-')%s or slashes ('/')"
 		if strings.Contains(parts[0], ".") {
 			tmp.Authority = AuthorityDomain(parts[0])
-			if re["host"].MatchString(string(tmp.Authority)) {
+			if re["authority"].MatchString(string(tmp.Authority)) {
 				status = stat.NewFailedStatus(&stat.Args{
 					Error:   stat.IsStatusError,
-					Message: fmt.Sprintf("invalid host '%s' in '%s'", tmp.Authority, spec),
-					Help: fmt.Sprintf("host '%s' in '%s'%s",
+					Message: fmt.Sprintf("invalid authority '%s' in '%s'", tmp.Authority, spec),
+					Help: fmt.Sprintf("authority '%s' in '%s'%s",
 						tmp.Authority,
 						spec,
 						fmt.Sprintf(sharedHelp, ", dots ('.')"),

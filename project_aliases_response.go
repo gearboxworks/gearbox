@@ -13,7 +13,8 @@ func NewProjectAliasesResponse(aliases Aliases, proj *Project) *ProjectAliasesRe
 }
 
 func (me *ProjectAliasesResponse) GetApiSelfLink() string {
-	return me.Project.GetApiSelfLink(ProjectAliasesResource)
+	url, _ := me.Project.GetApiUrl(ProjectAliasesResource)
+	return url
 }
 func (me *ProjectAliasesResponse) GetResponseData() interface{} {
 	return me.Aliases

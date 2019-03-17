@@ -12,8 +12,9 @@ func NewProjectStacksResponse(p *Project) *ProjectStacksResponse {
 	}
 }
 
-func (me *ProjectStacksResponse) GetApiSelfLink() string {
-	return me.Project.GetApiSelfLink(ProjectStacksResource)
+func (me *ProjectStacksResponse) GetApiUrl() string {
+	url, _ := me.Project.GetApiUrl(ProjectStacksResource)
+	return url
 }
 
 func (me *ProjectStacksResponse) GetResponseData() interface{} {

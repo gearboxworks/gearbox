@@ -14,22 +14,22 @@ import (
 type Projects []*Project
 
 type Project struct {
-	Hostname string   `json:"hostname"`
-	Enabled  bool     `json:"enabled"`
-	Basedir  string   `json:"basedir"`
-	Notes    string   `json:"notes"`
-	Path     string   `json:"path"`
-	Gearbox  *Gearbox `json:"-"`
+	Hostname string  `json:"hostname"`
+	Enabled  bool    `json:"enabled"`
+	Basedir  string  `json:"basedir"`
+	Notes    string  `json:"notes"`
+	Path     string  `json:"path"`
+	Gearbox  Gearbox `json:"-"`
 	*ProjectDetails
 }
 
-func NewProject(gb *Gearbox, path string) *Project {
+func NewProject(gb Gearbox, path string) *Project {
 	p := Project{}
 	p.Renew(gb, path)
 	return &p
 }
 
-func (me *Project) Renew(gb *Gearbox, path string) {
+func (me *Project) Renew(gb Gearbox, path string) {
 	me.Gearbox = gb
 	me.Path = path
 	if me.Hostname == "" {
@@ -61,7 +61,7 @@ func (me *Project) GetProjectDir() (dir string) {
 		fp, status := me.GetFilepath()
 		if status.IsError() {
 			msg := []byte(fmt.Sprintf("failed to get filepath for project '%s'", me.Hostname))
-			_, _ = me.Gearbox.errorLog.Write(msg)
+			_, _ = me.Gearbox.WriteLog(msg)
 			break
 		}
 		dir = filepath.Dir(fp)
@@ -69,14 +69,14 @@ func (me *Project) GetProjectDir() (dir string) {
 	return dir
 }
 
-func (me *Project) GetApiSelfLink(name ...api.ResourceName) string {
+func (me *Project) GetApiUrl(name ...api.ResourceName) (url string, status stat.Status) {
 	var rn api.ResourceName
 	if len(name) == 0 {
 		rn = ProjectDetailsResource
 	} else {
 		rn = name[0]
 	}
-	return me.Gearbox.GetApiSelfLink(rn,
+	return me.Gearbox.GetApiUrl(rn,
 		api.UriTemplateVars{
 			HostnameResourceVar: me.Hostname,
 		},
@@ -198,12 +198,12 @@ func (me *Project) GetStuff(stackName StackName) (stuff interface{}, status stat
 	return stuff, status
 }
 
-func ValidateProjectHostname(hostname string, args ...*validateArgs) (status stat.Status) {
+func ValidateProjectHostname(hostname string, args ...*ValidateArgs) (status stat.Status) {
 	for range only.Once {
 		var apiHelp string
-		var _args *validateArgs
+		var _args *ValidateArgs
 		if len(args) == 0 {
-			_args = &validateArgs{}
+			_args = &ValidateArgs{}
 		} else {
 			_args = args[0]
 		}

@@ -1,7 +1,8 @@
-package tests
+package unit
 
 import (
 	"gearbox"
+	"gearbox/stat"
 	"gearbox/test"
 	"testing"
 )
@@ -18,7 +19,7 @@ func (me *IdTest) GetData() test.Table {
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "php:7"},
 				getRaw:     test.Args{Fail: false, Want: "php:7"},
-				getGroup:   test.Args{Fail: false, Want: ""},
+				getOrgName: test.Args{Fail: false, Want: ""},
 				getType:    test.Args{Fail: false, Want: ""},
 				getName:    test.Args{Fail: false, Want: "php"},
 				getVersion: test.Args{Fail: false, Want: "7"},
@@ -30,7 +31,7 @@ func (me *IdTest) GetData() test.Table {
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "gearbox/php:7"},
 				getRaw:     test.Args{Fail: false, Want: "gearbox/php:7"},
-				getGroup:   test.Args{Fail: false, Want: "gearbox"},
+				getOrgName: test.Args{Fail: false, Want: "gearbox"},
 				getType:    test.Args{Fail: false, Want: ""},
 				getName:    test.Args{Fail: false, Want: "php"},
 				getVersion: test.Args{Fail: false, Want: "7"},
@@ -42,7 +43,7 @@ func (me *IdTest) GetData() test.Table {
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "wordpress/plugins/akismet:4.1.1"},
 				getRaw:     test.Args{Fail: false, Want: "wordpress/plugins/akismet:4.1.1"},
-				getGroup:   test.Args{Fail: false, Want: "wordpress"},
+				getOrgName: test.Args{Fail: false, Want: "wordpress"},
 				getType:    test.Args{Fail: false, Want: "plugins"},
 				getName:    test.Args{Fail: false, Want: "akismet"},
 				getVersion: test.Args{Fail: false, Want: "4.1.1"},
@@ -54,7 +55,7 @@ func (me *IdTest) GetData() test.Table {
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "gearbox/php:7.2.1"},
 				getRaw:     test.Args{Fail: false, Want: "gearbox/php:7.2.1"},
-				getGroup:   test.Args{Fail: false, Want: "gearbox"},
+				getOrgName: test.Args{Fail: false, Want: "gearbox"},
 				getType:    test.Args{Fail: false, Want: ""},
 				getName:    test.Args{Fail: false, Want: "php"},
 				getVersion: test.Args{Fail: false, Want: "7.2.1"},
@@ -66,7 +67,7 @@ func (me *IdTest) GetData() test.Table {
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "gearbox/php:7.2.1~r3"},
 				getRaw:     test.Args{Fail: false, Want: "gearbox/php:7.2.1~r3"},
-				getGroup:   test.Args{Fail: false, Want: "gearbox"},
+				getOrgName: test.Args{Fail: false, Want: "gearbox"},
 				getType:    test.Args{Fail: false, Want: ""},
 				getName:    test.Args{Fail: false, Want: "php"},
 				getVersion: test.Args{Fail: false, Want: "7.2.1~r3"},
@@ -78,7 +79,7 @@ func (me *IdTest) GetData() test.Table {
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "gearbox/php:7.2"},
 				getRaw:     test.Args{Fail: false, Want: "gearbox/php:7.2"},
-				getGroup:   test.Args{Fail: false, Want: "gearbox"},
+				getOrgName: test.Args{Fail: false, Want: "gearbox"},
 				getType:    test.Args{Fail: false, Want: ""},
 				getName:    test.Args{Fail: false, Want: "php"},
 				getVersion: test.Args{Fail: false, Want: "7.2"},
@@ -106,10 +107,10 @@ func (me *IdTest) GetT() *testing.T {
 	return me.T
 }
 
-func (me *IdTest) MakeNewObject(f *test.Fixture) (obj interface{}, err error) {
+func (me *IdTest) MakeNewObject(f *test.Fixture) (obj interface{}, status stat.Status) {
 	id := gearbox.NewIdentity()
-	err = id.Parse(f.In)
-	return id, err
+	status = id.Parse(f.In)
+	return id, status
 }
 
 func (me *IdTest) GetOutput(f *test.Fixture) (got string) {

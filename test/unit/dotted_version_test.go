@@ -1,7 +1,8 @@
-package tests
+package unit
 
 import (
 	"gearbox"
+	"gearbox/stat"
 	"gearbox/test"
 	"testing"
 )
@@ -142,21 +143,46 @@ func (me *DvTest) GetData() test.Table {
 		test.NewFixture(&test.Fixture{
 			In: "a.b.c",
 			Out: test.Out{
-				parseDv: test.Args{Fail: true, Want: "non-integer major version in 'a.b.c'"},
+				parseDv:       test.Args{Fail: true, Want: "non-integer major version in 'a.b.c'"},
+				getRawDv:      test.Args{Fail: true, Want: "non-integer major version in 'a.b.c'"},
+				getMajorMinor: test.Args{Fail: true, Want: "non-integer major version in 'a.b.c'"},
+				getMajor:      test.Args{Fail: true, Want: "non-integer major version in 'a.b.c'"},
+				getMinor:      test.Args{Fail: true, Want: "non-integer major version in 'a.b.c'"},
+				getPatch:      test.Args{Fail: true, Want: "non-integer major version in 'a.b.c'"},
+				getPrerelease: test.Args{Fail: true, Want: "non-integer major version in 'a.b.c'"},
+				getMetadata:   test.Args{Fail: true, Want: "non-integer major version in 'a.b.c'"},
+				//				parseDv: test.Args{Fail: true, Want: "non-integer major version in 'a.b.c'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
 			Fail: true,
 			In:   "1.b.c",
 			Out: test.Out{
-				parseDv: test.Args{Fail: true, Want: "non-integer minor version in '1.b.c'"},
+				parseDv:       test.Args{Fail: true, Want: "non-integer minor version in '1.b.c'"},
+				getRawDv:      test.Args{Fail: true, Want: "non-integer minor version in '1.b.c'"},
+				getMajorMinor: test.Args{Fail: true, Want: "non-integer minor version in '1.b.c'"},
+				getMajor:      test.Args{Fail: true, Want: "non-integer minor version in '1.b.c'"},
+				getMinor:      test.Args{Fail: true, Want: "non-integer minor version in '1.b.c'"},
+				getPatch:      test.Args{Fail: true, Want: "non-integer minor version in '1.b.c'"},
+				getPrerelease: test.Args{Fail: true, Want: "non-integer minor version in '1.b.c'"},
+				getMetadata:   test.Args{Fail: true, Want: "non-integer minor version in '1.b.c'"},
+				//				parseDv: test.Args{Fail: true, Want: "non-integer major version in 'a.b.c'"},
+				//				parseDv: test.Args{Fail: true, Want: "non-integer minor version in '1.b.c'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
 			Fail: true,
 			In:   "1.1.c",
 			Out: test.Out{
-				parseDv: test.Args{Fail: true, Want: "non-integer patch version in '1.1.c'"},
+				parseDv:       test.Args{Fail: true, Want: "non-integer patch version in '1.1.c'"},
+				getRawDv:      test.Args{Fail: true, Want: "non-integer patch version in '1.1.c'"},
+				getMajorMinor: test.Args{Fail: true, Want: "non-integer patch version in '1.1.c'"},
+				getMajor:      test.Args{Fail: true, Want: "non-integer patch version in '1.1.c'"},
+				getMinor:      test.Args{Fail: true, Want: "non-integer patch version in '1.1.c'"},
+				getPatch:      test.Args{Fail: true, Want: "non-integer patch version in '1.1.c'"},
+				getPrerelease: test.Args{Fail: true, Want: "non-integer patch version in '1.1.c'"},
+				getMetadata:   test.Args{Fail: true, Want: "non-integer patch version in '1.1.c'"},
+				//				parseDv: test.Args{Fail: true, Want: "non-integer patch version in '1.1.c'"},
 			},
 		}),
 	}
@@ -185,11 +211,11 @@ func (me *DvTest) GetT() *testing.T {
 	return me.T
 }
 
-func (me *DvTest) MakeNewObject(f *test.Fixture) (obj interface{}, err error) {
+func (me *DvTest) MakeNewObject(f *test.Fixture) (obj interface{}, status stat.Status) {
 	var dv *gearbox.DottedVersion
 	dv = gearbox.NewDottedVersion()
-	err = dv.Parse(f.In)
-	return dv, err
+	status = dv.Parse(f.In)
+	return dv, status
 }
 
 func (me *DvTest) GetOutput(f *test.Fixture) (got string) {

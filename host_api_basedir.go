@@ -35,7 +35,7 @@ func (me *HostApi) addBasedir(rc *api.RequestContext) interface{} {
 			)
 			break
 		}
-		me.Gearbox.RequestType = rc.ResourceName
+		me.Gearbox.SetResourceName(rc.ResourceName)
 		status = me.Gearbox.AddBasedir(bd.HostDir, bd.Nickname)
 	}
 	return status
@@ -54,13 +54,13 @@ func (me *HostApi) updateBasedir(rc *api.RequestContext) interface{} {
 			)
 			break
 		}
-		me.Gearbox.RequestType = rc.ResourceName
+		me.Gearbox.SetResourceName(rc.ResourceName)
 		status = me.Gearbox.UpdateBasedir(bd.Nickname, bd.HostDir)
 	}
 	return status
 }
 func (me *HostApi) deleteNamedBasedir(rc *api.RequestContext) interface{} {
-	me.Gearbox.RequestType = rc.ResourceName
+	me.Gearbox.SetResourceName(rc.ResourceName)
 	return me.Gearbox.DeleteNamedBasedir(getBasedirNickname(rc))
 }
 

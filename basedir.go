@@ -12,8 +12,6 @@ import (
 	"strings"
 )
 
-const PrimaryBasedirNickname = "primary"
-
 type BasedirMap map[string]*Basedir
 
 type Basedirs []*Basedir
@@ -35,24 +33,28 @@ func NewBasedir(hostDir string, args ...*BasedirArgs) *Basedir {
 	}
 	bd := Basedir(*_args)
 	bd.HostDir = hostDir
-	bd.Initialize()
+	status := bd.Initialize()
+	if status.IsError() {
+		// @TODO Move this out of constructor
+		panic(status.Message)
+	}
 	return &bd
 }
 
-func ExpandHostBasedirPath(gb *Gearbox, nickname string, path string) (fp string, status stat.Status) {
-	status = gb.ValidateBasedirNickname(nickname, &validateArgs{
+func ExpandHostBasedirPath(gb Gearbox, nickname string, path string) (fp string, status stat.Status) {
+	status = gb.ValidateBasedirNickname(nickname, &ValidateArgs{
 		MustNotBeEmpty: true,
 		MustExist:      true,
-		ApiHelpUrl:     api.GetApiDocsUrl(gb.RequestType),
+		ApiHelpUrl:     api.GetApiDocsUrl(gb.GetResourceName()),
 	})
 	if !status.IsError() {
-		bd, _ := gb.Config.GetHostBasedir(nickname)
+		bd, _ := gb.GetConfig().GetHostBasedir(nickname)
 		fp = filepath.FromSlash(fmt.Sprintf("%s/%s", bd, path))
 	}
 	return fp, status
 }
 
-func (me *Basedir) MaybeExpandDir() (status stat.Status) {
+func (me *Basedir) MaybeExpandHostDir() (status stat.Status) {
 	for range only.Once {
 		origDir := me.HostDir
 		if strings.HasPrefix(me.HostDir, "~") {
@@ -89,7 +91,7 @@ func (me *Basedir) Initialize() (status stat.Status) {
 			})
 			break
 		}
-		status := me.MaybeExpandDir()
+		status := me.MaybeExpandHostDir()
 		if status.IsError() {
 			me.Error = status.Err
 			break
@@ -97,12 +99,12 @@ func (me *Basedir) Initialize() (status stat.Status) {
 		if me.Nickname == "" {
 			me.Nickname = filepath.Base(me.HostDir)
 		}
-		if me.BoxDir == PrimaryBasedirNickname {
-			me.BoxDir = boxBasedir
+		if me.Nickname == PrimaryBasedirNickname {
+			me.BoxDir = BoxBasedir
 			break
 		}
-		if me.BoxDir == "" || me.BoxDir == boxBasedir {
-			me.BoxDir = filepath.FromSlash(fmt.Sprintf("%s/%s", boxBasedir, me.Nickname))
+		if me.BoxDir == "" || me.BoxDir == BoxBasedir {
+			me.BoxDir = filepath.FromSlash(fmt.Sprintf("%s/%s", BoxBasedir, me.Nickname))
 		}
 	}
 	return status
@@ -129,12 +131,12 @@ func (me BasedirMap) GetNamedBasedir(nickname string) *Basedir {
 	return bd
 }
 
-func (me BasedirMap) DeleteNamedBasedir(gb *Gearbox, nickname string) (status stat.Status) {
+func (me BasedirMap) DeleteNamedBasedir(gb Gearbox, nickname string) (status stat.Status) {
 	for range only.Once {
-		status = gb.ValidateBasedirNickname(nickname, &validateArgs{
+		status = gb.ValidateBasedirNickname(nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
 			MustExist:      true,
-			ApiHelpUrl:     api.GetApiDocsUrl(gb.RequestType),
+			ApiHelpUrl:     api.GetApiDocsUrl(gb.GetResourceName()),
 		})
 		if status.IsError() {
 			break
@@ -151,19 +153,19 @@ func (me BasedirMap) DeleteNamedBasedir(gb *Gearbox, nickname string) (status st
 	return status
 }
 
-func (me BasedirMap) UpdateBasedir(gb *Gearbox, nickname string, dir string) (status stat.Status) {
+func (me BasedirMap) UpdateBasedir(gb Gearbox, nickname string, dir string) (status stat.Status) {
 	for range only.Once {
-		status = gb.ValidateBasedirNickname(nickname, &validateArgs{
+		status = gb.ValidateBasedirNickname(nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
 			MustExist:      true,
-			ApiHelpUrl:     api.GetApiDocsUrl(gb.RequestType),
+			ApiHelpUrl:     api.GetApiDocsUrl(gb.GetResourceName()),
 		})
 		if status.IsError() {
 			break
 		}
 		bd := me.GetNamedBasedir(nickname)
 		bd.HostDir = dir
-		status = bd.MaybeExpandDir()
+		status = bd.MaybeExpandHostDir()
 		if status.IsError() {
 			break
 		}
@@ -181,22 +183,22 @@ func (me BasedirMap) UpdateBasedir(gb *Gearbox, nickname string, dir string) (st
 	return status
 }
 
-func (me BasedirMap) AddBasedir(gb *Gearbox, dir string, nickname ...string) (status stat.Status) {
+func (me BasedirMap) AddBasedir(gb Gearbox, dir string, nickname ...string) (status stat.Status) {
 	for range only.Once {
 		var nn string
 		if len(nickname) > 0 {
 			nn = nickname[0]
 		}
-		status = gb.ValidateBasedirNickname(nn, &validateArgs{
+		status = gb.ValidateBasedirNickname(nn, &ValidateArgs{
 			MustNotBeEmpty: true,
 			MustNotExist:   true,
-			ApiHelpUrl:     api.GetApiDocsUrl(gb.RequestType),
+			ApiHelpUrl:     api.GetApiDocsUrl(gb.GetResourceName()),
 		})
 		if status.IsError() {
 			break
 		}
 		bd := NewBasedir(dir, &BasedirArgs{
-			BoxDir:   gb.Config.BoxBasedir,
+			BoxDir:   gb.GetConfig().GetBoxBasedir(),
 			Nickname: nn,
 		})
 		if bd.Error != nil {
@@ -221,7 +223,7 @@ func (me BasedirMap) AddBasedir(gb *Gearbox, dir string, nickname ...string) (st
 	return status
 }
 
-func ValidateBasedirNickname(nickname string, args *validateArgs) (status stat.Status) {
+func ValidateBasedirNickname(nickname string, args *ValidateArgs) (status stat.Status) {
 	for range only.Once {
 		var apiHelp string
 		if args.ApiHelpUrl != "" {

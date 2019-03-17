@@ -50,9 +50,9 @@ const SshDefaultStatusLineUpdateDelay = time.Second * 2
 
 // //////////////////////////////////////////////////////////////////////////////
 // Gearbox related
-func (me *Gearbox) ConnectSSH(sshArgs SSHArgs) error {
+func (me GearboxObj) ConnectSSH(sshArgs SSHArgs) error {
 
-	sshClient, err := NewSsh(*me, sshArgs)
+	sshClient, err := NewSsh(&me, sshArgs)
 	if err != nil {
 		return err
 	}

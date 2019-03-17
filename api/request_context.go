@@ -115,9 +115,11 @@ func (me *RequestContext) JsonMarshalHandler(js interface{}) (status stat.Status
 		path := ctx.Path()
 		if path != "/" {
 			r.Links = make(Links, 0)
+			r.Links[LinksResource] = "/"
 		}
-		if slg, ok := js.(SelfLinkGetter); ok {
-			r.Links[SelfResource] = slg.GetApiSelfLink()
+		if slg, ok := js.(UrlGetter); ok {
+			url, _ := slg.GetApiUrl()
+			r.Links[SelfResource] = url
 		} else {
 			r.Links[SelfResource] = me.GetApiSelfLink()
 		}

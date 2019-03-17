@@ -11,11 +11,11 @@ import (
 type Candidates []*Candidate
 
 type Candidate struct {
-	Basedir  string   `json:"basedir"`
-	Path     string   `json:"path"`
-	FullPath string   `json:"full_path"`
-	Config   *Config  `json:"-"`
-	Gearbox  *Gearbox `json:"-"`
+	Basedir  string         `json:"basedir"`
+	Path     string         `json:"path"`
+	FullPath string         `json:"full_path"`
+	Config   *Configuration `json:"-"`
+	Gearbox  Gearbox        `json:"-"`
 }
 
 type CandidateArgs Candidate

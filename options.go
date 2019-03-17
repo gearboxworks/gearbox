@@ -16,7 +16,7 @@ const GearsJsonUrl = RepoRawBaseUrl + "/master/assets/gears.json"
 const GearsKey = "gears"
 
 type Gears struct {
-	Gearbox         *Gearbox        `json:"-"`
+	Gearbox         Gearbox         `json:"-"`
 	Authorities     Authorities     `json:"authorities"`
 	StackNames      StackNames      `json:"stacks"`
 	RoleMap         RoleMap         `json:"roles"`
@@ -24,7 +24,7 @@ type Gears struct {
 	refreshed       bool
 }
 
-func NewGears(gb *Gearbox) *Gears {
+func NewGears(gb Gearbox) *Gears {
 	o := Gears{
 		Gearbox: gb,
 	}
@@ -122,7 +122,7 @@ func (me *Gears) Refresh() (status stat.Status) {
 		return status
 	}
 	for range only.Once {
-		cacheDir := me.Gearbox.HostConnector.GetCacheDir()
+		cacheDir := me.Gearbox.GetHostConnector().GetCacheDir()
 		store := cache.NewCache(cacheDir)
 
 		store.Disable = me.Gearbox.NoCache()

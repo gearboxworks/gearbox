@@ -2,9 +2,10 @@ package gearbox
 
 import (
 	"gearbox/api"
+	"gearbox/stat"
 )
 
-var _ api.SelfLinkGetter = (*ProjectResponse)(nil)
+var _ api.UrlGetter = (*ProjectResponse)(nil)
 
 type ProjectResponse struct {
 	Hostname   string     `json:"hostname"`
@@ -18,8 +19,8 @@ type ProjectResponse struct {
 	Project    *Project   `json:"-"`
 }
 
-func (me *ProjectResponse) GetApiSelfLink() string {
-	return me.Project.GetApiSelfLink()
+func (me *ProjectResponse) GetApiUrl(name ...api.ResourceName) (url string, status stat.Status) {
+	return me.Project.GetApiUrl(name...)
 }
 
 func NewProjectResponse(p *Project) *ProjectResponse {
@@ -38,8 +39,6 @@ func NewProjectResponse(p *Project) *ProjectResponse {
 }
 
 func NewProjectListResponse(p *Project) *api.ListItemResponse {
-	return api.NewListItemResponse(
-		p.GetApiSelfLink(),
-		NewProjectResponse(p),
-	)
+	url, _ := p.GetApiUrl()
+	return api.NewListItemResponse(url, NewProjectResponse(p))
 }

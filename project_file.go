@@ -13,9 +13,6 @@ import (
 	"strings"
 )
 
-const ProjectFilename = "gearbox.json"
-const ProjectFileHelpUrl = "https://docs.gearbox.works/projects/gearbox.json"
-
 var _ util.FilepathHelpUrlGetter = (*ProjectFile)(nil)
 
 type ProjectFile struct {
@@ -25,10 +22,10 @@ type ProjectFile struct {
 	ServiceBag ServiceBag `json:"stack"`
 	ServiceMap ServiceMap `json:"-"`
 	Filepath   string     `json:"-"`
-	Gearbox    *Gearbox   `json:"-"`
+	Gearbox    Gearbox    `json:"-"`
 }
 
-func NewProjectFile(gb *Gearbox, filepath string) *ProjectFile {
+func NewProjectFile(gb Gearbox, filepath string) *ProjectFile {
 	return &ProjectFile{
 		Gearbox:    gb,
 		Filepath:   filepath,

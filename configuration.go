@@ -15,46 +15,66 @@ import (
 	"strings"
 )
 
-const SchemaVersion = "1.0"
-const boxBasedir = "/home/gearbox/projects"
-const boxName = "Gearbox"
-const ConfigHelpUrl = "https://docs.gearbox.works/config"
+var _ util.FilepathHelpUrlGetter = (*Configuration)(nil)
+var _ Config = (*Configuration)(nil)
 
-var _ util.FilepathHelpUrlGetter = (*Config)(nil)
+type Config interface {
+	Initialize() (status stat.Status)
+	GetBasedirNicknames() []string
+	GetHostBasedir(string) (string, stat.Status)
+	GetHostBasedirs() map[string]string
+	Bytes() []byte
+	GetDir() string
+	GetFilepath() string
+	WriteFile() stat.Status
+	MaybeMakeDir(string, os.FileMode) stat.Status
+	GetHelpUrl() string
+	Unmarshal(j []byte) stat.Status
+	Load() stat.Status
+	LoadProjectsAndWrite() stat.Status
+	LoadProjects() stat.Status
+	GetProjectMap() ProjectMap
+	GetBasedirMap() BasedirMap
+	GetBoxBasedir() string
+	GetBoxname() string
+	GetCandidates() Candidates
+}
 
-type Config struct {
+var ProjectRootAddCmd *cobra.Command
+
+type Configuration struct {
 	About         string         `json:"about"`
 	LearnMore     string         `json:"learn_more"`
 	HostConnector host.Connector `json:"-"`
 	SchemaVersion string         `json:"schema_version"`
-	Basedirs      BasedirMap     `json:"basedirs"`
-	Projects      ProjectMap     `json:"projects"`
+	BasedirMap    BasedirMap     `json:"basedirs"`
+	ProjectMap    ProjectMap     `json:"projects"`
 	Candidates    Candidates     `json:"-"`
 	BoxBasedir    string         `json:"-"`
-	BoxName       string         `json:"-"`
-	Gearbox       *Gearbox       `json:"-"`
+	Boxname       string         `json:"-"`
+	Gearbox       Gearbox        `json:"-"`
 }
 
-func UnmarshalConfig(b []byte) *Config {
-	c := Config{}
+func UnmarshalConfig(b []byte) Config {
+	c := Configuration{}
 	_ = json.Unmarshal(b, &c)
 	return &c
 }
 
-func NewConfig(gb *Gearbox) *Config {
-	c := &Config{
+func NewConfiguration(gb Gearbox) Config {
+	c := &Configuration{
 		About:         "This is a Gearbox user configuration file.",
 		LearnMore:     "To learn about Gearbox visit https://gearbox.works",
-		HostConnector: gb.HostConnector,
-		SchemaVersion: SchemaVersion,
-		Basedirs:      make(BasedirMap, 1),
-		Projects:      make(ProjectMap, 0),
+		HostConnector: gb.GetHostConnector(),
+		SchemaVersion: ConfigSchemaVersion,
+		BasedirMap:    make(BasedirMap, 1),
+		ProjectMap:    make(ProjectMap, 0),
 		Candidates:    make(Candidates, 0),
-		BoxBasedir:    boxBasedir,
-		BoxName:       boxName,
+		BoxBasedir:    BoxBasedir,
+		Boxname:       Boxname,
 		Gearbox:       gb,
 	}
-	c.Basedirs[PrimaryBasedirNickname] = NewBasedir(
+	c.BasedirMap[PrimaryBasedirNickname] = NewBasedir(
 		c.HostConnector.GetSuggestedBasedir(),
 		&BasedirArgs{
 			Nickname: PrimaryBasedirNickname,
@@ -63,7 +83,7 @@ func NewConfig(gb *Gearbox) *Config {
 	return c
 }
 
-func (me *Config) Initialize() (status stat.Status) {
+func (me *Configuration) Initialize() (status stat.Status) {
 	status = me.Load()
 	if !status.IsError() {
 		status = me.WriteFile()
@@ -71,18 +91,29 @@ func (me *Config) Initialize() (status stat.Status) {
 	return status
 }
 
-func (me *Config) GetBasedirNicknames() (nns []string) {
-	nns = make([]string, len(me.Basedirs))
+func (me *Configuration) GetCandidates() Candidates {
+	return me.Candidates
+}
+func (me *Configuration) GetBoxname() string {
+	return me.Boxname
+}
+
+func (me *Configuration) GetBoxBasedir() string {
+	return me.BoxBasedir
+}
+
+func (me *Configuration) GetBasedirNicknames() (nns []string) {
+	nns = make([]string, len(me.BasedirMap))
 	i := 0
-	for nn, _ := range me.Basedirs {
+	for nn, _ := range me.BasedirMap {
 		nns[i] = nn
 		i++
 	}
 	return nns
 }
 
-func (me *Config) GetHostBasedir(nickname string) (basedir string, status stat.Status) {
-	bd, ok := me.Basedirs[nickname]
+func (me *Configuration) GetHostBasedir(nickname string) (basedir string, status stat.Status) {
+	bd, ok := me.BasedirMap[nickname]
 	if ok {
 		basedir = bd.HostDir
 		status = stat.NewOkStatus("hostdir found for nickname '%s'", nickname)
@@ -92,41 +123,43 @@ func (me *Config) GetHostBasedir(nickname string) (basedir string, status stat.S
 			Message:    fmt.Sprintf("basedir nickname '%s' is not valid", basedir),
 			HttpStatus: http.StatusBadRequest,
 			Help: fmt.Sprintf("Add '%s' as a new basedir, or use one of these valid nicknames: %s",
+				nickname,
 				util.OxfordComma(me.GetBasedirNicknames(), &util.OxfordCommaArgs{
 					SingleQuote: true,
 					Conjunction: "or",
 				}),
-				basedir,
 			),
 		})
 	}
 	return basedir, status
 }
 
-func (me *Config) GetHostBasedirs() map[string]string {
-	bds := make(map[string]string, len(me.Basedirs))
-	for _, bd := range me.Basedirs {
+func (me *Configuration) GetBasedirMap() BasedirMap {
+	return me.BasedirMap
+}
+
+func (me *Configuration) GetHostBasedirs() map[string]string {
+	bds := make(map[string]string, len(me.BasedirMap))
+	for _, bd := range me.BasedirMap {
 		bds[bd.Nickname] = bd.HostDir
 	}
 	return bds
 }
 
-func (me *Config) Bytes() []byte {
+func (me *Configuration) Bytes() []byte {
 	b, _ := json.Marshal(me)
 	return b
 }
 
-var ProjectRootAddCmd *cobra.Command
-
-func (me *Config) GetDir() string {
+func (me *Configuration) GetDir() string {
 	return me.HostConnector.GetUserConfigDir()
 }
 
-func (me *Config) GetFilepath() string {
+func (me *Configuration) GetFilepath() string {
 	return filepath.FromSlash(fmt.Sprintf("%s/config.json", me.HostConnector.GetUserConfigDir()))
 }
 
-func (me *Config) WriteFile() (status stat.Status) {
+func (me *Configuration) WriteFile() (status stat.Status) {
 	for range only.Once {
 		j, err := json.MarshalIndent(me, "", "    ")
 		if err != nil {
@@ -155,7 +188,7 @@ func (me *Config) WriteFile() (status stat.Status) {
 	return status
 }
 
-func (me *Config) MaybeMakeDir(dir string, mode os.FileMode) (status stat.Status) {
+func (me *Configuration) MaybeMakeDir(dir string, mode os.FileMode) (status stat.Status) {
 	for range only.Once {
 		err := util.MaybeMakeDir(dir, mode)
 		if err == nil {
@@ -172,7 +205,7 @@ func (me *Config) MaybeMakeDir(dir string, mode os.FileMode) (status stat.Status
 	return status
 }
 
-func (me *Config) ReadBytes() (b []byte, status stat.Status) {
+func (me *Configuration) ReadBytes() (b []byte, status stat.Status) {
 	for range only.Once {
 		fp := me.GetFilepath()
 		b, status = util.ReadBytes(fp)
@@ -184,11 +217,11 @@ func (me *Config) ReadBytes() (b []byte, status stat.Status) {
 	return b, status
 }
 
-func (me *Config) GetHelpUrl() string {
+func (me *Configuration) GetHelpUrl() string {
 	return ConfigHelpUrl
 }
 
-func (me *Config) Unmarshal(j []byte) (status stat.Status) {
+func (me *Configuration) Unmarshal(j []byte) (status stat.Status) {
 	for range only.Once {
 		status := util.UnmarshalJson(j, me)
 		if status.IsError() {
@@ -198,7 +231,8 @@ func (me *Config) Unmarshal(j []byte) (status stat.Status) {
 	}
 	return status
 }
-func (me *Config) Load() (status stat.Status) {
+
+func (me *Configuration) Load() (status stat.Status) {
 	for range only.Once {
 		var j []byte
 		j, status = me.ReadBytes()
@@ -216,7 +250,7 @@ func (me *Config) Load() (status stat.Status) {
 	return status
 }
 
-func (me *Config) LoadProjectsAndWrite() (status stat.Status) {
+func (me *Configuration) LoadProjectsAndWrite() (status stat.Status) {
 	status = me.LoadProjects()
 	if !status.IsError() {
 		status = me.WriteFile()
@@ -224,17 +258,13 @@ func (me *Config) LoadProjectsAndWrite() (status stat.Status) {
 	return status
 }
 
-func (me *Config) GetProjectMap() ProjectMap {
-	pm := make(ProjectMap, len(me.Projects))
-	for hostname, p := range me.Projects {
-		pm[hostname] = p
-	}
-	return pm
+func (me *Configuration) GetProjectMap() ProjectMap {
+	return me.ProjectMap
 }
 
-func (me *Config) LoadProjects() (status stat.Status) {
+func (me *Configuration) LoadProjects() (status stat.Status) {
 	for range only.Once {
-		if len(me.Basedirs) == 0 {
+		if len(me.BasedirMap) == 0 {
 			status = stat.NewStatus(&stat.Args{
 				Message: fmt.Sprintf("no project roots found in %s", me.GetFilepath()),
 				CliHelp: fmt.Sprintf("Add with the '%s <dir>' command", ProjectRootAddCmd.CommandPath()),
@@ -245,7 +275,7 @@ func (me *Config) LoadProjects() (status stat.Status) {
 		}
 		me.Candidates = make(Candidates, 0)
 		baseDirs := make([]string, 0)
-		for bdnn, bd := range me.Basedirs {
+		for bdnn, bd := range me.BasedirMap {
 			baseDirs = append(baseDirs, fmt.Sprintf("'%s'", bd.HostDir)) // For status message
 			bd.Nickname = bdnn                                           // In case it is not set, since it is not written to JSON as a property
 			var files []os.FileInfo
@@ -281,14 +311,14 @@ func (me *Config) LoadProjects() (status stat.Status) {
 					Gearbox: me.Gearbox,
 				})
 				if c.IsProject() {
-					p := me.Projects.FindProject(bdnn, c.Path)
+					p := me.ProjectMap.FindProject(bdnn, c.Path)
 					if p == nil {
 						p = NewProject(me.Gearbox, c.Path)
 					} else {
 						p.Renew(me.Gearbox, c.Path)
 					}
 					p.Basedir = bdnn
-					me.Projects[p.Hostname] = p
+					me.ProjectMap[p.Hostname] = p
 				} else {
 					me.Candidates = append(me.Candidates, c)
 				}
@@ -297,10 +327,10 @@ func (me *Config) LoadProjects() (status stat.Status) {
 		//
 		// Remove any old projects that are not located in one of the basedirs
 		//
-		for k, p := range me.Projects {
-			_, ok := me.Basedirs[p.Basedir]
+		for k, p := range me.ProjectMap {
+			_, ok := me.BasedirMap[p.Basedir]
 			if !ok {
-				delete(me.Projects, k)
+				delete(me.ProjectMap, k)
 				continue
 			}
 		}

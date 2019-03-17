@@ -76,7 +76,7 @@ func init() {
 		Use:   "status",
 		Short: "Display the current status of the Gearbox VM.",
 		Run: func(cmd *cobra.Command, args []string) {
-			_, err := gearbox.Instance.GetBoxStatus(boxArgs)
+			_, err := gearbox.Instance.PrintBoxStatus(boxArgs)
 			if err != nil {
 				panic(err)
 			}
@@ -122,7 +122,7 @@ func init() {
 	boxCmd.PersistentFlags().StringVarP(&boxArgs.ConsoleHost, "console-host", "", gearbox.BoxDefaultConsoleHost, "Box (VM) console host name.")
 	boxCmd.PersistentFlags().StringVarP(&boxArgs.ConsolePort, "console-port", "", gearbox.BoxDefaultConsolePort, "Box (VM) console port number.")
 	boxCmd.PersistentFlags().BoolVarP(&boxArgs.ShowConsole, "show-console", "", gearbox.BoxDefaultShowConsole, "Show Box (VM) console output.")
-	boxCmd.PersistentFlags().StringVarP(&boxArgs.BoxName, "name", "", gearbox.BoxDefaultName, "Gearbox Box (VM) name.")
+	boxCmd.PersistentFlags().StringVarP(&boxArgs.Boxname, "name", "", gearbox.Boxname, "Gearbox Box (VM) name.")
 
 	// Mike will not like this bit.
 	boxCmd.PersistentFlags().StringVarP(&boxArgs.Instance.Credentials.SSHUser, "user", "u", gearbox.SshDefaultUsername, "Alternate Gearbox SSH username.") // boxCmd.PersistentFlags().BoolP("no-wait", "w", false, "Don't wait for Box (VM) operation to complete.")

@@ -25,8 +25,12 @@ func getRoleSpec(rc *api.RequestContext) RoleSpec {
 	return RoleSpec(rc.Param("service"))
 }
 
-func (me *HostApi) getStacksResponse(rc *api.RequestContext) interface{} {
-	return me.Gearbox.StackMap
+func (me *HostApi) getStacksResponse(rc *api.RequestContext) (response interface{}) {
+	response, status := me.Gearbox.GetStackMap()
+	if status.IsError() {
+		response = status
+	}
+	return response
 }
 
 func (me *HostApi) getServiceResponseOptions(rc *api.RequestContext) (response interface{}) {

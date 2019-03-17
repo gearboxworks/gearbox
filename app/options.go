@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	gb := gearbox.NewGearbox(&gearbox.Args{
+	gb := gearbox.NewApp(&gearbox.Args{
 		HostConnector: host.GetConnector(),
 	})
 

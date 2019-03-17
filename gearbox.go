@@ -1,14 +1,12 @@
 package gearbox
 
 import (
-	"encoding/json"
 	"fmt"
 	"gearbox/api"
 	"gearbox/dockerhub"
 	"gearbox/host"
 	"gearbox/only"
 	"gearbox/stat"
-	"log"
 	"path/filepath"
 )
 
@@ -24,21 +22,84 @@ const (
 	ContainerScope JsonFileScope = "container"
 )
 
-var Instance *Gearbox
+var Instance Gearbox
 
-type Gearbox struct {
-	Config        *Config
+type Gearbox interface {
+	Admin(ViewerType)
+	StartBox(BoxArgs) error
+	StopBox(BoxArgs) error
+	PrintBoxStatus(BoxArgs) (string, error)
+	RestartBox(BoxArgs) error
+	CreateBox(BoxArgs) (string, error)
+	ConnectSSH(SSHArgs) error
+	Initialize() stat.Status
+	GetConfig() Config
+	SetConfig(Config)
+	GetHostConnector() host.Connector
+	GetStackMap() (StackMap, stat.Status)
+	GetGlobalOptions() *GlobalOptions
+	GetHostApi() *HostApi
+	GetResourceName() api.ResourceName
+	SetResourceName(api.ResourceName)
+	IsDebug() bool
+	NoCache() bool
+	ProjectExists(string) bool
+	ValidateBasedirNickname(string, *ValidateArgs) stat.Status
+	AddBasedir(string, ...string) stat.Status
+	UpdateBasedir(string, string) stat.Status
+	DeleteNamedBasedir(string) stat.Status
+	NamedBasedirExists(string) bool
+	FindProjectWithDetails(string) (*Project, stat.Status)
+	AddNamedStackToProject(StackName, string) stat.Status
+	RequestAvailableContainers(...*dockerhub.ContainerQuery) (dockerhub.ContainerNames, stat.Status)
+	GetApiUrl(api.ResourceName, api.UriTemplateVars) (string, stat.Status)
+	GetProjectFilepath(string, string) (string, stat.Status)
+	WriteLog([]byte) (int, error)
+}
+
+type GearboxObj struct {
+	Config        Config
 	HostConnector host.Connector
 	StackMap      StackMap
-	RequestType   api.ResourceName
 	GlobalOptions *GlobalOptions
-	hostApi       *HostApi
+	HostApi       *HostApi
+	ResourceType  api.ResourceName
 	errorLog      *ErrorLog
 }
 
-type Args Gearbox
+type Args GearboxObj
 
-func (me *Gearbox) Initialize() (status stat.Status) {
+func (me *GearboxObj) WriteLog(msg []byte) (nn int, err error) {
+	return me.errorLog.Write(msg)
+}
+func (me *GearboxObj) GetGlobalOptions() *GlobalOptions {
+	return me.GlobalOptions
+}
+
+func (me *GearboxObj) GetResourceName() api.ResourceName {
+	return me.ResourceType
+}
+
+func (me *GearboxObj) SetResourceName(resourceName api.ResourceName) {
+	me.ResourceType = resourceName
+}
+
+func (me *GearboxObj) GetHostConnector() host.Connector {
+	return me.HostConnector
+}
+
+func (me *GearboxObj) GetHostApi() *HostApi {
+	return me.HostApi
+}
+
+func (me *GearboxObj) GetConfig() Config {
+	return me.Config
+}
+func (me *GearboxObj) SetConfig(config Config) {
+	me.Config = config
+}
+
+func (me *GearboxObj) Initialize() (status stat.Status) {
 	for range only.Once {
 		status = me.Config.Initialize()
 		if status.IsError() {
@@ -52,24 +113,24 @@ func (me *Gearbox) Initialize() (status stat.Status) {
 	return status
 }
 
-func NewGearbox(args *Args) *Gearbox {
-	gb := Gearbox{
+func NewApp(args *Args) Gearbox {
+	gb := GearboxObj{
 		HostConnector: args.HostConnector,
 		GlobalOptions: args.GlobalOptions,
 		Config:        args.Config,
 		errorLog:      &ErrorLog{},
 	}
 	if args.Config == nil {
-		gb.Config = NewConfig(&gb)
+		gb.Config = NewConfiguration(&gb)
 	}
 	if args.GlobalOptions == nil {
 		gb.GlobalOptions = &GlobalOptions{}
 	}
-	gb.hostApi = NewHostApi(&gb)
+	gb.HostApi = NewHostApi(&gb)
 	return &gb
 }
 
-func (me *Gearbox) GetStackMap() (sm StackMap, status stat.Status) {
+func (me *GearboxObj) GetStackMap() (sm StackMap, status stat.Status) {
 	for range only.Once {
 		gears := NewGears(me)
 		status = gears.Refresh()
@@ -81,52 +142,47 @@ func (me *Gearbox) GetStackMap() (sm StackMap, status stat.Status) {
 	return sm, status
 }
 
-func (me *Gearbox) GetApiSelfLink(name api.ResourceName, vars api.UriTemplateVars) string {
-	t, status := me.hostApi.GetApiSelfLink(name)
-	if status.IsError() {
-		// @TODO consider handling this with Status
-		panic(status.Message)
-	}
-	return api.ExpandUriTemplate(t, vars)
+func (me *GearboxObj) GetApiUrl(name api.ResourceName, vars api.UriTemplateVars) (url string, status stat.Status) {
+	return me.HostApi.GetUrl(name, vars)
 }
 
-func (me *Gearbox) FindProjectWithDetails(hostname string) (p *Project, status stat.Status) {
-	return me.Config.Projects.FindProjectWithDetails(me, hostname)
+func (me *GearboxObj) FindProjectWithDetails(hostname string) (p *Project, status stat.Status) {
+	return me.Config.GetProjectMap().FindProjectWithDetails(me, hostname)
 }
 
-func (me *Gearbox) GetProject(hostname string) (p *Project, status stat.Status) {
-	return me.Config.Projects.GetProject(me, hostname)
+func (me *GearboxObj) GetProject(hostname string) (p *Project, status stat.Status) {
+	return me.Config.GetProjectMap().GetProject(me, hostname)
 }
 
-func (me *Gearbox) GetProjects() string {
-	j, err := json.Marshal(me.Config.Projects)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return string(j)
-}
-
-func (me *Gearbox) Admin(viewer ViewerType) {
+//func (me Gearbox) GetProjects() string {
+//	j, err := json.Marshal(me.Config.GetProjectMap())
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	return string(j)
+//}
+//
+func (me *GearboxObj) Admin(viewer ViewerType) {
 	aui := NewAdminUi(me, viewer)
 	aui.Initialize()
 	defer aui.Close()
 	aui.Start()
 }
 
-func (me *Gearbox) ProjectExists(hostname string) (ok bool) {
-	return me.Config.Projects.ProjectExists(hostname)
+func (me *GearboxObj) ProjectExists(hostname string) (ok bool) {
+	return me.Config.GetProjectMap().ProjectExists(hostname)
 }
 
-func (me *Gearbox) NamedBasedirExists(nickname string) bool {
-	return me.Config.Basedirs.NamedBasedirExists(nickname)
+func (me *GearboxObj) NamedBasedirExists(nickname string) bool {
+	return me.Config.GetBasedirMap().NamedBasedirExists(nickname)
 }
 
-func (me *Gearbox) BasedirExists(dir string) bool {
-	return me.Config.Basedirs.BasedirExists(dir)
+func (me *GearboxObj) BasedirExists(dir string) bool {
+	return me.Config.GetBasedirMap().BasedirExists(dir)
 }
 
-func (me *Gearbox) AddBasedir(dir string, nickname ...string) (status stat.Status) {
-	status = me.Config.Basedirs.AddBasedir(me, dir, nickname...)
+func (me *GearboxObj) AddBasedir(dir string, nickname ...string) (status stat.Status) {
+	status = me.Config.GetBasedirMap().AddBasedir(me, dir, nickname...)
 	if !status.IsError() {
 		status2 := me.Config.LoadProjectsAndWrite()
 		if status2.IsError() {
@@ -136,8 +192,8 @@ func (me *Gearbox) AddBasedir(dir string, nickname ...string) (status stat.Statu
 	return status
 }
 
-func (me *Gearbox) UpdateBasedir(nickname string, dir string) (status stat.Status) {
-	status = me.Config.Basedirs.UpdateBasedir(me, nickname, dir)
+func (me *GearboxObj) UpdateBasedir(nickname string, dir string) (status stat.Status) {
+	status = me.Config.GetBasedirMap().UpdateBasedir(me, nickname, dir)
 	if !status.IsError() {
 		status2 := me.Config.LoadProjectsAndWrite()
 		if status2.IsError() {
@@ -147,8 +203,8 @@ func (me *Gearbox) UpdateBasedir(nickname string, dir string) (status stat.Statu
 	return status
 }
 
-func (me *Gearbox) DeleteNamedBasedir(nickname string) (status stat.Status) {
-	status = me.Config.Basedirs.DeleteNamedBasedir(me, nickname)
+func (me *GearboxObj) DeleteNamedBasedir(nickname string) (status stat.Status) {
+	status = me.Config.GetBasedirMap().DeleteNamedBasedir(me, nickname)
 	if !status.IsError() {
 		status2 := me.Config.LoadProjectsAndWrite()
 		if status2.IsError() {
@@ -157,17 +213,17 @@ func (me *Gearbox) DeleteNamedBasedir(nickname string) (status stat.Status) {
 	}
 	return status
 }
-func (me *Gearbox) ValidateBasedirNickname(nn string, args *validateArgs) stat.Status {
+func (me *GearboxObj) ValidateBasedirNickname(nn string, args *ValidateArgs) stat.Status {
 	args.Gearbox = me
 	return ValidateBasedirNickname(nn, args)
 }
 
-func (me *Gearbox) ValidateProjectHostname(hn string, args *validateArgs) stat.Status {
+func (me *GearboxObj) ValidateProjectHostname(hn string, args *ValidateArgs) stat.Status {
 	args.Gearbox = me
 	return ValidateProjectHostname(hn, args)
 }
 
-func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery) (names dockerhub.ContainerNames, status stat.Status) {
+func (me *GearboxObj) RequestAvailableContainers(query ...*dockerhub.ContainerQuery) (names dockerhub.ContainerNames, status stat.Status) {
 	for range only.Once {
 		var _query *dockerhub.ContainerQuery
 		if len(query) == 0 {
@@ -181,19 +237,10 @@ func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery
 	return names, status
 }
 
-func getFirstBasedir(basedirs []string) (basedir string) {
-	if len(basedirs) == 0 {
-		basedir = PrimaryBasedirNickname
-	} else {
-		basedir = basedirs[0]
-	}
-	return basedir
-}
-
-func (me *Gearbox) GetProjectDir(path string, basedirs ...string) (basedir string, status stat.Status) {
+func (me *GearboxObj) GetProjectDir(path string, basedir string) (bd string, status stat.Status) {
 	for range only.Once {
 		var bd string
-		bd, status = me.Config.GetHostBasedir(getFirstBasedir(basedirs))
+		bd, status = me.Config.GetHostBasedir(basedir)
 		if status.IsError() {
 			break
 		}
@@ -202,10 +249,10 @@ func (me *Gearbox) GetProjectDir(path string, basedirs ...string) (basedir strin
 	return basedir, status
 }
 
-func (me *Gearbox) GetProjectFilepath(path string, basedirs ...string) (pfp string, status stat.Status) {
+func (me *GearboxObj) GetProjectFilepath(path string, basedir string) (pfp string, status stat.Status) {
 	for range only.Once {
 		var pd string
-		pd, status = me.GetProjectDir(path, getFirstBasedir(basedirs))
+		pd, status = me.GetProjectDir(path, basedir)
 		if status.IsError() {
 			break
 		}
@@ -214,7 +261,7 @@ func (me *Gearbox) GetProjectFilepath(path string, basedirs ...string) (pfp stri
 	return pfp, status
 }
 
-func (me *Gearbox) AddNamedStackToProject(stackName StackName, hostname string) (status stat.Status) {
+func (me *GearboxObj) AddNamedStackToProject(stackName StackName, hostname string) (status stat.Status) {
 	for range only.Once {
 		var p *Project
 		p, status = me.FindProjectWithDetails(hostname)
@@ -230,7 +277,7 @@ func (me *Gearbox) AddNamedStackToProject(stackName StackName, hostname string) 
 	return status
 }
 
-func (me *Gearbox) FindNamedStack(stackName StackName) (stack *Stack, status stat.Status) {
+func (me *GearboxObj) FindNamedStack(stackName StackName) (stack *Stack, status stat.Status) {
 	stack, status = FindNamedStack(me, stackName)
 	return stack, status
 }
