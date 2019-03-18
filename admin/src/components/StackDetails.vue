@@ -6,25 +6,25 @@
     <el-row>
       <el-col :span="4">
         <el-card class="box-card" label="Web">
-          <StackMemberWeb :member="stack.members.webserver"/>
+          <ServiceWeb :service="stack.services.webserver"/>
         </el-card>
       </el-col>
 
       <el-col :span="4">
         <el-card label="Database">
-          <StackMemberDB :member="stack.members.dbserver"/>
+          <ServiceDB :service="stack.services.dbserver"/>
         </el-card>
       </el-col>
 
       <el-col :span="4">
         <el-card label="Cache">
-          <StackMemberCache :member="stack.members.cacheserver"/>
+          <ServiceCache :service="stack.services.cacheserver"/>
         </el-card>
       </el-col>
 
       <el-col :span="4">
         <el-card label="Process">
-          <StackMemberWorker :member="stack.members.processvm"/>
+          <ServiceProcessVM :service="stack.services.processvm"/>
         </el-card>
       </el-col>
     </el-row>
@@ -34,10 +34,10 @@
 
 <script>
 
-import StackMemberWeb from './StackMemberWeb.vue'
-import StackMemberDB from './StackMemberDB.vue'
-import StackMemberCache from './StackMemberCache.vue'
-import StackMemberWorker from './StackMemberWorker.vue'
+import ServiceWeb from './ServiceWeb.vue'
+import ServiceDB from './ServiceDB.vue'
+import ServiceCache from './ServiceCache.vue'
+import ServiceProcessVM from './ServiceProcessVM.vue'
 
 export default {
   name: 'StackDetails',
@@ -47,10 +47,10 @@ export default {
     }
   },
   components: {
-    StackMemberWeb,
-    StackMemberDB,
-    StackMemberCache,
-    StackMemberWorker
+    ServiceWeb,
+    ServiceDB,
+    ServiceCache,
+    ServiceProcessVM
   }
 }
 </script>

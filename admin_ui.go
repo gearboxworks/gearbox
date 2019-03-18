@@ -23,8 +23,8 @@ import (
 
 const (
 	UiWindowTitle = "Gearbox"
-	UiHeight      = 600
-	UiWidth       = 800
+	UiHeight      = 800
+	UiWidth       = 1024
 	UiResizable   = true
 	UiDebug       = true
 )

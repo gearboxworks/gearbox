@@ -17,7 +17,9 @@ export default new Vuex.Store({
     projects: [],
     stacks: [],
     stack_members: [],
-    gears: [],
+    gearStacks: {},
+    gearRoles: {},
+    gearServices: {},
     connectionStatus: {
       networkError: null,
       remainingRetries: 5
@@ -30,6 +32,27 @@ export default new Vuex.Store({
     },
     projectBy: (state) => (fieldName, fieldValue) => {
       return state.projects.find(p => p[fieldName] === fieldValue)
+    },
+    stackRoles: (state) => (stack) => {
+      var result = {}
+      var key
+      for (key in state.gearRoles) {
+        if (state.gearRoles.hasOwnProperty(key) && (key.indexOf(stack) !== -1)) {
+          result[key] = state.gearRoles[key]
+        }
+      }
+      return result
+    },
+    stackServices: (state) => (stack) => {
+      var result = {}
+      var key
+      for (key in state.gearServices) {
+        if (state.gearServices.hasOwnProperty(key) && (key.indexOf(stack) !== -1)) {
+          result[key] = state.gearServices[key]
+        }
+      }
+      console.log(result)
+      return result
     },
     baseDirsAsOptions: (state) => {
       const options = []
@@ -229,19 +252,21 @@ export default new Vuex.Store({
         })
     },
     loadGears ({ commit }) {
-      // axios
-      //   .get(
-      //     'http://127.0.0.1:9999/gears',
-      //     { crossDomain: true },
-      //   )
-      //   .catch((error) => {
-      //     // handle error
-      //     // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
-      //   })
-      //   .then(r => r.data.data)
-      //   .then((gears) => {
-      //     commit('SET_GEARS', gears);
-      //   });
+      axios
+        .get(
+          'https://raw.githubusercontent.com/gearboxworks/gearbox/master/assets/gears.json',
+          { crossDomain: true }
+        )
+        .catch((error) => {
+          // handle error
+          // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
+        })
+        .then(r => r.data)
+        .then((data) => {
+          commit('SET_GEAR_STACKS', data.stacks)
+          commit('SET_GEAR_ROLES', data.roles)
+          commit('SET_GEAR_SERVICES', data.role_services)
+        })
     },
     updateProject ({ commit }, payload) {
       const { hostname, project } = payload
@@ -270,10 +295,8 @@ export default new Vuex.Store({
         method: 'post',
         url: 'basedirs/new',
         data: payload
-      }).then(r => r.data).then((project) => {
-        // move commit here
-        // resolve()
-        //commit('ADD_BASEDIR', payload)
+      }).then(r => r.data).then((baseDir) => {
+        // commit('ADD_BASEDIR', baseDir)
       }).catch((error) => {
         console.log('rejected', error)
         // resolve();
@@ -294,8 +317,14 @@ export default new Vuex.Store({
     SET_STACKS (state, stacks) {
       state.stacks = stacks
     },
-    SET_GEARS (state, gears) {
-      state.gears = gears
+    SET_GEAR_STACKS (state, stacks) {
+      state.gearStacks = stacks
+    },
+    SET_GEAR_ROLES (state, roles) {
+      state.gearRoles = roles
+    },
+    SET_GEAR_SERVICES (state, services) {
+      state.gearServices = services
     },
     UPDATE_PROJECT (state, args) {
       const { hostname, project } = args

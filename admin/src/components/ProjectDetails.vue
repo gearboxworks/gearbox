@@ -22,7 +22,7 @@
 
       <b-form-group
         id="basedirGroup1"
-        label="Base Directory:"
+        label="Base Dir:"
         label-for="basedirInput"
         description=""
         label-cols-sm="4"
@@ -38,7 +38,7 @@
 
       <b-form-group
         id="pathGroup"
-        label="Subdirectory:"
+        label="Path:"
         label-for="dirNameInput"
         :description="'Full path: ' + this.$store.state.baseDirs[baseDir].text + '/' + path"
         label-cols-sm="4"

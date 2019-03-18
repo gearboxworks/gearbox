@@ -30,13 +30,13 @@ export default new Router({
     {
       path: '/projects',
       name: 'projects',
-      component: () => import(/* webpackChunkName: "project" */ './views/Projects.vue')
-      // children: [
-      //   {
-      //     path: ':hostname',
-      //     component: () => import(/* webpackChunkName: "project" */ './components/ProjectDetails.vue')
-      //   }
-      // ]
+      component: () => import(/* webpackChunkName: "projects" */ './views/Projects.vue'),
+      children: [
+        {
+          path: ':hostname/stack',
+          component: () => import(/* webpackChunkName: "projectstack" */ './components/ProjectStack.vue')
+        }
+      ]
     },
     {
       path: '/stack/:stackName',
