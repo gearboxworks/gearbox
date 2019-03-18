@@ -23,9 +23,9 @@ func NewRequestContext(_api *Api, resourceName ResourceName) *RequestContext {
 		ResourceName: resourceName,
 	}
 }
-func (me *RequestContext) Param(name string) (value string) {
+func (me *RequestContext) Param(name ResourceVarName) (value string) {
 	if me.Context != nil {
-		value = me.Context.Param(name)
+		value = me.Context.Param(string(name))
 	}
 	return value
 }
@@ -64,7 +64,7 @@ func (me *RequestContext) GetApiSelfLink() (path UriTemplate) {
 			continue
 		}
 		p = p[1:]
-		parts[i] = me.Param(p)
+		parts[i] = me.Param(ResourceVarName(p))
 	}
 	path = UriTemplate(strings.Join(parts, "/"))
 	return path
