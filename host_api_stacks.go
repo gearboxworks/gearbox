@@ -137,3 +137,18 @@ func (me *HostApi) getStackResponse(rc *api.RequestContext) (response interface{
 	}
 	return response
 }
+
+func (me *HostApi) getStackNameValues(...interface{}) (values []string, status stat.Status) {
+	for range only.Once {
+		var fsns StackNames
+		fsns, status = GetFullStackNames(me.Gearbox)
+		if status.IsError() {
+			break
+		}
+		values = make([]string, len(fsns))
+		for i, sn := range fsns {
+			values[i] = string(sn)
+		}
+	}
+	return values, status
+}
