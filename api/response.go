@@ -29,7 +29,7 @@ func (me *Response) GetUrlPathTemplate(resourceType ResourceName) (url UriTempla
 		var ok bool
 		url, ok = me.Links[resourceType]
 		if !ok {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Message: fmt.Sprintf("no '%s' in resource links", resourceType),
 				Error:   stat.IsStatusError,
 				Help:    ContactSupportHelp(),

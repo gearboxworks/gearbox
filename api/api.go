@@ -145,7 +145,7 @@ func (me *Api) GetUrl(name ResourceName, vars UriTemplateVars) (url UriTemplate,
 func (me *Api) GetUrlPathTemplate(name ResourceName) (url UriTemplate, status stat.Status) {
 	for range only.Once {
 		if me.Defaults == nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Message: fmt.Sprintf("the Defaults property is nil when accessing api for resource type '%s'",
 					name,
 				),
@@ -174,7 +174,7 @@ func (me *Api) Stop() {
 }
 
 func (me *Api) NotYetImplemented(rc *RequestContext) interface{} {
-	return stat.NewFailedStatus(&stat.Args{
+	return stat.NewFailStatus(&stat.Args{
 		Message:    fmt.Sprintf("the '%s' resource has not been implemented yet", rc.ResourceName),
 		HttpStatus: http.StatusMethodNotAllowed,
 	})

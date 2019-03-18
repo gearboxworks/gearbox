@@ -24,7 +24,7 @@ func UnmarshalJson(j []byte, obj FilepathHelpUrlGetter) (status stat.Status) {
 	for range only.Once {
 		err := json.Unmarshal(j, &obj)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   err,
 				Message: fmt.Sprintf("failed to unmarshal JSON for '%s'", obj.GetFilepath()),
 				Help: fmt.Sprintf("ensure '%s' is in correct format per %s",

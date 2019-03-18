@@ -40,7 +40,7 @@ func (me *RequestContext) WrapHandler(next HandlerFunc) echo.HandlerFunc {
 func (me *RequestContext) ReadRequestBody() (b []byte, status stat.Status) {
 	b, err := ioutil.ReadAll(me.Context.Request().Body)
 	if err != nil {
-		status = stat.NewFailedStatus(&stat.Args{
+		status = stat.NewFailStatus(&stat.Args{
 			Error:   err,
 			Message: fmt.Sprintf("failed to read request body for '%s'", me.ResourceName),
 			Help:    ContactSupportHelp(),
@@ -78,7 +78,7 @@ func (me *RequestContext) UnmarshalFromRequest(obj interface{}) (status stat.Sta
 		}
 		err := json.Unmarshal(b, &obj)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:      err,
 				Message:    fmt.Sprintf("unexpected format for request body: '%s'", string(b)),
 				HttpStatus: http.StatusBadRequest,
@@ -136,7 +136,7 @@ func (me *RequestContext) JsonMarshalHandler(js interface{}) (status stat.Status
 		var j []byte
 		j, err = json.MarshalIndent(r, "", "   ")
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("unable to marshal output for resource '%s'",
 					me.ResourceName,
@@ -146,7 +146,7 @@ func (me *RequestContext) JsonMarshalHandler(js interface{}) (status stat.Status
 		}
 		err = ctx.String(httpStatus, string(j))
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("error when sending output for '%s'",
 					me.ResourceName,

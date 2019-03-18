@@ -61,7 +61,7 @@ func (me *ProjectFile) WriteFile() (status stat.Status) {
 		me.JsonMeta = jml.JsonMeta
 		b, err := json.MarshalIndent(me, "", "    ")
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   err,
 				Message: fmt.Sprintf("unable to generate JSON for project '%s'", me.Hostname),
 			})
@@ -70,7 +70,7 @@ func (me *ProjectFile) WriteFile() (status stat.Status) {
 		fp = strings.Replace(fp, ".json", "2.json", -1)
 		err = ioutil.WriteFile(fp, b, os.ModePerm)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   err,
 				Message: fmt.Sprintf("unable to write to '%s'", fp),
 				Help:    fmt.Sprintf("ensure you have permissions to write to '%s' and you are not out of disk space", filepath.Dir(fp)),
@@ -232,7 +232,7 @@ func (me *JsonMetaLoader) Load() (status stat.Status) {
 	for range only.Once {
 		b, err := ioutil.ReadFile(me.Filepath)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   err,
 				Message: fmt.Sprintf("unable to read '%s'", me.Filepath),
 				Help: fmt.Sprintf("ensure you have permissions you read '%s'",

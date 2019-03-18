@@ -50,14 +50,14 @@ func (me *HostApi) getServiceResponse(rc *api.RequestContext) (response interfac
 		}
 		roleMap, ok := response.(RoleMap)
 		if !ok {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Message: "getStackResponse() returned type other than Status or RoleMap",
 			})
 			break
 		}
 		role, ok := roleMap[getRoleSpec(rc)]
 		if !ok {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Message: fmt.Sprintf("role spec '%s' for stack '%s' not found",
 					getRoleSpec(rc),
 					me.getStackName(rc),
@@ -83,7 +83,7 @@ func (me *HostApi) getServicesResponse(rc *api.RequestContext) (response interfa
 		}
 		stack, ok := response.(*Stack)
 		if !ok {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Message: "getStackResponse() returned type other than Status or Stack",
 			})
 			break

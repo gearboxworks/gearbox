@@ -195,7 +195,7 @@ func ValidateStackName(gb Gearbox, stackName StackName) (status stat.Status) {
 			}
 		}
 		if !ok {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Message:    fmt.Sprintf("stack '%s' not found", stackName),
 				HttpStatus: http.StatusNotFound,
 				Help:       fmt.Sprintf("see valid stack names at %s", GearsJsonUrl),

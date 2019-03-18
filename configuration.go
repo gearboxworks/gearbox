@@ -118,7 +118,7 @@ func (me *Configuration) GetHostBasedir(nickname string) (basedir string, status
 		basedir = bd.HostDir
 		status = stat.NewOkStatus("hostdir found for nickname '%s'", nickname)
 	} else {
-		status = stat.NewFailedStatus(&stat.Args{
+		status = stat.NewFailStatus(&stat.Args{
 			Error:      stat.IsStatusError,
 			Message:    fmt.Sprintf("basedir nickname '%s' is not valid", basedir),
 			HttpStatus: http.StatusBadRequest,

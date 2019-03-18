@@ -76,7 +76,7 @@ func (me *Identity) Parse(identity string) (status stat.Status) {
 		me.Version = v
 	}
 	if msg != "" {
-		status = stat.NewFailedStatus(&stat.Args{
+		status = stat.NewFailStatus(&stat.Args{
 			Message: msg,
 			Help:    hlp,
 			Error:   stat.IsStatusError,

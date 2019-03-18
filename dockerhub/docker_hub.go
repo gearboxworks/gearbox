@@ -50,7 +50,7 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 		ar := ApiResponse{}
 		err := json.Unmarshal(crl, &ar)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("unable to unmarshal response from '%s'",
 					ContainerRespositoryListUrl,
@@ -60,7 +60,7 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 		}
 		rb, err := json.Marshal(ar.Results)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("unable to marshal container repositories from '%s'",
 					ContainerRespositoryListUrl,
@@ -71,7 +71,7 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 		rs := Repositories{}
 		err = json.Unmarshal(rb, &rs)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("unable to unmarshal container repositories from '%s'",
 					ContainerRespositoryListUrl,
@@ -117,7 +117,7 @@ func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*C
 		ar := ApiResponse{}
 		err := json.Unmarshal(acl, &ar)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("unable to unmarshal response from '%s'",
 					ContainerRespositoryListUrl,
@@ -136,7 +136,7 @@ func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*C
 
 		err = json.Unmarshal(cb, &cs)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("unable to marshal container repositories from '%s'",
 					ContainerRespositoryListUrl,
@@ -164,14 +164,14 @@ func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*C
 			for range only.Once {
 				iv, err := version.NewVersion(string(cs[i].Name))
 				if err != nil {
-					status = stat.NewFailedStatus(&stat.Args{
+					status = stat.NewFailStatus(&stat.Args{
 						Error: err,
 					})
 					break
 				}
 				jv, err := version.NewVersion(string(cs[j].Name))
 				if err != nil {
-					status = stat.NewFailedStatus(&stat.Args{
+					status = stat.NewFailStatus(&stat.Args{
 						Error: err,
 					})
 					break

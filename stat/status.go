@@ -79,9 +79,14 @@ func NewSuccessStatus(code int, msg ...string) (status Status) {
 	return status
 }
 
-func NewFailedStatus(args *Args) (status Status) {
+func NewFailStatus(args *Args) (status Status) {
 	args.Failed = true
 	return NewStatus(args)
+}
+
+func NewErrorStatus(err error, args *Args) (status Status) {
+	args.Error = err
+	return NewFailStatus(args)
 }
 
 func NewStatus(args *Args) (status Status) {

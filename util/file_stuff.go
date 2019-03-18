@@ -41,7 +41,7 @@ func ReadBytes(filepath string) (b []byte, status stat.Status) {
 			)
 		}
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   err,
 				Message: fmt.Sprintf("cannot read from '%s' file", filepath),
 				Help:    fmt.Sprintf("confirm file '%s' is readable", filepath),

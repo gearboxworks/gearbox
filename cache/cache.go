@@ -66,7 +66,7 @@ func (me *Cache) VerifyCacheFile(key string) (fp string, status stat.Status) {
 		} else {
 			msg = fmt.Sprintf("cannot open cache file for key '%s'", key)
 		}
-		status = stat.NewFailedStatus(&stat.Args{
+		status = stat.NewFailStatus(&stat.Args{
 			Error:   err,
 			Message: msg,
 		})
@@ -87,7 +87,7 @@ func (me *Cache) Get(key string) (data []byte, ok bool, status stat.Status) {
 		var b []byte
 		b, err := ioutil.ReadFile(fp)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   err,
 				Message: fmt.Sprintf("could not read file '%s'", fp),
 				Help:    fmt.Sprintf("ensure you have permissions to read '%s'", fp),
@@ -97,7 +97,7 @@ func (me *Cache) Get(key string) (data []byte, ok bool, status stat.Status) {
 		w := Wrapper{}
 		err = json.Unmarshal(b, &w)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   err,
 				Message: fmt.Sprintf("could not unmarshal JSON in file '%s'", fp),
 				Help:    fmt.Sprintf("try deleting the files your cache at '%s'", filepath.Dir(fp)),
@@ -107,7 +107,7 @@ func (me *Cache) Get(key string) (data []byte, ok bool, status stat.Status) {
 		data = []byte(w.Data)
 		expires, err := time.Parse(time.RFC3339, w.Expires)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   err,
 				Message: fmt.Sprintf("failed to calculate cache expiration for file '%s'", fp),
 				Help:    fmt.Sprintf("try deleting the files your cache at '%s'", filepath.Dir(fp)),
@@ -141,7 +141,7 @@ func (me *Cache) Set(key string, b []byte, duration string) (status stat.Status)
 		}
 		b, err := json.Marshal(w)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   err,
 				Message: fmt.Sprintf("could not marshal JSON to cache key '%s'", key),
 				Help:    "this should never happen, so try rebooting. Or contacting support",
@@ -153,7 +153,7 @@ func (me *Cache) Set(key string, b []byte, duration string) (status stat.Status)
 		if !dirExists(d) {
 			err = os.Mkdir(filepath.Dir(fp), 0777)
 			if err != nil {
-				status = stat.NewFailedStatus(&stat.Args{
+				status = stat.NewFailStatus(&stat.Args{
 					Error:   err,
 					Message: fmt.Sprintf("unable to create cache directory '%s'", d),
 					Help:    fmt.Sprintf("ensure you have permissions to '%s'", filepath.Dir(d)),
@@ -163,7 +163,7 @@ func (me *Cache) Set(key string, b []byte, duration string) (status stat.Status)
 		}
 		err = ioutil.WriteFile(fp, b, 0777)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   err,
 				Message: fmt.Sprintf("unable to write to cache file '%s'", fp),
 				Help:    fmt.Sprintf("ensure you have permissions to '%s'", filepath.Dir(d)),

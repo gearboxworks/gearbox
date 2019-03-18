@@ -30,7 +30,7 @@ func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
 	for range only.Once {
 		request, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   err,
 				Message: fmt.Sprintf("invalid URL '%s'", url),
 				Help:    "if you provided this URL please correct it, otherwise " + stat.ContactSupportHelp(),
@@ -46,7 +46,7 @@ func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
 			"status_code": statusCode,
 		}
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("http status code %d; unable to retrieve '%s': ",
 					statusCode,
@@ -59,7 +59,7 @@ func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
 		defer CloseResponseBody(response)
 		body, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("http status code %d; unable to retrieve '%s': ",
 					statusCode,
@@ -73,7 +73,7 @@ func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
 		switch statusCode {
 		case 200:
 			if err != nil {
-				status = stat.NewFailedStatus(&stat.Args{
+				status = stat.NewFailStatus(&stat.Args{
 					Error: err,
 					Message: fmt.Sprintf("http status code 200 but no content returned for '%s'",
 						url,
@@ -85,7 +85,7 @@ func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
 			}
 
 		case 401:
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("invalid credentials provided for '%s'",
 					url,
@@ -96,7 +96,7 @@ func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
 			break
 
 		case 403:
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("permission denied for '%s'",
 					url,
@@ -107,7 +107,7 @@ func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
 			break
 
 		default:
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: err,
 				Message: fmt.Sprintf("permission denied for '%s'",
 					url,

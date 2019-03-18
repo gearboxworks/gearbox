@@ -48,7 +48,7 @@ func (me *Spec) Parse(spec string) (status stat.Status) {
 		if len(parts) > 1 {
 			_, err = strconv.Atoi(parts[1])
 			if err != nil {
-				status = stat.NewFailedStatus(&stat.Args{
+				status = stat.NewFailStatus(&stat.Args{
 					Error:   err,
 					Message: fmt.Sprintf("invalid version in '%s'", spec),
 					Help: fmt.Sprintf("version must be integer after a colon (':') at end of '%s'",
@@ -61,7 +61,7 @@ func (me *Spec) Parse(spec string) (status stat.Status) {
 		}
 		parts = strings.Split(parts[0], "/")
 		if len(parts) == 1 {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error:   stat.IsStatusError,
 				Message: fmt.Sprintf("invalid spec '%s'", spec),
 				Help:    "specs must contain at least two (2) slash-seperated segments, i.e. {stack}/{role}",
@@ -73,7 +73,7 @@ func (me *Spec) Parse(spec string) (status stat.Status) {
 		if strings.Contains(parts[0], ".") {
 			tmp.Authority = AuthorityDomain(parts[0])
 			if re["authority"].MatchString(string(tmp.Authority)) {
-				status = stat.NewFailedStatus(&stat.Args{
+				status = stat.NewFailStatus(&stat.Args{
 					Error:   stat.IsStatusError,
 					Message: fmt.Sprintf("invalid authority '%s' in '%s'", tmp.Authority, spec),
 					Help: fmt.Sprintf("authority '%s' in '%s'%s",
@@ -91,7 +91,7 @@ func (me *Spec) Parse(spec string) (status stat.Status) {
 			tmp.StackName = StackName(strings.Join(parts[:len(parts)-1], "/"))
 		}
 		if re["ns_or_r"].MatchString(string(tmp.StackName)) {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: stat.IsStatusError,
 				Message: fmt.Sprintf("invalid stack name '%s' in spec '%s'",
 					tmp.StackName,
@@ -105,7 +105,7 @@ func (me *Spec) Parse(spec string) (status stat.Status) {
 			break
 		}
 		if re["ns_or_r"].MatchString(tmp.ServiceType) {
-			status = stat.NewFailedStatus(&stat.Args{
+			status = stat.NewFailStatus(&stat.Args{
 				Error: stat.IsStatusError,
 				Message: fmt.Sprintf("invalid role '%s' in '%s'",
 					tmp.ServiceType,

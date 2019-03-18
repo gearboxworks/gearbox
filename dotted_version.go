@@ -119,7 +119,7 @@ func (me *DottedVersion) Parse(ver string) (status stat.Status) {
 
 	}
 	if msg != "" {
-		status = stat.NewFailedStatus(&stat.Args{
+		status = stat.NewFailStatus(&stat.Args{
 			Message: msg,
 			Help:    hlp,
 			Error:   stat.IsStatusError,
