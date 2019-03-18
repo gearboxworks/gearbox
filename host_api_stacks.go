@@ -23,11 +23,18 @@ const StackNameResourceVar api.ResourceVarName = "stack"
 
 func (me *HostApi) addStackRoutes() {
 
-	me.GET("/stacks", "stacks", me.getStacksResponse)
-	me.GET("/stacks/:stack", "stack-details", me.getStackResponse)
-	me.GET("/stacks/:stack/services", "stack-services", me.getServicesResponse)
-	me.GET("/stacks/:stack/services/:service", "stack-service", me.getServiceResponse)
-	me.GET("/stacks/:stack/services/:service/options", "stack-service-options", me.getServiceResponse)
+	me.GET("/stacks", StacksResource, me.getStacksResponse, nil)
+	me.GET("/stacks/:stack", StackDetailsResource, me.getStackResponse, me.getStackNameValues)
+	me.GET("/stacks/:authority/:stack", AuthorityStackDetailsResource, me.getStackResponse, me.getStackNameValues)
+
+	//me.GET("/stacks/:stack/services", StackServicesResource, me.getServicesResponse,nil)
+	//me.GET("/stacks/:authority/:stack/services", AuthorityStackServicesResource, me.getServicesResponse,nil)
+	//
+	//me.GET("/stacks/:stack/services/:service", StackServiceResource, me.getServiceResponse,nil)
+	//me.GET("/stacks/:authority/:stack/services/:service", AuthorityStackServiceResource, me.getServiceResponse,nil)
+	//
+	//me.GET("/stacks/:stack/services/:service/options", StackServiceOptionsResource, me.getServiceResponse,nil)
+	//me.GET("/stacks/:authority/:stack/services/:service/options", AuthorityStackServiceOptionsResource, me.getServiceResponse,nil)
 }
 
 func (me *HostApi) getStackName(rc *api.RequestContext) StackName {

@@ -10,10 +10,10 @@ import (
 
 func (me *HostApi) addBasedirRoutes() {
 
-	me.GET("/basedirs", "basedirs", me.getHostBasedirsResponse)
-	me.PUT("/basedirs/:nickname", "basedir-update", me.updateBasedir)
-	me.POST("/basedirs/new", "basedir-add", me.addBasedir)
-	me.DELETE("/basedirs/:nickname", "basedir-delete", me.deleteNamedBasedir)
+	me.GET("/basedirs", "basedirs", me.getHostBasedirsResponse, nil)
+	me.PUT("/basedirs/:nickname", "basedir-update", me.updateBasedir, nil)
+	me.POST("/basedirs/new", "basedir-add", me.addBasedir, nil)
+	me.DELETE("/basedirs/:nickname", "basedir-delete", me.deleteNamedBasedir, nil)
 
 }
 

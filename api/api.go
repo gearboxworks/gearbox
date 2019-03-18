@@ -37,6 +37,9 @@ func optionsHandler(ctx echo.Context) error {
 	return nil
 }
 
+type ValuesFuncMap map[ResourceName]ValuesFunc
+type ValuesFunc func(...interface{}) ([]string, stat.Status)
+
 type UriTemplate string
 
 type EndpointMap map[ResourceName]*Endpoint
@@ -51,11 +54,12 @@ type Methods []Method
 type Method string
 
 type Api struct {
-	Echo        *echo.Echo
-	Port        string
-	Defaults    *Response
-	EndpointMap EndpointMap
-	MethodMap   MethodMap
+	Echo          *echo.Echo
+	Port          string
+	Defaults      *Response
+	EndpointMap   EndpointMap
+	MethodMap     MethodMap
+	ValuesFuncMap ValuesFuncMap
 }
 
 func NewApi(echo *echo.Echo, defaults *Response) *Api {
@@ -80,24 +84,26 @@ func NewApi(echo *echo.Echo, defaults *Response) *Api {
 			http.MethodDelete:  make(ResourceMap, 0),
 			http.MethodOptions: make(ResourceMap, 0),
 		},
+		ValuesFuncMap: make(ValuesFuncMap, 0),
 	}
 }
 
-func (me *Api) GET(path UriTemplate, name ResourceName, handler HandlerFunc) *echo.Route {
-	return me.Echo.GET(string(path), me.GetRequestContext(http.MethodGet, name, path).WrapHandler(handler))
+func (me *Api) GET(path UriTemplate, name ResourceName, valuesFunc ValuesFunc, handler HandlerFunc) *echo.Route {
+	return me.Echo.GET(string(path), me.GetRequestContext(http.MethodGet, name, path, valuesFunc).WrapHandler(handler))
 }
-func (me *Api) PUT(path UriTemplate, name ResourceName, handler HandlerFunc) *echo.Route {
-	return me.Echo.PUT(string(path), me.GetRequestContext(http.MethodPut, name, path).WrapHandler(handler))
-}
-
-func (me *Api) POST(path UriTemplate, name ResourceName, handler HandlerFunc) *echo.Route {
-	return me.Echo.POST(string(path), me.GetRequestContext(http.MethodPost, name, path).WrapHandler(handler))
-}
-func (me *Api) DELETE(path UriTemplate, name ResourceName, handler HandlerFunc) *echo.Route {
-	return me.Echo.DELETE(string(path), me.GetRequestContext(http.MethodDelete, name, path).WrapHandler(handler))
+func (me *Api) PUT(path UriTemplate, name ResourceName, valuesFunc ValuesFunc, handler HandlerFunc) *echo.Route {
+	return me.Echo.PUT(string(path), me.GetRequestContext(http.MethodPut, name, path, valuesFunc).WrapHandler(handler))
 }
 
-func (me *Api) GetRequestContext(method Method, name ResourceName, path UriTemplate) *RequestContext {
+func (me *Api) POST(path UriTemplate, name ResourceName, valuesFunc ValuesFunc, handler HandlerFunc) *echo.Route {
+	return me.Echo.POST(string(path), me.GetRequestContext(http.MethodPost, name, path, valuesFunc).WrapHandler(handler))
+}
+func (me *Api) DELETE(path UriTemplate, name ResourceName, valuesFunc ValuesFunc, handler HandlerFunc) *echo.Route {
+	return me.Echo.DELETE(string(path), me.GetRequestContext(http.MethodDelete, name, path, valuesFunc).WrapHandler(handler))
+}
+
+func (me *Api) GetRequestContext(method Method, name ResourceName, path UriTemplate, valuesFunc ValuesFunc) *RequestContext {
+	me.ValuesFuncMap[name] = valuesFunc
 	me.Defaults.Meta.Resource = name
 	uriTemplate := convertEchoTemplateToUriTemplate(path)
 	me.Defaults.Links[name] = uriTemplate

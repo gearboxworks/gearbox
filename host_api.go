@@ -75,10 +75,10 @@ func (me *HostApi) Stop() {
 	me.Api.Stop()
 }
 
-type HandlerFunc func(rc *api.RequestContext) interface{}
+type HandlerFunc func(*api.RequestContext) interface{}
 
-func (me *HostApi) GET(path api.UriTemplate, name api.ResourceName, handler HandlerFunc) *echo.Route {
-	return me.Api.GET(path, name, func(rc *api.RequestContext) (err error) {
+func (me *HostApi) GET(path api.UriTemplate, name api.ResourceName, handler HandlerFunc, valuesFunc api.ValuesFunc) *echo.Route {
+	return me.Api.GET(path, name, valuesFunc, func(rc *api.RequestContext) (err error) {
 		me.Gearbox.SetResourceName(rc.ResourceName)
 		if handler != nil {
 			err = me.jsonMarshalHandler(rc, handler(rc))
@@ -89,20 +89,20 @@ func (me *HostApi) GET(path api.UriTemplate, name api.ResourceName, handler Hand
 	})
 }
 
-func (me *HostApi) POST(path api.UriTemplate, name api.ResourceName, handler HandlerFunc) *echo.Route {
-	return me.Api.POST(path, name, func(rc *api.RequestContext) error {
+func (me *HostApi) POST(path api.UriTemplate, name api.ResourceName, handler HandlerFunc, valuesFunc api.ValuesFunc) *echo.Route {
+	return me.Api.POST(path, name, valuesFunc, func(rc *api.RequestContext) error {
 		return me.jsonMarshalHandler(rc, handler(rc))
 	})
 }
 
-func (me *HostApi) PUT(path api.UriTemplate, name api.ResourceName, handler HandlerFunc) *echo.Route {
-	return me.Api.PUT(path, name, func(rc *api.RequestContext) error {
+func (me *HostApi) PUT(path api.UriTemplate, name api.ResourceName, handler HandlerFunc, valuesFunc api.ValuesFunc) *echo.Route {
+	return me.Api.PUT(path, name, valuesFunc, func(rc *api.RequestContext) error {
 		return me.jsonMarshalHandler(rc, handler(rc))
 	})
 }
 
-func (me *HostApi) DELETE(path api.UriTemplate, name api.ResourceName, handler HandlerFunc) *echo.Route {
-	return me.Api.DELETE(path, name, func(rc *api.RequestContext) error {
+func (me *HostApi) DELETE(path api.UriTemplate, name api.ResourceName, handler HandlerFunc, valuesFunc api.ValuesFunc) *echo.Route {
+	return me.Api.DELETE(path, name, valuesFunc, func(rc *api.RequestContext) error {
 		return me.jsonMarshalHandler(rc, handler(rc))
 	})
 }

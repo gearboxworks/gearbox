@@ -49,31 +49,31 @@ func getProjectHostname(rc *api.RequestContext) (hn string, status stat.Status) 
 
 func (me *HostApi) addProjectRoutes() {
 
-	me.GET("/projects", ProjectsResource, me.getProjectsResponse)
-	me.GET("/projects/with-details", ProjectsWithDetailsResource, me.getProjectsResponse)
-	me.GET("/projects/enabled", ProjectEnabledResource, me.getEnabledProjectsResponse)
-	me.GET("/projects/disabled", ProjectDisabledResource, me.getDisabledProjectsResponse)
-	me.GET("/projects/candidates", ProjectCandidatesResource, me.getCandidateProjectsResponse)
+	me.GET("/projects", ProjectsResource, me.getProjectsResponse, nil)
+	me.GET("/projects/with-details", ProjectsWithDetailsResource, me.getProjectsResponse, nil)
+	me.GET("/projects/enabled", ProjectEnabledResource, me.getEnabledProjectsResponse, nil)
+	me.GET("/projects/disabled", ProjectDisabledResource, me.getDisabledProjectsResponse, nil)
+	me.GET("/projects/candidates", ProjectCandidatesResource, me.getCandidateProjectsResponse, nil)
 
-	me.GET("/projects/:hostname", ProjectDetailsResource, me.getProjectDetailsResponse)
-	me.PUT("/projects/:hostname", "project-update", me.updateProjectDetails)
-	me.POST("/projects/new", "project-add", me.addProjectDetails)
-	me.DELETE("/projects/:hostname", "project-delete", me.deleteProjectDetails)
+	me.GET("/projects/:hostname", ProjectDetailsResource, me.getProjectDetailsResponse, nil)
+	me.PUT("/projects/:hostname", "project-update", me.updateProjectDetails, nil)
+	me.POST("/projects/new", "project-add", me.addProjectDetails, nil)
+	me.DELETE("/projects/:hostname", "project-delete", me.deleteProjectDetails, nil)
 
-	me.GET("/projects/:hostname/aliases", ProjectAliasesResource, me.getProjectAliasesResponse)
-	me.PUT("/projects/:hostname/aliases/:alias", ProjectAliasUpdate, me.updateProjectAlias)
-	me.POST("/projects/:hostname/aliases/new", ProjectAliasAdd, me.addProjectAlias)
-	me.DELETE("/projects/:hostname/aliases/:alias", ProjectAliasDelete, me.deleteProjectAlias)
+	me.GET("/projects/:hostname/aliases", ProjectAliasesResource, me.getProjectAliasesResponse, nil)
+	me.PUT("/projects/:hostname/aliases/:alias", ProjectAliasUpdate, me.updateProjectAlias, nil)
+	me.POST("/projects/:hostname/aliases/new", ProjectAliasAdd, me.addProjectAlias, nil)
+	me.DELETE("/projects/:hostname/aliases/:alias", ProjectAliasDelete, me.deleteProjectAlias, nil)
 
-	me.GET("/projects/:hostname/services", ProjectServicesResource, me.getProjectServicesResponse)
-	me.PUT("/projects/:hostname/services/:service", ProjectServicesUpdate, me.updateProjectService)
-	me.POST("/projects/:hostname/services/new", ProjectServicesAdd, me.addProjectService)
-	me.DELETE("/projects/:hostname/services/:service", ProjectServicesDelete, me.deleteProjectService)
+	me.GET("/projects/:hostname/services", ProjectServicesResource, me.getProjectServicesResponse, nil)
+	me.PUT("/projects/:hostname/services/:service", ProjectServicesUpdate, me.updateProjectService, nil)
+	me.POST("/projects/:hostname/services/new", ProjectServicesAdd, me.addProjectService, nil)
+	me.DELETE("/projects/:hostname/services/:service", ProjectServicesDelete, me.deleteProjectService, nil)
 
-	me.GET("/projects/:hostname/stacks", ProjectStacksResource, me.getProjectStacksResponse)
-	me.PUT("/projects/:hostname/stacks/:stack", ProjectStackUpdate, me.updateProjectStack)
-	me.POST("/projects/:hostname/stacks/new", ProjectStackAdd, me.addProjectStack)
-	me.DELETE("/projects/:hostname/stacks/:stack", ProjectStackDelete, me.deleteProjectStack)
+	me.GET("/projects/:hostname/stacks", ProjectStacksResource, me.getProjectStacksResponse, nil)
+	me.PUT("/projects/:hostname/stacks/:stack", ProjectStackUpdate, me.updateProjectStack, nil)
+	me.POST("/projects/:hostname/stacks/new", ProjectStackAdd, me.addProjectStack, nil)
+	me.DELETE("/projects/:hostname/stacks/:stack", ProjectStackDelete, me.deleteProjectStack, nil)
 
 }
 
