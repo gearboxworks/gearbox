@@ -16,7 +16,11 @@ type StackNameRequest struct {
 func getStackName(rc *api.RequestContext) (sn StackName, status stat.Status) {
 	for range only.Once {
 		if rc.Context.Request().Method == echo.GET {
-			sn = StackName(rc.Param("stack"))
+			sn = StackName(rc.Param(StackNameResourceVar))
+			a := StackName(rc.Param(AuthorityResourceVar))
+			if a != "" {
+				sn = StackName(fmt.Sprintf("%s/%s", a, sn))
+			}
 			break
 		}
 		snr := StackNameRequest{}
