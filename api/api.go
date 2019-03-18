@@ -138,7 +138,7 @@ func (me *Api) GetUrl(name ResourceName, vars UriTemplateVars) (url UriTemplate,
 		path = convertEchoTemplateToUriTemplate(path)
 		path = ExpandUriTemplate(path, vars)
 	}
-	url = UriTemplate(fmt.Sprintf("http://127.0.0.1:%s/%s", me.Port, path))
+	url = UriTemplate(fmt.Sprintf("http://127.0.0.1:%s/%s", me.Port, strings.Trim(string(path), "/")))
 	return url, status
 }
 
