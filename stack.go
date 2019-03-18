@@ -143,6 +143,27 @@ func (me *Stack) Refresh() (status stat.Status) {
 	return status
 }
 
+func GetFullStackNames(gb Gearbox) (fsns StackNames, status stat.Status) {
+	gears := NewGears(gb)
+	for range only.Once {
+		status := gears.Refresh()
+		if status.IsError() {
+			break
+		}
+		for i, sn := range gears.StackNames {
+			sn, status = GetFullStackName(sn)
+			if status.IsError() {
+				break
+			}
+			gears.StackNames[i] = sn
+		}
+	}
+	if !status.IsError() {
+		status = stat.NewOkStatus("full stack named gotten")
+	}
+	return gears.StackNames, status
+}
+
 func GetFullStackName(stackName StackName) (fsn StackName, status stat.Status) {
 	for range only.Once {
 		spec := NewSpec()
