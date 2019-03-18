@@ -92,13 +92,18 @@ func GetStackMap() StackMap {
 }
 
 func (me *Stack) GetDefaultServices() (sm ServiceMap, status stat.Status) {
-	sm = make(ServiceMap, 0)
-	me.Refresh()
-	for gs, s := range me.RoleServicesMap {
-		if s.DefaultService == nil {
-			continue
+	for range only.Once {
+		sm = make(ServiceMap, 0)
+		status = me.Refresh()
+		if status.IsError() {
+			break
 		}
-		sm[gs] = s.DefaultService
+		for gs, s := range me.RoleServicesMap {
+			if s.DefaultService == nil {
+				continue
+			}
+			sm[gs] = s.DefaultService
+		}
 	}
 	return sm, status
 }

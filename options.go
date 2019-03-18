@@ -151,7 +151,13 @@ func (me *Gears) Refresh() (status stat.Status) {
 			break
 		}
 		for rs, sr := range me.RoleMap {
-			sr.Fixup(rs)
+			status = sr.Fixup(rs)
+			if status.IsError() {
+				break
+			}
+		}
+		if status.IsError() {
+			break
 		}
 		for rs, ro := range me.RoleServicesMap {
 			sr, ok := me.RoleMap[rs]

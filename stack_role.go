@@ -65,14 +65,20 @@ func (me *StackRole) FileRoleSpec() RoleSpec {
 	return spec.GetSpec()
 }
 
-func (me *StackRole) Fixup(rolespec RoleSpec) {
-	me.Parse(rolespec)
-	if me.Minimum == 0 && !me.Optional {
-		me.Minimum = 1
+func (me *StackRole) Fixup(rolespec RoleSpec) (status stat.Status) {
+	for range only.Once {
+		status := me.Parse(rolespec)
+		if status.IsError() {
+			break
+		}
+		if me.Minimum == 0 && !me.Optional {
+			me.Minimum = 1
+		}
+		if me.Maximum == 0 {
+			me.Maximum = MaxServicesPerRole
+		}
 	}
-	if me.Maximum == 0 {
-		me.Maximum = MaxServicesPerRole
-	}
+	return status
 }
 
 func (me *StackRole) GetStackName() (name StackName) {
