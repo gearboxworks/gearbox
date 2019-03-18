@@ -8,6 +8,19 @@ import (
 	"net/http"
 )
 
+const StacksResource api.ResourceName = "stacks"
+const StackDetailsResource api.ResourceName = "stack-details"
+const AuthorityStackDetailsResource api.ResourceName = "authority-stack-details"
+const StackServicesResource api.ResourceName = "stack-services"
+const AuthorityStackServicesResource api.ResourceName = "authority-stack-services"
+const StackServiceResource api.ResourceName = "stack-service"
+const AuthorityStackServiceResource api.ResourceName = "authority-stack-service"
+const StackServiceOptionsResource api.ResourceName = "stack-service-options"
+const AuthorityStackServiceOptionsResource api.ResourceName = "authority-stack-service-options"
+
+const AuthorityResourceVar api.ResourceVarName = "authority"
+const StackNameResourceVar api.ResourceVarName = "stack"
+
 func (me *HostApi) addStackRoutes() {
 
 	me.GET("/stacks", "stacks", me.getStacksResponse)
