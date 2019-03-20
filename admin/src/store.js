@@ -33,6 +33,31 @@ export default new Vuex.Store({
     projectBy: (state) => (fieldName, fieldValue) => {
       return state.projects.find(p => p[fieldName] === fieldValue)
     },
+    groupProjectStacks: (state) => (projectStack) => {
+      var result = {}
+      for (const stackRole in projectStack) {
+        if (projectStack.hasOwnProperty(stackRole)) {
+          const stackName = projectStack[stackRole].authority + '/' + projectStack[stackRole].stack
+          const serviceName = projectStack[stackRole].authority + '/' + stackRole
+          if (typeof result[stackName] === 'undefined') {
+            result[stackName] = {}
+          }
+          result[stackName][serviceName] = projectStack[stackRole]
+        }
+      }
+      return result
+    },
+    projectStackServices: (state) => (stack) => {
+      var result = {}
+      var key
+      for (key in state.gearServices) {
+        if (state.gearServices.hasOwnProperty(key) && (key.indexOf(stack) !== -1)) {
+          result[key] = state.gearServices[key]
+        }
+      }
+      return result
+    },
+
     stackRoles: (state) => (stack) => {
       var result = {}
       var key
@@ -43,15 +68,14 @@ export default new Vuex.Store({
       }
       return result
     },
-    stackServices: (state) => (stack) => {
+    stackServices: (state) => (stackName) => {
       var result = {}
       var key
       for (key in state.gearServices) {
-        if (state.gearServices.hasOwnProperty(key) && (key.indexOf(stack) !== -1)) {
+        if (state.gearServices.hasOwnProperty(key) && (key.indexOf(stackName) !== -1)) {
           result[key] = state.gearServices[key]
         }
       }
-      console.log(result)
       return result
     },
     baseDirsAsOptions: (state) => {
@@ -301,6 +325,9 @@ export default new Vuex.Store({
         console.log('rejected', error)
         // resolve();
       })
+    },
+    addProjectStack ({ commit }, payload) {
+      commit('ADD_PROJECT_STACK', payload)
     }
   },
   mutations: {
@@ -351,7 +378,16 @@ export default new Vuex.Store({
     },
     ADD_BASEDIR (state, baseDir) {
       state.baseDirs[baseDir.value] = baseDir
+    },
+    ADD_PROJECT_STACK (state, payload) {
+      const { projectHost, stackName } = payload
+      for (const serviceName in this.getters.stackServices(stackName)) {
+        state.projects[projectHost].stacks[serviceName] = {
+
+        }
+      }
     }
+
   }
 
 })

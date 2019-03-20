@@ -8,15 +8,9 @@
       >
         <project-details :storedProject="project"></project-details>
         <div slot="footer">
-          Stack: <strong>{{project.stack[Object.keys(project.stack)[0]].stack}}</strong> (
-          <span v-for="(service, index) in project.stack" :key="index" :title="index.replace(service.stack+'/','')">
-            {{service.program}} <small>{{service.version.major+'.'+service.version.minor+'.'+service.version.patch}}</small>
-          </span>
-          )
           <project-stack :projectHostname="project.hostname" :projectStack="project.stack"></project-stack>
           <!--b-button title="Configure service stack" :to="'/projects/'+project.hostname+'/stack'" variant="primary">Customize</b-button-->
         </div>
-
       </b-card>
     </b-card-group>
   </b-container>
