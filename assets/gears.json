@@ -101,7 +101,7 @@
          "max": 1
       }
    },
-   "role_services": {
+   "services": {
       "gearbox.works/elasticsearch/elasticsearch": {
          "org": "gearboxworks",
          "default": "elasticsearch",
