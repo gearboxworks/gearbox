@@ -14,58 +14,58 @@
    ],
    "roles": {
       "gearbox.works/elasticsearch/elasticsearch": {
+         "name": "Elasticsearch",
          "label": "Elasticsearch",
-         "short_label": "Elasticsearch",
          "examples": [
             "Elasticsearch"
          ]
       },
       "gearbox.works/lamp/apache": {
-         "label": "LAMP Apache Web Server",
-         "short_label": "Apache",
+         "name": "LAMP Apache Web Server",
+         "label": "Apache",
          "examples": [
             "Apache"
          ]
       },
       "gearbox.works/lamp/mysql": {
-         "label": "LAMP MySQL database server",
-         "short_label": "MySQL",
+         "name": "LAMP MySQL database server",
+         "label": "MySQL",
          "examples": [
             "MySQL"
          ]
       },
       "gearbox.works/lamp/php": {
-         "label": "LAMP PHP ProcessVM",
-         "short_label": "PHP",
+         "name": "LAMP PHP ProcessVM",
+         "label": "PHP",
          "examples": [
             "PHP"
          ]
       },
       "gearbox.works/lemp/nginx": {
-         "label": "LEMP Nginx Web server",
-         "short_label": "Nginx",
+         "name": "LEMP Nginx Web server",
+         "label": "Nginx",
          "examples": [
             "Nginx"
          ]
       },
       "gearbox.works/lemp/mysql": {
-         "label": "LEMP Database server; MySQL or MariaDB",
-         "short_label": "DB server",
+         "name": "LEMP Database server; MySQL or MariaDB",
+         "label": "DB server",
          "examples": [
             "MySQL",
             "MariaDB"
          ]
       },
       "gearbox.works/lemp/p-script": {
-         "label": "LEMP server-side scripting process VM; PHP, Python or Perl",
-         "short_label": "server-side scripting",
+         "name": "LEMP server-side scripting process VM; PHP, Python or Perl",
+         "label": "server-side scripting",
          "examples": [
             "PHP"
          ]
       },
       "gearbox.works/wordpress/webserver": {
-         "label": "Web server for WordPress",
-         "short_label": "Web server",
+         "name": "Web server for WordPress",
+         "label": "Web server",
          "examples": [
             "Apache",
             "Nginx",
@@ -74,8 +74,8 @@
          ]
       },
       "gearbox.works/wordpress/dbserver": {
-         "label": "Database server for WordPress",
-         "short_label": "DB server",
+         "name": "Database server for WordPress",
+         "label": "DB server",
          "examples": [
             "MySQL",
             "MariaDB",
@@ -83,16 +83,16 @@
          ]
       },
       "gearbox.works/wordpress/processvm": {
-         "label": "ProcessVM (PHP) for WordPress",
-         "short_label": "PHP",
+         "name": "ProcessVM (PHP) for WordPress",
+         "label": "PHP",
          "examples": [
             "PHP",
             "HHVM"
          ]
       },
       "gearbox.works/wordpress/cacheserver": {
-         "label": "Cache server for WordPress",
-         "short_label": "Cache server",
+         "name": "Cache server for WordPress",
+         "label": "Cache server",
          "examples": [
             "Redis",
             "Memcached"
