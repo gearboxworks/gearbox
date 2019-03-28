@@ -253,19 +253,19 @@ export default new Vuex.Store({
         .then((stacks) => {
           if (stacks) {
             const s = []
-            for (const stackName in stacks) {
-              if (!stacks.hasOwnProperty(stackName)) {
+            for (const stackCode in stacks) {
+              if (!stacks.hasOwnProperty(stackCode)) {
                 continue
               }
-              let stack = stacks[stackName]
+              let stack = stacks[stackCode]
               s.push(
                 {
-                  name: stackName,
+                  code: stackCode,
+                  name: stack.name,
                   label: stack.label,
                   examples: stack.examples,
                   stack: stack.stack,
                   optional: stack.optional,
-                  shortLabel: stack.short_label,
                   memberType: stack.member_type
                 }
               )
@@ -289,7 +289,7 @@ export default new Vuex.Store({
         .then((data) => {
           commit('SET_GEAR_STACKS', data.stacks)
           commit('SET_GEAR_ROLES', data.roles)
-          commit('SET_GEAR_SERVICES', data.role_services)
+          commit('SET_GEAR_SERVICES', data.services)
         })
     },
     updateProject ({ commit }, payload) {

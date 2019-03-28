@@ -17,9 +17,9 @@
             <b-form-group
               v-for="(service, serviceRole) in stackServices(stackName)"
               :key="project_base + escAttr(serviceRole)"
-              :label="stackRoles(stackName)[serviceRole].short_label"
+              :label="stackRoles(stackName)[serviceRole].label"
               :label-for="project_base + escAttr(serviceRole)+'_input'"
-              :description="stackRoles(stackName)[serviceRole].label"
+              :description="stackRoles(stackName)[serviceRole].name"
               label-cols-sm="4"
               label-cols-lg="3"
             >
