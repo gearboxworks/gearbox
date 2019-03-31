@@ -26,6 +26,7 @@ groupProjectStacks<template>
               <b-form-select
                 :id="project_base + escAttr(serviceRole)+'_input'"
                 :value="projectServices[serviceRole] ? projectServices[serviceRole].service_id: null"
+                @change="changeProjectService(serviceRole,$event)"
               >
                 <option disabled value="">Please select one...</option>
                 <optgroup v-for="(options, groupLabel) in optionGroups(service.options)" :label="groupLabel" :key="groupLabel">
@@ -38,7 +39,7 @@ groupProjectStacks<template>
       </b-collapse>
     </b-card>
     <b-form-select v-model='stackToAdd' @change="addProjectStack" v-if="hasUnusedStacks" class="add-stack">
-      <option :value="null">Add Stack...</option>
+      <option :value="null" disabled>Add Stack...</option>
       <option
         v-for="(stack,stackName) in stacksNotUnusedInProject"
         :key="stackName"
@@ -139,6 +140,9 @@ export default {
       console.log('Selected', this.stackToAdd, stackName)
       this.$store.dispatch('addProjectStack', { 'projectHostname': this.projectHostname, stackName })
       this.stackToAdd = null
+    },
+    changeProjectService (serviceName, serviceId) {
+      this.$store.dispatch('changeProjectService', { 'projectHostname': this.projectHostname, serviceName, serviceId })
     }
   }
 }
@@ -148,5 +152,16 @@ export default {
   .add-stack {
     margin-left: 15px;
     width: calc(100% - 30px);
+/*    color: #fff;
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+*/
   }
+/*
+  .add-stack:hover {
+    color: #fff;
+    background-color: #138496;
+    border-color: #117a8b;
+  }
+*/
 </style>

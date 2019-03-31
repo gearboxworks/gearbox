@@ -324,10 +324,22 @@ export default new Vuex.Store({
       })
     },
     addProjectStack ({ commit }, payload) {
+      /**
+       * TODO: call the API and commit when it returns
+       */
       commit('ADD_PROJECT_STACK', payload)
     },
     removeProjectStack ({ commit }, payload) {
+      /**
+       * TODO: call the API and commit when it returns
+       */
       commit('REMOVE_PROJECT_STACK', payload)
+    },
+    changeProjectService ({ commit }, payload) {
+      /**
+       * TODO: call the API and commit when it returns
+       */
+      commit('CHANGE_PROJECT_SERVICE', payload)
     }
   },
   mutations: {
@@ -443,8 +455,10 @@ export default new Vuex.Store({
       const project = this.getters.projectBy('hostname', projectHostname)
       if (project) {
         /**
-         * stackName is of the form "gearbox.works/wordpress"
-         * We need all properties of project.stack that start with "wordpress/"
+         * Payload is of this form:
+         * {projectHostname: "project1.local", stackName: "gearbox.works/wordpress"}
+         *
+         * We need to remove all properties of project.stack that start with "wordpress/"
          */
         const shortStackName = stackName.split('/')[1]
         const newProjectStack = {}
@@ -459,6 +473,34 @@ export default new Vuex.Store({
           }
         }
         Vue.set(project, 'stack', newProjectStack)
+      }
+    },
+    CHANGE_PROJECT_SERVICE (state, payload) {
+      /**
+       * Payload is of this form:
+       * {projectHostname: "project1.local", serviceName: "gearbox.works/wordpress/webserver", serviceId: "gearboxworks/apache:2.4"}
+       */
+      const { projectHostname, serviceName, serviceId } = payload
+      const project = this.getters.projectBy('hostname', projectHostname)
+      const service = state.gearServices[serviceName]
+      if (project && service) {
+        const serviceRole = serviceName.substring(serviceName.indexOf('/') + 1)
+        const newService = project.stack[serviceRole]
+        const programVer = serviceId.split('/')[1]
+        newService.program = programVer.split(':')[0]
+        newService.version = {}
+        const ver = serviceId.split(':')[1].split('.')
+        if (ver.length > 0) {
+          newService.version.major = ver[0]
+        }
+        if (ver.length > 1) {
+          newService.version.minor = ver[1]
+        }
+        if (ver.length > 2) {
+          newService.version.patch = ver[2]
+        }
+
+        Vue.set(project.stack, serviceRole, newService)
       }
     }
   }
