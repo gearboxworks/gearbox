@@ -1,4 +1,4 @@
-<template>
+groupProjectStacks<template>
   <div role="tablist" class="project-stack">
     <b-card
       v-for="(projectServices, stackName, index) in groupProjectStacks(projectStack)"
@@ -8,7 +8,7 @@
     >
       <b-card-header header-tag="header" class="p-1" role="tab">
         <b-button block href="#" v-b-toggle="project_base + '_accordion_' + index" variant="info">
-          <project-stack-header :stackName = "stackName" :stackRoles = "projectServices"></project-stack-header>
+          <project-stack-header :projectHostname = "projectHostname" :stackName = "stackName" :stackRoles = "projectServices"></project-stack-header>
         </b-button>
       </b-card-header>
       <b-collapse :id="project_base + '_accordion_' + index" :accordion="project_base + '_accordion'" role="tabpanel">
@@ -25,9 +25,11 @@
             >
               <b-form-select
                 :id="project_base + escAttr(serviceRole)+'_input'"
+                :value="projectServices[serviceRole] ? projectServices[serviceRole].service_id: null"
               >
+                <option disabled value="">Please select one...</option>
                 <optgroup v-for="(options, groupLabel) in optionGroups(service.options)" :label="groupLabel" :key="groupLabel">
-                  <option v-for="(serviceVer) in options" :value="serviceVer" :key="serviceVer" :selected="stackIncludesService(projectServices, service.org+'/'+serviceVer)">{{serviceVer}}</option>
+                  <option v-for="serviceVer in options" :value="service.org + '/' + serviceVer" :key="serviceVer">{{serviceVer}}</option>
                 </optgroup>
               </b-form-select>
             </b-form-group>
@@ -35,12 +37,12 @@
         </b-card-body>
       </b-collapse>
     </b-card>
-    <br>
-    <b-form-select v-model='stackToAdd' @change="addProjectStack">
+    <b-form-select v-model='stackToAdd' @change="addProjectStack" v-if="hasUnusedStacks" class="add-stack">
       <option :value="null">Add Stack...</option>
       <option
-        v-for="(stack,stackName) in unusedProjectStacks(projectStack)"
+        v-for="(stack,stackName) in stacksNotUnusedInProject"
         :key="stackName"
+        :value="stackName"
       >{{stackName.replace('gearbox.works/', '')}}</option>
     </b-form-select>
 
@@ -79,6 +81,20 @@ export default {
     },
     project () {
       return this.$store.getters.projectBy('hostname', this.projectHostname)
+    },
+    hasUnusedStacks () {
+      return Object.entries(this.stacksNotUnusedInProject).length > 0
+    },
+    stacksNotUnusedInProject () {
+      const result = {}
+      const projectStacks = this.groupProjectStacks(this.projectStack)
+      for (const index in this.$store.state.gearStacks) {
+        const stackName = this.$store.state.gearStacks[index]
+        if (typeof projectStacks[stackName] === 'undefined') {
+          result[stackName] = this.$store.state.gearStacks[stackName]
+        }
+      }
+      return result
     }
   },
   methods: {
@@ -94,19 +110,7 @@ export default {
         }
       }
       if (result) {
-        // console.log('found', serviceId)
-      }
-      return result
-    },
-    unusedProjectStacks (projectStack) {
-      const result = {}
-      const projectStacks = this.groupProjectStacks(projectStack)
-      for (const index in this.$store.state.gearStacks) {
-        const stackName = this.$store.state.gearStacks[index]
-        // console.log(stackName, projectStack)
-        if (typeof projectStacks[stackName] === 'undefined') {
-          result[stackName] = this.$store.state.gearStacks[stackName]
-        }
+        console.log('found', serviceId)
       }
       return result
     },
@@ -133,7 +137,7 @@ export default {
     },
     addProjectStack (stackName) {
       console.log('Selected', this.stackToAdd, stackName)
-      this.$store.dispatch('addProjectStack', stackName)
+      this.$store.dispatch('addProjectStack', { 'projectHostname': this.projectHostname, stackName })
       this.stackToAdd = null
     }
   }
@@ -141,5 +145,8 @@ export default {
 </script>
 
 <style scoped>
-
+  .add-stack {
+    margin-left: 15px;
+    width: calc(100% - 30px);
+  }
 </style>

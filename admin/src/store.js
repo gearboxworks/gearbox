@@ -27,9 +27,6 @@ export default new Vuex.Store({
     baseDirs: []
   },
   getters: {
-    projectByName: (state) => (projectName) => {
-      return state.projects.find(p => p.name === projectName)
-    },
     projectBy: (state) => (fieldName, fieldValue) => {
       return state.projects.find(p => p[fieldName] === fieldValue)
     },
@@ -328,6 +325,9 @@ export default new Vuex.Store({
     },
     addProjectStack ({ commit }, payload) {
       commit('ADD_PROJECT_STACK', payload)
+    },
+    removeProjectStack ({ commit }, payload) {
+      commit('REMOVE_PROJECT_STACK', payload)
     }
   },
   mutations: {
@@ -380,14 +380,87 @@ export default new Vuex.Store({
       state.baseDirs[baseDir.value] = baseDir
     },
     ADD_PROJECT_STACK (state, payload) {
-      const { projectHost, stackName } = payload
-      for (const serviceName in this.getters.stackServices(stackName)) {
-        state.projects[projectHost].stacks[serviceName] = {
+      const { projectHostname, stackName } = payload
+      const project = this.getters.projectBy('hostname', projectHostname)
+      if (project) {
+        for (const serviceName in this.getters.stackServices(stackName)) {
+          const genericServiceName = serviceName.substring(serviceName.indexOf('/') + 1)
+          const org = serviceName.substring(0, serviceName.indexOf('/'))
+          const service = state.gearServices[serviceName]
 
+          /**
+           * Resolve default option:
+           * - if exact match is found, use it
+           * - otherwise, use the last in the list that have the specified name mentioned (hopefully that will be the latest version)
+           */
+          let firstFound = -1
+          let exactFound = -1
+          for (var i = service.options.length; i--;) {
+            if (service.options[i].indexOf(service.default) !== -1) {
+              if (firstFound === -1) {
+                firstFound = i
+              }
+              if (service.options[i] === service.default) {
+                exactFound = i
+                break
+              }
+            }
+          }
+          const defaultOpt = (firstFound !== -1)
+            ? service.options[ exactFound !== -1 ? exactFound : firstFound ]
+            : ''
+
+          const ver = defaultOpt.split(':')[1].split('.')
+
+          const stackService = {
+            'authority': org,
+            'org': org.replace('.', ''),
+            'stack': stackName.substring(stackName.indexOf('/') + 1),
+            'service_id': service.org + '/' + defaultOpt,
+            'program': defaultOpt.substring(0, defaultOpt.indexOf(':')),
+            'version': {}
+          }
+
+          if (ver.length > 0) {
+            stackService.version.major = ver[0]
+          }
+          if (ver.length > 1) {
+            stackService.version.minor = ver[1]
+          }
+          if (ver.length > 2) {
+            stackService.version.patch = ver[2]
+          }
+
+          /**
+           * Set it in a reactive way!
+           */
+          Vue.set(project.stack, genericServiceName, stackService)
         }
       }
+    },
+    REMOVE_PROJECT_STACK (state, payload) {
+      const { projectHostname, stackName } = payload
+      const project = this.getters.projectBy('hostname', projectHostname)
+      if (project) {
+        /**
+         * stackName is of the form "gearbox.works/wordpress"
+         * We need all properties of project.stack that start with "wordpress/"
+         */
+        const shortStackName = stackName.split('/')[1]
+        const newProjectStack = {}
+        for (const stackRole in project.stack) {
+          if (project.stack.hasOwnProperty(stackRole)) {
+            if (stackRole.indexOf(shortStackName) === -1) {
+              /**
+               * has a property starting with shortStackName
+               */
+              newProjectStack[stackRole] = project.stack[stackRole]
+            }
+          }
+        }
+        Vue.set(project, 'stack', newProjectStack)
+      }
     }
-
   }
 
 })

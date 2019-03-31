@@ -1,2 +1,2 @@
 (window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["gear"],{babd:function(e,a,n){"use strict";n.r(a);var t=function(){var e=this,a=e.$createElement,n=e._self._c||a;return n("h1",[e._v("Gear Details")])},r=[],s={name:"GearDetails"},l=s,c=n("2877"),i=Object(c["a"])(l,t,r,!1,null,"1f24866f",null);a["default"]=i.exports}}]);
-//# sourceMappingURL=gear.fc648d2d.js.map
+//# sourceMappingURL=gear.4b844932.js.map
