@@ -340,7 +340,14 @@ export default new Vuex.Store({
        * TODO: call the API and commit when it returns
        */
       commit('CHANGE_PROJECT_SERVICE', payload)
+    },
+    changeProjectState ({ commit }, payload) {
+      /**
+       * TODO: call the API and commit when it returns
+       */
+      commit('CHANGE_PROJECT_STATE', payload)
     }
+
   },
   mutations: {
     /**
@@ -501,6 +508,15 @@ export default new Vuex.Store({
         }
 
         Vue.set(project.stack, serviceRole, newService)
+      }
+    },
+    CHANGE_PROJECT_STATE (state, payload) {
+      const { projectHostname, isEnabled } = payload
+      const project = this.getters.projectBy('hostname', projectHostname)
+      if (project) {
+        console.log(project.enabled)
+        Vue.set(project, 'enabled', !!isEnabled)
+        console.log(project.enabled)
       }
     }
   }

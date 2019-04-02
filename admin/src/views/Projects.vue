@@ -2,13 +2,13 @@
   <b-container>
     <b-card-group deck>
       <b-card
-        v-for="project in projects"
+        v-for="(project, projectIndex) in projects"
         :key="project.path"
         :to="{path:'/project/'+project.hostname}"
       >
-        <project-details :storedProject="project"></project-details>
+        <project-details :storedProject="project" :projectIndex="projectIndex"></project-details>
         <div slot="footer">
-          <project-stack :projectHostname="project.hostname" :projectStack="project.stack"></project-stack>
+          <project-stack :projectHostname="project.hostname" :projectStack="project.stack" :projectIndex="projectIndex"></project-stack>
           <!--b-button title="Configure service stack" :to="'/projects/'+project.hostname+'/stack'" variant="primary">Customize</b-button-->
         </div>
       </b-card>

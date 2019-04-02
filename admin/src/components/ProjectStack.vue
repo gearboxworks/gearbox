@@ -1,19 +1,20 @@
 <template>
   <div role="tablist" class="project-stack-list" :id="project_base + '-stack'">
     <div
-      v-for="(projectServices, stackName) in groupProjectStacks(projectStack)"
+      v-for="(projectServices, stackName, stackIndex) in groupProjectStacks(projectStack)"
       :key="stackName"
       class="project-stack"
     >
-      <strong>{{stackName.replace('gearbox.works/', '')}}</strong>
-      <b-button @click.prevent="removeProjectStack(stackName)" class="js-remove-stack" size="sm" variant="outline-secondary" aria-label="Remove this stack from project" title="Remove this stack from project">&times;</b-button>
+      <h2 class="stack-title">{{stackName.replace('gearbox.works/', '')}}</h2>
+      <b-button :tabindex="projectIndex*100+stackIndex*10" @click.prevent="removeProjectStack(stackName)" class="js-remove-stack" size="sm" variant="outline-secondary" aria-label="Remove this stack from project" title="Remove this stack from project">&times;</b-button>
       <!--project-stack-header :projectHostname = "projectHostname" :stackName = "stackName" :stackRoles = "projectServices"></project-stack-header-->
       <ul class="service-list">
         <li
-            v-for="(service, serviceRole) in stackServices(stackName)"
+            v-for="(service, serviceRole,serviceIndex) in stackServices(stackName)"
             :key="project_base + escAttr(serviceRole)"
             :id="project_base + escAttr(serviceRole)"
             class="service-item"
+            :tabindex="projectIndex*100+stackIndex*10+serviceIndex+1"
         >
           <img :src="require('../assets/'+projectServices[serviceRole].program+'.svg')" class="service-program" />
           <h6 class="service-role">{{stackRoles(stackName)[serviceRole].label}}</h6>
@@ -21,7 +22,7 @@
             :target="project_base + escAttr(serviceRole)"
             :container="projectHostname+'-stack'"
             :ref="project_base + escAttr(serviceRole)+'_popover'"
-            triggers="click blur"
+            triggers="focus"
             placement="bottom"
           >
             <template slot="title">
@@ -38,6 +39,7 @@
                 :id="project_base + escAttr(serviceRole)+'_input'"
                 :value="projectServices[serviceRole] ? projectServices[serviceRole].service_id: null"
                 @change="changeProjectService(serviceRole,$event)"
+                :tabindex="projectIndex*100+stackIndex*10+serviceIndex+9"
               >
                 <option disabled value="">Please select one...</option>
                 <optgroup v-for="(options, groupLabel) in optionGroups(service.options)" :label="groupLabel" :key="groupLabel">
@@ -76,6 +78,10 @@ export default {
     },
     'projectStack': {
       type: Object,
+      required: true
+    },
+    'projectIndex': {
+      type: Number,
       required: true
     }
   },
@@ -175,8 +181,14 @@ export default {
     margin-bottom: 8px;
   }
   .project-stack:not(:first-child){
-    border-top: 1px solid silver;
+    border-top: 1px solid #e0e0e0;
     padding-top: 8px;
+  }
+  .stack-title {
+    text-transform: uppercase;
+    font-size: 1.25rem;
+    display: inline-block;
+    color: #989898;
   }
   .add-stack {
 /*    color: #fff;
@@ -201,6 +213,12 @@ export default {
     max-width: 110px;
     padding: 5px;
     margin: 5px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 4px;
+  }
+  .service-item:hover {
+    border: 1px solid #aaa;
   }
   .service-role{
     margin-top:5px;
