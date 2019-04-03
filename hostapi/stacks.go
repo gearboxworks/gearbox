@@ -2,12 +2,12 @@ package hostapi
 
 import (
 	"fmt"
-	"gearbox"
 	"gearbox/api"
+	"gearbox/gearbox"
 	"gearbox/gears"
 	"gearbox/gearspecid"
-	"gearbox/hostapi/routes"
 	"gearbox/only"
+	"gearbox/routes"
 	"gearbox/status"
 	"gearbox/types"
 	"net/http"

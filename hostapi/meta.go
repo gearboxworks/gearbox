@@ -2,7 +2,7 @@ package hostapi
 
 import (
 	"gearbox/api"
-	"gearbox/hostapi/routes"
+	"gearbox/routes"
 	"gearbox/status"
 	"gearbox/status/is"
 )

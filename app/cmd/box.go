@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"gearbox"
 	"gearbox/box"
+	"gearbox/gearbox"
 	"gearbox/ssh"
 	"gearbox/status/is"
 	"github.com/spf13/cobra"

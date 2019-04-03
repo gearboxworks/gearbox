@@ -1,4 +1,4 @@
-package main
+package _save
 
 /**
  * See https://stackoverflow.com/questions/23529663/how-to-get-all-addresses-and-masks-from-local-interfaces-in-go
@@ -33,7 +33,7 @@ func localAddresses() {
 		}
 	}
 }
-func main() {
+func main_net_interfaces() {
 	localAddresses()
 }
 

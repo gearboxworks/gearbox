@@ -2,7 +2,7 @@ package routes
 
 import (
 	"fmt"
-	"gearbox"
+	"gearbox/gearbox"
 	"gearbox/gearspecid"
 	"gearbox/only"
 	svc "gearbox/service"

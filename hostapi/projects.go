@@ -1,7 +1,7 @@
 package hostapi
 
 import (
-	"gearbox/hostapi/routes"
+	"gearbox/routes"
 	"gearbox/status/is"
 )
 
@@ -28,10 +28,10 @@ func (me *HostApi) addProjectRoutes() {
 
 //import (
 //	"fmt"
-//	"gearbox"
+//	"gearbox/gearbox"
 //	"gearbox/api"
-//	"gearbox/hostapi/routes"
 //	"gearbox/only"
+//	"gearbox/routes"
 //	"gearbox/status"
 //	"net/http"
 //)

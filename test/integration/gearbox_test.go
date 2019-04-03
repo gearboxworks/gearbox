@@ -1,7 +1,8 @@
 package integration
 
 import (
-	"gearbox"
+	"gearbox/gearbox"
+	"gearbox/global"
 	"gearbox/hostapi"
 	"gearbox/status"
 	"gearbox/test/includes"
@@ -26,7 +27,7 @@ func GearboxConstructAndInitialize(t *testing.T) (gearbox.Gearboxer, status.Stat
 	//})
 	gb := gearbox.NewGearbox(&gearbox.Args{
 		OsSupport: mock.NewOsSupport(t),
-		GlobalOptions: &gopt.GlobalOptions{
+		GlobalOptions: &global.Options{
 			NoCache: true,
 			IsDebug: false,
 		},

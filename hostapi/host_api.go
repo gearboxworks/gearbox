@@ -2,10 +2,10 @@ package hostapi
 
 import (
 	"fmt"
-	"gearbox"
 	"gearbox/api"
 	"gearbox/apibuilder"
 	"gearbox/config"
+	"gearbox/gearbox"
 	"gearbox/jsonapi"
 	"gearbox/only"
 	"gearbox/status"

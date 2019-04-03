@@ -1,23 +1,23 @@
-package main
+package _save
 
 import (
 	"fmt"
 	"gearbox"
 	"gearbox/os_support"
+	"gearbox/status/is"
 	"log"
 )
 
-func main() {
+func main_options() {
 	gb := gearbox.NewGearbox(&gearbox.Args{
 		OsSupport: oss.Get(),
 	})
 
 	gears := gb.GetGears()
 	sts := gears.Initialize()
-	if status.IsError(sts) {
-		log.Fatal(status.Message)
+	if is.Error(sts) {
+		log.Fatal(sts.Message())
 	}
-
 	fmt.Println(gears.String())
 
 }

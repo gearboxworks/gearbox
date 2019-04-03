@@ -1,6 +1,6 @@
 // See https://www.youtube.com/watch?v=YRWCa84pykM
 
-package main
+package _save
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ func newVisitor(f *ast.File) visitor {
 		make(map[string]int),
 	}
 }
-func main() {
+func main_parse_go() {
 	fs := token.NewFileSet()
 	locals := make(map[string]int)
 	globals := make(map[string]int)

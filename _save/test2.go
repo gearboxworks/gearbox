@@ -1,4 +1,4 @@
-package main
+package _save
 
 import "fmt"
 
@@ -38,7 +38,7 @@ func OptionTemperature(t Celsius) func(f *Foobar) error {
 
 type Celsius int
 
-func main() {
+func main_test2() {
 	f1, err := NewFoobar()
 	fmt.Println(f1, err)
 

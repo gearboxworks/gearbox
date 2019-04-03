@@ -1,13 +1,16 @@
 package unit
 
 import (
-	"gearbox"
+	"gearbox/gearbox"
 	gopt "gearbox/global"
 	"gearbox/status"
 	"gearbox/test/includes"
 	"gearbox/test/mock"
 	"testing"
 )
+
+const T = true
+const F = false
 
 var GlobalOptionsTable = []*gopt.Options{
 	{NoCache: T, IsDebug: T},

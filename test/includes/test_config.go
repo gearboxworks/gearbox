@@ -1,8 +1,8 @@
 package includes
 
 import (
-	"gearbox"
 	"gearbox/config"
+	"gearbox/gearbox"
 	"gearbox/status"
 )
 

@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"gearbox"
 	"gearbox/app/cmd"
+	"gearbox/gearbox"
 	"gearbox/hostapi"
 	"gearbox/os_support"
 	"gearbox/status"

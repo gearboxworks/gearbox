@@ -26,7 +26,7 @@ func GetRemoteImageTags(token, image string) (TagList, error) {
 	if err != nil {
 		return TagList{}, err
 	}
-	resource.Header.Add("Authorization", "Bearer "+token)
+	req.Header.Add("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)
 	if err != nil {
 		return TagList{}, err

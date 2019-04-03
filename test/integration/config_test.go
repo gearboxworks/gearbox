@@ -2,16 +2,17 @@ package integration
 
 import (
 	"fmt"
-	"gearbox"
 	"gearbox/config"
+	"gearbox/gearbox"
 	"gearbox/status"
 	"gearbox/test"
 	"gearbox/test/mock"
-	"path/filepath"
+	"gearbox/types"
+	"gearbox/util"
 	"testing"
 )
 
-var ProjectPaths = map[string]bool{
+var ProjectPaths = map[types.RelativePath]bool{
 	"/site1.local": true,
 	"/site2.local": true,
 	"/site3.test":  true,
@@ -21,10 +22,10 @@ var ProjectPaths = map[string]bool{
 }
 
 func TestEmptyConfig(t *testing.T) {
-	mgb := &mock.Gearbox{
+	mgb := &gearbox.Gearbox{
 		OsSupport: mock.NewOsSupport(t),
 	}
-	c := config.NewConfig(mgb)
+	c := config.NewConfig(mgb.GetOsSupport())
 	mgb.SetConfig(c)
 
 	t.Run("Initialize", func(t *testing.T) {
@@ -56,7 +57,10 @@ func TestEmptyConfig(t *testing.T) {
 						t.Error(sts.Message())
 						return
 					}
-					path := test.ParseRelativePath(basedir, util.Dir(fp))
+					path := test.ParseRelativePath(
+						types.AbsoluteDir(basedir),
+						types.AbsoluteFilepath(util.FileDir(fp)),
+					)
 					if _, ok := ProjectPaths[path]; !ok {
 						t.Error(fmt.Sprintf("path '%s' not found", path))
 					}

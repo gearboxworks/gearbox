@@ -29,7 +29,7 @@ require (
 	github.com/zserge/webview v0.0.0-20190123072648-16c93bcaeaeb
 	golang.org/x/crypto v0.0.0-20190211182817-74369b46fc67
 	google.golang.org/grpc v1.18.0
-	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
+	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/guregu/null.v2 v2.1.2 // indirect
 
 )

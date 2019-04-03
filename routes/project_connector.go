@@ -2,9 +2,9 @@ package routes
 
 import (
 	"fmt"
-	"gearbox"
 	"gearbox/apibuilder"
 	"gearbox/config"
+	"gearbox/gearbox"
 	"gearbox/only"
 	"gearbox/project"
 	"gearbox/status"

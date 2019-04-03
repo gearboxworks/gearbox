@@ -1,6 +1,6 @@
 package routes
 
-import "gearbox"
+import "gearbox/gearbox"
 
 type Gearbox struct {
 	Gearbox gearbox.Gearboxer

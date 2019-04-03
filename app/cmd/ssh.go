@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"gearbox"
+	"gearbox/gearbox"
 	"gearbox/ssh"
 	"github.com/spf13/cobra"
 )

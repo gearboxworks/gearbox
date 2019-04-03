@@ -15,8 +15,8 @@ func NewHttpRequest(method, url string) (*http.Client, *http.Request, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, nil)
 	if err == nil {
-		resource.Header.Add("User-Agent", UserAgent)
-		resource.Header.Add("Content-Type", "application/json")
+		req.Header.Add("User-Agent", UserAgent)
+		req.Header.Add("Content-Type", "application/json")
 	}
 	return client, req, err
 }

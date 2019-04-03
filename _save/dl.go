@@ -1,4 +1,4 @@
-package main
+package _save
 
 import (
 	"fmt"
@@ -48,7 +48,7 @@ func (wc *WriteCounter) Finish() {
 	wc.bar.Finish()
 }
 
-func main() {
+func main_dl() {
 	if len(os.Args) < 2 {
 		fmt.Println("Provide a url to download.")
 		os.Exit(1)
