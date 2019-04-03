@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"gearbox"
+	"gearbox/config"
+	"gearbox/types"
 	"github.com/spf13/cobra"
 )
 
@@ -56,22 +58,27 @@ func init() {
 
 	projectCmd.AddCommand(projectRootCmd)
 
-	gearbox.ProjectRootAddCmd = &cobra.Command{
+	config.ProjectRootAddCmd = &cobra.Command{
 		Use:   "add",
 		Args:  cobra.RangeArgs(1, 2),
 		Short: "Add a new directory on a host computer to the list of project roots in use.",
 		Run: func(cmd *cobra.Command, args []string) {
+			var dir types.AbsoluteDir
+			var basedir types.Nickname
 			switch len(args) {
-			case 1:
-				status := gearbox.Instance.AddBasedir(args[0])
-				fmt.Printf(status.Message)
 			case 2:
-				status := gearbox.Instance.AddBasedir(args[0], args[1])
-				fmt.Printf(status.Message)
+				basedir = types.Nickname(args[1])
+				fallthrough
+			case 1:
+				dir = types.AbsoluteDir(args[0])
+			}
+			if dir != "" {
+				sts := gearbox.Instance.AddBasedir(dir, basedir)
+				fmt.Printf(sts.Message())
 			}
 		},
 	}
 
-	projectRootCmd.AddCommand(gearbox.ProjectRootAddCmd)
+	projectRootCmd.AddCommand(config.ProjectRootAddCmd)
 
 }

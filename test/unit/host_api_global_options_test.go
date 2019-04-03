@@ -2,12 +2,14 @@ package unit
 
 import (
 	"gearbox"
+	gopt "gearbox/global"
+	"gearbox/status"
 	"gearbox/test/includes"
 	"gearbox/test/mock"
 	"testing"
 )
 
-var GlobalOptionsTable = []*gearbox.GlobalOptions{
+var GlobalOptionsTable = []*gopt.Options{
 	{NoCache: T, IsDebug: T},
 	{NoCache: F, IsDebug: F},
 	{NoCache: F, IsDebug: T},
@@ -22,14 +24,14 @@ func TestHostApiGlobalOptions(t *testing.T) {
 	}
 }
 
-func testGlobalOption(t *testing.T, glopt *gearbox.GlobalOptions) {
-	gb := gearbox.NewApp(&gearbox.Args{
-		HostConnector: mock.NewHostConnector(t),
+func testGlobalOption(t *testing.T, glopt *gopt.Options) {
+	gb := gearbox.NewGearbox(&gearbox.Args{
+		OsSupport:     mock.NewOsSupport(t),
 		GlobalOptions: glopt,
 	})
 	gb.SetConfig(includes.NewTestConfig(gb))
-	status := gb.Initialize()
-	if status.IsError() {
-		t.Error(status.Message)
+	sts := gb.Initialize()
+	if status.IsError(sts) {
+		t.Error(sts.Message())
 	}
 }

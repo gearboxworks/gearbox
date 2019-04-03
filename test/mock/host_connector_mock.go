@@ -2,20 +2,24 @@ package mock
 
 import (
 	"fmt"
-	"gearbox/host"
+	"gearbox/os_support"
+	"gearbox/types"
+	"gearbox/util"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
-const testSuggestedBasedir = "sites"
+const (
+	SuggestedBasedir = "sites"
+	AdminPath        = "admin/dist"
+)
 
-var HostConnectorInstance = (*HostConnector)(nil)
+var NilOsSupport = (*OsSupport)(nil)
 
-var _ host.Connector = HostConnectorInstance
+var _ oss.OsSupporter = NilOsSupport
 
-type HostConnector struct {
-	host.BaseConnector
+type OsSupport struct {
+	oss.Base
 	T                 *testing.T
 	UserHomePath      string
 	SuggestedBasePath string
@@ -24,13 +28,13 @@ type HostConnector struct {
 	CachePath         string
 }
 
-func NewHostConnector(t *testing.T) host.Connector {
-	return &HostConnector{
+func NewOsSupport(t *testing.T) oss.OsSupporter {
+	return &OsSupport{
 		T: t,
 	}
 }
 
-func (me *HostConnector) GetUserHomeDir() string {
+func (me *OsSupport) GetUserHomeDir() types.AbsoluteDir {
 	if me.UserHomePath == "" {
 		me.UserHomePath = "user-home"
 	}
@@ -38,46 +42,46 @@ func (me *HostConnector) GetUserHomeDir() string {
 	if err != nil {
 		me.T.Error(fmt.Sprintf("failed to get current working directory: %s", err.Error()))
 	}
-	dir = filepath.Dir(dir)
-	return fmt.Sprintf("%s/%s", dir, me.UserHomePath)
+	absdir := util.ParentDir(types.AbsoluteDir(dir))
+	return types.AbsoluteDir(fmt.Sprintf("%s/%s", absdir, me.UserHomePath))
 }
 
-func (me *HostConnector) GetSuggestedBasedir() string {
+func (me *OsSupport) GetSuggestedBasedir() types.AbsoluteDir {
 	if me.SuggestedBasePath == "" {
-		me.SuggestedBasePath = testSuggestedBasedir
+		me.SuggestedBasePath = SuggestedBasedir
 	}
-	return fmt.Sprintf("%s/%s",
+	return types.AbsoluteDir(fmt.Sprintf("%s/%s",
 		me.GetUserHomeDir(),
 		me.SuggestedBasePath,
-	)
+	))
 }
 
-func (me *HostConnector) GetUserConfigDir() string {
+func (me *OsSupport) GetUserConfigDir() types.AbsoluteDir {
 	if me.UserConfigPath == "" {
-		me.UserConfigPath = host.UserDataPath
+		me.UserConfigPath = oss.UserDataPath
 	}
-	return fmt.Sprintf("%s/%s",
+	return types.AbsoluteDir(fmt.Sprintf("%s/%s",
 		me.GetUserHomeDir(),
 		me.UserConfigPath,
-	)
+	))
 }
 
-func (me *HostConnector) GetAdminRootDir() string {
+func (me *OsSupport) GetAdminRootDir() types.AbsoluteDir {
 	if me.AdminRootPath == "" {
-		me.AdminRootPath = me.GetAdminPath()
+		me.AdminRootPath = AdminPath
 	}
-	return fmt.Sprintf("%s/%s",
+	return types.AbsoluteDir(fmt.Sprintf("%s/%s",
 		me.GetUserConfigDir(),
 		me.AdminRootPath,
-	)
+	))
 }
 
-func (me *HostConnector) GetCacheDir() string {
+func (me *OsSupport) GetCacheDir() types.AbsoluteDir {
 	if me.CachePath == "" {
-		me.CachePath = host.CachePath
+		me.CachePath = oss.CachePath
 	}
-	return fmt.Sprintf("%s/%s",
+	return types.AbsoluteDir(fmt.Sprintf("%s/%s",
 		me.GetUserConfigDir(),
 		me.CachePath,
-	)
+	))
 }

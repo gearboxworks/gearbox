@@ -1,0 +1,49 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/project-details",
+      "route": "project-details"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/projects/site3.test"
+   },
+   "data": {
+      "hostname": "site3.test",
+      "enabled": false,
+      "basedir": "primary",
+      "notes": "",
+      "path": "site3.test",
+      "project_dir": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site3.test",
+      "aliases": [
+         "www.{hostname}",
+         "docs.{hostname}",
+         "api.{hostname}"
+      ],
+      "stack": {
+         "gearbox.works/wordpress/dbserver": {
+            "service_id": "gearboxworks/mariadb",
+            "org": "gearboxworks",
+            "program": "mariadb",
+            "version": {}
+         },
+         "gearbox.works/wordpress/processvm": {
+            "service_id": "gearboxworks/php",
+            "org": "gearboxworks",
+            "program": "php",
+            "version": {}
+         },
+         "gearbox.works/wordpress/webserver": {
+            "service_id": "gearboxworks/nginx",
+            "org": "gearboxworks",
+            "program": "nginx",
+            "version": {}
+         }
+      }
+   }
+}

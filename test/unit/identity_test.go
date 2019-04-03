@@ -1,8 +1,8 @@
 package unit
 
 import (
-	"gearbox"
-	"gearbox/stat"
+	"gearbox/gearid"
+	"gearbox/status"
 	"gearbox/test"
 	"testing"
 )
@@ -50,7 +50,7 @@ func (me *IdTest) GetData() test.Table {
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Full Identity",
+			Label: "Full GearId",
 			In:    "gearbox/php:7.2.1",
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "gearbox/php:7.2.1"},
@@ -62,7 +62,7 @@ func (me *IdTest) GetData() test.Table {
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Full Identity with Revision",
+			Label: "Full GearId with Revision",
 			In:    "gearbox/php:7.2.1~r3",
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "gearbox/php:7.2.1~r3"},
@@ -107,32 +107,32 @@ func (me *IdTest) GetT() *testing.T {
 	return me.T
 }
 
-func (me *IdTest) MakeNewObject(f *test.Fixture) (obj interface{}, status stat.Status) {
-	id := gearbox.NewIdentity()
-	status = id.Parse(f.In)
-	return id, status
+func (me *IdTest) MakeNewObject(f *test.Fixture) (obj interface{}, sts status.Status) {
+	gid := gearid.NewGearId()
+	sts = gid.ParseString(f.In)
+	return gid, sts
 }
 
 func (me *IdTest) GetOutput(f *test.Fixture) (got string) {
-	id := f.Obj.(*gearbox.Identity)
+	gid := f.Obj.(*gearid.GearId)
 	switch f.Name {
 	case getId:
-		got = id.String()
+		got = gid.String()
 
 	case getOrgName:
-		got = string(id.GetOrgName())
+		got = string(gid.GetOrgName())
 
 	case getType:
-		got = id.GetType()
+		got = string(gid.GetType())
 
 	case getName:
-		got = id.GetName()
+		got = string(gid.GetName())
 
 	case getVersion:
-		got = id.GetVersion().String()
+		got = gid.GetVersion().String()
 
 	case getRaw:
-		got = id.GetRaw()
+		got = string(gid.GetRaw())
 
 	}
 	return got

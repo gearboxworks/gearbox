@@ -1,0 +1,74 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/projects",
+      "route": "projects"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "projects": {
+         "project-aliases[site1.local]": "/projects/site1.local/aliases",
+         "project-aliases[site3.test]": "/projects/site3.test/aliases",
+         "project-aliases[site5.local]": "/projects/site5.local/aliases",
+         "project-delete[site1.local]": "/projects/site1.local",
+         "project-delete[site3.test]": "/projects/site3.test",
+         "project-delete[site5.local]": "/projects/site5.local",
+         "project-details[site1.local]": "/projects/site1.local",
+         "project-details[site3.test]": "/projects/site3.test",
+         "project-details[site5.local]": "/projects/site5.local",
+         "project-update[site1.local]": "/projects/site1.local",
+         "project-update[site3.test]": "/projects/site3.test",
+         "project-update[site5.local]": "/projects/site5.local"
+      },
+      "self": "/projects"
+   },
+   "data": {
+      "site1.local": {
+         "meta": {
+            "type": "project"
+         },
+         "links": {
+            "self": "/projects/site1.local"
+         },
+         "data": {
+            "hostname": "site1.local",
+            "enabled": false,
+            "basedir": "primary",
+            "notes": "",
+            "path": "site1.local",
+            "project_dir": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site1.local"
+         }
+      },
+      "site3.test": {
+         "links": {
+            "self": "/projects/site3.test"
+         },
+         "data": {
+            "hostname": "site3.test",
+            "enabled": false,
+            "basedir": "primary",
+            "notes": "",
+            "path": "site3.test",
+            "project_dir": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site3.test"
+         }
+      },
+      "site5.local": {
+         "links": {
+            "self": "/projects/site5.local"
+         },
+         "data": {
+            "hostname": "site5.local",
+            "enabled": false,
+            "basedir": "primary",
+            "notes": "",
+            "path": "site5",
+            "project_dir": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site5"
+         }
+      }
+   }
+}

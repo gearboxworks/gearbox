@@ -1,6 +1,8 @@
 package gearbox
 
 import (
+	"gearbox/types"
+	"gearbox/util"
 	"log"
 	"os"
 	"path/filepath"
@@ -9,9 +11,10 @@ import (
 var rootDir string
 
 func init() {
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	executable := types.AbsoluteFilepath(os.Args[0])
+	file, err := filepath.Abs(string(executable))
 	if err != nil {
 		log.Fatal(err)
 	}
-	rootDir = filepath.Dir(dir)
+	rootDir = string(util.FileDir(types.AbsoluteFilepath(file)))
 }

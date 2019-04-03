@@ -1,0 +1,109 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/stack-details",
+      "route": "stack-details"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/stacks/gearbox.works/lamp"
+   },
+   "data": {
+      "authority": "gearbox.works",
+      "name": "lamp",
+      "roles": {
+         "links": {},
+         "data": {
+            "apache": {
+               "links": {},
+               "data": {
+                  "role": "gearbox.works/lamp/apache",
+                  "type": "apache",
+                  "name": "LAMP Apache Web Server",
+                  "label": "Apache",
+                  "max": 10,
+                  "min": 1,
+                  "examples": [
+                     "Apache"
+                  ]
+               }
+            },
+            "mysql": {
+               "links": {},
+               "data": {
+                  "role": "gearbox.works/lamp/mysql",
+                  "type": "mysql",
+                  "name": "LAMP MySQL database server",
+                  "label": "MySQL",
+                  "max": 10,
+                  "min": 1,
+                  "examples": [
+                     "MySQL"
+                  ]
+               }
+            },
+            "php": {
+               "links": {},
+               "data": {
+                  "role": "gearbox.works/lamp/php",
+                  "type": "php",
+                  "name": "LAMP PHP ProcessVM",
+                  "label": "PHP",
+                  "max": 10,
+                  "min": 1,
+                  "examples": [
+                     "PHP"
+                  ]
+               }
+            }
+         }
+      },
+      "services": {
+         "links": {},
+         "data": {
+            "gearbox.works/lamp/apache": {
+               "links": {},
+               "data": {
+                  "org": "gearboxworks",
+                  "default": "gearboxworks/apache",
+                  "options": [
+                     "gearboxworks/apache:2.4"
+                  ]
+               }
+            },
+            "gearbox.works/lamp/mysql": {
+               "links": {},
+               "data": {
+                  "org": "gearboxworks",
+                  "default": "gearboxworks/mysql",
+                  "options": [
+                     "gearboxworks/mysql:5.5",
+                     "gearboxworks/mysql:5.6",
+                     "gearboxworks/mysql:5.7",
+                     "gearboxworks/mysql:8.0"
+                  ]
+               }
+            },
+            "gearbox.works/lamp/php": {
+               "links": {},
+               "data": {
+                  "org": "gearboxworks",
+                  "default": "gearboxworks/php",
+                  "options": [
+                     "gearboxworks/php:5.2",
+                     "gearboxworks/php:5.6",
+                     "gearboxworks/php:7.0",
+                     "gearboxworks/php:7.1",
+                     "gearboxworks/php:7.2"
+                  ]
+               }
+            }
+         }
+      }
+   }
+}

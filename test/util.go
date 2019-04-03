@@ -1,6 +1,8 @@
 package test
 
-import "strings"
+import (
+	"strings"
+)
 
 func ParseRelativePath(basedir, fulldir string) (path string) {
 	if strings.HasPrefix(fulldir, basedir) {

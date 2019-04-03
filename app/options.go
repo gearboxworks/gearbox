@@ -3,18 +3,18 @@ package main
 import (
 	"fmt"
 	"gearbox"
-	"gearbox/host"
+	"gearbox/os_support"
 	"log"
 )
 
 func main() {
-	gb := gearbox.NewApp(&gearbox.Args{
-		HostConnector: host.GetConnector(),
+	gb := gearbox.NewGearbox(&gearbox.Args{
+		OsSupport: oss.Get(),
 	})
 
-	gears := gearbox.NewGears(gb)
-	status := gears.Refresh()
-	if status.IsError() {
+	gears := gb.GetGears()
+	sts := gears.Initialize()
+	if status.IsError(sts) {
 		log.Fatal(status.Message)
 	}
 

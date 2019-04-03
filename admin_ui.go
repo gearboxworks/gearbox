@@ -3,8 +3,8 @@ package gearbox
 import (
 	"context"
 	"fmt"
-	"gearbox/host"
 	"gearbox/only"
+	"gearbox/os_support"
 	"github.com/zserge/lorca"
 	"github.com/zserge/webview"
 	"io/ioutil"
@@ -46,14 +46,14 @@ const (
 )
 
 type AdminUi struct {
-	ViewerType    ViewerType
-	webListener   net.Listener
-	HostConnector host.Connector
-	Gearbox       Gearbox
-	webServer     *http.Server
-	api           *HostApi
-	Window        *UiWindow
-	ErrorLog      *ErrorLog
+	ViewerType  ViewerType
+	webListener net.Listener
+	OsSupport   oss.OsSupporter
+	Gearbox     Gearboxer
+	webServer   *http.Server
+	api         HostApi
+	Window      *UiWindow
+	ErrorLog    *ErrorLog
 }
 
 type UiWindowArgs struct {
@@ -81,11 +81,11 @@ func NewUiWindow(args *UiWindowArgs) *UiWindow {
 	}
 }
 
-func NewAdminUi(gearbox Gearbox, viewer ViewerType) *AdminUi {
+func NewAdminUi(gearbox Gearboxer, viewer ViewerType) *AdminUi {
 	ui := AdminUi{
-		Gearbox:       gearbox,
-		HostConnector: gearbox.GetHostConnector(),
-		ViewerType:    viewer,
+		Gearbox:    gearbox,
+		OsSupport:  gearbox.GetOsSupport(),
+		ViewerType: viewer,
 		Window: NewUiWindow(&UiWindowArgs{
 			Title: "%s - " + fmt.Sprintf("[%s]", viewer),
 		}),
@@ -103,12 +103,12 @@ func (me *AdminUi) Initialize() {
 }
 
 func (me *AdminUi) WriteAssetsToAdminWebRoot() {
-	hc := me.HostConnector
+	hc := me.OsSupport
 	if hc == nil {
-		log.Fatal("Gearbox has no host connector. (End users should never see this; it is a programming error.)")
+		log.Fatal("Gearbox has no os_support connector. (End users should never see this; it is a programming error.)")
 	}
 	for _, afn := range AssetNames() {
-		err := RestoreAsset(hc.GetUserConfigDir(), afn)
+		err := RestoreAsset(string(hc.GetUserConfigDir()), afn)
 		if err != nil {
 			log.Fatal(fmt.Sprintf("Could not restore asset '%s/%s'",
 				hc.GetUserConfigDir(),
@@ -166,18 +166,18 @@ func (me *AdminUi) StartWebView() {
 
 func (me *AdminUi) WriteApiBaseUrls() {
 	var err error
-	url := me.api.Url()
-	file := me.GetApiBaseUrls()
+	url := me.api.GetBaseUrl()
+	file := me.GetApiBaseUrlsFilepath()
 	err = ioutil.WriteFile(file, NewApiBaseUrls(url, url).Bytes(), os.ModePerm)
 	if err != nil {
 		log.Printf("error writing API bootrap file '%s': %s\n",
-			me.GetApiBaseUrls(),
+			me.GetApiBaseUrlsFilepath(),
 			err,
 		)
 	}
 }
 
-func (me *AdminUi) GetApiBaseUrls() string {
+func (me *AdminUi) GetApiBaseUrlsFilepath() string {
 	return fmt.Sprintf("%s/api.json", me.GetWebRootDir())
 }
 
@@ -212,7 +212,7 @@ func (me *AdminUi) GetWebRootFileUrl() string {
 }
 
 func (me *AdminUi) GetWebRootDir() http.Dir {
-	return http.Dir(me.HostConnector.GetAdminRootDir())
+	return http.Dir(me.OsSupport.GetAdminRootDir())
 }
 
 func (me *AdminUi) GetWebRootFileDir() string {
@@ -254,7 +254,7 @@ func (me *AdminUi) GetWebServer() *http.Server {
 	return me.webServer
 }
 
-func (me *AdminUi) GetHostApi() *HostApi {
+func (me *AdminUi) GetHostApi() HostApi {
 	for range only.Once {
 		if me.api != nil {
 			break

@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/only"
-	"gearbox/stat"
+	"gearbox/status"
+	"gearbox/types"
 )
 
 type FilepathHelpUrlGetter interface {
@@ -13,19 +14,18 @@ type FilepathHelpUrlGetter interface {
 }
 
 type FilepathGetter interface {
-	GetFilepath() string
+	GetFilepath() types.AbsoluteFilepath
 }
 
 type HelpUrlGetter interface {
 	GetHelpUrl() string
 }
 
-func UnmarshalJson(j []byte, obj FilepathHelpUrlGetter) (status stat.Status) {
+func UnmarshalJson(j []byte, obj FilepathHelpUrlGetter) (sts status.Status) {
 	for range only.Once {
 		err := json.Unmarshal(j, &obj)
 		if err != nil {
-			status = stat.NewFailStatus(&stat.Args{
-				Error:   err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("failed to unmarshal JSON for '%s'", obj.GetFilepath()),
 				Help: fmt.Sprintf("ensure '%s' is in correct format per %s",
 					obj.GetFilepath(),
@@ -35,5 +35,5 @@ func UnmarshalJson(j []byte, obj FilepathHelpUrlGetter) (status stat.Status) {
 			break
 		}
 	}
-	return status
+	return sts
 }

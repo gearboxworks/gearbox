@@ -4,39 +4,36 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/only"
-	"gearbox/stat"
+	"gearbox/status"
 )
 
-type ResourceType string
-
 type ResponseMeta struct {
-	Version  string       `json:"version"`
-	Service  string       `json:"service"`
-	DocsUrl  string       `json:"docs_url"`
-	Resource ResourceName `json:"resource"`
+	Version   string    `json:"version"`
+	Service   string    `json:"service"`
+	DocsUrl   string    `json:"docs_url"`
+	RouteName RouteName `json:"route"`
 }
 
 type Response struct {
 	Success    bool         `json:"success"`
 	StatusCode int          `json:"status_code"`
-	Meta       ResponseMeta `json:"meta"`
-	Links      Links        `json:"links"`
+	Meta       ResponseMeta `json:"meta,omitempty"`
+	Links      Links        `json:"links,omitempty"`
 	Data       interface{}  `json:"data,omitempty"`
 }
 
-func (me *Response) GetUrlPathTemplate(resourceType ResourceName) (url UriTemplate, status stat.Status) {
+func (me *Response) GetUrlPathTemplate(resourceType RouteName) (url UriTemplate, sts status.Status) {
 	for range only.Once {
 		var ok bool
-		url, ok = me.Links[resourceType]
+		url, ok = me.Links[resourceType].(UriTemplate)
 		if !ok {
-			status = stat.NewFailStatus(&stat.Args{
+			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("no '%s' in resource links", resourceType),
-				Error:   stat.IsStatusError,
 				Help:    ContactSupportHelp(),
 			})
 		}
 	}
-	return url, status
+	return url, sts
 }
 
 func (me *Response) Clone() *Response {

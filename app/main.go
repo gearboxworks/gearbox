@@ -4,22 +4,33 @@ import (
 	"fmt"
 	"gearbox"
 	"gearbox/app/cmd"
-	"gearbox/host"
+	"gearbox/hostapi"
+	"gearbox/os_support"
+	"gearbox/status"
+	"gearbox/status/is"
 	"os"
 )
 
 //go:generate go-bindata -dev -o assets.go -pkg gearbox admin/dist/...
 
 func main() {
-	gearbox.Instance = gearbox.NewApp(&gearbox.Args{
-		HostConnector: host.GetConnector(),
+	gb := gearbox.NewGearbox(&gearbox.Args{
+		OsSupport:     oss.Get(),
 		GlobalOptions: cmd.GlobalOptions,
 	})
-	status := gearbox.Instance.Initialize()
-	if status.IsError() {
-		fmt.Println(status.Message)
-		if status.CliHelp != "" {
-			fmt.Println(status.CliHelp)
+	gearbox.Instance = gb
+	ha := hostapi.NewHostApi(gb)
+	sts := ha.Route()
+	if is.Error(sts) {
+		panic(sts.Message())
+	}
+	gb.SetHostApi(ha)
+	sts = gb.Initialize()
+	if status.IsError(sts) {
+		fmt.Println(sts.Message())
+		help := sts.GetHelp(status.CliHelp)
+		if help != "" {
+			fmt.Println(help)
 		}
 		os.Exit(1)
 	}

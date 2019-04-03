@@ -1,0 +1,67 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/authority-stack-details",
+      "resource_type": "authority-stack-details"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/stacks/gearbox.works/lemp"
+   },
+   "data": {
+      "authority": "gearbox.works",
+      "name": "lemp",
+      "roles": {
+         "gearbox.works/lemp/mysql": {
+            "label": "LEMP Database server; MySQL or MariaDB",
+            "examples": [
+               "MySQL",
+               "MariaDB"
+            ],
+            "min": 1,
+            "max": 10,
+            "authority": "gearbox.works",
+            "stack": "lemp",
+            "type": "mysql"
+         },
+         "gearbox.works/lemp/nginx": {
+            "label": "LEMP Nginx Web server",
+            "examples": [
+               "Nginx"
+            ],
+            "min": 1,
+            "max": 10,
+            "authority": "gearbox.works",
+            "stack": "lemp",
+            "type": "nginx"
+         },
+         "gearbox.works/lemp/p-script": {
+            "label": "LEMP server-side scripting process VM; PHP, Python or Perl",
+            "examples": [
+               "PHP"
+            ],
+            "min": 1,
+            "max": 10,
+            "authority": "gearbox.works",
+            "stack": "lemp",
+            "type": "p-script"
+         }
+      },
+      "role_services": {
+         "gearbox.works/lemp/mysql": {
+            "org": "gearboxworks"
+         },
+         "gearbox.works/lemp/nginx": {
+            "org": "gearboxworks"
+         },
+         "gearbox.works/lemp/p-script": {
+            "org": "gearboxworks"
+         }
+      }
+   }
+}

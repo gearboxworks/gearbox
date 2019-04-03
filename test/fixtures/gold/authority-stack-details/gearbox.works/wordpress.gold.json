@@ -1,0 +1,87 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/authority-stack-details",
+      "resource_type": "authority-stack-details"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/stacks/gearbox.works/wordpress"
+   },
+   "data": {
+      "authority": "gearbox.works",
+      "name": "wordpress",
+      "roles": {
+         "gearbox.works/wordpress/cacheserver": {
+            "label": "Cache server for WordPress",
+            "examples": [
+               "Redis",
+               "Memcached"
+            ],
+            "optional": true,
+            "max": 1,
+            "authority": "gearbox.works",
+            "stack": "wordpress",
+            "type": "cacheserver"
+         },
+         "gearbox.works/wordpress/dbserver": {
+            "label": "Database server for WordPress",
+            "examples": [
+               "MySQL",
+               "MariaDB",
+               "Percona"
+            ],
+            "min": 1,
+            "max": 10,
+            "authority": "gearbox.works",
+            "stack": "wordpress",
+            "type": "dbserver"
+         },
+         "gearbox.works/wordpress/processvm": {
+            "label": "ProcessVM (PHP) for WordPress",
+            "examples": [
+               "PHP",
+               "HHVM"
+            ],
+            "min": 1,
+            "max": 10,
+            "authority": "gearbox.works",
+            "stack": "wordpress",
+            "type": "processvm"
+         },
+         "gearbox.works/wordpress/webserver": {
+            "label": "Web server for WordPress",
+            "examples": [
+               "Apache",
+               "Nginx",
+               "Caddy",
+               "Lighttpd"
+            ],
+            "min": 1,
+            "max": 10,
+            "authority": "gearbox.works",
+            "stack": "wordpress",
+            "type": "webserver"
+         }
+      },
+      "role_services": {
+         "gearbox.works/wordpress/cacheserver": {
+            "org": "gearboxworks"
+         },
+         "gearbox.works/wordpress/dbserver": {
+            "org": "gearboxworks"
+         },
+         "gearbox.works/wordpress/processvm": {
+            "org": "gearboxworks"
+         },
+         "gearbox.works/wordpress/webserver": {
+            "org": "gearboxworks"
+         }
+      }
+   }
+}

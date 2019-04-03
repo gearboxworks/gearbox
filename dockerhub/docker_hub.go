@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/only"
-	"gearbox/stat"
+	"gearbox/status"
 	"gearbox/util"
 	"github.com/hashicorp/go-version"
 	"log"
@@ -26,7 +26,7 @@ type ContainerQuery struct {
 	IncludePatches bool
 }
 
-func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (cns ContainerNames, status stat.Status) {
+func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (cns ContainerNames, sts status.Status) {
 	var _query *ContainerQuery
 	if len(query) == 0 {
 		_query = &ContainerQuery{}
@@ -38,20 +38,20 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 
 		cns = make(ContainerNames, 0)
 
-		crl, _, status := util.HttpGet(ContainerRespositoryListUrl)
-		if status.IsError() {
-			status.PriorStatus = status.String()
-			status.Message = fmt.Sprintf("failed to download list of container repositories from '%s'",
-				ContainerRespositoryListUrl,
-			)
-			status.Help = "check your Internet access, or " + stat.ContactSupportHelp()
+		crl, _, sts := util.HttpRequest(ContainerRespositoryListUrl)
+		if status.IsError(sts) {
+			sts = status.Wrap(sts, &status.Args{
+				Message: fmt.Sprintf("failed to download list of container repositories from '%s'",
+					ContainerRespositoryListUrl,
+				),
+				Help: "check your Internet access, or " + status.ContactSupportHelp(),
+			})
 			break
 		}
 		ar := ApiResponse{}
 		err := json.Unmarshal(crl, &ar)
 		if err != nil {
-			status = stat.NewFailStatus(&stat.Args{
-				Error: err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("unable to unmarshal response from '%s'",
 					ContainerRespositoryListUrl,
 				),
@@ -60,8 +60,7 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 		}
 		rb, err := json.Marshal(ar.Results)
 		if err != nil {
-			status = stat.NewFailStatus(&stat.Args{
-				Error: err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("unable to marshal container repositories from '%s'",
 					ContainerRespositoryListUrl,
 				),
@@ -71,8 +70,7 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 		rs := Repositories{}
 		err = json.Unmarshal(rb, &rs)
 		if err != nil {
-			status = stat.NewFailStatus(&stat.Args{
-				Error: err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("unable to unmarshal container repositories from '%s'",
 					ContainerRespositoryListUrl,
 				),
@@ -80,8 +78,8 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 			break
 		}
 		for _, r := range rs {
-			rc, status := me.RequestRepositoryContainers(ContainerName(r.Name), _query)
-			if status.IsError() {
+			rc, sts := me.RequestRepositoryContainers(ContainerName(r.Name), _query)
+			if status.IsError(sts) {
 				// @TODO Should we do anything here?!?
 				continue
 			}
@@ -90,10 +88,10 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 			}
 		}
 	}
-	return cns, status
+	return cns, sts
 }
 
-func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*ContainerQuery) (cs Containers, status stat.Status) {
+func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*ContainerQuery) (cs Containers, sts status.Status) {
 	var _query *ContainerQuery
 	if len(query) == 0 {
 		_query = &ContainerQuery{}
@@ -105,20 +103,20 @@ func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*C
 
 		url := strings.Replace(AvailableContainerListUrl, "{name}", string(name), 1)
 
-		acl, _, status := util.HttpGet(url)
-		if status.IsError() {
-			status.PriorStatus = status.String()
-			status.Message = fmt.Sprintf("failed to download list of containers for '%s' from '%s'",
-				name,
-				url,
-			)
+		acl, _, sts := util.HttpRequest(url)
+		if status.IsError(sts) {
+			sts = status.Wrap(sts, &status.Args{
+				Message: fmt.Sprintf("failed to download list of containers for '%s' from '%s'",
+					name,
+					url,
+				),
+			})
 			break
 		}
 		ar := ApiResponse{}
 		err := json.Unmarshal(acl, &ar)
 		if err != nil {
-			status = stat.NewFailStatus(&stat.Args{
-				Error: err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("unable to unmarshal response from '%s'",
 					ContainerRespositoryListUrl,
 				),
@@ -136,8 +134,7 @@ func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*C
 
 		err = json.Unmarshal(cb, &cs)
 		if err != nil {
-			status = stat.NewFailStatus(&stat.Args{
-				Error: err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("unable to marshal container repositories from '%s'",
 					ContainerRespositoryListUrl,
 				),
@@ -164,16 +161,12 @@ func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*C
 			for range only.Once {
 				iv, err := version.NewVersion(string(cs[i].Name))
 				if err != nil {
-					status = stat.NewFailStatus(&stat.Args{
-						Error: err,
-					})
+					sts = status.Wrap(err)
 					break
 				}
 				jv, err := version.NewVersion(string(cs[j].Name))
 				if err != nil {
-					status = stat.NewFailStatus(&stat.Args{
-						Error: err,
-					})
+					sts = status.Wrap(err)
 					break
 				}
 				lt = iv.LessThan(jv)
@@ -181,5 +174,5 @@ func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*C
 			return lt
 		})
 	}
-	return cs, status
+	return cs, sts
 }

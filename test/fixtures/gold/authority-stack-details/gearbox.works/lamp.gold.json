@@ -1,0 +1,66 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/authority-stack-details",
+      "resource_type": "authority-stack-details"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/stacks/gearbox.works/lamp"
+   },
+   "data": {
+      "authority": "gearbox.works",
+      "name": "lamp",
+      "roles": {
+         "gearbox.works/lamp/apache": {
+            "label": "LAMP Apache Web Server",
+            "examples": [
+               "Apache"
+            ],
+            "min": 1,
+            "max": 10,
+            "authority": "gearbox.works",
+            "stack": "lamp",
+            "type": "apache"
+         },
+         "gearbox.works/lamp/mysql": {
+            "label": "LAMP MySQL database server",
+            "examples": [
+               "MySQL"
+            ],
+            "min": 1,
+            "max": 10,
+            "authority": "gearbox.works",
+            "stack": "lamp",
+            "type": "mysql"
+         },
+         "gearbox.works/lamp/php": {
+            "label": "LAMP PHP ProcessVM",
+            "examples": [
+               "PHP"
+            ],
+            "min": 1,
+            "max": 10,
+            "authority": "gearbox.works",
+            "stack": "lamp",
+            "type": "php"
+         }
+      },
+      "role_services": {
+         "gearbox.works/lamp/apache": {
+            "org": "gearboxworks"
+         },
+         "gearbox.works/lamp/mysql": {
+            "org": "gearboxworks"
+         },
+         "gearbox.works/lamp/php": {
+            "org": "gearboxworks"
+         }
+      }
+   }
+}

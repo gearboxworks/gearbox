@@ -2,29 +2,30 @@ package includes
 
 import (
 	"gearbox"
-	"gearbox/stat"
+	"gearbox/config"
+	"gearbox/status"
 )
 
-var _ gearbox.Config = (*TestConfig)(nil)
+var _ config.Configer = (*TestConfig)(nil)
 
 type TestConfig struct {
-	gearbox.Config
+	config.Configer
 }
 
-func NewTestConfig(gb gearbox.Gearbox) gearbox.Config {
+func NewTestConfig(gb gearbox.Gearboxer) config.Configer {
 	return &TestConfig{
-		Config: gearbox.NewConfiguration(gb),
+		Configer: config.NewConfig(gb.GetOsSupport()),
 	}
 }
 
-func (me *TestConfig) Initialize() (status stat.Status) {
-	status = me.Load()
-	if !status.IsError() {
-		status = me.WriteFile()
+func (me *TestConfig) Initialize() (sts status.Status) {
+	sts = me.Load()
+	if !status.IsError(sts) {
+		sts = me.WriteFile()
 	}
-	return status
+	return sts
 }
 
-func (me *TestConfig) WriteFile() (status stat.Status) {
-	return stat.NewOkStatus("Test file written (wink, wink)")
+func (me *TestConfig) WriteFile() (sts status.Status) {
+	return status.Success("Test file written (wink, wink)")
 }

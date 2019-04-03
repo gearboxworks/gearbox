@@ -1,0 +1,38 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/authority-stack-details",
+      "resource_type": "authority-stack-details"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/stacks/gearbox.works/elasticsearch"
+   },
+   "data": {
+      "authority": "gearbox.works",
+      "name": "elasticsearch",
+      "roles": {
+         "gearbox.works/elasticsearch/elasticsearch": {
+            "label": "Elasticsearch",
+            "examples": [
+               "Elasticsearch"
+            ],
+            "min": 1,
+            "max": 10,
+            "authority": "gearbox.works",
+            "stack": "elasticsearch",
+            "type": "elasticsearch"
+         }
+      },
+      "role_services": {
+         "gearbox.works/elasticsearch/elasticsearch": {
+            "org": "gearboxworks"
+         }
+      }
+   }
+}
