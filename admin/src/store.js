@@ -431,7 +431,7 @@ export default new Vuex.Store({
 
           const ver = defaultOpt.split(':')[1].split('.')
 
-          const stackService = {
+          const newService = {
             'authority': org,
             'org': org.replace('.', ''),
             'stack': stackName.substring(stackName.indexOf('/') + 1),
@@ -441,19 +441,20 @@ export default new Vuex.Store({
           }
 
           if (ver.length > 0) {
-            stackService.version.major = ver[0]
+            newService.version.major = ver[0]
           }
           if (ver.length > 1) {
-            stackService.version.minor = ver[1]
+            newService.version.minor = ver[1]
           }
           if (ver.length > 2) {
-            stackService.version.patch = ver[2]
+            newService.version.patch = ver[2]
           }
 
           /**
            * Set it in a reactive way!
            */
-          Vue.set(project.stack, genericServiceName, stackService)
+          console.log(project.hostname, genericServiceName, newService)
+          Vue.set(project.stack, genericServiceName, newService)
         }
       }
     },
@@ -468,18 +469,16 @@ export default new Vuex.Store({
          * We need to remove all properties of project.stack that start with "wordpress/"
          */
         const shortStackName = stackName.split('/')[1]
-        const newProjectStack = {}
         for (const stackRole in project.stack) {
           if (project.stack.hasOwnProperty(stackRole)) {
-            if (stackRole.indexOf(shortStackName) === -1) {
+            if (stackRole.indexOf(shortStackName) !== -1) {
               /**
                * has a property starting with shortStackName
                */
-              newProjectStack[stackRole] = project.stack[stackRole]
+              Vue.delete(project.stack, stackRole)
             }
           }
         }
-        Vue.set(project, 'stack', newProjectStack)
       }
     },
     CHANGE_PROJECT_SERVICE (state, payload) {
@@ -506,7 +505,6 @@ export default new Vuex.Store({
         if (ver.length > 2) {
           newService.version.patch = ver[2]
         }
-
         Vue.set(project.stack, serviceRole, newService)
       }
     },

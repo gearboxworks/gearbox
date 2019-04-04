@@ -5,11 +5,11 @@
         v-for="(project, projectIndex) in projects"
         :key="project.path"
         :to="{path:'/project/'+project.hostname}"
+        class="card--project"
       >
         <project-details :storedProject="project" :projectIndex="projectIndex"></project-details>
-        <div slot="footer">
+        <div slot="footer" v-if="Object.entries(project.stack).length">
           <project-stack :projectHostname="project.hostname" :projectStack="project.stack" :projectIndex="projectIndex"></project-stack>
-          <!--b-button title="Configure service stack" :to="'/projects/'+project.hostname+'/stack'" variant="primary">Customize</b-button-->
         </div>
       </b-card>
     </b-card-group>
@@ -23,7 +23,10 @@ import ProjectStack from '../components/ProjectStack'
 
 export default {
   name: 'ProjectList',
-  components: { ProjectDetails, ProjectStack },
+  components: {
+    ProjectDetails,
+    ProjectStack
+  },
   computed: {
     ...mapState([
       'projects',

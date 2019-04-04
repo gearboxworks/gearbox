@@ -1,5 +1,5 @@
 <template>
-  <div role="tablist" class="project-stack-list" :id="project_base + '-stack'">
+  <div role="tablist" class="project-stack-list" :id="`${projectBase}stack`">
     <div
       v-for="(projectServices, stackName, stackIndex) in groupProjectStacks(projectStack)"
       :key="stackName"
@@ -11,37 +11,37 @@
       <ul class="service-list">
         <li
             v-for="(service, serviceRole,serviceIndex) in stackServices(stackName)"
-            :key="project_base + escAttr(serviceRole)"
-            :id="project_base + escAttr(serviceRole)"
+            :key="projectBase + escAttr(serviceRole)"
+            :id="projectBase + escAttr(serviceRole)"
             class="service-item"
             :tabindex="projectIndex*100+stackIndex*10+serviceIndex+1"
+            v-b-tooltip.hover
+            :title="projectServices[serviceRole] ? projectServices[serviceRole].service_id.replace('gearboxworks/', ''): null"
         >
           <img :src="require('../assets/'+projectServices[serviceRole].program+'.svg')" class="service-program" />
           <h6 class="service-role">{{stackRoles(stackName)[serviceRole].label}}</h6>
           <b-popover
-            :target="project_base + escAttr(serviceRole)"
-            :container="projectHostname+'-stack'"
-            :ref="project_base + escAttr(serviceRole)+'_popover'"
+            :target="projectBase + escAttr(serviceRole)"
+            :container="`${projectHostname}stack`"
+            :ref="projectBase + escAttr(serviceRole) + '-popover'"
             triggers="focus"
             placement="bottom"
           >
             <template slot="title">
-              <b-button @click="onClosePopoverFor(project_base + escAttr(serviceRole))" class="close" aria-label="Close">
+              <b-button @click="onClosePopoverFor(projectBase + escAttr(serviceRole))" class="close" aria-label="Close">
                 <span class="d-inline-block" aria-hidden="true">&times;</span>
               </b-button>
-              {{stackRoles(stackName)[serviceRole].name}}
+              {{stackRoles(stackName)[serviceRole].program}}
             </template>
 
             <div>
-              <!--{{'Service: '+projectServices[serviceRole].service_id}}
-              <div><small>Click to pick a different one...</small></div>-->
               <b-form-select
-                :id="project_base + escAttr(serviceRole)+'_input'"
+                :id="projectBase + escAttr(serviceRole)+'_input'"
                 :value="projectServices[serviceRole] ? projectServices[serviceRole].service_id: null"
                 @change="changeProjectService(serviceRole,$event)"
                 :tabindex="projectIndex*100+stackIndex*10+serviceIndex+9"
               >
-                <option disabled value="">Please select one...</option>
+                <option disabled value="">Select service...</option>
                 <optgroup v-for="(options, groupLabel) in optionGroups(service.options)" :label="groupLabel" :key="groupLabel">
                   <option v-for="serviceVer in options" :value="service.org + '/' + serviceVer" :key="serviceVer">{{serviceVer}}</option>
                 </optgroup>
@@ -51,16 +51,6 @@
         </li>
       </ul>
     </div>
-
-    <b-form-select v-model='stackToAdd' @change="addProjectStack" v-if="hasUnusedStacks" class="add-stack">
-      <option :value="null" disabled>Add Stack...</option>
-      <option
-        v-for="(stack,stackName) in stacksNotUnusedInProject"
-        :key="stackName"
-        :value="stackName"
-      >{{stackName.replace('gearbox.works/', '')}}</option>
-    </b-form-select>
-
   </div>
 </template>
 
@@ -87,7 +77,7 @@ export default {
   },
   data () {
     return {
-      stackToAdd: null
+
     }
   },
   components: {
@@ -95,43 +85,16 @@ export default {
   },
   computed: {
     ...mapGetters(['groupProjectStacks', 'stackRoles', 'stackServices']),
-    project_base () {
-      return this.escAttr(this.projectHostname)
+    projectBase () {
+      return this.escAttr(this.projectHostname) + '-'
     },
     project () {
       return this.$store.getters.projectBy('hostname', this.projectHostname)
-    },
-    hasUnusedStacks () {
-      return Object.entries(this.stacksNotUnusedInProject).length > 0
-    },
-    stacksNotUnusedInProject () {
-      const result = {}
-      const projectStacks = this.groupProjectStacks(this.projectStack)
-      for (const index in this.$store.state.gearStacks) {
-        const stackName = this.$store.state.gearStacks[index]
-        if (typeof projectStacks[stackName] === 'undefined') {
-          result[stackName] = this.$store.state.gearStacks[stackName]
-        }
-      }
-      return result
     }
   },
   methods: {
     escAttr (value) {
-      return value.replace(/\//g, '_').replace(/\./g, '_')
-    },
-    stackIncludesService (services, serviceId) {
-      let result = false
-      for (const serviceName in services) {
-        if (serviceId === services[serviceName].service_id) {
-          result = true
-          break
-        }
-      }
-      if (result) {
-        console.log('found', serviceId)
-      }
-      return result
+      return value.replace(/\//g, '-').replace(/\./g, '-')
     },
     mapOptions (options) {
       const result = []
@@ -154,11 +117,6 @@ export default {
       }
       return result
     },
-    addProjectStack (stackName) {
-      console.log('Selected', this.stackToAdd, stackName)
-      this.$store.dispatch('addProjectStack', { 'projectHostname': this.projectHostname, stackName })
-      this.stackToAdd = null
-    },
     changeProjectService (serviceName, serviceId) {
       this.$store.dispatch('changeProjectService', { 'projectHostname': this.projectHostname, serviceName, serviceId })
     },
@@ -176,6 +134,11 @@ export default {
 <style scoped>
   .js-remove-stack {
     float: right;
+    opacity: 0;
+    transition: opacity 400ms;
+  }
+  .card--project:hover .js-remove-stack {
+    opacity: 1;
   }
   .project-stack{
     margin-bottom: 8px;
@@ -216,9 +179,11 @@ export default {
     cursor: pointer;
     border: 1px solid transparent;
     border-radius: 4px;
+    transition: all 400ms;
   }
   .service-item:hover {
     border: 1px solid #aaa;
+    background-color: #eee;
   }
   .service-role{
     margin-top:5px;

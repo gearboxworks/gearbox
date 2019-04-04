@@ -2,21 +2,21 @@
   <div :class="{'showing-details': showingDetails, 'not-showing-details': !showingDetails}">
     <b-form>
       <b-form-group
-        :id="'hostname-group-'+projectIndex"
+        :id="`hostname-group-${projectIndex}`"
         class="hostname-group"
         label=""
-        :label-for="'hostname-input-'+projectIndex"
+        :label-for="`hostname-input-${projectIndex}`"
         :description="showingDetails ? 'Hostname' : ''"
       >
         <b-form-input
-          :id="'hostname-input-'+projectIndex"
+          :id="`hostname-input-${projectIndex}`"
           class="hostname-input"
           type="text"
           v-model="hostname"
           @change="maybeSubmit"
           size="lg"
           v-b-tooltip.hover.bottomright
-          title="Expand details"
+          :title="showingDetails ? '' : 'Expand details'"
           required
           @click="showDetails"
           placeholder="" />
@@ -62,29 +62,29 @@
          v-b-tooltip.hover
          @click.prevent = ""
          class="titlebar-icon titlebar-icon--details"
-         v-b-toggle="project_base + '_advanced'"
+         v-b-toggle="projectBase + '_advanced'"
       >
         <font-awesome-icon
           :icon="['fa', 'ellipsis-h']"
         />
       </a-->
 
-      <b-collapse :id="project_base + '_advanced'" role="tabpanel" :visible="showingDetails">
+      <b-collapse :id="projectBase + '_advanced'" role="tabpanel" :visible="showingDetails">
 
         <b-form-group
-          :id="project_base + 'location-group'"
-          :label-for="project_base+'location-input'"
+          :id="projectBase + 'location-group'"
+          :label-for="projectBase+'location-input'"
           label=""
           description="Location"
         >
           <b-form-input
             disabled
-            :id="project_base+'location-input'"
+            :id="projectBase+'location-input'"
             :value="resolvePath(baseDir, path)"
             class="location-input"
           />
           <a target="_blank"
-             :id="`${project_base}change-location`"
+             :id="`${projectBase}change-location`"
              href="#"
              title="Change location"
              :class="['cog-icon']"
@@ -97,14 +97,14 @@
         </b-form-group>
 
         <b-popover
-          :target="`${project_base}change-location`"
-          :container="project_base + '-advanced'"
-          :ref="project_base + 'location-popover'"
+          :target="`${projectBase}change-location`"
+          :container="projectBase + '-advanced'"
+          :ref="projectBase + 'location-popover'"
           triggers="focus"
           placement="bottom"
         >
           <template slot="title">
-            <b-button @click="onClosePopoverFor(project_base + 'location-group')" class="close" aria-label="Close">
+            <b-button @click="onClosePopoverFor(`${projectBase}location-group`)" class="close" aria-label="Close">
               <span class="d-inline-block" aria-hidden="true">&times;</span>
             </b-button>
             Change location
@@ -156,13 +156,24 @@
             max-rows="6"
           />
         </b-form-group>
+
+        <b-form-select v-model="selectedService" :required="true" @change="addProjectStack" :disabled="!hasUnusedStacks" class="add-stack">
+          <option value="" disabled>{{hasUnusedStacks ? 'Add Stack...' : 'No more stacks to add'}}</option>
+          <option
+            v-for="(stack,stackName) in stacksNotUnusedInProject"
+            :key="stackName"
+            :value="stackName"
+          >{{stackName.replace('gearbox.works/', '')}}</option>
+        </b-form-select>
+
       </b-collapse>
     </b-form>
   </div>
 </template>
 
 <script>
-// import Vue from 'vue'
+
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'ProjectDetails',
@@ -179,12 +190,28 @@ export default {
   data () {
     return {
       ...this.storedProject,
-      showingDetails: false
+      showingDetails: false,
+      selectedService: ''
     }
   },
   computed: {
-    project_base () {
+    ...mapGetters(['groupProjectStacks']),
+    projectBase () {
       return this.escAttr(this.hostname) + '-'
+    },
+    hasUnusedStacks () {
+      return Object.entries(this.stacksNotUnusedInProject).length > 0
+    },
+    stacksNotUnusedInProject () {
+      const result = {}
+      const projectStacks = this.groupProjectStacks(this.stack)
+      for (const index in this.$store.state.gearStacks) {
+        const stackName = this.$store.state.gearStacks[index]
+        if (typeof projectStacks[stackName] === 'undefined') {
+          result[stackName] = this.$store.state.gearStacks[stackName]
+        }
+      }
+      return result
     }
   },
   methods: {
@@ -211,14 +238,16 @@ export default {
       })
     },
     onRunStop () {
-      console.log(this.enabled)
       this.$store.dispatch(
         'changeProjectState', { 'projectHostname': this.storedProject.hostname, 'isEnabled': !this.enabled }
       )
     },
     onClosePopoverFor (triggerElementId) {
-      console.log('onClosePopoverFor', triggerElementId)
       this.$root.$emit('bv::popover::hide', triggerElementId)
+    },
+    addProjectStack (stackName) {
+      this.selectedService = ''
+      this.$store.dispatch('addProjectStack', { 'projectHostname': this.hostname, stackName })
     }
   }
 }
@@ -229,6 +258,7 @@ export default {
     font-size: 0.75rem;
     margin-bottom: 0;
   }
+
   .hostname-group{
     display: inline-block;
     float: left;
@@ -248,7 +278,11 @@ export default {
 
   .not-showing-details .hostname-input {
     border: 1px solid transparent;
-    cursor: row-resize;
+    cursor: pointer;
+  }
+
+  .not-showing-details .hostname-input:hover {
+    text-decoration: underline;
   }
 
   .showing-details .hostname-input{
