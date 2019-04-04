@@ -14,42 +14,42 @@
    ],
    "roles": {
       "gearbox.works/elasticsearch/elasticsearch": {
-         "name": "Elasticsearch",
+         "program": "Elasticsearch",
          "label": "Elasticsearch",
          "examples": [
             "Elasticsearch"
          ]
       },
       "gearbox.works/lamp/apache": {
-         "name": "LAMP Apache Web Server",
+         "program": "LAMP Apache Web Server",
          "label": "Apache",
          "examples": [
             "Apache"
          ]
       },
       "gearbox.works/lamp/mysql": {
-         "name": "LAMP MySQL database server",
+         "program": "LAMP MySQL database server",
          "label": "MySQL",
          "examples": [
             "MySQL"
          ]
       },
       "gearbox.works/lamp/php": {
-         "name": "LAMP PHP ProcessVM",
+         "program": "LAMP PHP ProcessVM",
          "label": "PHP",
          "examples": [
             "PHP"
          ]
       },
       "gearbox.works/lemp/nginx": {
-         "name": "LEMP Nginx Web server",
+         "program": "LEMP Nginx Web server",
          "label": "Nginx",
          "examples": [
             "Nginx"
          ]
       },
       "gearbox.works/lemp/mysql": {
-         "name": "LEMP Database server; MySQL or MariaDB",
+         "program": "LEMP Database server; MySQL or MariaDB",
          "label": "DB server",
          "examples": [
             "MySQL",
@@ -57,14 +57,14 @@
          ]
       },
       "gearbox.works/lemp/p-script": {
-         "name": "LEMP server-side scripting process VM; PHP, Python or Perl",
+         "program": "LEMP server-side scripting process VM; PHP, Python or Perl",
          "label": "server-side scripting",
          "examples": [
             "PHP"
          ]
       },
       "gearbox.works/wordpress/webserver": {
-         "name": "Web server for WordPress",
+         "program": "Web server for WordPress",
          "label": "Web server",
          "examples": [
             "Apache",
@@ -74,7 +74,7 @@
          ]
       },
       "gearbox.works/wordpress/dbserver": {
-         "name": "Database server for WordPress",
+         "program": "Database server for WordPress",
          "label": "DB server",
          "examples": [
             "MySQL",
@@ -83,7 +83,7 @@
          ]
       },
       "gearbox.works/wordpress/processvm": {
-         "name": "ProcessVM (PHP) for WordPress",
+         "program": "ProcessVM (PHP) for WordPress",
          "label": "PHP",
          "examples": [
             "PHP",
@@ -91,7 +91,7 @@
          ]
       },
       "gearbox.works/wordpress/cacheserver": {
-         "name": "Cache server for WordPress",
+         "program": "Cache server for WordPress",
          "label": "Cache server",
          "examples": [
             "Redis",
