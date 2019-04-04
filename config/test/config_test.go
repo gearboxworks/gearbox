@@ -1,10 +1,11 @@
-package integration
+package test
 
 import (
 	"fmt"
 	"gearbox/config"
 	"gearbox/gearbox"
 	"gearbox/status"
+	"gearbox/status/is"
 	"gearbox/test"
 	"gearbox/test/mock"
 	"gearbox/types"
@@ -22,11 +23,11 @@ var ProjectPaths = map[types.RelativePath]bool{
 }
 
 func TestEmptyConfig(t *testing.T) {
-	mgb := &gearbox.Gearbox{
+	gb := &gearbox.Gearbox{
 		OsSupport: mock.NewOsSupport(t),
 	}
-	c := config.NewConfig(mgb.GetOsSupport())
-	mgb.SetConfig(c)
+	c := config.NewConfig(gb.GetOsSupport())
+	gb.SetConfig(c)
 
 	t.Run("Initialize", func(t *testing.T) {
 		sts := c.Initialize()
@@ -34,15 +35,6 @@ func TestEmptyConfig(t *testing.T) {
 			t.Error(sts.Message())
 		}
 	})
-	t.Run("Brandname", func(t *testing.T) {
-		if c.GetBoxname() != gearbox.Brandname {
-			t.Error(fmt.Sprintf("Want: %s, Got %s",
-				gearbox.Brandname,
-				c.GetBoxname(),
-			))
-		}
-	})
-	basedir := mgb.OsSupport.GetUserHomeDir()
 	t.Run("ProjectMap", func(t *testing.T) {
 		pm, sts := c.GetProjectMap()
 		if status.IsError(sts) {
@@ -53,14 +45,17 @@ func TestEmptyConfig(t *testing.T) {
 			t.Run(string(k), func(t *testing.T) {
 				t.Run(string(k), func(t *testing.T) {
 					fp, sts := p.GetFilepath()
-					if status.IsError(sts) {
+					if is.Error(sts) {
 						t.Error(sts.Message())
 						return
 					}
-					path := test.ParseRelativePath(
-						types.AbsoluteDir(basedir),
-						types.AbsoluteFilepath(util.FileDir(fp)),
-					)
+					var basedir types.AbsoluteDir
+					basedir, sts = c.GetHostBasedir(p.Basedir)
+					if is.Error(sts) {
+						t.Error(sts.Message())
+						return
+					}
+					path := test.ParseRelativePath(basedir, types.AbsoluteFilepath(util.FileDir(fp)))
 					if _, ok := ProjectPaths[path]; !ok {
 						t.Error(fmt.Sprintf("path '%s' not found", path))
 					}

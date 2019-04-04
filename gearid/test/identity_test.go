@@ -1,4 +1,4 @@
-package unit
+package test
 
 import (
 	"gearbox/gearid"
@@ -17,9 +17,9 @@ func (me *IdTest) GetData() test.Table {
 			Label: "No OrgName",
 			In:    "php:7",
 			Out: test.Out{
-				getId:      test.Args{Fail: false, Want: "php:7"},
+				getId:      test.Args{Fail: false, Want: "gearboxworks/php:7"},
 				getRaw:     test.Args{Fail: false, Want: "php:7"},
-				getOrgName: test.Args{Fail: false, Want: ""},
+				getOrgName: test.Args{Fail: false, Want: "gearboxworks"},
 				getType:    test.Args{Fail: false, Want: ""},
 				getName:    test.Args{Fail: false, Want: "php"},
 				getVersion: test.Args{Fail: false, Want: "7"},
@@ -27,11 +27,11 @@ func (me *IdTest) GetData() test.Table {
 		}),
 		test.NewFixture(&test.Fixture{
 			Label: "Major",
-			In:    "gearbox/php:7",
+			In:    "gearboxworks/php:7",
 			Out: test.Out{
-				getId:      test.Args{Fail: false, Want: "gearbox/php:7"},
-				getRaw:     test.Args{Fail: false, Want: "gearbox/php:7"},
-				getOrgName: test.Args{Fail: false, Want: "gearbox"},
+				getId:      test.Args{Fail: false, Want: "gearboxworks/php:7"},
+				getRaw:     test.Args{Fail: false, Want: "gearboxworks/php:7"},
+				getOrgName: test.Args{Fail: false, Want: "gearboxworks"},
 				getType:    test.Args{Fail: false, Want: ""},
 				getName:    test.Args{Fail: false, Want: "php"},
 				getVersion: test.Args{Fail: false, Want: "7"},
@@ -51,11 +51,11 @@ func (me *IdTest) GetData() test.Table {
 		}),
 		test.NewFixture(&test.Fixture{
 			Label: "Full GearId",
-			In:    "gearbox/php:7.2.1",
+			In:    "gearboxworks/php:7.2.1",
 			Out: test.Out{
-				getId:      test.Args{Fail: false, Want: "gearbox/php:7.2.1"},
-				getRaw:     test.Args{Fail: false, Want: "gearbox/php:7.2.1"},
-				getOrgName: test.Args{Fail: false, Want: "gearbox"},
+				getId:      test.Args{Fail: false, Want: "gearboxworks/php:7.2.1"},
+				getRaw:     test.Args{Fail: false, Want: "gearboxworks/php:7.2.1"},
+				getOrgName: test.Args{Fail: false, Want: "gearboxworks"},
 				getType:    test.Args{Fail: false, Want: ""},
 				getName:    test.Args{Fail: false, Want: "php"},
 				getVersion: test.Args{Fail: false, Want: "7.2.1"},
@@ -63,11 +63,11 @@ func (me *IdTest) GetData() test.Table {
 		}),
 		test.NewFixture(&test.Fixture{
 			Label: "Full GearId with Revision",
-			In:    "gearbox/php:7.2.1~r3",
+			In:    "gearboxworks/php:7.2.1~r3",
 			Out: test.Out{
-				getId:      test.Args{Fail: false, Want: "gearbox/php:7.2.1~r3"},
-				getRaw:     test.Args{Fail: false, Want: "gearbox/php:7.2.1~r3"},
-				getOrgName: test.Args{Fail: false, Want: "gearbox"},
+				getId:      test.Args{Fail: false, Want: "gearboxworks/php:7.2.1~r3"},
+				getRaw:     test.Args{Fail: false, Want: "gearboxworks/php:7.2.1~r3"},
+				getOrgName: test.Args{Fail: false, Want: "gearboxworks"},
 				getType:    test.Args{Fail: false, Want: ""},
 				getName:    test.Args{Fail: false, Want: "php"},
 				getVersion: test.Args{Fail: false, Want: "7.2.1~r3"},
@@ -75,11 +75,11 @@ func (me *IdTest) GetData() test.Table {
 		}),
 		test.NewFixture(&test.Fixture{
 			Label: "Major/Minor",
-			In:    "gearbox/php:7.2",
+			In:    "gearboxworks/php:7.2",
 			Out: test.Out{
-				getId:      test.Args{Fail: false, Want: "gearbox/php:7.2"},
-				getRaw:     test.Args{Fail: false, Want: "gearbox/php:7.2"},
-				getOrgName: test.Args{Fail: false, Want: "gearbox"},
+				getId:      test.Args{Fail: false, Want: "gearboxworks/php:7.2"},
+				getRaw:     test.Args{Fail: false, Want: "gearboxworks/php:7.2"},
+				getOrgName: test.Args{Fail: false, Want: "gearboxworks"},
 				getType:    test.Args{Fail: false, Want: ""},
 				getName:    test.Args{Fail: false, Want: "php"},
 				getVersion: test.Args{Fail: false, Want: "7.2"},

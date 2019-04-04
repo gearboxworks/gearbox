@@ -1,21 +1,13 @@
-package integration
+package includes
 
 import (
 	"gearbox/gearbox"
 	"gearbox/global"
 	"gearbox/hostapi"
 	"gearbox/status"
-	"gearbox/test/includes"
 	"gearbox/test/mock"
 	"testing"
 )
-
-func TestGearboxConstructAndInitialize(t *testing.T) {
-	_, sts := GearboxConstructAndInitialize(t)
-	if status.IsError(sts) {
-		t.Error(sts.Message())
-	}
-}
 
 func GearboxConstructAndInitialize(t *testing.T) (gearbox.Gearboxer, status.Status) {
 	//gb := mock.NewGearbox(&mock.GearboxArgs{
@@ -32,7 +24,7 @@ func GearboxConstructAndInitialize(t *testing.T) (gearbox.Gearboxer, status.Stat
 			IsDebug: false,
 		},
 	})
-	gb.SetConfig(includes.NewTestConfig(gb))
+	gb.SetConfig(NewTestConfig(gb))
 	gb.SetHostApi(hostapi.NewHostApi(gb))
 	sts := gb.Initialize()
 	return gb, sts

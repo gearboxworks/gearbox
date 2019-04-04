@@ -1,16 +1,18 @@
-package integration
+package test
 
 import (
 	"gearbox/api"
 	"gearbox/gearbox"
 	"gearbox/status"
+	"gearbox/status/is"
+	"gearbox/test/includes"
 	"net/http"
 	"testing"
 	"time"
 )
 
 func TestHostApiResponses(t *testing.T) {
-	gb, sts := GearboxConstructAndInitialize(t)
+	gb, sts := includes.GearboxConstructAndInitialize(t)
 	if status.IsError(sts) {
 		t.Error(sts.Message())
 	}
@@ -27,7 +29,7 @@ func TestHostApiResponses(t *testing.T) {
 			for routeName, _ := range methodMap {
 				t.Run(string(routeName), func(t *testing.T) {
 					sts = testResource(t, ha, routeName)
-					if status.IsError(sts) {
+					if is.Error(sts) {
 						t.Error(sts.Message())
 					}
 				})

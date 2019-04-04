@@ -25,7 +25,3 @@ func (me *TestConfig) Initialize() (sts status.Status) {
 	}
 	return sts
 }
-
-func (me *TestConfig) WriteFile() (sts status.Status) {
-	return status.Success("Test file written (wink, wink)")
-}

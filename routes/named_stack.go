@@ -47,7 +47,7 @@ func newRoleMap(srm gears.StackRoleMap) interface{} {
 		rmr[t] = &role{
 			Role:     gs,
 			Type:     t,
-			Name:     r.Program,
+			Name:     r.Name,
 			Label:    r.Label,
 			Max:      r.Maximum,
 			Min:      r.Minimum,

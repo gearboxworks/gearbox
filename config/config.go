@@ -31,7 +31,6 @@ type Configer interface {
 	GetBasedirMap() BasedirMap
 	GetBasedirNicknames() types.Nicknames
 	GetBoxBasedir() types.AbsoluteDir
-	GetBoxname() string
 	GetCandidates() Candidates
 	GetDir() types.AbsoluteDir
 	GetFilepath() types.AbsoluteFilepath
@@ -165,10 +164,6 @@ func (me *Config) Initialize() (sts status.Status) {
 
 func (me *Config) GetCandidates() Candidates {
 	return me.Candidates
-}
-
-func (me *Config) GetBoxname() string {
-	return me.Boxname
 }
 
 func (me *Config) GetBoxBasedir() types.AbsoluteDir {
@@ -396,7 +391,7 @@ func (me *Config) LoadProjects() (sts status.Status) {
 					if is.Error(sts) {
 						break
 					}
-					p.Basedir = bdnn
+					p.Config = me
 					me.ProjectMap[p.Hostname] = p
 				}
 			}

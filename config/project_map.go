@@ -87,10 +87,6 @@ func (me ProjectMap) FindProjectByPath(basedir types.Nickname, path types.Relati
 		sts = status.Fail(&status.Args{
 			Message: fmt.Sprintf("project path '%s' not found", path),
 		})
-	} else {
-
-		p.Hostname = hn
-		p.Path = path
 	}
 	return p, sts
 }
