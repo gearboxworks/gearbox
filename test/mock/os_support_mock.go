@@ -3,9 +3,9 @@ package mock
 import (
 	"fmt"
 	"gearbox/os_support"
+	"gearbox/test/user-home"
 	"gearbox/types"
-	"gearbox/util"
-	"os"
+	"strings"
 	"testing"
 )
 
@@ -21,7 +21,6 @@ var _ oss.OsSupporter = NilOsSupport
 type OsSupport struct {
 	oss.Base
 	T                 *testing.T
-	UserHomePath      string
 	SuggestedBasePath string
 	UserConfigPath    string
 	AdminRootPath     string
@@ -35,15 +34,10 @@ func NewOsSupport(t *testing.T) oss.OsSupporter {
 }
 
 func (me *OsSupport) GetUserHomeDir() types.AbsoluteDir {
-	if me.UserHomePath == "" {
-		me.UserHomePath = "user-home"
+	if strings.HasPrefix(string(testconst.UserHomeDir), "ERROR:") {
+		me.T.Error(fmt.Sprintf("failed to get current working directory: %s", testconst.UserHomeDir))
 	}
-	dir, err := os.Getwd()
-	if err != nil {
-		me.T.Error(fmt.Sprintf("failed to get current working directory: %s", err.Error()))
-	}
-	absdir := util.ParentDir(types.AbsoluteDir(dir))
-	return types.AbsoluteDir(fmt.Sprintf("%s/%s", absdir, me.UserHomePath))
+	return testconst.UserHomeDir
 }
 
 func (me *OsSupport) GetSuggestedBasedir() types.AbsoluteDir {
@@ -60,10 +54,11 @@ func (me *OsSupport) GetUserConfigDir() types.AbsoluteDir {
 	if me.UserConfigPath == "" {
 		me.UserConfigPath = oss.UserDataPath
 	}
-	return types.AbsoluteDir(fmt.Sprintf("%s/%s",
-		me.GetUserHomeDir(),
+	dir := types.AbsoluteDir(fmt.Sprintf("%s/%s",
+		testconst.UserHomeDir,
 		me.UserConfigPath,
 	))
+	return dir
 }
 
 func (me *OsSupport) GetAdminRootDir() types.AbsoluteDir {

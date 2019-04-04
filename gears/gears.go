@@ -20,18 +20,23 @@ type Gear interface {
 }
 
 type Gears struct {
-	Authorities      types.Authorities `json:"authorities"`
-	NamedStackIds    types.StackIds    `json:"stacks"`
-	StackRoleMap     StackRoleMap      `json:"roles"`
-	ServiceOptionMap ServiceOptionsMap `json:"services"`
-	OsSupport        oss.OsSupporter   `json:"-"`
-	GlobalOptions    global.Options    `json:"-"`
-	refreshed        bool
+	Authorities       types.Authorities `json:"authorities"`
+	NamedStackIds     types.StackIds    `json:"stacks"`
+	OsSupport         oss.OsSupporter   `json:"-"`
+	StackRoleMap      StackRoleMap      `json:"roles"`
+	ServiceOptionsMap ServiceOptionsMap `json:"services"`
+	GlobalOptions     global.Options    `json:"-"`
+	refreshed         bool
 }
 
-func NewGears() *Gears {
-	o := Gears{}
-	return &o
+func NewGears(ossup oss.OsSupporter) *Gears {
+	return &Gears{
+		OsSupport:         ossup,
+		Authorities:       make(types.Authorities, 0),
+		NamedStackIds:     make(types.StackIds, 0),
+		StackRoleMap:      make(StackRoleMap, 0),
+		ServiceOptionsMap: make(ServiceOptionsMap, 0),
+	}
 }
 
 func (me *Gears) GetNamedStackIds() (nsids types.StackIds, sts status.Status) {
@@ -52,7 +57,7 @@ func (me *Gears) GetStackRoleMap() (StackRoleMap, status.Status) {
 }
 
 func (me *Gears) GetNamedStackServiceOptionMap(stackid types.StackId) (rsm ServiceOptionsMap, sts status.Status) {
-	return me.ServiceOptionMap.FilterForNamedStack(stackid)
+	return me.ServiceOptionsMap.FilterForNamedStack(stackid)
 }
 
 func (me *Gears) GetNamedStackRoleMap(stackid types.StackId) (StackRoleMap, status.Status) {
@@ -106,12 +111,12 @@ func (me *Gears) Initialize() (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
-		for rs, ro := range me.ServiceOptionMap {
+		for rs, ro := range me.ServiceOptionsMap {
 			sr, ok := me.StackRoleMap[rs]
 			if !ok {
 				continue // @TODO Log error here and communicate back to home base
 			}
-			sts = ro.Fixup(sr.GetStackId())
+			sts = ro.Fixup(sr.GearspecId)
 			if is.Error(sts) {
 				break
 			}

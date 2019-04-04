@@ -40,9 +40,8 @@ func NewService(serviceId service.Identifier, args ...*ServiceArgs) *Service {
 	} else {
 		_args = args[0]
 	}
-	s := Service{
-		ServiceId: serviceId,
-	}
+	_args.ServiceId = serviceId
+	s := Service{}
 	s = Service(*_args)
 	return &s
 }

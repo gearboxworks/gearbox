@@ -13,13 +13,13 @@ func (me *HostApi) addProjectRoutes() {
 }
 
 //me.AddConnector("/projects", &ab.ResourceArgs{
-//Name:       routes.ProjectsRoute,
+//Program:       routes.ProjectsRoute,
 //IdParams:   ab.IdParams{"hostname"},
 //Item:       routes.ProjectInstance,
 //Factory: routes.NewProjectCollection(gb),
 //Children: ab.ConnectionsMap{
 //	ab.NewResource("/aliases", &ab.ResourceArgs{
-//		Name:       routes.ProjectAliasesRoute,
+//		Program:       routes.ProjectAliasesRoute,
 //		IdParams:   ab.IdParams{"alias"},
 //		ItemType:   reflect.String,
 //	}),

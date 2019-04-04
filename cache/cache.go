@@ -148,7 +148,7 @@ func (me *Cache) Set(key types.CacheKey, b []byte, duration string) (sts status.
 		fp := me.GetCacheFilepath(key)
 		d := filepath.Dir(string(fp))
 		if !dirExists(d) {
-			err = os.Mkdir(filepath.Dir(string(fp)), 0777)
+			err = os.MkdirAll(filepath.Dir(string(fp)), 0777)
 			if err != nil {
 				sts = status.Wrap(err, &status.Args{
 					Message: fmt.Sprintf("unable to create cache directory '%s'", d),

@@ -78,10 +78,10 @@ func (me ServiceOptionsMap) FilterForNamedStack(stackid types.StackId) (nsrm Ser
 	return nsrm, sts
 }
 
-func (me *ServiceOptions) Fixup(nsid types.StackId) (sts status.Status) {
+func (me *ServiceOptions) Fixup(id gsid.Identifier) (sts status.Status) {
 	for range only.Once {
 		gsi := gsid.NewGearspecId()
-		sts = gsi.Parse(gsid.Identifier(me.NamedStackId))
+		sts = gsi.Parse(gsid.Identifier(id))
 		if is.Error(sts) {
 			break
 		}

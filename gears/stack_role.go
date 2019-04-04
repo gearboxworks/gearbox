@@ -15,7 +15,7 @@ type StackRoleMap map[gsid.Identifier]*StackRole
 type StackRoles []*StackRole
 type StackRole struct {
 	GearspecId gsid.Identifier `json:"-"`
-	Name       string          `json:"name,omitempty"`
+	Name       string          `json:"program,omitempty"`
 	Label      string          `json:"label,omitempty"`
 	Examples   []string        `json:"examples,omitempty"`
 	Optional   bool            `json:"optional,omitempty"`

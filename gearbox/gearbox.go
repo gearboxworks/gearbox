@@ -223,11 +223,11 @@ func (me *Gearbox) SetConfig(config config.Configer) {
 func (me *Gearbox) Initialize() (sts status.Status) {
 	for range only.Once {
 		sts = me.Gears.Initialize()
-		if status.IsError(sts) {
+		if is.Error(sts) {
 			break
 		}
 		sts = me.Config.Initialize()
-		if status.IsError(sts) {
+		if is.Error(sts) {
 			break
 		}
 	}
@@ -252,7 +252,7 @@ func NewGearbox(args *Args) Gearboxer {
 		gb.HostApi.SetGearbox(&gb)
 	}
 	if args.Gears == nil {
-		gb.Gears = gears.NewGears()
+		gb.Gears = gears.NewGears(gb.OsSupport)
 	}
 	return &gb
 }
