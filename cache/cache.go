@@ -34,10 +34,6 @@ func NewCache(dir types.AbsoluteDir) *Cache {
 	}
 }
 
-func (me *Cache) Close(f *os.File) {
-	_ = f.Close()
-}
-
 func (me *Cache) GetCacheFilepath(key types.CacheKey) types.AbsoluteFilepath {
 	fp := filepath.FromSlash(fmt.Sprintf("%s/%s.json", me.Dir, key))
 	return types.AbsoluteFilepath(fp)
@@ -47,7 +43,7 @@ func (me *Cache) VerifyCacheFile(key types.CacheKey) (fp types.AbsoluteFilepath,
 	var f *os.File
 	var err error
 	for range only.Once {
-		fp := me.GetCacheFilepath(key)
+		fp = me.GetCacheFilepath(key)
 		f, err = os.Open(string(fp))
 		if err != nil {
 			pe, ok := err.(*os.PathError)
@@ -61,7 +57,7 @@ func (me *Cache) VerifyCacheFile(key types.CacheKey) (fp types.AbsoluteFilepath,
 			break
 		}
 	}
-	me.Close(f)
+	me.close(f)
 	if err != nil {
 		var msg string
 		if err.Error() == ErrCacheMiss {
@@ -74,6 +70,28 @@ func (me *Cache) VerifyCacheFile(key types.CacheKey) (fp types.AbsoluteFilepath,
 		})
 	}
 	return fp, sts
+}
+
+func (me *Cache) Clear(key types.CacheKey) (sts status.Status) {
+	for range only.Once {
+		if me.Disable {
+			break
+		}
+		err := os.Remove(string(me.GetCacheFilepath(key)))
+		if err != nil {
+			pe, ok := err.(*os.PathError)
+			if !ok {
+				break
+			}
+			if pe.Err == syscall.ENOENT && pe.Op == "open" {
+				sts = status.Wrap(err, &status.Args{
+					Message: fmt.Sprintf("unable to clear cache '%s'", key),
+				})
+				break
+			}
+		}
+	}
+	return sts
 }
 
 func (me *Cache) Get(key types.CacheKey) (data []byte, ok bool, sts status.Status) {
@@ -122,6 +140,7 @@ func (me *Cache) Get(key types.CacheKey) (data []byte, ok bool, sts status.Statu
 			})
 			break
 		}
+		sts = status.Success("cache retrieved for key '%s'", key)
 		ok = true
 	}
 	return data, ok, sts
@@ -165,8 +184,12 @@ func (me *Cache) Set(key types.CacheKey, b []byte, duration string) (sts status.
 			})
 			break
 		}
+		sts = status.Success("cache set for key '%s'", key)
 	}
 	return sts
+}
+func (me *Cache) close(f *os.File) {
+	_ = f.Close()
 }
 
 func dirExists(d string) bool {

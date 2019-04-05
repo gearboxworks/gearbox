@@ -4,6 +4,7 @@ import (
 	"gearbox/types"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func DirExists(dir types.AbsoluteDir) bool {
@@ -29,3 +30,12 @@ func ParentDir(file types.AbsoluteDir) types.AbsoluteDir {
 //func GetProjectDir() string {
 //	return util.FileDir(GetExecutableDir())
 //}
+
+func ExtractRelativePath(fulldir types.AbsoluteFilepath, basedir types.AbsoluteDir) (path types.RelativePath) {
+	if strings.HasPrefix(string(fulldir), string(basedir)) {
+		path = types.RelativePath(string([]byte(fulldir)[len(basedir):]))
+	} else {
+		path = types.RelativePath(fulldir)
+	}
+	return path
+}

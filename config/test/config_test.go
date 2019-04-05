@@ -6,7 +6,6 @@ import (
 	"gearbox/gearbox"
 	"gearbox/status"
 	"gearbox/status/is"
-	"gearbox/test"
 	"gearbox/test/mock"
 	"gearbox/types"
 	"gearbox/util"
@@ -55,7 +54,7 @@ func TestEmptyConfig(t *testing.T) {
 						t.Error(sts.Message())
 						return
 					}
-					path := test.ParseRelativePath(basedir, types.AbsoluteFilepath(util.FileDir(fp)))
+					path := util.ExtractRelativePath(types.AbsoluteFilepath(util.FileDir(fp)), basedir)
 					if _, ok := ProjectPaths[path]; !ok {
 						t.Error(fmt.Sprintf("path '%s' not found", path))
 					}
