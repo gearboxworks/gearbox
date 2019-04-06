@@ -1,9 +1,16 @@
-package modeler
+package apimodeler
 
 import (
 	"gearbox/status"
 	"gearbox/types"
 )
+
+type Contexter interface {
+	ParamGetter
+}
+type ParamGetter interface {
+	Param(string) string
+}
 
 type Modeler interface {
 	BasepathGetter
@@ -15,6 +22,7 @@ type Modeler interface {
 	CollectionItemUpdater
 	CollectionItemDeleter
 	CollectionItemGetter
+	CollectionFilterer
 	ItemFilterer
 }
 
@@ -25,28 +33,46 @@ type IdParamsGetter interface {
 	GetIdParams() IdParams
 }
 type CollectionGetter interface {
-	GetCollection(FilterPath) (Collection, status.Status)
+	GetCollection() (Collection, status.Status)
 }
 type CollectionIdsGetter interface {
 	GetCollectionIds() (ItemIds, status.Status)
 }
 type CollectionItemAdder interface {
-	AddItem(Item) status.Status
+	AddItem(Itemer) status.Status
 }
 type CollectionItemUpdater interface {
-	UpdateItem(Item) status.Status
+	UpdateItem(Itemer) status.Status
 }
 type CollectionItemDeleter interface {
 	DeleteItem(ItemId) status.Status
 }
 type CollectionItemGetter interface {
-	GetItem(ItemId) (Item, status.Status)
+	GetItem(ItemId) (Itemer, status.Status)
 }
 type ItemFilterer interface {
-	FilterItem(Item, FilterPath) (Item, status.Status)
+	FilterItem(Itemer, FilterPath) (Itemer, status.Status)
+}
+type CollectionFilterer interface {
+	FilterCollection(FilterPath) (Collection, status.Status)
 }
 type CollectionFiltersGetter interface {
-	GetCollectionFilterMap() FilterMap
+	GetFilterMap() FilterMap
+}
+
+type ItemIdsGetter interface {
+	GetIds() ItemIds
+}
+type ItemsGetter interface {
+	GetItems() (Collection, status.Status)
+}
+
+type Itemer interface {
+	ItemIdGetter
+	ItemIdSetter
+	ItemTypeGetter
+	ItemTypeSetter
+	ItemGetter
 }
 
 type ItemIdGetter interface {
@@ -55,14 +81,11 @@ type ItemIdGetter interface {
 type ItemTypeGetter interface {
 	GetType() ItemType
 }
+type ItemTypeSetter interface {
+	SetType(ItemType)
+}
 type ItemGetter interface {
-	GetItem() (Item, status.Status)
-}
-type ItemIdsGetter interface {
-	GetIds() ItemIds
-}
-type ItemsGetter interface {
-	GetItems() (Collection, status.Status)
+	GetItem() (Itemer, status.Status)
 }
 type ItemIdSetter interface {
 	SetId(ItemId)

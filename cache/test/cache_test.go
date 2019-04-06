@@ -150,10 +150,10 @@ func matchValues(t *testing.T, data *testStruct, b []byte) {
 		t.Error("unable to unmarshal retrieved cache value")
 	}
 	if data.Name != data2.Name {
-		t.Error("retrieved cache Name does not match name")
+		t.Error("retrieved cache name does not match name")
 	}
 	if data.Number != data2.Number {
-		t.Error("retrieved cache Number does not match name")
+		t.Error("retrieved cache number does not match name")
 	}
 	if data.MapStringInt != nil {
 		t.Error("retrieved cache Map not nil")

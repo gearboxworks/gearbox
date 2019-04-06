@@ -6,7 +6,7 @@ type Projects []*Project
 //var _ ab.ItemCollection = ProjectsInstance
 //
 //
-//func (me Projects) GetCollectionFilterMap() ab.FilterMap {
+//func (me Projects) GetFilterMap() ab.FilterMap {
 //	return GetProjectFilterMap()
 //}
 //

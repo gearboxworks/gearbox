@@ -3,10 +3,10 @@ package hostapi
 import (
 	"fmt"
 	"gearbox/api"
+	"gearbox/apimodeler"
 	"gearbox/config"
 	"gearbox/gearbox"
 	"gearbox/jsonapi"
-	"gearbox/modeler"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -21,7 +21,7 @@ type HostApi struct {
 	Config         config.Configer
 	Api            *api.Api
 	Gearbox        gearbox.Gearboxer
-	ConnectionsMap modeler.ModelsMap
+	ConnectionsMap apimodeler.ModelsMap
 }
 
 func apiResponseDefaults() *api.Response {
@@ -40,7 +40,7 @@ func NewHostApi(gearbox gearbox.Gearboxer) *HostApi {
 		Config:         gearbox.GetConfig(),
 		Api:            api.NewApi(echo.New(), apiResponseDefaults()),
 		Gearbox:        gearbox,
-		ConnectionsMap: make(modeler.ModelsMap, 0),
+		ConnectionsMap: make(apimodeler.ModelsMap, 0),
 	}
 	ha.Api.Port = Port
 	return ha
@@ -57,7 +57,7 @@ func (me *HostApi) Route() (sts status.Status) {
 	return sts
 }
 
-func (me *HostApi) connectRoutes(connectionsMap modeler.ModelsMap) {
+func (me *HostApi) connectRoutes(connectionsMap apimodeler.ModelsMap) {
 	for _, cn := range connectionsMap {
 		e := me.Api.Echo
 
@@ -68,7 +68,7 @@ func (me *HostApi) connectRoutes(connectionsMap modeler.ModelsMap) {
 		// Collection Route
 		route = e.GET(string(cn.GetBasepath()), func(ctx echo.Context) error {
 			rd := ja.NewRootDocument(ja.CollectionResponse)
-			data, sts := modeler.GetCollectionSlice(cn.Self.GetCollection(modeler.NoFilterPath))
+			data, sts := apimodeler.GetCollectionSlice(cn.Self.GetCollection(apimodeler.NoFilterPath))
 			if is.Success(sts) {
 				sts = setCollectionData(rd, data)
 			}
@@ -90,7 +90,7 @@ func (me *HostApi) connectRoutes(connectionsMap modeler.ModelsMap) {
 				if is.Error(sts) {
 					break
 				}
-				var item modeler.Item
+				var item apimodeler.Itemer
 				item, sts = cn.Self.GetItem(id)
 				if is.Error(sts) {
 					break
@@ -103,74 +103,6 @@ func (me *HostApi) connectRoutes(connectionsMap modeler.ModelsMap) {
 		route.Name = fmt.Sprintf("%s-details", inflector.Singularize(prefix))
 
 	}
-}
-
-func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.Status) {
-	ro, ok := rd.Data.(*ja.ResourceObject)
-	if !ok {
-		sts = status.Fail(&status.Args{
-			Message: "root document does not contain a single resource object",
-		})
-	}
-	return ro, sts
-}
-
-func setItemData(ro *ja.ResourceObject, item modeler.Item) (sts status.Status) {
-	for range only.Once {
-		itemId := item.GetId()
-		sts = ro.SetId(ja.ResourceId(itemId))
-		if is.Error(sts) {
-			break
-		}
-		typ := item.GetType()
-		sts = ro.SetType(ja.ResourceType(typ))
-		if is.Error(sts) {
-			break
-		}
-		sts = ro.SetAttributes(item)
-		if is.Error(sts) {
-			break
-		}
-	}
-	return sts
-}
-
-func setCollectionData(rd *ja.RootDocument, data interface{}) (sts status.Status) {
-	for range only.Once {
-		getter, ok := data.(modeler.ItemsGetter)
-		if !ok {
-			break
-		}
-		var items modeler.Collection
-		items, sts = getter.GetItems()
-		if is.Error(sts) {
-			break
-		}
-		for _, item := range items {
-			ro := ja.NewResourceObject()
-			sts = setItemData(ro, item)
-			if is.Error(sts) {
-				break
-			}
-			sts = rd.AddResourceObject(ro)
-			if is.Error(sts) {
-				break
-			}
-		}
-	}
-	return sts
-}
-
-func (me *HostApi) getRouteName(ctx echo.Context) (name api.RouteName) {
-	rts := me.Api.Echo.Routes()
-	path := ctx.Path()
-	for _, rt := range rts {
-		if rt.Path == path {
-			name = api.RouteName(rt.Name)
-			break
-		}
-	}
-	return name
 }
 
 func (me *HostApi) GetSelfUrl(ctx echo.Context) types.UrlTemplate {
@@ -231,37 +163,19 @@ func (me *HostApi) JsonMarshalHandler(rootdoc *ja.RootDocument, ctx echo.Context
 	return sts
 }
 
-func (me *HostApi) AddModels(models modeler.Modeler) (sts status.Status) {
+func (me *HostApi) AddModels(models apimodeler.Modeler) (sts status.Status) {
 	for range only.Once {
-		getter, ok := models.(modeler.BasepathGetter)
+		getter, ok := models.(apimodeler.BasepathGetter)
 		if !ok {
 			sts = status.Fail(&status.Args{
 				Message: "factory has no GetBasepath()",
 			})
 			break
 		}
-		me.ConnectionsMap[getter.GetBasepath()] = modeler.NewModels(models)
+		me.ConnectionsMap[getter.GetBasepath()] = apimodeler.NewModels(models)
 	}
 	return sts
 }
-
-//func (me *HostApi) GetValuesFunc(name api.RouteName) (values api.ValuesFunc, sts status.Status) {
-//	for range only.Once {
-//		var ok bool
-//		values, ok = me.Api.ValuesFuncMap[name]
-//		if !ok {
-//			sts = status.Fail(&status.Args{
-//				Message: "no values func for route '%s'",
-//			})
-//		}
-//	}
-//	return values, sts
-//
-//}
-//
-//func (me *HostApi) GetUriTemplateVars(name api.RouteName, values interface{}, index int) (api.UriTemplateVars, status.Status) {
-//	return me.Api.GetUriTemplateVars(name, values, index)
-//}
 
 func (me *HostApi) GetMethodMap() api.MethodMap {
 	return me.Api.MethodMap
@@ -352,6 +266,24 @@ func (me *HostApi) DELETE(path api.UriTemplate, name api.RouteName, funcs ...int
 	})
 }
 
+//func (me *HostApi) GetValuesFunc(name api.RouteName) (values api.ValuesFunc, sts status.Status) {
+//	for range only.Once {
+//		var ok bool
+//		values, ok = me.Api.ValuesFuncMap[name]
+//		if !ok {
+//			sts = status.Fail(&status.Args{
+//				Message: "no values func for route '%s'",
+//			})
+//		}
+//	}
+//	return values, sts
+//
+//}
+//
+//func (me *HostApi) GetUriTemplateVars(name api.RouteName, values interface{}, index int) (api.UriTemplateVars, status.Status) {
+//	return me.Api.GetUriTemplateVars(name, values, index)
+//}
+
 func getFuncsArgs(funcs []interface{}) (handler api.UpstreamHandlerFunc, valuesFunc api.ValuesFunc) {
 	switch {
 	case len(funcs) > 1:
@@ -365,4 +297,71 @@ func getFuncsArgs(funcs []interface{}) (handler api.UpstreamHandlerFunc, valuesF
 		}
 	}
 	return handler, valuesFunc
+}
+func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.Status) {
+	ro, ok := rd.Data.(*ja.ResourceObject)
+	if !ok {
+		sts = status.Fail(&status.Args{
+			Message: "root document does not contain a single resource object",
+		})
+	}
+	return ro, sts
+}
+
+func setItemData(ro *ja.ResourceObject, item apimodeler.Itemer) (sts status.Status) {
+	for range only.Once {
+		itemId := item.GetId()
+		sts = ro.SetId(ja.ResourceId(itemId))
+		if is.Error(sts) {
+			break
+		}
+		typ := item.GetType()
+		sts = ro.SetType(ja.ResourceType(typ))
+		if is.Error(sts) {
+			break
+		}
+		sts = ro.SetAttributes(item)
+		if is.Error(sts) {
+			break
+		}
+	}
+	return sts
+}
+
+func setCollectionData(rd *ja.RootDocument, data interface{}) (sts status.Status) {
+	for range only.Once {
+		getter, ok := data.(apimodeler.ItemsGetter)
+		if !ok {
+			break
+		}
+		var items apimodeler.Collection
+		items, sts = getter.GetItems()
+		if is.Error(sts) {
+			break
+		}
+		for _, item := range items {
+			ro := ja.NewResourceObject()
+			sts = setItemData(ro, item)
+			if is.Error(sts) {
+				break
+			}
+			sts = rd.AddResourceObject(ro)
+			if is.Error(sts) {
+				break
+			}
+		}
+	}
+	return sts
+}
+
+func (me *HostApi) getRouteName(ctx echo.Context) (name api.RouteName) {
+	rts := me.Api.Echo.Routes()
+	path := ctx.Path()
+	for _, rt := range rts {
+		if rt.Path == path {
+			name = api.RouteName(rt.Name)
+			break
+		}
+	}
+	return name
 }

@@ -1,4 +1,4 @@
-package modeler
+package apimodeler
 
 import (
 	"gearbox/types"

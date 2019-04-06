@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"gearbox/modeler"
+	"gearbox/apimodeler"
 	"gearbox/only"
 	"gearbox/project"
 	"gearbox/status"
@@ -12,10 +12,10 @@ import (
 const ProjectTypeName = "project"
 
 var ProjectInstance = (*Project)(nil)
-var _ modeler.Item = ProjectInstance
+var _ apimodeler.Itemer = ProjectInstance
 
 type Project struct {
-	Hostname   modeler.ItemId          `json:"hostname"`
+	Hostname   apimodeler.ItemId       `json:"hostname"`
 	Enabled    bool                    `json:"enabled"`
 	Basedir    types.Nickname          `json:"basedir"`
 	Notes      string                  `json:"notes"`
@@ -25,21 +25,21 @@ type Project struct {
 	Services   Services                `json:"stack,omitempty"`
 }
 
-func NewProject(hostname modeler.ItemId) *Project {
+func NewProject(hostname apimodeler.ItemId) *Project {
 	return &Project{
 		Hostname: hostname,
 	}
 }
 
-func (me *Project) GetType() modeler.ItemType {
+func (me *Project) GetType() apimodeler.ItemType {
 	return ProjectTypeName
 }
 
-func (me *Project) GetId() modeler.ItemId {
+func (me *Project) GetId() apimodeler.ItemId {
 	return me.Hostname
 }
 
-func (me *Project) GetItem() (modeler.Item, status.Status) {
+func (me *Project) GetItem() (apimodeler.Itemer, status.Status) {
 	return me, nil
 }
 
@@ -50,7 +50,7 @@ func ConvertProject(pp *project.Project) (p *Project, sts status.Status) {
 			break
 		}
 		p = &Project{
-			Hostname: modeler.ItemId(pp.Hostname),
+			Hostname: apimodeler.ItemId(pp.Hostname),
 			Basedir:  pp.Basedir,
 			Notes:    pp.Notes,
 			Path:     pp.Path,

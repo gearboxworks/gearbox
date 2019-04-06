@@ -1,11 +1,10 @@
-package modeler
+package apimodeler
 
 import (
 	"fmt"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/types"
-	"github.com/labstack/echo"
 	"net/http"
 	"strings"
 )
@@ -27,12 +26,12 @@ func NewModels(self Modeler) *Models {
 func (me *Models) GetBasepath() types.Basepath {
 	getter, ok := me.Self.(BasepathGetter)
 	if !ok {
-		panic("controller does not have GetBasepath()")
+		panic("API modeler does not have GetBasepath()")
 	}
 	return getter.GetBasepath()
 }
 
-func (me *Models) GetIdFromUrl(ctx echo.Context) (id ItemId, sts status.Status) {
+func (me *Models) GetIdFromUrl(ctx Contexter) (id ItemId, sts status.Status) {
 	for range only.Once {
 		params := me.GetIdParams()
 		parts := make([]string, len(params))
@@ -59,7 +58,7 @@ func (me *Models) GetIdTemplate() types.UrlTemplate {
 func (me *Models) GetIdParams() IdParams {
 	getter, ok := me.Self.(IdParamsGetter)
 	if !ok {
-		panic("factory does not have GetIdParams()")
+		panic("API modeler does not have GetIdParams()")
 	}
 	return getter.GetIdParams()
 }

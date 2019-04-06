@@ -2,9 +2,9 @@ package routes
 
 import (
 	"fmt"
+	"gearbox/apimodeler"
 	"gearbox/gearbox"
 	"gearbox/gears"
-	"gearbox/modeler"
 	"gearbox/status"
 	"gearbox/types"
 )
@@ -12,9 +12,9 @@ import (
 const StackTypeName = "stack"
 
 var StackInstance = (*NamedStack)(nil)
-var _ modeler.Item = StackInstance
+var _ apimodeler.Itemer = StackInstance
 
-func (me *NamedStack) GetType() modeler.ItemType {
+func (me *NamedStack) GetType() apimodeler.ItemType {
 	return StackTypeName
 }
 
@@ -22,11 +22,11 @@ func (me *NamedStack) GetFullStackname() types.Stackname {
 	return types.Stackname(me.GetId())
 }
 
-func (me *NamedStack) GetId() modeler.ItemId {
-	return modeler.ItemId(fmt.Sprintf("%s/%s", me.Authority, me.StackName))
+func (me *NamedStack) GetId() apimodeler.ItemId {
+	return apimodeler.ItemId(fmt.Sprintf("%s/%s", me.Authority, me.StackName))
 }
 
-func (me *NamedStack) GetItem() (modeler.Item, status.Status) {
+func (me *NamedStack) GetItem() (apimodeler.Itemer, status.Status) {
 	return me, nil
 }
 

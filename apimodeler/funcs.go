@@ -1,3 +1,3 @@
-package modeler
+package apimodeler
 
 func noop(i ...interface{}) {}
