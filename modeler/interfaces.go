@@ -3,7 +3,6 @@ package modeler
 import (
 	"gearbox/status"
 	"gearbox/types"
-	"github.com/labstack/echo"
 )
 
 type Modeler interface {
@@ -41,7 +40,7 @@ type CollectionItemDeleter interface {
 	DeleteItem(ItemId) status.Status
 }
 type CollectionItemGetter interface {
-	GetItem(ItemId, echo.Context) (Item, status.Status)
+	GetItem(ItemId) (Item, status.Status)
 }
 type ItemFilterer interface {
 	FilterItem(Item, FilterPath) (Item, status.Status)

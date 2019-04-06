@@ -91,7 +91,7 @@ func (me *HostApi) connectRoutes(connectionsMap modeler.ModelsMap) {
 					break
 				}
 				var item modeler.Item
-				item, sts = cn.Self.GetItem(id, ctx)
+				item, sts = cn.Self.GetItem(id)
 				if is.Error(sts) {
 					break
 				}

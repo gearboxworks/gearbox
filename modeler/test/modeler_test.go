@@ -180,8 +180,29 @@ func TestModels(t *testing.T) {
 	})
 
 	t.Run("GetItem()", func(t *testing.T) {
-		//m := modeler.NewModels(NewTestableModel())
-
+		m := modeler.NewModels(NewTestableModel())
+		coll, sts := m.Self.GetCollection(modeler.NoFilterPath)
+		if is.Error(sts) {
+			t.Error(sts.Message())
+			return
+		}
+		if len(coll) == 0 {
+			t.Error("collection is empty")
+			return
+		}
+		ti := coll[0]
+		ti2, sts := m.Self.GetItem(ti.GetId())
+		if is.Error(sts) {
+			t.Error(sts.Message())
+			return
+		}
+		if ti2.GetId() != ti.GetId() {
+			t.Errorf("got ID: %s, wanted: %s", ti2.GetId(), ti.GetId())
+		}
+		if ti2.GetType() != ti.GetType() {
+			t.Errorf("got Type: %s, wanted: %s", ti2.GetType(), ti.GetType())
+			return
+		}
 	})
 
 	t.Run("UpdateItem()", func(t *testing.T) {

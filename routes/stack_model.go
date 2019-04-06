@@ -9,7 +9,6 @@ import (
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
-	"github.com/labstack/echo"
 	"net/http"
 	"reflect"
 )
@@ -145,7 +144,7 @@ func (me *StackModel) DeleteItem(stackid modeler.ItemId) (sts status.Status) {
 	return sts
 }
 
-func (me *StackModel) GetItem(stackid modeler.ItemId, ctx echo.Context) (collection modeler.Item, sts status.Status) {
+func (me *StackModel) GetItem(stackid modeler.ItemId) (collection modeler.Item, sts status.Status) {
 	var ns *NamedStack
 	for range only.Once {
 		gbns, sts := me.Gearbox.FindNamedStack(types.StackId(stackid))

@@ -10,7 +10,6 @@ import (
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
-	"github.com/labstack/echo"
 	"net/http"
 	"reflect"
 )
@@ -142,7 +141,7 @@ func (me *ProjectModel) DeleteItem(hostname modeler.ItemId) (sts status.Status) 
 	return sts
 }
 
-func (me *ProjectModel) GetItem(hostname modeler.ItemId, ctx echo.Context) (collection modeler.Item, sts status.Status) {
+func (me *ProjectModel) GetItem(hostname modeler.ItemId) (collection modeler.Item, sts status.Status) {
 	var p *Project
 	for range only.Once {
 		gbp, sts := me.Gearbox.FindProject(types.Hostname(hostname))

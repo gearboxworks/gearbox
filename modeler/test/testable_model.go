@@ -1,10 +1,12 @@
 package test
 
 import (
+	"fmt"
 	"gearbox/modeler"
+	"gearbox/only"
 	"gearbox/status"
+	"gearbox/status/is"
 	"gearbox/types"
-	"github.com/labstack/echo"
 )
 
 const TestableModelBasepath = "/foo"
@@ -63,24 +65,44 @@ func (me *TestableModel) UpdateItem(modeler.Item) status.Status {
 }
 
 func (me *TestableModel) DeleteItem(itemid modeler.ItemId) (sts status.Status) {
-	found := false
-	for index, item := range me.Collection {
-		if item.GetId() != itemid {
-			continue
+	for range only.Once {
+		index, sts := me.getItemIndex(itemid)
+		if is.Error(sts) {
+			break
 		}
 		me.Collection = append(me.Collection[:index], me.Collection[index+1:]...)
-		found = true
-		break
-	}
-	if !found {
-		sts = status.Fail(&status.Args{})
 	}
 	return sts
 }
 
-func (me *TestableModel) GetItem(modeler.ItemId, echo.Context) (modeler.Item, status.Status) {
+func (me *TestableModel) getItemIndex(itemid modeler.ItemId) (index int, sts status.Status) {
+	found := false
+	var item modeler.Item
+	for index, item = range me.Collection {
+		if item.GetId() != itemid {
+			continue
+		}
+		found = true
+		break
+	}
+	if !found {
+		index = -1
+		sts = status.Fail(&status.Args{
+			Message: fmt.Sprintf("item '%s' not found", itemid),
+		})
+	}
+	return index, sts
+}
 
-	panic("implement me")
+func (me *TestableModel) GetItem(itemid modeler.ItemId) (item modeler.Item, sts status.Status) {
+	for range only.Once {
+		index, sts := me.getItemIndex(itemid)
+		if is.Error(sts) {
+			break
+		}
+		item = me.Collection[index]
+	}
+	return item, sts
 }
 
 func (me *TestableModel) FilterItem(modeler.Item, modeler.FilterPath) (modeler.Item, status.Status) {
