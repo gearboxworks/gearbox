@@ -1,12 +1,12 @@
-package ab
+package modeler
 
 import (
 	"gearbox/status"
-	"gearbox/status/is"
+	"gearbox/types"
 	"github.com/labstack/echo"
 )
 
-type Connector interface {
+type Modeler interface {
 	BasepathGetter
 	IdParamsGetter
 	CollectionFiltersGetter
@@ -20,7 +20,7 @@ type Connector interface {
 }
 
 type BasepathGetter interface {
-	GetBasepath() Basepath
+	GetBasepath() types.Basepath
 }
 type IdParamsGetter interface {
 	GetIdParams() IdParams
@@ -32,13 +32,13 @@ type CollectionIdsGetter interface {
 	GetCollectionIds() (ItemIds, status.Status)
 }
 type CollectionItemAdder interface {
-	AddItem(Item) (Collection, status.Status)
+	AddItem(Item) status.Status
 }
 type CollectionItemUpdater interface {
-	UpdateItem(Item) (Collection, status.Status)
+	UpdateItem(Item) status.Status
 }
 type CollectionItemDeleter interface {
-	DeleteItem(ItemId) (Collection, status.Status)
+	DeleteItem(ItemId) status.Status
 }
 type CollectionItemGetter interface {
 	GetItem(ItemId, echo.Context) (Item, status.Status)
@@ -49,40 +49,6 @@ type ItemFilterer interface {
 type CollectionFiltersGetter interface {
 	GetCollectionFilterMap() FilterMap
 }
-
-type Collection []Item
-
-func GetCollectionSlice(collection Collection, sts status.Status) (Collection, status.Status) {
-	var slice = make(Collection, len(collection))
-	if is.Success(sts) {
-		for _, item := range collection {
-			slice = append(slice, item)
-		}
-	}
-	return slice, sts
-}
-
-func (me Collection) GetIds() (ItemIds, status.Status) {
-	itemIds := make(ItemIds, len(me))
-	for i, item := range me {
-		itemIds[i] = item.GetId()
-	}
-	return itemIds, nil
-}
-func (Collection) ContainsResource() {}
-func (me Collection) GetItems() (Collection, status.Status) {
-	return me, nil
-}
-
-type Item interface {
-	ItemIdGetter
-	ItemTypeGetter
-	ItemGetter
-}
-
-type ItemIds []ItemId
-type ItemId string
-type ItemType string
 
 type ItemIdGetter interface {
 	GetId() ItemId

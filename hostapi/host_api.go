@@ -3,13 +3,14 @@ package hostapi
 import (
 	"fmt"
 	"gearbox/api"
-	"gearbox/apibuilder"
 	"gearbox/config"
 	"gearbox/gearbox"
 	"gearbox/jsonapi"
+	"gearbox/modeler"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
+	"gearbox/types"
 	"github.com/gedex/inflector"
 	"github.com/labstack/echo"
 )
@@ -20,7 +21,7 @@ type HostApi struct {
 	Config         config.Configer
 	Api            *api.Api
 	Gearbox        gearbox.Gearboxer
-	ConnectionsMap ab.ConnectionsMap
+	ConnectionsMap modeler.ModelsMap
 }
 
 func apiResponseDefaults() *api.Response {
@@ -39,7 +40,7 @@ func NewHostApi(gearbox gearbox.Gearboxer) *HostApi {
 		Config:         gearbox.GetConfig(),
 		Api:            api.NewApi(echo.New(), apiResponseDefaults()),
 		Gearbox:        gearbox,
-		ConnectionsMap: make(ab.ConnectionsMap, 0),
+		ConnectionsMap: make(modeler.ModelsMap, 0),
 	}
 	ha.Api.Port = Port
 	return ha
@@ -56,7 +57,7 @@ func (me *HostApi) Route() (sts status.Status) {
 	return sts
 }
 
-func (me *HostApi) connectRoutes(connectionsMap ab.ConnectionsMap) {
+func (me *HostApi) connectRoutes(connectionsMap modeler.ModelsMap) {
 	for _, cn := range connectionsMap {
 		e := me.Api.Echo
 
@@ -67,7 +68,7 @@ func (me *HostApi) connectRoutes(connectionsMap ab.ConnectionsMap) {
 		// Collection Route
 		route = e.GET(string(cn.GetBasepath()), func(ctx echo.Context) error {
 			rd := ja.NewRootDocument(ja.CollectionResponse)
-			data, sts := ab.GetCollectionSlice(cn.Self.GetCollection(ab.NoFilterPath))
+			data, sts := modeler.GetCollectionSlice(cn.Self.GetCollection(modeler.NoFilterPath))
 			if is.Success(sts) {
 				sts = setCollectionData(rd, data)
 			}
@@ -89,7 +90,7 @@ func (me *HostApi) connectRoutes(connectionsMap ab.ConnectionsMap) {
 				if is.Error(sts) {
 					break
 				}
-				var item ab.Item
+				var item modeler.Item
 				item, sts = cn.Self.GetItem(id, ctx)
 				if is.Error(sts) {
 					break
@@ -114,7 +115,7 @@ func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.S
 	return ro, sts
 }
 
-func setItemData(ro *ja.ResourceObject, item ab.Item) (sts status.Status) {
+func setItemData(ro *ja.ResourceObject, item modeler.Item) (sts status.Status) {
 	for range only.Once {
 		itemId := item.GetId()
 		sts = ro.SetId(ja.ResourceId(itemId))
@@ -136,11 +137,11 @@ func setItemData(ro *ja.ResourceObject, item ab.Item) (sts status.Status) {
 
 func setCollectionData(rd *ja.RootDocument, data interface{}) (sts status.Status) {
 	for range only.Once {
-		getter, ok := data.(ab.ItemsGetter)
+		getter, ok := data.(modeler.ItemsGetter)
 		if !ok {
 			break
 		}
-		var items ab.Collection
+		var items modeler.Collection
 		items, sts = getter.GetItems()
 		if is.Error(sts) {
 			break
@@ -172,18 +173,18 @@ func (me *HostApi) getRouteName(ctx echo.Context) (name api.RouteName) {
 	return name
 }
 
-func (me *HostApi) GetSelfUrl(ctx echo.Context) ab.UrlTemplate {
+func (me *HostApi) GetSelfUrl(ctx echo.Context) types.UrlTemplate {
 	r := ctx.Request()
 	scheme := "https"
 	if r.TLS == nil {
 		scheme = "http"
 	}
 	url := fmt.Sprintf("%s://%s%s", scheme, r.Host, me.GetSelfPath(ctx))
-	return ab.UrlTemplate(url)
+	return types.UrlTemplate(url)
 }
 
-func (me *HostApi) GetSelfPath(ctx echo.Context) ab.UrlTemplate {
-	return ab.UrlTemplate(ctx.Request().RequestURI)
+func (me *HostApi) GetSelfPath(ctx echo.Context) types.UrlTemplate {
+	return types.UrlTemplate(ctx.Request().RequestURI)
 }
 
 func (me *HostApi) GetContentType(ctx echo.Context) string {
@@ -230,16 +231,16 @@ func (me *HostApi) JsonMarshalHandler(rootdoc *ja.RootDocument, ctx echo.Context
 	return sts
 }
 
-func (me *HostApi) AddConnector(connector ab.Connector) (sts status.Status) {
+func (me *HostApi) AddModels(models modeler.Modeler) (sts status.Status) {
 	for range only.Once {
-		getter, ok := connector.(ab.BasepathGetter)
+		getter, ok := models.(modeler.BasepathGetter)
 		if !ok {
 			sts = status.Fail(&status.Args{
 				Message: "factory has no GetBasepath()",
 			})
 			break
 		}
-		me.ConnectionsMap[getter.GetBasepath()] = ab.NewConnections(connector)
+		me.ConnectionsMap[getter.GetBasepath()] = modeler.NewModels(models)
 	}
 	return sts
 }

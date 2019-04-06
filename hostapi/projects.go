@@ -6,13 +6,13 @@ import (
 )
 
 func (me *HostApi) addProjectRoutes() {
-	sts := me.AddConnector(routes.NewProjectConnector(me.Gearbox))
+	sts := me.AddModels(routes.NewProjectModel(me.Gearbox))
 	if is.Error(sts) {
 		panic(sts.Message())
 	}
 }
 
-//me.AddConnector("/projects", &ab.ResourceArgs{
+//me.AddModels("/projects", &ab.ResourceArgs{
 //Program:       routes.ProjectsRoute,
 //IdParams:   ab.IdParams{"hostname"},
 //Item:       routes.ProjectInstance,

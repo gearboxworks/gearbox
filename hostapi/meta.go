@@ -13,22 +13,22 @@ func (me *HostApi) addRoutes() (sts status.Status) {
 	//me.GET___("/meta/endpoints", api.MetaEndpointsResource, me.getMetaEndpointsResponse)
 	//me.GET___("/meta/methods", api.MetaMethodsResource, me.getMetaMethodsResponse)
 
-	sts = me.AddConnector(routes.NewProjectConnector(me.Gearbox))
+	sts = me.AddModels(routes.NewProjectModel(me.Gearbox))
 	if is.Error(sts) {
 		panic(sts.Message())
 	}
 
-	sts = me.AddConnector(routes.NewStackConnector(me.Gearbox))
+	sts = me.AddModels(routes.NewStackConnector(me.Gearbox))
 	if is.Error(sts) {
 		panic(sts.Message())
 	}
 	//me.addBasedirRoutes()
-	//sts := me.AddConnector(e,routes.NewBasedirFactory(me.Gearbox))
+	//sts := me.AddModels(e,routes.NewBasedirFactory(me.Gearbox))
 	//if is.Error(sts) {
 	//	panic(sts.Message())
 	//}
 	//me.addStackRoutes()
-	//sts = me.AddConnector(e,routes.NewStackFactory(me.Gearbox))
+	//sts = me.AddModels(e,routes.NewStackFactory(me.Gearbox))
 	//if is.Error(sts) {
 	//	panic(sts.Message())
 	//}

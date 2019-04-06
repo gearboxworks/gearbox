@@ -65,7 +65,7 @@ func (me *Id) Parse(gsi Identifier) (sts status.Status) {
 		if len(parts) == 1 {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("invalid gearspec ID '%s'", gsi),
-				Help:    "gearspec ID must contain at least two (2) slash-seperated segments, i.e. {stack}/{role}",
+				Help:    "gearspec ID must contain at least two (2) slash-separated segments, i.e. {stack}/{role}",
 			})
 			break
 		}

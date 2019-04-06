@@ -2,9 +2,9 @@ package routes
 
 import (
 	"fmt"
-	"gearbox/apibuilder"
 	"gearbox/gearbox"
 	"gearbox/gears"
+	"gearbox/modeler"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -14,52 +14,52 @@ import (
 	"reflect"
 )
 
-const AuthorityIdParam ab.IdParam = "authority"
-const StacknameIdParam ab.IdParam = "stackname"
+const AuthorityIdParam modeler.IdParam = "authority"
+const StacknameIdParam modeler.IdParam = "stackname"
 
-var NilStackConnector = (*StackConnector)(nil)
-var _ ab.Connector = NilStackConnector
+var NilStackModel = (*StackModel)(nil)
+var _ modeler.Modeler = NilStackModel
 
-type StackConnector struct {
+type StackModel struct {
 	Gearbox gearbox.Gearboxer
 }
 
-func NewStackConnector(gb gearbox.Gearboxer) *StackConnector {
-	return &StackConnector{
+func NewStackConnector(gb gearbox.Gearboxer) *StackModel {
+	return &StackModel{
 		Gearbox: gb,
 	}
 }
 
-func (me *StackConnector) Related() {
+func (me *StackModel) Related() {
 	return
 }
 
-func (me *StackConnector) GetBasepath() ab.Basepath {
+func (me *StackModel) GetBasepath() types.Basepath {
 	return "/stacks"
 }
 
-func (me *StackConnector) GetItemType() reflect.Kind {
+func (me *StackModel) GetItemType() reflect.Kind {
 	return reflect.Struct
 }
 
-func (me *StackConnector) GetIdParams() ab.IdParams {
-	return ab.IdParams{
+func (me *StackModel) GetIdParams() modeler.IdParams {
+	return modeler.IdParams{
 		AuthorityIdParam,
 		StacknameIdParam,
 	}
 }
 
-func (me *StackConnector) GetNamedStackMap() (gears.NamedStackMap, status.Status) {
+func (me *StackModel) GetNamedStackMap() (gears.NamedStackMap, status.Status) {
 	return me.Gearbox.GetNamedStackMap()
 }
 
-func (me *StackConnector) getGearboxStackRoleMap() (gears.StackRoleMap, status.Status) {
+func (me *StackModel) getGearboxStackRoleMap() (gears.StackRoleMap, status.Status) {
 	return me.Gearbox.GetStackRoleMap()
 }
 
-func (me *StackConnector) GetCollection(filterPath ab.FilterPath) (collection ab.Collection, sts status.Status) {
+func (me *StackModel) GetCollection(filterPath modeler.FilterPath) (collection modeler.Collection, sts status.Status) {
 	for range only.Once {
-		collection = make(ab.Collection, 0)
+		collection = make(modeler.Collection, 0)
 		gbsm, sts := me.GetNamedStackMap()
 		if is.Error(sts) {
 			break
@@ -82,26 +82,26 @@ func (me *StackConnector) GetCollection(filterPath ab.FilterPath) (collection ab
 	return collection, sts
 }
 
-func (me *StackConnector) GetCollectionIds() (itemIds ab.ItemIds, sts status.Status) {
+func (me *StackModel) GetCollectionIds() (itemIds modeler.ItemIds, sts status.Status) {
 	for range only.Once {
 		gbsm, sts := me.getGearboxStackMap()
 		if is.Error(sts) {
 			break
 		}
-		itemIds = make(ab.ItemIds, len(gbsm))
+		itemIds = make(modeler.ItemIds, len(gbsm))
 		i := 0
 		for _, gbs := range gbsm {
-			itemIds[i] = ab.ItemId(gbs.GetIdentifier())
+			itemIds[i] = modeler.ItemId(gbs.GetIdentifier())
 			i++
 		}
 	}
 	return itemIds, sts
 }
 
-func (me *StackConnector) AddItem(item ab.Item) (collection ab.Collection, sts status.Status) {
+func (me *StackModel) AddItem(item modeler.Item) (sts status.Status) {
 	for range only.Once {
 		var gbs *gears.NamedStack
-		gbs, collection, sts = me.extractGearboxStack(item)
+		gbs, _, sts = me.extractGearboxStack(item)
 		if status.IsError(sts) {
 			break
 		}
@@ -112,13 +112,13 @@ func (me *StackConnector) AddItem(item ab.Item) (collection ab.Collection, sts s
 		sts = status.Success("Stack '%s' added", gbs.GetIdentifier())
 		sts.SetHttpStatus(http.StatusCreated)
 	}
-	return collection, sts
+	return sts
 }
 
-func (me *StackConnector) UpdateItem(item ab.Item) (collection ab.Collection, sts status.Status) {
+func (me *StackModel) UpdateItem(item modeler.Item) (sts status.Status) {
 	for range only.Once {
 		var gbs *gears.NamedStack
-		gbs, collection, sts = me.extractGearboxStack(item)
+		gbs, _, sts = me.extractGearboxStack(item)
 		if status.IsError(sts) {
 			break
 		}
@@ -129,11 +129,11 @@ func (me *StackConnector) UpdateItem(item ab.Item) (collection ab.Collection, st
 		sts = status.Success("Stack '%s' updated", item.GetId())
 		sts.SetHttpStatus(http.StatusNoContent)
 	}
-	return collection, sts
+	return sts
 
 }
 
-func (me *StackConnector) DeleteItem(stackid ab.ItemId) (collection ab.Collection, sts status.Status) {
+func (me *StackModel) DeleteItem(stackid modeler.ItemId) (sts status.Status) {
 	for range only.Once {
 		sts := me.Gearbox.DeleteNamedStack(types.StackId(stackid))
 		if status.IsError(sts) {
@@ -142,10 +142,10 @@ func (me *StackConnector) DeleteItem(stackid ab.ItemId) (collection ab.Collectio
 		sts = status.Success("Stack '%s' found", stackid)
 		sts.SetHttpStatus(http.StatusNoContent)
 	}
-	return collection, sts
+	return sts
 }
 
-func (me *StackConnector) GetItem(stackid ab.ItemId, ctx echo.Context) (collection ab.Item, sts status.Status) {
+func (me *StackModel) GetItem(stackid modeler.ItemId, ctx echo.Context) (collection modeler.Item, sts status.Status) {
 	var ns *NamedStack
 	for range only.Once {
 		gbns, sts := me.Gearbox.FindNamedStack(types.StackId(stackid))
@@ -163,7 +163,7 @@ func (me *StackConnector) GetItem(stackid ab.ItemId, ctx echo.Context) (collecti
 
 }
 
-func (me *StackConnector) FilterItem(in ab.Item, filterPath ab.FilterPath) (out ab.Item, sts status.Status) {
+func (me *StackModel) FilterItem(in modeler.Item, filterPath modeler.FilterPath) (out modeler.Item, sts status.Status) {
 	for range only.Once {
 		var ns *NamedStack
 		ns, sts = AssertStack(in)
@@ -175,18 +175,18 @@ func (me *StackConnector) FilterItem(in ab.Item, filterPath ab.FilterPath) (out 
 	return out, sts
 }
 
-func (me *StackConnector) GetCollectionFilterMap() ab.FilterMap {
+func (me *StackModel) GetCollectionFilterMap() modeler.FilterMap {
 	return GetStackFilterMap()
 }
 
-func (me *StackConnector) getGearboxStackMap() (gears.NamedStackMap, status.Status) {
+func (me *StackModel) getGearboxStackMap() (gears.NamedStackMap, status.Status) {
 	return me.Gearbox.GetNamedStackMap()
 }
 
-func (me *StackConnector) extractGearboxStack(item ab.Item) (gbs *gears.NamedStack, collection ab.Collection, sts status.Status) {
+func (me *StackModel) extractGearboxStack(item modeler.Item) (gbs *gears.NamedStack, collection modeler.Collection, sts status.Status) {
 	var ns *NamedStack
 	for range only.Once {
-		collection, sts = me.GetCollection(ab.NoFilterPath)
+		collection, sts = me.GetCollection(modeler.NoFilterPath)
 		if is.Error(sts) {
 			break
 		}
@@ -199,15 +199,15 @@ func (me *StackConnector) extractGearboxStack(item ab.Item) (gbs *gears.NamedSta
 	return gbs, collection, sts
 }
 
-func GetStackFilterMap() ab.FilterMap {
-	return ab.FilterMap{}
+func GetStackFilterMap() modeler.FilterMap {
+	return modeler.FilterMap{}
 }
 
-func FilterStack(in *NamedStack, filterPath ab.FilterPath) (out *NamedStack, sts status.Status) {
+func FilterStack(in *NamedStack, filterPath modeler.FilterPath) (out *NamedStack, sts status.Status) {
 	return in, nil
 }
 
-func AssertStack(item ab.Item) (s *NamedStack, sts status.Status) {
+func AssertStack(item modeler.Item) (s *NamedStack, sts status.Status) {
 	s, ok := item.(*NamedStack)
 	if !ok {
 		sts = status.Fail(&status.Args{

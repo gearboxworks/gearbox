@@ -15,8 +15,8 @@ import (
 type ExternalUrlId string
 
 const (
-	ContainerRespositoryListUrl = "https://hub.docker.com/v2/repositories/wplib/?page_size=256"
-	AvailableContainerListUrl   = "https://hub.docker.com/v2/repositories/wplib/{name}/tags/?page_size=256"
+	ContainerRepositoryListUrl = "https://hub.docker.com/v2/repositories/wplib/?page_size=256"
+	AvailableContainerListUrl  = "https://hub.docker.com/v2/repositories/wplib/{name}/tags/?page_size=256"
 )
 
 type DockerHub struct {
@@ -38,11 +38,11 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 
 		cns = make(ContainerNames, 0)
 
-		crl, _, sts := util.HttpRequest(ContainerRespositoryListUrl)
+		crl, _, sts := util.HttpRequest(ContainerRepositoryListUrl)
 		if status.IsError(sts) {
 			sts = status.Wrap(sts, &status.Args{
 				Message: fmt.Sprintf("failed to download list of container repositories from '%s'",
-					ContainerRespositoryListUrl,
+					ContainerRepositoryListUrl,
 				),
 				Help: "check your Internet access, or " + status.ContactSupportHelp(),
 			})
@@ -53,7 +53,7 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("unable to unmarshal response from '%s'",
-					ContainerRespositoryListUrl,
+					ContainerRepositoryListUrl,
 				),
 			})
 			break
@@ -62,7 +62,7 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("unable to marshal container repositories from '%s'",
-					ContainerRespositoryListUrl,
+					ContainerRepositoryListUrl,
 				),
 			})
 			break
@@ -72,7 +72,7 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("unable to unmarshal container repositories from '%s'",
-					ContainerRespositoryListUrl,
+					ContainerRepositoryListUrl,
 				),
 			})
 			break
@@ -118,7 +118,7 @@ func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*C
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("unable to unmarshal response from '%s'",
-					ContainerRespositoryListUrl,
+					ContainerRepositoryListUrl,
 				),
 			})
 			break
@@ -126,7 +126,7 @@ func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*C
 		cb, err := json.Marshal(ar.Results)
 		if err != nil {
 			log.Printf("failed to marshal list of containers from '%s': %s ",
-				ContainerRespositoryListUrl,
+				ContainerRepositoryListUrl,
 				err.Error(),
 			)
 			break
@@ -136,7 +136,7 @@ func (me *DockerHub) RequestRepositoryContainers(name ContainerName, query ...*C
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("unable to marshal container repositories from '%s'",
-					ContainerRespositoryListUrl,
+					ContainerRepositoryListUrl,
 				),
 			})
 			break

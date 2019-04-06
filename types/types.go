@@ -1,7 +1,6 @@
 package types
 
 type Hostnames []Hostname
-
 type Hostname string
 
 type Stackname string
@@ -29,3 +28,8 @@ type AuthorityDomain string
 type Revision string
 
 type StackRole string
+
+type Basepath AbsoluteDir
+
+type UrlTemplates []UrlTemplate
+type UrlTemplate string
