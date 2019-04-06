@@ -49,7 +49,11 @@ func (me *ProjectModel) GetIdParams() apimodeler.IdParams {
 	return apimodeler.IdParams{HostnameIdParam}
 }
 
-func (me *ProjectModel) GetCollection(filterPath apimodeler.FilterPath) (collection apimodeler.Collection, sts status.Status) {
+func (me *ProjectModel) GetCollection() (collection apimodeler.Collection, sts status.Status) {
+	return me.FilterCollection(apimodeler.NoFilterPath)
+}
+
+func (me *ProjectModel) FilterCollection(filterPath apimodeler.FilterPath) (collection apimodeler.Collection, sts status.Status) {
 	for range only.Once {
 		collection = make(apimodeler.Collection, 0)
 		gbpm, sts := me.getGearboxProjectMap()
@@ -191,7 +195,7 @@ func (me *ProjectModel) getGearboxProjectMap() (pm project.Map, sts status.Statu
 func (me *ProjectModel) extractGearboxProject(item apimodeler.Itemer) (gbp *project.Project, collection apimodeler.Collection, sts status.Status) {
 	var p *Project
 	for range only.Once {
-		collection, sts = me.GetCollection(apimodeler.NoFilterPath)
+		collection, sts = me.GetCollection()
 		if is.Error(sts) {
 			break
 		}

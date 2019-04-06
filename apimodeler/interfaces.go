@@ -71,7 +71,6 @@ type Itemer interface {
 	ItemIdGetter
 	ItemIdSetter
 	ItemTypeGetter
-	ItemTypeSetter
 	ItemGetter
 }
 
@@ -81,12 +80,9 @@ type ItemIdGetter interface {
 type ItemTypeGetter interface {
 	GetType() ItemType
 }
-type ItemTypeSetter interface {
-	SetType(ItemType)
-}
 type ItemGetter interface {
 	GetItem() (Itemer, status.Status)
 }
 type ItemIdSetter interface {
-	SetId(ItemId)
+	SetId(ItemId) status.Status
 }

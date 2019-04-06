@@ -13,12 +13,9 @@ type TestableItem struct {
 	Type apimodeler.ItemType
 }
 
-func (me *TestableItem) SetId(itemid apimodeler.ItemId) {
+func (me *TestableItem) SetId(itemid apimodeler.ItemId) status.Status {
 	me.Id = itemid
-}
-
-func (me *TestableItem) SetType(typ apimodeler.ItemType) {
-	me.Type = typ
+	return nil
 }
 
 func (me *TestableItem) GetId() apimodeler.ItemId {

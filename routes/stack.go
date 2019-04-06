@@ -5,8 +5,10 @@ import (
 	"gearbox/apimodeler"
 	"gearbox/gearbox"
 	"gearbox/gears"
+	"gearbox/only"
 	"gearbox/status"
 	"gearbox/types"
+	"strings"
 )
 
 const StackTypeName = "stack"
@@ -24,6 +26,26 @@ func (me *NamedStack) GetFullStackname() types.Stackname {
 
 func (me *NamedStack) GetId() apimodeler.ItemId {
 	return apimodeler.ItemId(fmt.Sprintf("%s/%s", me.Authority, me.StackName))
+}
+
+func (me *NamedStack) SetId(itemid apimodeler.ItemId) (sts status.Status) {
+	for range only.Once {
+		parts := strings.Split(string(itemid), "/")
+		if len(parts) < 2 {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("stack ID '%s' missing '/'", itemid),
+			})
+			break
+		} else if len(parts) > 2 {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("stack ID '%s' has too many '/'", itemid),
+			})
+			break
+		}
+		me.Authority = types.AuthorityDomain(parts[0])
+		me.StackName = types.Stackname(parts[1])
+	}
+	return sts
 }
 
 func (me *NamedStack) GetItem() (apimodeler.Itemer, status.Status) {

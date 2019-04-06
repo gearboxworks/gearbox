@@ -39,6 +39,11 @@ func (me *Project) GetId() apimodeler.ItemId {
 	return me.Hostname
 }
 
+func (me *Project) SetId(hostname apimodeler.ItemId) status.Status {
+	me.Hostname = hostname
+	return nil
+}
+
 func (me *Project) GetItem() (apimodeler.Itemer, status.Status) {
 	return me, nil
 }

@@ -68,7 +68,7 @@ func (me *HostApi) connectRoutes(connectionsMap apimodeler.ModelsMap) {
 		// Collection Route
 		route = e.GET(string(cn.GetBasepath()), func(ctx echo.Context) error {
 			rd := ja.NewRootDocument(ja.CollectionResponse)
-			data, sts := apimodeler.GetCollectionSlice(cn.Self.GetCollection(apimodeler.NoFilterPath))
+			data, sts := cn.Self.GetCollection()
 			if is.Success(sts) {
 				sts = setCollectionData(rd, data)
 			}
