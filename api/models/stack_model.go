@@ -24,6 +24,10 @@ type StackModel struct {
 	Gearbox gearbox.Gearboxer
 }
 
+func (me *StackModel) GetListLinkMap(*apimodeler.Context, ...apimodeler.FilterPath) (apimodeler.LinkMap, status.Status) {
+	panic("implement me")
+}
+
 func NewStackConnector(gb gearbox.Gearboxer) *StackModel {
 	return &StackModel{
 		Gearbox: gb,
@@ -57,7 +61,7 @@ func (me *StackModel) getGearboxStackRoleMap() (gears.StackRoleMap, status.Statu
 	return me.Gearbox.GetStackRoleMap()
 }
 
-func (me *StackModel) GetCollection(ctx apimodeler.Contexter, filterPath ...apimodeler.FilterPath) (coll apimodeler.Collection, sts status.Status) {
+func (me *StackModel) GetList(ctx *apimodeler.Context, filterPath ...apimodeler.FilterPath) (coll apimodeler.List, sts status.Status) {
 	var fp apimodeler.FilterPath
 	if len(filterPath) > 0 {
 		fp = filterPath[0]
@@ -87,9 +91,9 @@ func (me *StackModel) GetCollection(ctx apimodeler.Contexter, filterPath ...apim
 	return coll, sts
 }
 
-func (me *StackModel) FilterCollection(ctx apimodeler.Contexter, filterPath apimodeler.FilterPath) (coll apimodeler.Collection, sts status.Status) {
+func (me *StackModel) FilterList(ctx *apimodeler.Context, filterPath apimodeler.FilterPath) (coll apimodeler.List, sts status.Status) {
 	for range only.Once {
-		coll = make(apimodeler.Collection, 0)
+		coll = make(apimodeler.List, 0)
 		gbsm, sts := me.GetNamedStackMap()
 		if is.Error(sts) {
 			break
@@ -112,7 +116,7 @@ func (me *StackModel) FilterCollection(ctx apimodeler.Contexter, filterPath apim
 	return coll, sts
 }
 
-func (me *StackModel) GetCollectionIds(ctx apimodeler.Contexter) (itemIds apimodeler.ItemIds, sts status.Status) {
+func (me *StackModel) GetListIds(ctx *apimodeler.Context) (itemIds apimodeler.ItemIds, sts status.Status) {
 	for range only.Once {
 		gbsm, sts := me.getGearboxStackMap()
 		if is.Error(sts) {
@@ -128,7 +132,7 @@ func (me *StackModel) GetCollectionIds(ctx apimodeler.Contexter) (itemIds apimod
 	return itemIds, sts
 }
 
-func (me *StackModel) AddItem(ctx apimodeler.Contexter, item apimodeler.Itemer) (sts status.Status) {
+func (me *StackModel) AddItem(ctx *apimodeler.Context, item apimodeler.Itemer) (sts status.Status) {
 	for range only.Once {
 		var gbs *gears.NamedStack
 		gbs, _, sts = me.extractGearboxStack(ctx, item)
@@ -145,7 +149,7 @@ func (me *StackModel) AddItem(ctx apimodeler.Contexter, item apimodeler.Itemer) 
 	return sts
 }
 
-func (me *StackModel) UpdateItem(ctx apimodeler.Contexter, item apimodeler.Itemer) (sts status.Status) {
+func (me *StackModel) UpdateItem(ctx *apimodeler.Context, item apimodeler.Itemer) (sts status.Status) {
 	for range only.Once {
 		var gbs *gears.NamedStack
 		gbs, _, sts = me.extractGearboxStack(ctx, item)
@@ -163,7 +167,7 @@ func (me *StackModel) UpdateItem(ctx apimodeler.Contexter, item apimodeler.Iteme
 
 }
 
-func (me *StackModel) DeleteItem(ctx apimodeler.Contexter, stackid apimodeler.ItemId) (sts status.Status) {
+func (me *StackModel) DeleteItem(ctx *apimodeler.Context, stackid apimodeler.ItemId) (sts status.Status) {
 	for range only.Once {
 		sts := me.Gearbox.DeleteNamedStack(types.StackId(stackid))
 		if status.IsError(sts) {
@@ -175,7 +179,7 @@ func (me *StackModel) DeleteItem(ctx apimodeler.Contexter, stackid apimodeler.It
 	return sts
 }
 
-func (me *StackModel) GetItem(ctx apimodeler.Contexter, stackid apimodeler.ItemId) (collection apimodeler.Itemer, sts status.Status) {
+func (me *StackModel) GetItem(ctx *apimodeler.Context, stackid apimodeler.ItemId) (list apimodeler.Itemer, sts status.Status) {
 	var ns *NamedStack
 	for range only.Once {
 		gbns, sts := me.Gearbox.FindNamedStack(types.StackId(stackid))
@@ -213,10 +217,10 @@ func (me *StackModel) getGearboxStackMap() (gears.NamedStackMap, status.Status) 
 	return me.Gearbox.GetNamedStackMap()
 }
 
-func (me *StackModel) extractGearboxStack(ctx apimodeler.Contexter, item apimodeler.Itemer) (gbs *gears.NamedStack, collection apimodeler.Collection, sts status.Status) {
+func (me *StackModel) extractGearboxStack(ctx *apimodeler.Context, item apimodeler.Itemer) (gbs *gears.NamedStack, list apimodeler.List, sts status.Status) {
 	var ns *NamedStack
 	for range only.Once {
-		collection, sts = me.GetCollection(ctx)
+		list, sts = me.GetList(ctx)
 		if is.Error(sts) {
 			break
 		}
@@ -226,7 +230,7 @@ func (me *StackModel) extractGearboxStack(ctx apimodeler.Contexter, item apimode
 		}
 		gbs, sts = MakeGearboxStack(me.Gearbox, ns)
 	}
-	return gbs, collection, sts
+	return gbs, list, sts
 }
 
 func GetStackFilterMap() apimodeler.FilterMap {

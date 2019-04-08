@@ -13,21 +13,21 @@ var NilTestableModel = (*TestableModel)(nil)
 var _ apimodeler.Modeler = NilTestableModel
 
 type TestableModel struct {
-	Collection apimodeler.Collection
+	List apimodeler.List
 }
 
 func NewTestableModel() *TestableModel {
 	tm := TestableModel{
-		Collection: make(apimodeler.Collection, 0),
+		List: make(apimodeler.List, 0),
 	}
-	coll := tm.Collection
+	coll := tm.List
 	for id, typ := range testableItemData {
 		coll = append(coll, &TestableItem{
 			Id:   id,
 			Type: typ,
 		})
 	}
-	tm.Collection = coll
+	tm.List = coll
 	return &tm
 }
 
@@ -44,8 +44,8 @@ func (me *TestableModel) GetFilterMap() apimodeler.FilterMap {
 		FrobinatorsFilter: apimodeler.Filter{
 			Label: "Items of Frobinator type",
 			Path:  FrobinatorsFilter,
-			CollectionFilter: func(coll apimodeler.Collection) apimodeler.Collection {
-				newcoll := make(apimodeler.Collection, 0)
+			ListFilter: func(coll apimodeler.List) apimodeler.List {
+				newcoll := make(apimodeler.List, 0)
 				for _, item := range coll {
 					if item.GetType() != FrobinatorType {
 						continue
@@ -68,12 +68,12 @@ func (me *TestableModel) GetFilterMap() apimodeler.FilterMap {
 	}
 }
 
-func (me *TestableModel) GetCollection(filter ...apimodeler.FilterPath) (coll apimodeler.Collection, sts status.Status) {
-	return me.Collection, sts
+func (me *TestableModel) GetList(filter ...apimodeler.FilterPath) (coll apimodeler.List, sts status.Status) {
+	return me.List, sts
 }
 
 func (me *TestableModel) AddItem(item apimodeler.Itemer) status.Status {
-	me.Collection = append(me.Collection, item)
+	me.List = append(me.List, item)
 	return nil
 }
 
@@ -83,7 +83,7 @@ func (me *TestableModel) DeleteItem(itemid apimodeler.ItemId) (sts status.Status
 		if is.Error(sts) {
 			break
 		}
-		me.Collection = append(me.Collection[:index], me.Collection[index+1:]...)
+		me.List = append(me.List[:index], me.List[index+1:]...)
 	}
 	return sts
 }
@@ -94,7 +94,7 @@ func (me *TestableModel) GetItem(itemid apimodeler.ItemId) (item apimodeler.Item
 		if is.Error(sts) {
 			break
 		}
-		item = me.Collection[index]
+		item = me.List[index]
 	}
 	return item, sts
 }
@@ -102,7 +102,7 @@ func (me *TestableModel) GetItem(itemid apimodeler.ItemId) (item apimodeler.Item
 func (me *TestableModel) getItemIndex(itemid apimodeler.ItemId) (index int, sts status.Status) {
 	found := false
 	var item apimodeler.Itemer
-	for index, item = range me.Collection {
+	for index, item = range me.List {
 		if item.GetId() != itemid {
 			continue
 		}
@@ -118,9 +118,9 @@ func (me *TestableModel) getItemIndex(itemid apimodeler.ItemId) (index int, sts 
 	return index, sts
 }
 
-func (me *TestableModel) GetCollectionIds() (apimodeler.ItemIds, status.Status) {
-	cids := make(apimodeler.ItemIds, len(me.Collection))
-	for i, c := range me.Collection {
+func (me *TestableModel) GetListIds() (apimodeler.ItemIds, status.Status) {
+	cids := make(apimodeler.ItemIds, len(me.List))
+	for i, c := range me.List {
 		cids[i] = c.GetId()
 	}
 	return cids, nil
@@ -133,7 +133,7 @@ func (me *TestableModel) UpdateItem(item apimodeler.Itemer) (sts status.Status) 
 		if is.Error(sts) {
 			break
 		}
-		me.Collection[index] = item
+		me.List[index] = item
 	}
 	return sts
 }
@@ -153,9 +153,9 @@ func (me *TestableModel) FilterItem(item apimodeler.Itemer, filter apimodeler.Fi
 	return _item, sts
 }
 
-func (me *TestableModel) FilterCollection(filter apimodeler.FilterPath) (coll apimodeler.Collection, sts status.Status) {
+func (me *TestableModel) FilterList(filter apimodeler.FilterPath) (coll apimodeler.List, sts status.Status) {
 	for range only.Once {
-		coll = me.Collection
+		coll = me.List
 		fm := me.GetFilterMap()
 		f, ok := fm[filter]
 		if !ok {
@@ -164,10 +164,10 @@ func (me *TestableModel) FilterCollection(filter apimodeler.FilterPath) (coll ap
 			})
 			break
 		}
-		if f.CollectionFilter == nil {
+		if f.ListFilter == nil {
 			break
 		}
-		coll = f.CollectionFilter(coll)
+		coll = f.ListFilter(coll)
 	}
 	return coll, sts
 }

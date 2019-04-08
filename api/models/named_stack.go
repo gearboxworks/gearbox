@@ -1,9 +1,11 @@
 package models
 
 import (
+	"gearbox/apimodeler"
 	"gearbox/gears"
 	"gearbox/gearspecid"
 	"gearbox/service"
+	"gearbox/status"
 	"gearbox/types"
 )
 
@@ -15,6 +17,10 @@ type NamedStack struct {
 	StackName  types.Stackname       `json:"name"`
 	RoleMap    interface{}           `json:"roles"`
 	ServiceMap interface{}           `json:"services"`
+}
+
+func (me *NamedStack) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
+	panic("implement me")
 }
 
 func NewNamedStack(ns *gears.NamedStack) *NamedStack {

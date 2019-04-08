@@ -37,3 +37,5 @@ type UrlTemplate string
 type RouteName string
 
 type ResourceType string
+
+type ResponseType string

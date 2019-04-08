@@ -28,6 +28,12 @@ type Project struct {
 	ConfigProject *config.Project         `json:"-"`
 }
 
+func (me *Project) GetItemLinkMap(*apimodeler.Context) (lm apimodeler.LinkMap, sts status.Status) {
+	return apimodeler.LinkMap{
+		apimodeler.RelatedRelType: apimodeler.Link("boofarfaz"),
+	}, sts
+}
+
 func NewProject(hostname apimodeler.ItemId) *Project {
 	return &Project{
 		Hostname: hostname,

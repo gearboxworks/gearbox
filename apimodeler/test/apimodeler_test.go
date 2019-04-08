@@ -22,10 +22,10 @@ func TestModels(t *testing.T) {
 	t.Run("GetBasepath()", func(t *testing.T) {
 		ms := apimodeler.NewModels(NewTestableModel())
 		if ms.Self.GetBasepath() != testableModelBasepath {
-			t.Errorf("collection basepath is not '%s'", testableModelBasepath)
+			t.Errorf("List basepath is not '%s'", testableModelBasepath)
 		}
 		if ms.Self.GetBasepath() != testableModelBasepath {
-			t.Errorf("collection basepath is not '%s'", testableModelBasepath)
+			t.Errorf("List basepath is not '%s'", testableModelBasepath)
 		}
 	})
 
@@ -141,9 +141,9 @@ func TestModeler(t *testing.T) {
 		}
 	})
 
-	t.Run("GetCollection()", func(t *testing.T) {
+	t.Run("GetList()", func(t *testing.T) {
 		m := apimodeler.NewModels(NewTestableModel())
-		coll, sts := m.Self.GetCollection()
+		coll, sts := m.Self.GetList()
 		if is.Error(sts) {
 			t.Errorf(sts.Message())
 		}
@@ -181,22 +181,22 @@ func TestModeler(t *testing.T) {
 			t.Errorf("unable to add testable item ID %s: %s", ti.Id, sts.Message())
 			return
 		}
-		coll, sts := m.Self.GetCollection()
+		coll, sts := m.Self.GetList()
 		if is.Error(sts) {
 			t.Error(sts.Message())
 			return
 		}
 		if len(coll) == 0 {
-			t.Error("returned empty collection")
+			t.Error("returned empty List")
 			return
 		}
 		if coll[len(coll)-1] == nil {
-			t.Error("returned collection with nil items")
+			t.Error("returned List with nil items")
 			return
 		}
 		ti2, ok := coll[len(coll)-1].(*TestableItem)
 		if !ok {
-			t.Error("elements of returned collection not *TestableItem")
+			t.Error("elements of returned List not *TestableItem")
 			return
 		}
 		if ti2.Id != ti.Id {
@@ -210,7 +210,7 @@ func TestModeler(t *testing.T) {
 
 	t.Run("DeleteItem()", func(t *testing.T) {
 		m := apimodeler.NewModels(NewTestableModel())
-		coll, sts := m.Self.GetCollection()
+		coll, sts := m.Self.GetList()
 		if is.Error(sts) {
 			t.Error(sts.Message())
 			return
@@ -219,10 +219,10 @@ func TestModeler(t *testing.T) {
 		item := coll[wantLen]
 		sts = m.Self.DeleteItem(item.GetId())
 		if is.Error(sts) {
-			t.Errorf("item '%s' not found in collection", item.GetId())
+			t.Errorf("item '%s' not found in List", item.GetId())
 			return
 		}
-		coll2, _ := m.Self.GetCollection()
+		coll2, _ := m.Self.GetList()
 		if wantLen != len(coll2) {
 			t.Errorf("got len: %d, wanted: %d", len(coll2), wantLen)
 		}
@@ -236,7 +236,7 @@ func TestModeler(t *testing.T) {
 
 	t.Run("UpdateItem()", func(t *testing.T) {
 		m := apimodeler.NewModels(NewTestableModel())
-		coll, sts := m.Self.GetCollection()
+		coll, sts := m.Self.GetList()
 		if is.Error(sts) {
 			t.Error(sts.Message())
 			return
@@ -259,7 +259,7 @@ func TestModeler(t *testing.T) {
 			t.Errorf("item '%s' not found", item.GetId())
 			return
 		}
-		coll2, _ := m.Self.GetCollection()
+		coll2, _ := m.Self.GetList()
 		if len(coll) != len(coll2) {
 			t.Errorf("got len: %d, wanted: %d", len(coll2), len(coll))
 			return
@@ -294,8 +294,8 @@ func TestModeler(t *testing.T) {
 			if f.ItemFilter != nil {
 				t.Errorf("item filter for '%s' not nil", FrobinatorsFilter)
 			}
-			if f.CollectionFilter == nil {
-				t.Errorf("collection filter for '%s' is nil", FrobinatorsFilter)
+			if f.ListFilter == nil {
+				t.Errorf("List filter for '%s' is nil", FrobinatorsFilter)
 			}
 		}
 		if f, ok := fm[UnicornFilter]; !ok {
@@ -307,17 +307,17 @@ func TestModeler(t *testing.T) {
 			if f.ItemFilter == nil {
 				t.Errorf("item filter for '%s' is nil", UnicornFilter)
 			}
-			if f.CollectionFilter != nil {
-				t.Errorf("collection filter for '%s' not nil", UnicornFilter)
+			if f.ListFilter != nil {
+				t.Errorf("List filter for '%s' not nil", UnicornFilter)
 			}
 		}
 
 	})
 
-	t.Run("GetCollectionIds()", func(t *testing.T) {
+	t.Run("GetListIds()", func(t *testing.T) {
 		for range only.Once {
 			m := apimodeler.NewModels(NewTestableModel())
-			cids, sts := m.Self.GetCollectionIds()
+			cids, sts := m.Self.GetListIds()
 			if is.Error(sts) {
 				t.Error(sts.Message())
 				break
@@ -336,13 +336,13 @@ func TestModeler(t *testing.T) {
 
 	t.Run("GetItem()", func(t *testing.T) {
 		m := apimodeler.NewModels(NewTestableModel())
-		coll, sts := m.Self.GetCollection()
+		coll, sts := m.Self.GetList()
 		if is.Error(sts) {
 			t.Error(sts.Message())
 			return
 		}
 		if len(coll) == 0 {
-			t.Error("collection is empty")
+			t.Error("List is empty")
 			return
 		}
 		ti := coll[0]
@@ -360,11 +360,11 @@ func TestModeler(t *testing.T) {
 		}
 	})
 
-	t.Run("FilterCollection()", func(t *testing.T) {
+	t.Run("FilterList()", func(t *testing.T) {
 		m := apimodeler.NewModels(NewTestableModel())
-		fc, sts := m.Self.FilterCollection(FrobinatorsFilter)
+		fc, sts := m.Self.FilterList(FrobinatorsFilter)
 		if is.Error(sts) {
-			t.Errorf("unable to filter collection on '%s': %s", FrobinatorsFilter, sts.Message())
+			t.Errorf("unable to filter List on '%s': %s", FrobinatorsFilter, sts.Message())
 		}
 		wantLen := countValues(FrobinatorType)
 		if len(fc) != wantLen {
@@ -375,20 +375,20 @@ func TestModeler(t *testing.T) {
 			if c.GetType() == FrobinatorType {
 				continue
 			}
-			t.Errorf("collection contains type '%s'", c.GetType())
+			t.Errorf("List contains type '%s'", c.GetType())
 			return
 		}
 	})
 
 	t.Run("FilterItem()", func(t *testing.T) {
 		m := apimodeler.NewModels(NewTestableModel())
-		coll, sts := m.Self.GetCollection()
+		coll, sts := m.Self.GetList()
 		if is.Error(sts) {
-			t.Error("unable to get collection")
+			t.Error("unable to get List")
 			return
 		}
 		wantLen := countValues(UnicornType)
-		filtered := make(apimodeler.Collection, 0)
+		filtered := make(apimodeler.List, 0)
 		for i, item := range coll {
 			fi, sts := m.Self.FilterItem(item, UnicornFilter)
 			if is.Error(sts) {
@@ -417,7 +417,7 @@ func TestModeler(t *testing.T) {
 
 }
 
-func getItem(coll apimodeler.Collection, itemid apimodeler.ItemId) (item apimodeler.Itemer) {
+func getItem(coll apimodeler.List, itemid apimodeler.ItemId) (item apimodeler.Itemer) {
 	for _, i := range coll {
 		if i.GetId() != itemid {
 			continue
@@ -428,7 +428,7 @@ func getItem(coll apimodeler.Collection, itemid apimodeler.ItemId) (item apimode
 	return item
 }
 
-func countIds(coll apimodeler.Collection, id apimodeler.ItemId) int {
+func countIds(coll apimodeler.List, id apimodeler.ItemId) int {
 	cnt := 0
 	for _, c := range coll {
 		if c.GetId() != id {
@@ -439,7 +439,7 @@ func countIds(coll apimodeler.Collection, id apimodeler.ItemId) int {
 	return cnt
 }
 
-func countTypes(coll apimodeler.Collection, typ apimodeler.ItemType) int {
+func countTypes(coll apimodeler.List, typ apimodeler.ItemType) int {
 	cnt := 0
 	for _, c := range coll {
 		if c.GetType() != typ {

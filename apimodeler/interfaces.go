@@ -3,12 +3,18 @@ package apimodeler
 import (
 	"gearbox/status"
 	"gearbox/types"
+	"net/http"
 )
 
 type Contexter interface {
 	ParamGetter
 	KeyValueGetter
 	KeyValueSetter
+	RequestGetter
+}
+
+type RequestGetter interface {
+	Request() *http.Request
 }
 type ParamGetter interface {
 	Param(string) string
@@ -23,14 +29,15 @@ type KeyValueSetter interface {
 type Modeler interface {
 	BasepathGetter
 	IdParamsGetter
-	CollectionFiltersGetter
-	CollectionGetter
-	CollectionIdsGetter
-	CollectionItemAdder
-	CollectionItemUpdater
-	CollectionItemDeleter
-	CollectionItemGetter
-	CollectionFilterer
+	ListFiltersGetter
+	ListGetter
+	ListIdsGetter
+	ListItemAdder
+	ListItemUpdater
+	ListItemDeleter
+	ListItemGetter
+	ListFilterer
+	ListLinkMapGetter
 	ItemFilterer
 }
 
@@ -40,35 +47,38 @@ type BasepathGetter interface {
 type IdParamsGetter interface {
 	GetIdParams() IdParams
 }
-type CollectionGetter interface {
-	GetCollection(Contexter, ...FilterPath) (Collection, status.Status)
+type ListGetter interface {
+	GetList(*Context, ...FilterPath) (List, status.Status)
 }
-type CollectionIdsGetter interface {
-	GetCollectionIds(Contexter) (ItemIds, status.Status)
+type ListIdsGetter interface {
+	GetListIds(*Context) (ItemIds, status.Status)
 }
-type CollectionItemAdder interface {
-	AddItem(Contexter, Itemer) status.Status
+type ListItemAdder interface {
+	AddItem(*Context, Itemer) status.Status
 }
-type CollectionItemUpdater interface {
-	UpdateItem(Contexter, Itemer) status.Status
+type ListItemUpdater interface {
+	UpdateItem(*Context, Itemer) status.Status
 }
-type CollectionItemDeleter interface {
-	DeleteItem(Contexter, ItemId) status.Status
+type ListItemDeleter interface {
+	DeleteItem(*Context, ItemId) status.Status
 }
-type CollectionItemGetter interface {
-	GetItem(Contexter, ItemId) (Itemer, status.Status)
+type ListItemGetter interface {
+	GetItem(*Context, ItemId) (Itemer, status.Status)
 }
 type ItemFilterer interface {
 	FilterItem(Itemer, FilterPath) (Itemer, status.Status)
 }
-type CollectionFilterer interface {
-	FilterCollection(Contexter, FilterPath) (Collection, status.Status)
+type ListFilterer interface {
+	FilterList(*Context, FilterPath) (List, status.Status)
 }
-type CollectionFiltersGetter interface {
+type ListFiltersGetter interface {
 	GetFilterMap() FilterMap
 }
 type ItemIdsGetter interface {
-	GetIds(Contexter) ItemIds
+	GetIds(*Context) ItemIds
+}
+type ListLinkMapGetter interface {
+	GetListLinkMap(*Context, ...FilterPath) (LinkMap, status.Status)
 }
 
 type Itemer interface {
@@ -76,6 +86,7 @@ type Itemer interface {
 	ItemIdSetter
 	ItemTypeGetter
 	ItemGetter
+	ItemLinkMapGetter
 }
 
 type ItemIdGetter interface {
@@ -90,5 +101,14 @@ type ItemGetter interface {
 type ItemIdSetter interface {
 	SetId(ItemId) status.Status
 }
+type ItemLinkMapGetter interface {
+	GetItemLinkMap(*Context) (LinkMap, status.Status)
+}
 
-type Critera interface{}
+type ResponseTypeGetter interface {
+	GetResponseType() types.ResponseType
+}
+type RootDocumentGetter interface {
+	ResponseTypeGetter
+	GetRootDocument() interface{}
+}

@@ -2,8 +2,11 @@ package ja
 
 import (
 	"fmt"
+	"gearbox/apimodeler"
+	"gearbox/global"
 	"gearbox/only"
 	"gearbox/status"
+	"gearbox/types"
 	"reflect"
 )
 
@@ -18,18 +21,18 @@ const (
 )
 
 type RootDocument struct {
-	ResponseType ResponseType      `json:"-"`
-	JsonApi      *JsonApi          `json:"jsonapi,omitempty"`
-	MetaMap      MetaMap           `json:"meta,omitempty"`
-	LinkMap      LinkMap           `json:"links,omitempty"`
-	Data         ResourceContainer `json:"data,omitempty"`
-	Included     ResourceObjects   `json:"included,omitempty"`
-	Errors       Errors            `json:"errors,omitempty"`
+	ResponseType types.ResponseType `json:"-"`
+	JsonApi      *JsonApi           `json:"jsonapi,omitempty"`
+	MetaMap      MetaMap            `json:"meta,omitempty"`
+	LinkMap      apimodeler.LinkMap `json:"links,omitempty"`
+	Data         ResourceContainer  `json:"data,omitempty"`
+	Included     ResourceObjects    `json:"included,omitempty"`
+	Errors       Errors             `json:"errors,omitempty"`
 }
 
 type RootDocArgs RootDocument
 
-func NewRootDocument(ctx Contexter, responseType ResponseType, args ...*RootDocArgs) *RootDocument {
+func NewRootDocument(ctx Contexter, responseType types.ResponseType, args ...*RootDocArgs) *RootDocument {
 	ctx.Set(ResponseTypeKey, responseType)
 	var _args *RootDocArgs
 	if len(args) == 0 {
@@ -42,9 +45,9 @@ func NewRootDocument(ctx Contexter, responseType ResponseType, args ...*RootDocA
 	rd.ResponseType = responseType
 	if rd.Data == nil {
 		switch responseType {
-		case DatasetResponse:
+		case global.ItemResponse:
 			rd.Data = &ResourceObject{}
-		case CollectionResponse:
+		case global.ListResponse:
 			rd.Data = make(ResourceObjects, 0)
 		default:
 			panic(fmt.Sprintf("invalid response type '%s'", responseType))
@@ -58,21 +61,29 @@ func NewRootDocument(ctx Contexter, responseType ResponseType, args ...*RootDocA
 	if rd.MetaMap == nil {
 		rd.MetaMap = make(MetaMap, 0)
 	}
-	rd.MetaMap[MetaDcFormat] = ContentType
-	rd.MetaMap[MetaDcType] = responseType
+	rd.MetaMap[apimodeler.MetaDcFormat] = ContentType
+	rd.MetaMap[apimodeler.MetaDcType] = responseType
 
 	if rd.Included == nil {
 		rd.Included = make(ResourceObjects, 0)
 	}
 
 	if rd.LinkMap == nil {
-		rd.LinkMap = make(LinkMap, 0)
+		rd.LinkMap = make(apimodeler.LinkMap, 0)
 	}
 
 	if rd.Errors != nil {
 		rd.Data = nil
 	}
 	return &rd
+}
+
+func (me *RootDocument) GetResponseType() types.ResponseType {
+	return me.ResponseType
+}
+
+func (me *RootDocument) GetRootDocument() interface{} {
+	return me
 }
 
 func (me *RootDocument) AddResourceObject(ro *ResourceObject) (sts status.Status) {
@@ -132,7 +143,7 @@ func (me *RootDocument) SetIncluded(included ResourceObjects) (sts status.Status
 	me.Included = included
 	return nil
 }
-func (me *RootDocument) SetLinks(linkmap LinkMap) (sts status.Status) {
+func (me *RootDocument) SetLinks(linkmap apimodeler.LinkMap) (sts status.Status) {
 	me.LinkMap = linkmap
 	return nil
 }
