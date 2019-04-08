@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"gearbox/box/vm"
+	"gearbox/global"
+	"gearbox/help"
 	"gearbox/only"
 	"gearbox/os_support"
 	"gearbox/ssh"
@@ -60,7 +62,7 @@ func NewBox(OsSupport oss.OsSupporter, args ...Args) *Box {
 	_args.OsSupport = OsSupport
 
 	if _args.Boxname == "" {
-		_args.Boxname = Brandname
+		_args.Boxname = global.Brandname
 	}
 
 	if _args.WaitDelay == 0 {
@@ -130,12 +132,12 @@ func (me *Box) Initialize() (sts status.Status) {
 		me.OvaFile = fmt.Sprintf("%s/%s", cfgdir, OvaFileName)
 
 		// The OvaFile is created from an export from within VirtualBox.
-		// VBoxManage export Gearbox -o Gearbox.ova --options manifest
+		// VBoxManage export Parent -o Parent.ova --options manifest
 		// This was the best way to create a base template, avoiding too much code bloat.
 		// And allows multiple VM frameworks to be used with libretto.
 		// It doesn't include the ISO image yet as it is too large.
 		// Once the ISO image size has been reduced, we can do this:
-		// VBoxManage export Gearbox -o Gearbox.ova --options iso,manifest
+		// VBoxManage export Parent -o Parent.ova --options iso,manifest
 
 		_, err := os.Stat(me.OvaFile)
 		if os.IsExist(err) {
@@ -144,7 +146,7 @@ func (me *Box) Initialize() (sts status.Status) {
 		err = vm.RestoreAssets(string(cfgdir), strings.TrimLeft(OvaFileName, string(os.PathSeparator)))
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("%s: VM OVA file cannot be created as'%s'.", Brandname, me.OvaFile),
+				Message: fmt.Sprintf("%s: VM OVA file cannot be created as'%s'.", global.Brandname, me.OvaFile),
 			})
 			break
 		}
@@ -181,8 +183,8 @@ func (me *Box) WaitForState(waitForState State, displayString string) (sts statu
 	}
 	if is.Error(sts) {
 		sts = status.Wrap(sts, &status.Args{
-			Message: fmt.Sprintf("%s VM failed to stop", Brandname),
-			Help:    status.ContactSupportHelp(), // @TODO need better support here
+			Message: fmt.Sprintf("%s VM failed to stop", global.Brandname),
+			Help:    help.ContactSupportHelp(), // @TODO need better support here
 			Data:    ErrorState,
 		})
 	}
@@ -248,7 +250,7 @@ func (me *Box) WaitForConsole(displayString string, waitFor time.Duration) (sts 
 		if state != RunningState {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("unable to wait for console with %s VM in '%s' state",
-					Brandname,
+					global.Brandname,
 					state,
 				),
 			})
@@ -335,11 +337,11 @@ func (me *Box) StartBox() (sts status.Status) {
 		}
 
 		if me.State == StartedState {
-			sts = status.Success("%s VM is starting", Brandname)
+			sts = status.Success("%s VM is starting", global.Brandname)
 		}
 
 		if me.State == RunningState {
-			sts = status.Success("%s VM is running", Brandname)
+			sts = status.Success("%s VM is running", global.Brandname)
 		}
 
 		err := me.Instance.Start()
@@ -347,16 +349,16 @@ func (me *Box) StartBox() (sts status.Status) {
 			if me.NoWait {
 				break
 			}
-			err = me.WaitForState(RunningState, fmt.Sprintf("%s VM: Starting", Brandname))
+			err = me.WaitForState(RunningState, fmt.Sprintf("%s VM: Starting", global.Brandname))
 			if err == nil {
-				err = me.WaitForConsole(fmt.Sprintf("%s VM: Starting", Brandname), 30)
+				err = me.WaitForConsole(fmt.Sprintf("%s VM: Starting", global.Brandname), 30)
 			}
 		}
 
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("%s VM failed to start", Brandname),
-				Help:    status.ContactSupportHelp(), // @TODO need better support here
+				Message: fmt.Sprintf("%s VM failed to start", global.Brandname),
+				Help:    help.ContactSupportHelp(), // @TODO need better support here
 				Data:    ErrorState,
 			})
 			break
@@ -394,20 +396,20 @@ func (me *Box) StopBox() (sts status.Status) {
 			break
 		}
 
-		sts = me.WaitForState(HaltedState, fmt.Sprintf("%s VM stopping", Brandname))
+		sts = me.WaitForState(HaltedState, fmt.Sprintf("%s VM stopping", global.Brandname))
 		if is.Error(sts) {
 			break
 		}
 
-		err = me.WaitForConsole(fmt.Sprintf("%s VM stopping", Brandname), 30)
+		err = me.WaitForConsole(fmt.Sprintf("%s VM stopping", global.Brandname), 30)
 
 	}
 	if err == nil {
-		sts = status.Success("%s VM stopped", Brandname)
+		sts = status.Success("%s VM stopped", global.Brandname)
 	} else {
 		sts = status.Wrap(err, &status.Args{
-			Message: fmt.Sprintf("%s VM failed to stop", Brandname),
-			Help:    status.ContactSupportHelp(), // @TODO need better support here
+			Message: fmt.Sprintf("%s VM failed to stop", global.Brandname),
+			Help:    help.ContactSupportHelp(), // @TODO need better support here
 			Data:    ErrorState,
 		})
 	}
@@ -419,7 +421,7 @@ func (me *Box) StopBox() (sts status.Status) {
 // This is here because it's not implemented in libretto.
 func (me *Box) ReplacementBoxHalt() error {
 
-	_, err := me.RunCombinedError("controlvm", Brandname, "acpipowerbutton")
+	_, err := me.RunCombinedError("controlvm", global.Brandname, "acpipowerbutton")
 	if err != nil {
 		return virtualmachine.WrapErrors(virtualmachine.ErrStoppingVM, err)
 	}
@@ -500,7 +502,7 @@ func (me *Box) RestartBox() (sts status.Status) {
 
 		case UnknownState:
 			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("%s VM in an unknown state: %s", Brandname, me.State),
+				Message: fmt.Sprintf("%s VM in an unknown state: %s", global.Brandname, me.State),
 				Data:    UnknownState,
 			})
 		}
@@ -508,7 +510,7 @@ func (me *Box) RestartBox() (sts status.Status) {
 	}
 	if me.State != RunningState {
 		sts = status.Wrap(sts, &status.Args{
-			Message: fmt.Sprintf("%s VM failed to restart", Brandname),
+			Message: fmt.Sprintf("%s VM failed to restart", global.Brandname),
 		})
 	}
 	return sts
@@ -522,12 +524,12 @@ func (me *Box) GetState() (sts status.Status) {
 		}
 		state, err := me.Instance.GetState()
 		if err != nil {
-			sts := status.Success("%s VM in a valid state: %s", Brandname, state)
+			sts := status.Success("%s VM in a valid state: %s", global.Brandname, state)
 			sts.SetData(state)
 		} else {
 			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("%s VM in an invalid state", Brandname),
-				Help:    status.ContactSupportHelp(), // @TODO need better support here
+				Message: fmt.Sprintf("%s VM in an invalid state", global.Brandname),
+				Help:    help.ContactSupportHelp(), // @TODO need better support here
 				Data:    state,
 			})
 			break
@@ -536,8 +538,8 @@ func (me *Box) GetState() (sts status.Status) {
 			err := me.WaitForConsole("", 10)
 			if err != nil {
 				sts = status.Wrap(err, &status.Args{
-					Message: fmt.Sprintf("%s VM's API failed to respond", Brandname),
-					Help:    status.ContactSupportHelp(), // @TODO need better support here
+					Message: fmt.Sprintf("%s VM's API failed to respond", global.Brandname),
+					Help:    help.ContactSupportHelp(), // @TODO need better support here
 					Data:    state,
 				})
 			}
@@ -552,7 +554,7 @@ func (me *Box) CreateBox() (sts status.Status) {
 		if me == nil {
 			sts = status.Fail(&status.Args{
 				Message: "unexpected failure",
-				Help:    status.ContactSupportHelp(), // @TODO need better support here
+				Help:    help.ContactSupportHelp(), // @TODO need better support here
 				Data:    UnknownState,
 			})
 			break
@@ -560,13 +562,13 @@ func (me *Box) CreateBox() (sts status.Status) {
 
 		state, err := me.Instance.GetState()
 		if err == nil {
-			sts = status.Success("%s VM already exists and is in state %s.\n", Brandname, state)
+			sts = status.Success("%s VM already exists and is in state %s.\n", global.Brandname, state)
 			break
 		}
 
 		if _, err := os.Stat(me.OvaFile); os.IsNotExist(err) {
 			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("%s VM OVA file '%s' does not exist", Brandname, me.OvaFile),
+				Message: fmt.Sprintf("%s VM OVA file '%s' does not exist", global.Brandname, me.OvaFile),
 				Data:    UnknownState,
 			})
 			break
@@ -575,8 +577,8 @@ func (me *Box) CreateBox() (sts status.Status) {
 		err = me.Instance.Provision()
 		if err != nil {
 			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("failed to provision %s VM", Brandname),
-				Help:    status.ContactSupportHelp(), // @TODO need better support here
+				Message: fmt.Sprintf("failed to provision %s VM", global.Brandname),
+				Help:    help.ContactSupportHelp(), // @TODO need better support here
 				Data:    UnknownState,
 			})
 			break
@@ -590,7 +592,7 @@ func EnsureNotNil(bx *Box) (sts status.Status) {
 	if bx == nil {
 		sts = status.Fail(&status.Args{
 			Message: "unexpected error",
-			Help:    status.ContactSupportHelp(), // @TODO need better support here
+			Help:    help.ContactSupportHelp(), // @TODO need better support here
 			Data:    UnknownState,
 		})
 	}

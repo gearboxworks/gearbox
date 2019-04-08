@@ -22,25 +22,25 @@ var _ util.FilepathHelpUrlGetter = (*JsonFile)(nil)
 type HostnameAliases []types.Hostname
 
 type JsonFile struct {
-	JsonMeta     JsonMeta               `json:"gearbox"`
-	Hostname     types.Hostname         `json:"hostname"`
-	Aliases      HostnameAliases        `json:"aliases"`
-	ServiceBag   gears.ServiceBag       `json:"stack"`
-	ProjectStack service.StackMap       `json:"-"`
-	Filepath     types.AbsoluteFilepath `json:"-"`
+	JsonMeta   JsonMeta               `json:"gearbox"`
+	Hostname   types.Hostname         `json:"hostname"`
+	Aliases    HostnameAliases        `json:"aliases"`
+	ServiceBag gears.ServiceBag       `json:"stack"`
+	Stack      service.StackMap       `json:"-"`
+	Filepath   types.AbsoluteFilepath `json:"-"`
 }
 
 func NewJsonFile(filepath types.AbsoluteFilepath) *JsonFile {
 	return &JsonFile{
-		Filepath:     filepath,
-		ProjectStack: make(service.StackMap, 0),
+		Filepath: filepath,
+		Stack:    make(service.StackMap, 0),
 	}
 }
 
 func (me *JsonFile) GetServiceBag() (sb gears.ServiceBag, sts status.Status) {
-	sb = make(gears.ServiceBag, len(me.ProjectStack))
+	sb = make(gears.ServiceBag, len(me.Stack))
 	for range only.Once {
-		for gs, s := range me.ProjectStack {
+		for gs, s := range me.Stack {
 			var ps service.Servicer
 			ps, sts = s.GetPersistableServiceValue()
 			if is.Error(sts) {
@@ -55,7 +55,7 @@ func (me *JsonFile) GetServiceBag() (sb gears.ServiceBag, sts status.Status) {
 func (me *JsonFile) CaptureProject(project *Project) (sts status.Status) {
 	me.Hostname = types.Hostname(project.Hostname)
 	me.Aliases = project.Aliases
-	me.ProjectStack = project.Stack
+	me.Stack = project.Stack
 	sb, sts := me.GetServiceBag()
 	me.ServiceBag = sb
 	return sts
@@ -119,7 +119,7 @@ func (me *JsonFile) Unmarshal(j []byte) (sts status.Status) {
 }
 
 func (me *JsonFile) FixupStack() (sts status.Status) {
-	me.ProjectStack = make(service.StackMap, len(me.ServiceBag))
+	me.Stack = make(service.StackMap, len(me.ServiceBag))
 	for gsi, item := range me.ServiceBag {
 		var svc *service.Service
 		svc, sts = me.FixupStackItem(item, gsi)
@@ -127,7 +127,7 @@ func (me *JsonFile) FixupStack() (sts status.Status) {
 			break
 		}
 		svc.GearspecId = gsi
-		me.ProjectStack[gsi].Servicer = svc
+		me.Stack[gsi] = service.NewProxyServicer(svc)
 	}
 	if !status.IsError(sts) {
 		me.ServiceBag = nil

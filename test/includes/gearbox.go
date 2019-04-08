@@ -1,9 +1,9 @@
 package includes
 
 import (
+	"gearbox/api"
 	"gearbox/gearbox"
 	"gearbox/global"
-	"gearbox/hostapi"
 	"gearbox/status"
 	"gearbox/test/mock"
 	"testing"
@@ -25,7 +25,7 @@ func GearboxConstructAndInitialize(t *testing.T) (gearbox.Gearboxer, status.Stat
 		},
 	})
 	gb.SetConfig(NewTestConfig(gb))
-	gb.SetHostApi(hostapi.NewHostApi(gb))
+	gb.SetApi(api.NewApi(gb))
 	sts := gb.Initialize()
 	return gb, sts
 }

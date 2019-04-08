@@ -169,7 +169,7 @@ type testStruct struct {
 
 func newTestStruct(m map[string]int) *testStruct {
 	return &testStruct{
-		Name:   "Gearbox",
+		Name:   "Parent",
 		Number: 10,
 	}
 }

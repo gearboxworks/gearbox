@@ -3,8 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
-	"gearbox/api"
 	"gearbox/box"
+	"gearbox/help"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -70,7 +70,7 @@ func (me *Basedir) Initialize() (sts status.Status) {
 			sts = status.Wrap(me.Err, &status.Args{
 				Message:    me.Err.Error(),
 				HttpStatus: http.StatusBadRequest,
-				ApiHelp:    fmt.Sprintf("see %s", api.GetApiDocsUrl("basedirs")),
+				ApiHelp:    fmt.Sprintf("see %s", help.GetApiDocsUrl("basedirs")),
 			})
 			break
 		}

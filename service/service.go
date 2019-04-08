@@ -52,11 +52,11 @@ func (me *Service) GetPersistableServiceValue() (Servicer, status.Status) {
 func (me *Service) GetServiceValue() (Servicer, status.Status) {
 	return me, nil
 }
-func (me *Service) GetServiceId() (Identifier, status.Status) {
+func (me *Service) GetServiceId() (id Identifier, sts status.Status) {
 	if me.OrgName == "" {
 		me.OrgName = global.DefaultOrgName
 	}
-	return Identifier(me.GetIdentifier()), nil
+	return Identifier(me.GearId.GetIdentifier()), sts
 }
 
 //
@@ -68,19 +68,27 @@ func (me *Service) GetServiceId() (Identifier, status.Status) {
 // to keep things simple for the user/reader.
 //
 func (me *Service) GetPersistableServiceId() (sid Identifier, sts status.Status) {
-	gid := gearid.GearId{}
-	sts = gid.Parse(gearid.GearIdentifier(me.GetIdentifier()))
-	if is.Success(sts) && gid.OrgName == global.DefaultOrgName {
-		gid.OrgName = ""
+	for range only.Once {
+		_gsid, sts := me.GearspecId.GetIdentifier()
+		if is.Error(sts) {
+			break
+		}
+		gid := gearid.GearId{}
+		sts = gid.Parse(gearid.GearIdentifier(_gsid))
+		if is.Success(sts) && gid.OrgName == global.DefaultOrgName {
+			gid.OrgName = ""
+		}
+		sid = Identifier(gid.String())
 	}
-	return Identifier(gid.String()), sts
+	return sid, sts
 }
 
 func (me *Service) GetGearspecId() (role gsid.Identifier, sts status.Status) {
 	for range only.Once {
 		if me.GearspecId == "" {
+			id, _ := me.GetIdentifier()
 			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("gearspec ID is empty for service '%s'", me.GetIdentifier()),
+				Message: fmt.Sprintf("gearspec ID is empty for service '%s'", id),
 			})
 		}
 	}
@@ -92,12 +100,16 @@ func (me *Service) GetStackname() (name types.Stackname) {
 	return name
 }
 
-func (me *Service) GetIdentifier() Identifier {
-	return Identifier(me.String())
+func (me *Service) GetIdentifier() (id Identifier, sts status.Status) {
+	return me.GetServiceId()
 }
 
 func (me *Service) String() string {
-	return string(me.GetIdentifier())
+	_gsid, sts := me.GetIdentifier()
+	if is.Error(sts) {
+		panic(sts.Message())
+	}
+	return string(_gsid)
 }
 
 func (me *Service) ParseString(serviceid Identifier) (sts status.Status) {
@@ -113,7 +125,10 @@ func (me *Service) Parse(serviceid Identifier) (sts status.Status) {
 		if status.IsError(sts) {
 			break
 		}
-		me.Identifier = me.GetIdentifier()
+		me.Identifier, sts = me.GetIdentifier()
+		if is.Error(sts) {
+			break
+		}
 		sts = status.Success("service serviceid '%s' successfully parsed", serviceid)
 	}
 	return sts

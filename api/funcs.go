@@ -1,3 +1,3 @@
-package hostapi
+package api
 
 func noop(i ...interface{}) {}

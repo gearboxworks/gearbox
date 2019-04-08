@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"gearbox/api"
+	"gearbox/api/models"
 	"gearbox/app/cmd"
 	"gearbox/gearbox"
-	"gearbox/hostapi"
 	"gearbox/os_support"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -19,12 +20,13 @@ func main() {
 		GlobalOptions: cmd.GlobalOptions,
 	})
 	gearbox.Instance = gb
-	ha := hostapi.NewHostApi(gb)
-	sts := ha.Route()
+	a := api.NewApi(gb)
+	sts := models.AddRoutes(a, gb)
 	if is.Error(sts) {
 		panic(sts.Message())
 	}
-	gb.SetHostApi(ha)
+	a.ConnectRoutes()
+	gb.SetApi(a)
 	sts = gb.Initialize()
 	if status.IsError(sts) {
 		fmt.Println(sts.Message())

@@ -40,10 +40,35 @@ func (me *TestableModel) GetIdParams() apimodeler.IdParams {
 }
 
 func (me *TestableModel) GetFilterMap() apimodeler.FilterMap {
-	return getTestableFilterMap()
+	return apimodeler.FilterMap{
+		FrobinatorsFilter: apimodeler.Filter{
+			Label: "Items of Frobinator type",
+			Path:  FrobinatorsFilter,
+			CollectionFilter: func(coll apimodeler.Collection) apimodeler.Collection {
+				newcoll := make(apimodeler.Collection, 0)
+				for _, item := range coll {
+					if item.GetType() != FrobinatorType {
+						continue
+					}
+					newcoll = append(newcoll, item)
+				}
+				return newcoll
+			},
+		},
+		UnicornFilter: apimodeler.Filter{
+			Label: "Items of Unicorn type",
+			Path:  UnicornFilter,
+			ItemFilter: func(item apimodeler.Itemer) apimodeler.Itemer {
+				if item.GetType() != UnicornType {
+					return nil
+				}
+				return item
+			},
+		},
+	}
 }
 
-func (me *TestableModel) GetCollection() (coll apimodeler.Collection, sts status.Status) {
+func (me *TestableModel) GetCollection(filter ...apimodeler.FilterPath) (coll apimodeler.Collection, sts status.Status) {
 	return me.Collection, sts
 }
 
@@ -156,32 +181,4 @@ func (me *TestableModel) getFilter(filter apimodeler.FilterPath) (f apimodeler.F
 		})
 	}
 	return f, sts
-}
-func getTestableFilterMap() apimodeler.FilterMap {
-	return apimodeler.FilterMap{
-		FrobinatorsFilter: apimodeler.Filter{
-			Label: "Items of Frobinator type",
-			Path:  FrobinatorsFilter,
-			CollectionFilter: func(coll apimodeler.Collection) apimodeler.Collection {
-				newcoll := make(apimodeler.Collection, 0)
-				for _, item := range coll {
-					if item.GetType() != FrobinatorType {
-						continue
-					}
-					newcoll = append(newcoll, item)
-				}
-				return newcoll
-			},
-		},
-		UnicornFilter: apimodeler.Filter{
-			Label: "Items of Unicorn type",
-			Path:  UnicornFilter,
-			ItemFilter: func(item apimodeler.Itemer) apimodeler.Itemer {
-				if item.GetType() != UnicornType {
-					return nil
-				}
-				return item
-			},
-		},
-	}
 }

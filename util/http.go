@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"gearbox/help"
 	"gearbox/only"
 
 	"gearbox/status"
@@ -60,7 +61,7 @@ func HttpRequest(url string, args ...*HttpArgs) (body []byte, statusCode int, st
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("invalid URL '%s'", url),
-				Help:    fmt.Sprintf("if you provided this URL please correct it, otherwise %s", status.ContactSupportHelp()),
+				Help:    fmt.Sprintf("if you provided this URL please correct it, otherwise %s", help.ContactSupportHelp()),
 			})
 			break
 		}
@@ -105,7 +106,7 @@ func HttpRequest(url string, args ...*HttpArgs) (body []byte, statusCode int, st
 					Message: fmt.Sprintf("http status code 200 but no content returned for '%s'",
 						url,
 					),
-					Help: status.ContactSupportHelp(),
+					Help: help.ContactSupportHelp(),
 					Data: data,
 				})
 				break
@@ -116,7 +117,7 @@ func HttpRequest(url string, args ...*HttpArgs) (body []byte, statusCode int, st
 				Message: fmt.Sprintf("invalid credentials provided for '%s'",
 					url,
 				),
-				Help: status.ContactSupportHelp(),
+				Help: help.ContactSupportHelp(),
 				Data: data,
 			})
 			break
@@ -126,7 +127,7 @@ func HttpRequest(url string, args ...*HttpArgs) (body []byte, statusCode int, st
 				Message: fmt.Sprintf("permission denied for '%s'",
 					url,
 				),
-				Help: status.ContactSupportHelp(),
+				Help: help.ContactSupportHelp(),
 				Data: data,
 			})
 			break
@@ -136,7 +137,7 @@ func HttpRequest(url string, args ...*HttpArgs) (body []byte, statusCode int, st
 				Message: fmt.Sprintf("permission denied for '%s'",
 					url,
 				),
-				Help: status.ContactSupportHelp(),
+				Help: help.ContactSupportHelp(),
 				Data: data,
 			})
 			break

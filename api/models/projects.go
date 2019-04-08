@@ -1,4 +1,4 @@
-package routes
+package models
 
 type Projects []*Project
 

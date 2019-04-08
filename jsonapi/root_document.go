@@ -8,6 +8,7 @@ import (
 )
 
 const SchemaVersion = "1.0"
+const ResponseTypeKey = "response_type"
 
 type ResponseType string
 
@@ -28,7 +29,8 @@ type RootDocument struct {
 
 type RootDocArgs RootDocument
 
-func NewRootDocument(responseType ResponseType, args ...*RootDocArgs) *RootDocument {
+func NewRootDocument(ctx Contexter, responseType ResponseType, args ...*RootDocArgs) *RootDocument {
+	ctx.Set(ResponseTypeKey, responseType)
 	var _args *RootDocArgs
 	if len(args) == 0 {
 		_args = &RootDocArgs{}

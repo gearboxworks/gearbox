@@ -3,6 +3,7 @@ package gearbox
 import (
 	"fmt"
 	"gearbox/box"
+	"gearbox/global"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -93,7 +94,7 @@ func (me *Gearbox) CreateBox(args box.Args) (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
-		sts = status.Success("%s VM created", Brandname)
+		sts = status.Success("%s VM created", global.Brandname)
 	}
 	return sts
 

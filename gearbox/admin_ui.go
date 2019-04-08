@@ -3,6 +3,8 @@ package gearbox
 import (
 	"context"
 	"fmt"
+	"gearbox/api"
+	"gearbox/global"
 	"gearbox/only"
 	"gearbox/os_support"
 	"github.com/zserge/lorca"
@@ -22,7 +24,7 @@ import (
 //
 
 const (
-	UiWindowTitle = "Gearbox"
+	UiWindowTitle = "Parent"
 	UiHeight      = 800
 	UiWidth       = 1024
 	UiResizable   = true
@@ -51,7 +53,7 @@ type AdminUi struct {
 	OsSupport   oss.OsSupporter
 	Gearbox     Gearboxer
 	webServer   *http.Server
-	api         HostApi
+	api         api.Apier
 	Window      *UiWindow
 	ErrorLog    *ErrorLog
 }
@@ -96,7 +98,7 @@ func NewAdminUi(gearbox Gearboxer, viewer ViewerType) *AdminUi {
 func (me *AdminUi) Initialize() {
 	me.webListener = me.GetWebListener()
 	me.webServer = me.GetWebServer()
-	me.api = me.Gearbox.GetHostApi()
+	me.api = me.Gearbox.GetApi()
 	me.WriteAssetsToAdminWebRoot()
 	me.ErrorLog = &ErrorLog{Gearbox: me.Gearbox}
 	log.SetOutput(me.ErrorLog)
@@ -105,7 +107,7 @@ func (me *AdminUi) Initialize() {
 func (me *AdminUi) WriteAssetsToAdminWebRoot() {
 	hc := me.OsSupport
 	if hc == nil {
-		log.Fatal("Gearbox has no os_support connector. (End users should never see this; it is a programming error.)")
+		log.Fatal("Parent has no os_support connector. (End users should never see this; it is a programming error.)")
 	}
 	for _, afn := range AssetNames() {
 		err := RestoreAsset(string(hc.GetUserConfigDir()), afn)
@@ -146,7 +148,7 @@ func (me *AdminUi) StartLorca() {
 		win.Height,
 	)
 	if err != nil {
-		log.Printf("error loading Lorca to view Gearbox Admin UI: %s\n", err)
+		log.Printf("error loading Lorca to view Parent Admin UI: %s\n", err)
 	}
 	<-ui.Done()
 }
@@ -191,7 +193,7 @@ func (me *AdminUi) GetWebListener() net.Listener {
 		if err != nil {
 			log.Printf("error initiating a TCP connection for AdminUi on '127.0.0.0:0': %s\n", err)
 		}
-		fmt.Print("Starting Gearbox admin console...")
+		fmt.Printf("Starting %s admin console...", global.Brandname)
 		if me.Gearbox.IsDebug() {
 			fmt.Printf("\nListening on %s", me.GetHostname())
 		}
@@ -233,7 +235,7 @@ func addCorsMiddleware(rooturl string, next http.Handler) http.Handler {
 }
 
 func (me *AdminUi) shutdownServer(srv *http.Server) {
-	fmt.Print("Stopping Gearbox admin console.\n")
+	fmt.Printf("Stopping %s admin console.\n", global.Brandname)
 	err := srv.Shutdown(context.TODO())
 	if err != nil {
 		panic(err) // failure/timeout shutting down the server gracefully
@@ -254,12 +256,12 @@ func (me *AdminUi) GetWebServer() *http.Server {
 	return me.webServer
 }
 
-func (me *AdminUi) GetHostApi() HostApi {
+func (me *AdminUi) GetApi() api.Apier {
 	for range only.Once {
 		if me.api != nil {
 			break
 		}
-		me.api = me.Gearbox.GetHostApi()
+		me.api = me.Gearbox.GetApi()
 	}
 	return me.api
 }

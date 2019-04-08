@@ -29,16 +29,15 @@ func NewProject(cfg Configer, path types.RelativePath) *Project {
 	}
 }
 
-func (me *Project) GetDir() (pd types.AbsoluteDir, sts status.Status) {
+func (me *Project) GetDir() (dir types.AbsoluteDir, sts status.Status) {
 	for range only.Once {
-		var bd types.AbsoluteDir
-		bd, sts = me.Config.GetHostBasedir(me.Basedir)
+		dir, sts = me.Config.GetHostBasedir(me.Basedir)
 		if status.IsError(sts) {
 			break
 		}
-		bd = types.AbsoluteDir(filepath.FromSlash(fmt.Sprintf("%s/%s", bd, me.Path)))
+		dir = types.AbsoluteDir(filepath.FromSlash(fmt.Sprintf("%s/%s", dir, me.Path)))
 	}
-	return pd, sts
+	return dir, sts
 }
 
 func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts status.Status) {

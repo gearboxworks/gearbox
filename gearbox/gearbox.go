@@ -1,6 +1,7 @@
 package gearbox
 
 import (
+	"encoding/json"
 	"gearbox/api"
 	"gearbox/box"
 	"gearbox/config"
@@ -44,17 +45,15 @@ type Gearboxer interface {
 	DeleteProject(hostname types.Hostname) status.Status
 	FindNamedStack(stackid types.StackId) (*gears.NamedStack, status.Status)
 	FindProject(hostname types.Hostname) (*project.Project, status.Status)
-	GetApiUrl(api.RouteName, api.UriTemplateVars) (api.UriTemplate, status.Status)
-	GetApiUrlPath(api.RouteName, api.UriTemplateVars) (api.UriTemplate, status.Status)
 	GetConfig() config.Configer
 	GetGears() *gears.Gears
 	GetGlobalOptions() *global.Options
-	GetHostApi() HostApi
+	GetApi() api.Apier
 	GetNamedStackMap() (gears.NamedStackMap, status.Status)
 	GetNamedStackRoleMap(types.StackId) (gears.StackRoleMap, status.Status)
 	GetOsSupport() oss.OsSupporter
 	GetProjectMap() (project.Map, status.Status)
-	GetRouteName() api.RouteName
+	GetRouteName() types.RouteName
 	GetStackRoleMap() (gears.StackRoleMap, status.Status)
 	Initialize() status.Status
 	IsDebug() bool
@@ -65,8 +64,8 @@ type Gearboxer interface {
 	RequestAvailableContainers(...*dockerhub.ContainerQuery) (dockerhub.ContainerNames, status.Status)
 	RestartBox(box.Args) status.Status
 	SetConfig(config.Configer)
-	SetHostApi(hostApi HostApi)
-	SetRouteName(api.RouteName)
+	SetApi(api api.Apier)
+	SetRouteName(types.RouteName)
 	StartBox(box.Args) status.Status
 	StopBox(box.Args) status.Status
 	UpdateBasedir(types.Nickname, types.AbsoluteDir) status.Status
@@ -80,16 +79,44 @@ type Gearbox struct {
 	OsSupport     oss.OsSupporter
 	StackMap      gears.NamedStackMap
 	GlobalOptions *global.Options
-	HostApi       HostApi
-	RouteName     api.RouteName
+	Api           api.Apier
+	RouteName     types.RouteName
 	Gears         *gears.Gears
 	errorLog      *ErrorLog
 }
 
 type Args Gearbox
 
-func (me *Gearbox) GetNamedStackMap() (gears.NamedStackMap, status.Status) {
-	return me.StackMap, nil
+func NewGearbox(args *Args) Gearboxer {
+	gb := Gearbox{
+		OsSupport:     args.OsSupport,
+		GlobalOptions: args.GlobalOptions,
+		Config:        args.Config,
+		errorLog:      &ErrorLog{},
+	}
+	if args.Config == nil {
+		gb.Config = config.NewConfig(args.OsSupport)
+	}
+	if args.GlobalOptions == nil {
+		gb.GlobalOptions = &global.Options{}
+	}
+	if args.Api != nil {
+		gb.Api = args.Api
+		gb.Api.SetParent(&gb)
+	}
+	if args.Gears == nil {
+		gb.Gears = gears.NewGears(gb.OsSupport)
+	}
+	return &gb
+}
+
+func (me *Gearbox) GetNamedStackMap() (nsm gears.NamedStackMap, sts status.Status) {
+	for range only.Once {
+		if me.StackMap != nil {
+			break
+		}
+	}
+	return me.StackMap, sts
 }
 
 func (me *Gearbox) AddNamedStack(*gears.NamedStack) status.Status {
@@ -193,15 +220,15 @@ func (me *Gearbox) GetGears() *gears.Gears {
 	return me.Gears
 }
 
-func (me *Gearbox) GetRouteName() api.RouteName {
+func (me *Gearbox) GetRouteName() types.RouteName {
 	return me.RouteName
 }
 
-func (me *Gearbox) SetHostApi(hostApi HostApi) {
-	me.HostApi = hostApi
+func (me *Gearbox) SetApi(api api.Apier) {
+	me.Api = api
 }
 
-func (me *Gearbox) SetRouteName(routeName api.RouteName) {
+func (me *Gearbox) SetRouteName(routeName types.RouteName) {
 	me.RouteName = routeName
 }
 
@@ -209,8 +236,8 @@ func (me *Gearbox) GetOsSupport() oss.OsSupporter {
 	return me.OsSupport
 }
 
-func (me *Gearbox) GetHostApi() HostApi {
-	return me.HostApi
+func (me *Gearbox) GetApi() api.Apier {
+	return me.Api
 }
 
 func (me *Gearbox) GetConfig() config.Configer {
@@ -232,37 +259,6 @@ func (me *Gearbox) Initialize() (sts status.Status) {
 		}
 	}
 	return sts
-}
-
-func NewGearbox(args *Args) Gearboxer {
-	gb := Gearbox{
-		OsSupport:     args.OsSupport,
-		GlobalOptions: args.GlobalOptions,
-		Config:        args.Config,
-		errorLog:      &ErrorLog{},
-	}
-	if args.Config == nil {
-		gb.Config = config.NewConfig(args.OsSupport)
-	}
-	if args.GlobalOptions == nil {
-		gb.GlobalOptions = &global.Options{}
-	}
-	if args.HostApi != nil {
-		gb.HostApi = args.HostApi
-		gb.HostApi.SetGearbox(&gb)
-	}
-	if args.Gears == nil {
-		gb.Gears = gears.NewGears(gb.OsSupport)
-	}
-	return &gb
-}
-
-func (me *Gearbox) GetApiUrl(name api.RouteName, vars api.UriTemplateVars) (url api.UriTemplate, sts status.Status) {
-	return me.HostApi.GetUrl(name, vars)
-}
-
-func (me *Gearbox) GetApiUrlPath(name api.RouteName, vars api.UriTemplateVars) (url api.UriTemplate, sts status.Status) {
-	return me.HostApi.GetUrlPath(name, vars)
 }
 
 func (me *Gearbox) GetProject(hostname types.Hostname) (p *project.Project, sts status.Status) {
@@ -366,7 +362,7 @@ func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery
 	return names, sts
 }
 
-//func (me *Gearbox) GetProjectDir(path types.RelativePath, basedir types.Nickname) (bd types.AbsoluteDir, sts status.Status) {
+//func (me *Parent) GetProjectDir(path types.RelativePath, basedir types.Nickname) (bd types.AbsoluteDir, sts status.Status) {
 //	for range only.Once {
 //		var bd types.AbsoluteDir
 //		bd, sts = me.Config.GetHostBasedir(basedir)
@@ -378,7 +374,7 @@ func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery
 //	return bd, sts
 //}
 
-//func (me *Gearbox) GetProjectFilepath(path types.RelativePath, basedir types.Nickname) (pfp types.AbsoluteDir, sts status.Status) {
+//func (me *Parent) GetProjectFilepath(path types.RelativePath, basedir types.Nickname) (pfp types.AbsoluteDir, sts status.Status) {
 //	for range only.Once {
 //		var pd types.AbsoluteDir
 //		pd, sts = me.GetProjectDir(path, basedir)
@@ -390,7 +386,7 @@ func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery
 //	return pfp, sts
 //}
 
-//func (me *Gearbox) AddNamedStackToProject(stackid gears.StackId, hostname types.Hostname) (sts status.Status) {
+//func (me *Parent) AddNamedStackToProject(stackid gears.StackId, hostname types.Hostname) (sts status.Status) {
 //	for range only.Once {
 //		var p *config.Project
 //		p, sts = me.GetProjects(hostname)
@@ -408,4 +404,19 @@ func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery
 
 func (me *Gearbox) ConnectSSH(sshArgs ssh.Args) (sts status.Status) {
 	return ssh.NewSSH(sshArgs).StartSSH()
+}
+
+//
+// This just here as a method to copy when needed
+//
+func (me *Gearbox) Clone() *Gearbox {
+	gb := Gearbox{}
+	for range only.Once {
+		b, err := json.Marshal(me)
+		if err != nil {
+			break
+		}
+		_ = json.Unmarshal(b, &gb)
+	}
+	return &gb
 }

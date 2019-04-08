@@ -1,5 +1,7 @@
 package apimodeler
 
+import "gearbox/status"
+
 type Collection []Itemer
 
 //func (Collection) ContainsResource() {}
@@ -12,10 +14,10 @@ type Collection []Itemer
 //	return itemIds, nil
 //}
 //
-//func (me Collection) GetItems() (Collection, status.Status) {
-//	return me, nil
-//}
-//
+func (me Collection) GetCollection(Contexter, ...FilterPath) (Collection, status.Status) {
+	return me, nil
+}
+
 //func GetCollectionSlice(collection Collection, sts status.Status) (Collection, status.Status) {
 //	var slice = make(Collection, len(collection))
 //	if is.Success(sts) {

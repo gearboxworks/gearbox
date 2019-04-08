@@ -1,16 +1,12 @@
-package api
+package help
 
 import (
 	"fmt"
-	"github.com/labstack/echo"
+	"gearbox/types"
 )
 
-func optionsHandler(ctx echo.Context) error {
-	return nil
-}
-
-func GetApiDocsUrl(route ...RouteName) string {
-	var _route RouteName
+func GetApiDocsUrl(route ...types.RouteName) string {
+	var _route types.RouteName
 	if len(route) == 0 {
 		_route = "{route_name}"
 	} else {
@@ -19,7 +15,7 @@ func GetApiDocsUrl(route ...RouteName) string {
 	return fmt.Sprintf("%s/%s", DocsBaseUrl, _route)
 }
 
-func GetApiHelp(routeName RouteName, more ...string) string {
+func GetApiHelp(routeName types.RouteName, more ...string) string {
 	var _more string
 	if len(more) > 0 {
 		_more = " " + more[0]
@@ -30,5 +26,3 @@ func GetApiHelp(routeName RouteName, more ...string) string {
 func ContactSupportHelp() string {
 	return "contact support"
 }
-
-func noop(x ...interface{}) {}

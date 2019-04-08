@@ -33,3 +33,7 @@ type Basepath AbsoluteDir
 
 type UrlTemplates []UrlTemplate
 type UrlTemplate string
+
+type RouteName string
+
+type ResourceType string

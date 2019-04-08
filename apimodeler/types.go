@@ -9,7 +9,6 @@ type FilterLabel string
 type FilterPath string
 type FilterMap map[FilterPath]Filter
 type Filters []Filter
-type Critera interface{}
 type Filter struct {
 	Label            FilterLabel
 	Path             FilterPath

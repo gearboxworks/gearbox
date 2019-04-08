@@ -1,15 +1,15 @@
-package routes
+package models
 
 import (
-	"gearbox/api"
 	"gearbox/config"
 	"gearbox/service"
+	"gearbox/types"
 )
 
-const ProjectServicesResource api.RouteName = "project-services"
-const ProjectServicesAdd api.RouteName = ProjectServicesResource + "-add"
-const ProjectServicesUpdate api.RouteName = ProjectServicesResource + "-update"
-const ProjectServicesDelete api.RouteName = ProjectServicesResource + "-delete"
+const ProjectServicesResource types.RouteName = "project-services"
+const ProjectServicesAdd types.RouteName = ProjectServicesResource + "-add"
+const ProjectServicesUpdate types.RouteName = ProjectServicesResource + "-update"
+const ProjectServicesDelete types.RouteName = ProjectServicesResource + "-delete"
 
 type ProjectServices struct {
 	ServiceMap service.StackMap

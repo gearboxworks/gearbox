@@ -9,7 +9,7 @@ type ServicerProxy struct {
 	Servicer
 }
 
-func ProxyServicer(servicer Servicer) *ServicerProxy {
+func NewProxyServicer(servicer Servicer) *ServicerProxy {
 	psp := &ServicerProxy{}
 	psp.Servicer = servicer
 	return psp

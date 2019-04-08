@@ -1,48 +1,54 @@
 package api
 
-//
-//See https://echo.labstack.com/cookbook/cors
-//See https://flaviocopes.com/golang-enable-cors/
-//
 import (
 	"fmt"
+	"gearbox/apimodeler"
+	"gearbox/config"
+	"gearbox/global"
+	"gearbox/jsonapi"
 	"gearbox/only"
 	"gearbox/status"
+	"gearbox/status/is"
+	"gearbox/types"
 	"gearbox/util"
+	"github.com/gedex/inflector"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"net/http"
-	"strings"
 )
 
-const RequestContextKey = "api-request-context"
-const BaseUrlPattern = "http://127.0.0.1:%s"
+var _ Apier = (*Api)(nil)
 
 type Api struct {
-	Echo          *echo.Echo
-	Port          string
-	Defaults      *Response
-	EndpointMap   EndpointMap
-	MethodMap     MethodMap
-	ValuesFuncMap ValuesFuncMap
-	RelatedMap    ResourcesMap
+	Config    config.Configer
+	Port      string
+	Echo      *echo.Echo
+	Parent    interface{}
+	ModelsMap apimodeler.ModelsMap
 }
 
-func NewApi(e *echo.Echo, defaults *Response) *Api {
-	a := Api{
-		Defaults:    defaults,
-		EndpointMap: make(EndpointMap, 0),
-		MethodMap: MethodMap{
-			http.MethodGet:     make(ResourceMap, 0),
-			http.MethodPut:     make(ResourceMap, 0),
-			http.MethodPost:    make(ResourceMap, 0),
-			http.MethodDelete:  make(ResourceMap, 0),
-			http.MethodOptions: make(ResourceMap, 0),
-		},
-		ValuesFuncMap: make(ValuesFuncMap, 0),
-		RelatedMap:    make(ResourcesMap, 0),
+type ConfigGetter interface {
+	GetConfig() config.Configer
+}
+
+func NewApi(parent interface{}) *Api {
+	c, ok := parent.(ConfigGetter)
+	if !ok {
+		panic("parent does not implement ConfigGetter")
 	}
 
+	a := Api{
+		Config:    c.GetConfig(),
+		Echo:      newConfiguredEcho(),
+		Parent:    parent,
+		ModelsMap: make(apimodeler.ModelsMap, 0),
+	}
+	a.Port = Port
+	return &a
+}
+
+func newConfiguredEcho() *echo.Echo {
+	e := echo.New()
 	e.Use(middleware.CORS())
 	e.Use(middleware.RemoveTrailingSlashWithConfig(middleware.TrailingSlashConfig{
 		RedirectCode: http.StatusMovedPermanently,
@@ -50,164 +56,158 @@ func NewApi(e *echo.Echo, defaults *Response) *Api {
 	e.HideBanner = true
 	e.HidePort = true
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		_, ok := c.Get(RequestContextKey).(*RequestContext)
+		// @TODO short circuit error handler, if needed
+		var ok = false
 		if !ok {
 			e.DefaultHTTPErrorHandler(err, c)
 		}
 	}
-	a.Echo = e
-	return &a
+	return e
 }
 
-func (me *Api) GET(path UriTemplate, name RouteName, valuesFunc ValuesFunc, handler HandlerFunc) *echo.Route {
-	r := me.Echo.GET(string(path), me.GetRequestContext(http.MethodGet, path, name, valuesFunc).WrapHandler(handler))
-	r.Name = string(name)
-	return r
-}
-func (me *Api) PUT(path UriTemplate, name RouteName, valuesFunc ValuesFunc, handler HandlerFunc) *echo.Route {
-	r := me.Echo.PUT(string(path), me.GetRequestContext(http.MethodPut, path, name, valuesFunc).WrapHandler(handler))
-	r.Name = string(name)
-	return r
-}
+func (me *Api) ConnectRoutes() {
+	for _, models := range me.ModelsMap {
 
-func (me *Api) POST(path UriTemplate, name RouteName, valuesFunc ValuesFunc, handler HandlerFunc) *echo.Route {
-	r := me.Echo.POST(string(path), me.GetRequestContext(http.MethodPost, path, name, valuesFunc).WrapHandler(handler))
-	r.Name = string(name)
-	return r
-}
-func (me *Api) DELETE(path UriTemplate, name RouteName, valuesFunc ValuesFunc, handler HandlerFunc) *echo.Route {
-	r := me.Echo.DELETE(string(path), me.GetRequestContext(http.MethodDelete, path, name, valuesFunc).WrapHandler(handler))
-	r.Name = string(name)
-	return r
-}
+		// Copy to allow different values in closures
+		ms := models
 
-func (me *Api) GetRequestContext(method Method, path UriTemplate, name RouteName, valuesFunc ValuesFunc) *RequestContext {
-	me.ValuesFuncMap[name] = valuesFunc
-	me.Defaults.Meta.RouteName = name
-	uriTemplate := path.Convert()
-	me.Defaults.Links[name] = uriTemplate
-	me.MethodMap[method][name] = uriTemplate
-	me.MethodMap[http.MethodOptions][name] = uriTemplate
+		e := me.Echo
 
-	if me.EndpointMap[name] == nil {
-		me.EndpointMap[name] = &Endpoint{
-			UriTemplate: uriTemplate,
-			Methods:     make(Methods, 0),
-		}
+		prefix := ms.GetRouteNamePrefix()
+
+		var route *echo.Route
+
+		path := string(ms.GetBasepath())
+
+		// Collection Route
+		route = e.GET(path, func(ctx echo.Context) error {
+			rd := ja.NewRootDocument(ctx, ja.CollectionResponse)
+			data, sts := ms.Self.GetCollection(ctx)
+			if is.Success(sts) {
+				sts = setCollectionData(ctx, rd, data)
+			}
+			return me.JsonMarshalHandler(rd, ctx, sts)
+		})
+
+		route.Name = fmt.Sprintf("%s-list", inflector.Pluralize(prefix))
+
+		urlTemplate := string(ms.GetResourceUrlTemplate())
+
+		// Single Item Route
+		route = e.GET(urlTemplate, func(ctx echo.Context) error {
+			var sts status.Status
+			rd := ja.NewRootDocument(ctx, ja.DatasetResponse)
+			for range only.Once {
+				id, sts := ms.GetIdFromUrl(ctx)
+				if is.Error(sts) {
+					break
+				}
+				var ro *ja.ResourceObject
+				ro, sts = getResourceObject(rd)
+				if is.Error(sts) {
+					break
+				}
+				var item apimodeler.Itemer
+				item, sts = ms.Self.GetItem(ctx, id)
+				if is.Error(sts) {
+					break
+				}
+				sts = setItemData(ctx, ro, item)
+				rd.Data = ro
+			}
+			return me.JsonMarshalHandler(rd, ctx, sts)
+		})
+		route.Name = fmt.Sprintf("%s-details", inflector.Singularize(prefix))
 	}
-	me.EndpointMap[name].Methods = append(
-		me.EndpointMap[name].Methods,
-		method,
-	)
-	if method != http.MethodGet {
-		me.Echo.OPTIONS(string(path), optionsHandler)
-		me.EndpointMap[name].Methods = append(
-			me.EndpointMap[name].Methods,
-			http.MethodOptions,
-		)
+}
+
+func (me *Api) GetSelfUrl(ctx echo.Context) types.UrlTemplate {
+	r := ctx.Request()
+	scheme := "https"
+	if r.TLS == nil {
+		scheme = "http"
 	}
-	return NewRequestContext(me, name)
+	url := fmt.Sprintf("%s://%s%s", scheme, r.Host, me.GetSelfPath(ctx))
+	return types.UrlTemplate(url)
 }
 
-func (me *Api) GetBaseUrl() (url UriTemplate) {
-	return UriTemplate(fmt.Sprintf(BaseUrlPattern, me.Port))
+func (me *Api) GetSelfPath(ctx echo.Context) types.UrlTemplate {
+	return types.UrlTemplate(ctx.Request().RequestURI)
 }
 
-func (me *Api) GetUrlPath(name RouteName, vars UriTemplateVars) (urlpath UriTemplate, sts status.Status) {
-	var path UriTemplate
+func (me *Api) GetContentType(ctx echo.Context) string {
+	return ja.ContentType + "; " + ja.CharsetUTF8
+}
+
+const (
+	GearboxApiSchema             ja.Link         = "https://docs.gearbox.works/api/schema/1.0/"
+	SchemaGearboxApiRelationType ja.RelationType = "schema.GearboxAPI"
+	MetaGearboxApiSchema         ja.Metaname     = "GearboxAPI.schema"
+)
+
+func (me *Api) JsonMarshalHandler(rootdoc *ja.RootDocument, ctx echo.Context, sts status.Status) status.Status {
 	for range only.Once {
-		path, sts = me.GetUrlPathTemplate(name)
-		if status.IsError(sts) {
+		var err error
+		ctx.Response().Header().Set(echo.HeaderContentType, me.GetContentType(ctx))
+
+		rootdoc.MetaMap[ja.MetaDcCreator] = global.Brandname
+
+		rootdoc.MetaMap[ja.MetaDcTermsIdentifier] = me.GetSelfUrl(ctx)
+		rootdoc.MetaMap[ja.MetaDcLanguage] = ja.DefaultLanguage
+
+		rootdoc.LinkMap[ja.SelfRelationType] = ja.Link(me.GetSelfPath(ctx))
+		rootdoc.LinkMap[ja.SchemaDcRelationType] = ja.DcSchema
+		rootdoc.LinkMap[ja.SchemaDcTermsRelationType] = ja.DcTermsSchema
+
+		rootdoc.LinkMap[SchemaGearboxApiRelationType] = GearboxApiSchema
+		rootdoc.MetaMap[MetaGearboxApiSchema] = me.getRouteName(ctx)
+
+		if is.Error(sts) {
+			ctx.Response().Status = sts.HttpStatus()
+			_ = rootdoc.SetError(sts)
+		}
+		err = ctx.JSONPretty(ctx.Response().Status, rootdoc, "   ")
+		if err != nil {
+			sts = status.Wrap(err, &status.Args{
+				Message: fmt.Sprintf("error when sending output for '%s'",
+					ctx.Path(),
+				),
+			})
 			break
 		}
-		if len(vars) == 0 {
-			break
-		}
-		path = path.Expand(vars)
 	}
-	urlpath = UriTemplate(strings.TrimRight(string(path), "/"))
-	return urlpath, sts
+	return sts
 }
 
-func (me *Api) GetUrl(name RouteName, vars UriTemplateVars) (url UriTemplate, sts status.Status) {
-	var path UriTemplate
+func (me *Api) AddModels(models apimodeler.Modeler) (sts status.Status) {
 	for range only.Once {
-		path, sts = me.GetUrlPath(name, vars)
-		if status.IsError(sts) {
-			break
-		}
-	}
-	url = UriTemplate(fmt.Sprintf("%s/%s",
-		me.GetBaseUrl(),
-		strings.TrimLeft(string(path), "/"),
-	))
-	return url, sts
-}
-
-func (me *Api) GetUriTemplateVars(name RouteName, values interface{}, index int) (utvars UriTemplateVars, sts status.Status) {
-	for range only.Once {
-		var vars TemplateVars
-		vars, sts = me.GetUrlVars(name)
-		if status.IsError(sts) {
-			break
-		}
-		if len(vars) == 0 {
-			break
-		}
-		vals, ok := values.(ValuesFuncValues)
+		getter, ok := models.(apimodeler.BasepathGetter)
 		if !ok {
 			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("values for '%s' does not support %d URL params, e.g. %s",
-					name,
-					len(vars),
-					util.OxfordComma(vars.Values()),
-				),
+				Message: "factory has no GetBasepath()",
 			})
 			break
 		}
-		utvars = make(UriTemplateVars, len(vars))
-		for i, v := range vars {
-			utvars[i] = &UriTemplateVar{
-				Name:  ResourceVarName(v),
-				Value: string(vals[i][index]),
-			}
-		}
+		path := getter.GetBasepath()
+		me.ModelsMap[path] = apimodeler.NewModels(models)
 	}
-	return utvars, sts
+	return sts
 }
 
-func (me *Api) GetUrlVars(name RouteName) (vars TemplateVars, sts status.Status) {
-	for range only.Once {
-		var ut UriTemplate
-		ut, sts = me.GetUrlPathTemplate(name)
-		if status.IsError(sts) {
-			break
-		}
-		parts := strings.Split(string(ut), "/")
-		vars = make(TemplateVars, 0)
-		for _, s := range parts {
-			if len(s) > 0 && s[0] == '{' && s[len(s)-1] == '}' {
-				vars = append(vars, TemplateVar(s[1:len(s)-1]))
-			}
-		}
-	}
-	return vars, sts
+//func (me *Apier) GetMethodMap() api.MethodMap {
+//	return me.MethodMap
+//}
+
+func (me *Api) SetParent(parent interface{}) {
+	me.Parent = parent
 }
 
-func (me *Api) GetUrlPathTemplate(name RouteName) (url UriTemplate, sts status.Status) {
-	for range only.Once {
-		if me.Defaults == nil {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("the Defaults property is nil when accessing api for resource type '%s'",
-					name,
-				),
-				Help: ContactSupportHelp(),
-			})
-			break
-		}
-		url, sts = me.Defaults.GetUrlPathTemplate(name)
-	}
-	return url, sts
+func (me *Api) GetBaseUrl() (url types.UrlTemplate) {
+	return types.UrlTemplate(fmt.Sprintf(BaseUrlPattern, me.Port))
+}
+
+func (me *Api) Url() string {
+	return fmt.Sprintf(BaseUrlPattern, me.Port)
 }
 
 func (me *Api) Start() {
@@ -224,9 +224,70 @@ func (me *Api) Stop() {
 	}
 }
 
-func (me *Api) NotYetImplemented(rc *RequestContext) interface{} {
-	return status.Fail(&status.Args{
-		Message:    fmt.Sprintf("the '%s' resource has not been implemented yet", rc.RouteName),
-		HttpStatus: http.StatusMethodNotAllowed,
-	})
+func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.Status) {
+	ro, ok := rd.Data.(*ja.ResourceObject)
+	if !ok {
+		sts = status.Fail(&status.Args{
+			Message: "root document does not contain a single resource object",
+		})
+	}
+	return ro, sts
+}
+
+func setItemData(ctx apimodeler.Contexter, ro *ja.ResourceObject, item apimodeler.Itemer) (sts status.Status) {
+	for range only.Once {
+		itemId := item.GetId()
+		sts = ro.SetId(ja.ResourceId(itemId))
+		if is.Error(sts) {
+			break
+		}
+		typ := item.GetType()
+		sts = ro.SetType(ja.ResourceType(typ))
+		if is.Error(sts) {
+			break
+		}
+		sts = ro.SetAttributes(item)
+		if is.Error(sts) {
+			break
+		}
+	}
+	return sts
+}
+
+func setCollectionData(ctx apimodeler.Contexter, rd *ja.RootDocument, data interface{}) (sts status.Status) {
+	for range only.Once {
+		getter, ok := data.(apimodeler.CollectionGetter)
+		if !ok {
+			break
+		}
+		var items apimodeler.Collection
+		items, sts = getter.GetCollection(ctx)
+		if is.Error(sts) {
+			break
+		}
+		for _, item := range items {
+			ro := ja.NewResourceObject()
+			sts = setItemData(ctx, ro, item)
+			if is.Error(sts) {
+				break
+			}
+			sts = rd.AddResourceObject(ro)
+			if is.Error(sts) {
+				break
+			}
+		}
+	}
+	return sts
+}
+
+func (me *Api) getRouteName(ctx echo.Context) (name types.RouteName) {
+	rts := me.Echo.Routes()
+	path := ctx.Path()
+	for _, rt := range rts {
+		if rt.Path == path {
+			name = types.RouteName(rt.Name)
+			break
+		}
+	}
+	return name
 }

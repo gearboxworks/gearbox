@@ -107,7 +107,21 @@ func (me *GearId) Parse(gearid GearIdentifier) (sts status.Status) {
 }
 
 func (me *GearId) GetIdentifier() GearIdentifier {
-	return GearIdentifier(me.String())
+	id := string(me.Program)
+	if me.Type != "" {
+		id = fmt.Sprintf("%s/%s", me.Type, id)
+	}
+	if me.OrgName != "" {
+		id = fmt.Sprintf("%s/%s", me.OrgName, id)
+	}
+	if me.Version != nil && me.Version.GetRaw() != "" {
+		id = fmt.Sprintf("%s:%s", id, me.Version.String())
+	}
+	return GearIdentifier(id)
+}
+
+func (me *GearId) String() (id string) {
+	return string(me.GetIdentifier())
 }
 
 func (me *GearId) SetRaw(gearid GearIdentifier) {
@@ -135,18 +149,4 @@ func (me *GearId) GetVersion() *version.Version {
 		me.Version = version.NewVersion()
 	}
 	return me.Version
-}
-
-func (me *GearId) String() (id string) {
-	id = string(me.Program)
-	if me.Type != "" {
-		id = fmt.Sprintf("%s/%s", me.Type, id)
-	}
-	if me.OrgName != "" {
-		id = fmt.Sprintf("%s/%s", me.OrgName, id)
-	}
-	if me.Version != nil && me.Version.GetRaw() != "" {
-		id = fmt.Sprintf("%s:%s", id, me.Version.String())
-	}
-	return id
 }

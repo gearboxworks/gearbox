@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"fmt"
+	"gearbox/help"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -317,7 +318,7 @@ func (me *SSH) exampleHostWorker() {
 		//dateStr := normal("Date:") + " " + yellow(fmt.Sprintf("%.4d/%.2d/%.2d", now.Year(), now.Month(), now.Day()))
 		//timeStr := normal("Time:") + " " + magenta(fmt.Sprintf("%.2d:%.2d:%.2d", now.Hour(), now.Minute(), now.Second()))
 		statusStr := normal("Status:") + " " + green("OK")
-		infoStr := yellow("You are connected to") + " " + magenta("Gearbox OS")
+		infoStr := yellow("You are connected to") + " " + magenta("Parent OS")
 
 		//line := fmt.Sprintf("%s	%s %s", statusStr, dateStr, timeStr)
 		line := fmt.Sprintf("%s - %s", infoStr, statusStr)
@@ -339,7 +340,7 @@ func EnsureNotNil(ssh *SSH) (sts status.Status) {
 	if ssh == nil {
 		sts = status.Fail(&status.Args{
 			Message: "unexpected error",
-			Help:    status.ContactSupportHelp(), // @TODO need better support here
+			Help:    help.ContactSupportHelp(), // @TODO need better support here
 		})
 	}
 	return sts

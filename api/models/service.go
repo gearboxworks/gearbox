@@ -1,8 +1,7 @@
-package routes
+package models
 
 import (
 	"fmt"
-	"gearbox/gearbox"
 	"gearbox/gearspecid"
 	"gearbox/only"
 	svc "gearbox/service"
@@ -21,29 +20,41 @@ type Service struct {
 	OrgName    types.OrgName     `json:"org"`
 	Program    types.ProgramName `json:"program"`
 	Version    *version.Version  `json:"version"`
-	Gearbox    gearbox.Gearboxer `json:"-"`
 }
 
-func ConvertService(gearspecid gsid.Identifier, ps svc.Servicer) (s *Service) {
-	var sts status.Status
+func ConvertService(gearspecid gsid.Identifier, ps svc.Servicer) (s *Service, sts status.Status) {
+	var sid svc.Identifier
+	var ss *svc.Service
 	for range only.Once {
-		ss, ok := ps.(*svc.Service)
+		_ps, ok := ps.(*svc.ServicerProxy)
 		if ok {
-			s = makeServiceFrom(ss.Identifier, ss, gearspecid)
+			ps = _ps.Servicer
+		}
+		ss, ok = ps.(*svc.Service)
+		if ok {
+			sid = ss.Identifier
 			break
 		}
-		sid, ok := ps.(svc.Identifier)
+		sid, ok = ps.(svc.Identifier)
 		if !ok {
-			panic("invalid project servicer")
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("unable to get identifier for service '%s'", gearspecid),
+			})
+			break
 		}
 		ss = svc.NewService()
 		sts = ss.Parse(sid)
 		if is.Error(sts) {
-			panic(fmt.Sprintf("cannot parse identifier for service '%s'", sid))
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("cannot parse identifier for service '%s'", sid),
+			})
+			break
 		}
+	}
+	if is.Success(sts) {
 		s = makeServiceFrom(sid, ss, gearspecid)
 	}
-	return s
+	return s, sts
 }
 
 func makeServiceFrom(sid svc.Identifier, ss *svc.Service, gsi gsid.Identifier) *Service {
@@ -56,19 +67,29 @@ func makeServiceFrom(sid svc.Identifier, ss *svc.Service, gsi gsid.Identifier) *
 	}
 }
 
-func ConvertServiceMap(sm svc.StackMap) (rsm ServiceMap) {
+func ConvertServiceMap(sm svc.StackMap) (rsm ServiceMap, sts status.Status) {
 	rsm = make(ServiceMap, len(sm))
 	for gs, gbs := range sm {
-		rsm[gs] = ConvertService(gs, gbs)
+		var s *Service
+		s, sts = ConvertService(gs, gbs)
+		if is.Error(sts) {
+			break
+		}
+		rsm[gs] = s
 	}
-	return rsm
+	return rsm, sts
 }
-func ConvertServices(sm svc.StackMap) (rss Services) {
+func ConvertServices(sm svc.StackMap) (rss Services, sts status.Status) {
 	rss = make(Services, len(sm))
 	i := 0
 	for gs, gbs := range sm {
-		rss[i] = ConvertService(gs, gbs)
+		var s *Service
+		s, sts = ConvertService(gs, gbs)
+		if is.Error(sts) {
+			break
+		}
+		rss[i] = s
 		i++
 	}
-	return rss
+	return rss, sts
 }

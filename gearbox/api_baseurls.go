@@ -2,15 +2,15 @@ package gearbox
 
 import (
 	"encoding/json"
-	"gearbox/api"
+	"gearbox/types"
 )
 
 type ApiBaseUrls struct {
-	HostUrl api.UriTemplate `json:"host_url"`
-	VmUrl   api.UriTemplate `json:"vm_url"`
+	HostUrl types.UrlTemplate `json:"host_url"`
+	VmUrl   types.UrlTemplate `json:"vm_url"`
 }
 
-func NewApiBaseUrls(hostUrl, vmUrl api.UriTemplate) *ApiBaseUrls {
+func NewApiBaseUrls(hostUrl, vmUrl types.UrlTemplate) *ApiBaseUrls {
 	return &ApiBaseUrls{
 		HostUrl: hostUrl,
 		VmUrl:   vmUrl,

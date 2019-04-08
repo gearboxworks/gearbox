@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/box"
+	"gearbox/help"
 	"gearbox/only"
 	"gearbox/os_support"
 	"gearbox/status"
@@ -72,8 +73,8 @@ func UnmarshalConfig(b []byte) Configer {
 
 func NewConfig(OsSupport oss.OsSupporter) Configer {
 	c := &Config{
-		About:         "This is a Gearbox user configuration file.",
-		LearnMore:     "To learn about Gearbox visit https://gearbox.works",
+		About:         "This is a Parent user configuration file.",
+		LearnMore:     "To learn about Parent visit https://gearbox.works",
 		OsSupport:     OsSupport,
 		SchemaVersion: SchemaVersion,
 		BasedirMap:    make(BasedirMap, 1),
@@ -233,7 +234,7 @@ func (me *Config) WriteFile() (sts status.Status) {
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("unable to marhsal config"),
-				Help:    status.ContactSupportHelp(),
+				Help:    help.ContactSupportHelp(),
 			})
 			break
 		}

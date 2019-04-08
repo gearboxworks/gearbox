@@ -7,9 +7,17 @@ import (
 
 type Contexter interface {
 	ParamGetter
+	KeyValueGetter
+	KeyValueSetter
 }
 type ParamGetter interface {
 	Param(string) string
+}
+type KeyValueGetter interface {
+	Get(string) interface{}
+}
+type KeyValueSetter interface {
+	Set(string, interface{})
 }
 
 type Modeler interface {
@@ -33,38 +41,34 @@ type IdParamsGetter interface {
 	GetIdParams() IdParams
 }
 type CollectionGetter interface {
-	GetCollection() (Collection, status.Status)
+	GetCollection(Contexter, ...FilterPath) (Collection, status.Status)
 }
 type CollectionIdsGetter interface {
-	GetCollectionIds() (ItemIds, status.Status)
+	GetCollectionIds(Contexter) (ItemIds, status.Status)
 }
 type CollectionItemAdder interface {
-	AddItem(Itemer) status.Status
+	AddItem(Contexter, Itemer) status.Status
 }
 type CollectionItemUpdater interface {
-	UpdateItem(Itemer) status.Status
+	UpdateItem(Contexter, Itemer) status.Status
 }
 type CollectionItemDeleter interface {
-	DeleteItem(ItemId) status.Status
+	DeleteItem(Contexter, ItemId) status.Status
 }
 type CollectionItemGetter interface {
-	GetItem(ItemId) (Itemer, status.Status)
+	GetItem(Contexter, ItemId) (Itemer, status.Status)
 }
 type ItemFilterer interface {
 	FilterItem(Itemer, FilterPath) (Itemer, status.Status)
 }
 type CollectionFilterer interface {
-	FilterCollection(FilterPath) (Collection, status.Status)
+	FilterCollection(Contexter, FilterPath) (Collection, status.Status)
 }
 type CollectionFiltersGetter interface {
 	GetFilterMap() FilterMap
 }
-
 type ItemIdsGetter interface {
-	GetIds() ItemIds
-}
-type ItemsGetter interface {
-	GetItems() (Collection, status.Status)
+	GetIds(Contexter) ItemIds
 }
 
 type Itemer interface {
@@ -86,3 +90,5 @@ type ItemGetter interface {
 type ItemIdSetter interface {
 	SetId(ItemId) status.Status
 }
+
+type Critera interface{}

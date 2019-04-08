@@ -9,6 +9,7 @@ import (
 )
 
 var rootDir string
+var execDir string
 
 func init() {
 	executable := types.AbsoluteFilepath(os.Args[0])
@@ -16,5 +17,6 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	rootDir = string(util.FileDir(types.AbsoluteFilepath(file)))
+	execDir = string(util.FileDir(types.AbsoluteFilepath(file)))
+	rootDir = string(util.ParentDir(types.AbsoluteDir(execDir)))
 }

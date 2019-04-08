@@ -17,6 +17,26 @@ import (
 type Map map[types.Hostname]*Project
 type Projects []*Project
 
+type Project struct {
+	loaded bool
+	*config.Project
+	Filepath types.AbsoluteFilepath `json:"filepath"`
+	Aliases  HostnameAliases        `json:"aliases"`
+	Stack    service.StackMap       `json:"stack"`
+}
+
+func NewProject(cp *config.Project) (p *Project) {
+	p = &Project{
+		Project: cp,
+
+		//Stack: ConvertServiceMap(p.GetServiceMap()),
+		//Services: ConvertServices(pp.GetServiceMap()),
+		//
+		//Aliases:    pp.GetAliases(),
+	}
+	return p
+}
+
 func (me Map) GetProject(hostname types.Hostname) (p *Project, sts status.Status) {
 	for range only.Once {
 		p, sts = me.GetProject(hostname)
@@ -35,20 +55,6 @@ func (me Map) GetProject(hostname types.Hostname) (p *Project, sts status.Status
 func (me Map) ProjectExists(hostname types.Hostname) (ok bool) {
 	_, ok = me[hostname]
 	return ok
-}
-
-type Project struct {
-	loaded bool
-	*config.Project
-	Filepath types.AbsoluteFilepath `json:"filepath"`
-	Aliases  HostnameAliases        `json:"aliases"`
-	Stack    service.StackMap       `json:"stack"`
-}
-
-func NewProject(configProject *config.Project) *Project {
-	return &Project{
-		Project: configProject,
-	}
 }
 
 func (me *Project) Renew(path types.RelativePath) (sts status.Status) {
@@ -95,14 +101,17 @@ func (me *Project) Load() (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
-		pf := NewJsonFile(fp)
+		jpf := NewJsonFile(fp)
 		if len(j) > 0 {
-			sts = pf.Unmarshal(j)
+			sts = jpf.Unmarshal(j)
 		}
-		sts = pf.FixupStack()
+		sts = jpf.FixupStack()
 		if is.Error(sts) {
 			break
 		}
+		me.Aliases = jpf.Aliases
+		me.Stack = jpf.Stack
+		me.Filepath = jpf.Filepath
 		me.loaded = true
 	}
 	return sts

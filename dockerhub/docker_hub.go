@@ -3,6 +3,7 @@ package dockerhub
 import (
 	"encoding/json"
 	"fmt"
+	"gearbox/help"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/util"
@@ -44,7 +45,7 @@ func (me *DockerHub) RequestAvailableContainerNames(query ...*ContainerQuery) (c
 				Message: fmt.Sprintf("failed to download list of container repositories from '%s'",
 					ContainerRepositoryListUrl,
 				),
-				Help: "check your Internet access, or " + status.ContactSupportHelp(),
+				Help: "check your Internet access, or " + help.ContactSupportHelp(),
 			})
 			break
 		}

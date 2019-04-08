@@ -3,7 +3,9 @@
 package cmd
 
 import (
+	"fmt"
 	"gearbox/gearbox"
+	"gearbox/global"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +17,7 @@ var AdminArgs = adminArgs{}
 
 var adminCmd = &cobra.Command{
 	Use:   "admin",
-	Short: "Load the Gearbox admin console.",
+	Short: fmt.Sprintf("Load the %s admin console.", global.Brandname),
 	Run: func(cmd *cobra.Command, args []string) {
 		gb := gearbox.Instance
 		gb.Admin(gearbox.ViewerType(AdminArgs.Viewer))

@@ -1,15 +1,15 @@
-package routes
+package models
 
 import (
-	"gearbox/api"
 	"gearbox/config"
 	"gearbox/project"
+	"gearbox/types"
 )
 
-const ProjectAliasesRoute api.RouteName = "project-aliases"
-const ProjectAliasAdd api.RouteName = ProjectAliasesRoute + "-add"
-const ProjectAliasUpdate api.RouteName = ProjectAliasesRoute + "-update"
-const ProjectAliasDelete api.RouteName = ProjectAliasesRoute + "-delete"
+const ProjectAliasesRoute types.RouteName = "project-aliases"
+const ProjectAliasAdd types.RouteName = ProjectAliasesRoute + "-add"
+const ProjectAliasUpdate types.RouteName = ProjectAliasesRoute + "-update"
+const ProjectAliasDelete types.RouteName = ProjectAliasesRoute + "-delete"
 
 type ProjectAliases struct {
 	Aliases project.HostnameAliases
