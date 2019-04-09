@@ -137,23 +137,7 @@ func (me *Gearbox) DeleteNamedStack(stackid types.StackId) status.Status {
 }
 
 func (me *Gearbox) FindNamedStack(stackid types.StackId) (stack *gears.NamedStack, sts status.Status) {
-	var tmp *gears.NamedStack
-	for range only.Once {
-		sts = me.Gears.ValidateNamedStackId(stackid)
-		if is.Error(sts) {
-			break
-		}
-		tmp = gears.NewNamedStack(me.Gears, stackid)
-		sts = tmp.Refresh()
-		if is.Error(sts) {
-			break
-		}
-	}
-	if !status.IsError(sts) && tmp != nil {
-		stack = &gears.NamedStack{}
-		*stack = *tmp
-	}
-	return stack, sts
+	return me.Gears.FindNamedStack(stackid)
 }
 
 func (me *Gearbox) FindProject(hostname types.Hostname) (pp *project.Project, sts status.Status) {

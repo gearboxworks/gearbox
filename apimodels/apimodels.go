@@ -8,7 +8,7 @@ import (
 	"gearbox/status/is"
 )
 
-func AddRoutes(a api.Apier, gb gearbox.Gearboxer) (sts status.Status) {
+func AddModels(a api.Apier, gb gearbox.Gearboxer) (sts status.Status) {
 	for range only.Once {
 
 		sts = a.AddModels(NewProjectModel(gb))

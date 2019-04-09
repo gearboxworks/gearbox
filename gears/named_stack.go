@@ -156,17 +156,10 @@ func (me *NamedStack) GetIdentifier() types.StackId {
 }
 
 func (me *Gears) ValidateNamedStackId(stackid types.StackId) (sts status.Status) {
-	_, sts = me.FindNamedStackId(stackid)
-	return sts
-}
-
-func (me *Gears) FindNamedStackId(stackid types.StackId) (sid types.StackId, sts status.Status) {
 	for range only.Once {
-		var stackid types.StackId
 		var ok bool
 		for _, nsid := range me.NamedStackIds {
 			if nsid == stackid {
-				sid = nsid
 				ok = true
 				break
 			}
@@ -181,5 +174,25 @@ func (me *Gears) FindNamedStackId(stackid types.StackId) (sid types.StackId, sts
 			sts = status.Success("named stack ID '%s' found", stackid)
 		}
 	}
-	return sid, sts
+	return sts
+}
+
+func (me *Gears) FindNamedStack(stackid types.StackId) (stack *NamedStack, sts status.Status) {
+	var tmp *NamedStack
+	for range only.Once {
+		sts = me.ValidateNamedStackId(stackid)
+		if is.Error(sts) {
+			break
+		}
+		tmp = NewNamedStack(me, stackid)
+		sts = tmp.Refresh()
+		if is.Error(sts) {
+			break
+		}
+	}
+	if !status.IsError(sts) && tmp != nil {
+		stack = &NamedStack{}
+		*stack = *tmp
+	}
+	return stack, sts
 }

@@ -21,7 +21,7 @@ func main() {
 	})
 	gearbox.Instance = gb
 	a := api.NewApi(gb)
-	sts := apimodels.AddRoutes(a, gb)
+	sts := apimodels.AddModels(a, gb)
 	if is.Error(sts) {
 		panic(sts.Message())
 	}
