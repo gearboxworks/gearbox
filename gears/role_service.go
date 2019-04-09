@@ -62,11 +62,11 @@ func NewRoleServices(nsid types.StackId) *RoleServices {
 func (me RoleServicesMap) FilterForNamedStack(stackid types.StackId) (nsrm RoleServicesMap, sts status.Status) {
 	for range only.Once {
 		gsi := gsid.NewGearspecId()
-		sts = gsi.Parse(gsid.Identifier(stackid))
+		sts = gsi.SetStackId(stackid)
 		if is.Error(sts) {
 			break
 		}
-		stackid = types.StackId(gsi.String())
+		stackid = gsi.GetStackId()
 		nsrm = make(RoleServicesMap, 0)
 		for i, so := range me {
 			if so.NamedStackId != stackid {

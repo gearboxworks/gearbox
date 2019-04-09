@@ -20,7 +20,6 @@ type NamedStackMap map[types.Stackname]*NamedStack
 type NamedStacks []*NamedStack
 
 type NamedStack struct {
-	StackId    types.StackId         `json:"stack_id"`
 	Authority  types.AuthorityDomain `json:"authority"`
 	Stackname  types.Stackname       `json:"stackname"`
 	ServiceMap interface{}           `json:"services"`

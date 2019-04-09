@@ -81,7 +81,7 @@ func (me *StackModel) FilterList(ctx *apimodeler.Context, filterPath apimodeler.
 	return me.GetList(ctx, filterPath)
 }
 
-func (me *StackModel) GetListIds(ctx *apimodeler.Context, filterPath ...apimodeler.FilterPath) (itemIds apimodeler.ItemIds, sts status.Status) {
+func (me *StackModel) GetListIds(ctx *apimodeler.Context, filterPath ...apimodeler.FilterPath) (itemids apimodeler.ItemIds, sts status.Status) {
 	for range only.Once {
 		if len(filterPath) == 0 {
 			filterPath = []apimodeler.FilterPath{apimodeler.NoFilterPath}
@@ -90,14 +90,14 @@ func (me *StackModel) GetListIds(ctx *apimodeler.Context, filterPath ...apimodel
 		if is.Error(sts) {
 			break
 		}
-		itemIds = make(apimodeler.ItemIds, len(list))
+		itemids = make(apimodeler.ItemIds, len(list))
 		i := 0
 		for _, item := range list {
-			itemIds[i] = apimodeler.ItemId(item.GetId())
+			itemids[i] = apimodeler.ItemId(item.GetId())
 			i++
 		}
 	}
-	return itemIds, sts
+	return itemids, sts
 }
 
 func (me *StackModel) AddItem(ctx *apimodeler.Context, item apimodeler.Itemer) (sts status.Status) {

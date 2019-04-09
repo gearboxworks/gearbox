@@ -112,9 +112,10 @@ func NewGearbox(args *Args) Gearboxer {
 
 func (me *Gearbox) GetNamedStackMap() (nsm gears.NamedStackMap, sts status.Status) {
 	for range only.Once {
-		if me.StackMap != nil {
-			break
-		}
+		// @TODO Remove these comments after debugging
+		//if me.StackMap != nil {
+		//	break
+		//}
 		me.StackMap, sts = me.Gears.GetNamedStackMap()
 		if is.Error(sts) {
 			break

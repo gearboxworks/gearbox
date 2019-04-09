@@ -44,7 +44,12 @@ func (me *Gears) GetNamedStackMap() (nsm NamedStackMap, sts status.Status) {
 	for range only.Once {
 		nsm = make(NamedStackMap, len(me.NamedStackIds))
 		for _, nsid := range me.NamedStackIds {
-			nsm[nsid] = NewNamedStack(me, nsid)
+			ns := NewNamedStack(me, nsid)
+			sts = ns.Refresh()
+			if is.Error(sts) {
+				break
+			}
+			nsm[nsid] = ns
 		}
 	}
 	return nsm, sts

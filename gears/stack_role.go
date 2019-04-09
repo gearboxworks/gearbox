@@ -34,11 +34,11 @@ func NewStackRole() *StackRole {
 func (me StackRoleMap) FilterByNamedStack(stackid types.StackId) (nsrm StackRoleMap, sts status.Status) {
 	for range only.Once {
 		gsi := gsid.NewGearspecId()
-		sts = gsi.Parse(gsid.Identifier(stackid))
+		sts = gsi.SetStackId(stackid)
 		if is.Error(sts) {
 			break
 		}
-		stackid = types.StackId(gsi.String())
+		stackid = gsi.GetStackId()
 		nsrm = make(StackRoleMap, 0)
 		for i, r := range me {
 			if r.GetStackId() != stackid {

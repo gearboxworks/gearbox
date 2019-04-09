@@ -5,6 +5,7 @@ import (
 	"gearbox/global"
 	"gearbox/only"
 	"gearbox/status"
+	"gearbox/status/is"
 	"gearbox/types"
 	"regexp"
 	"strconv"
@@ -37,6 +38,15 @@ func init() {
 
 func (me *Id) ParseString(gearspecid string) (sts status.Status) {
 	return me.Parse(Identifier(gearspecid))
+}
+
+func (me *Id) ParseStackId(stackid types.StackId) (sts status.Status) {
+	gearspecid := fmt.Sprintf("%s/%s", stackid, "dummy")
+	sts = me.Parse(Identifier(gearspecid))
+	if is.Success(sts) {
+		me.Role = ""
+	}
+	return sts
 }
 
 func (me *Id) Parse(gsi Identifier) (sts status.Status) {
