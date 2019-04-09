@@ -1,4 +1,4 @@
-package gears
+package global
 
 type ShareableChoices string
 

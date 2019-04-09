@@ -2,8 +2,8 @@ package service
 
 import (
 	"fmt"
-	"gearbox/gearid"
-	"gearbox/gearspecid"
+	"gearbox/gear"
+	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
 	"gearbox/status"
@@ -24,8 +24,8 @@ var _ Servicer = (*Service)(nil)
 
 type Service struct {
 	Identifier Identifier `json:"service_id,omitempty"`
-	GearspecId gsid.Identifier
-	*gearid.GearId
+	GearspecId gearspec.Identifier
+	*gear.Gear
 	Services `json:"services,omitempty"`
 }
 
@@ -38,8 +38,8 @@ func NewService(args ...*Args) *Service {
 	} else {
 		_args = args[0]
 	}
-	if _args.GearId == nil {
-		_args.GearId = gearid.NewGearId()
+	if _args.Gear == nil {
+		_args.Gear = gear.NewGear()
 	}
 	svc := Service{}
 	svc = Service(*_args)
@@ -56,7 +56,7 @@ func (me *Service) GetServiceId() (id Identifier, sts status.Status) {
 	if me.OrgName == "" {
 		me.OrgName = global.DefaultOrgName
 	}
-	return Identifier(me.GearId.GetIdentifier()), sts
+	return Identifier(me.Gear.GetIdentifier()), sts
 }
 
 //
@@ -73,8 +73,8 @@ func (me *Service) GetPersistableServiceId() (sid Identifier, sts status.Status)
 		if is.Error(sts) {
 			break
 		}
-		gid := gearid.GearId{}
-		sts = gid.Parse(gearid.GearIdentifier(_gsid))
+		gid := gear.Gear{}
+		sts = gid.Parse(gear.Identifier(_gsid))
 		if is.Success(sts) && gid.OrgName == global.DefaultOrgName {
 			gid.OrgName = ""
 		}
@@ -83,7 +83,7 @@ func (me *Service) GetPersistableServiceId() (sid Identifier, sts status.Status)
 	return sid, sts
 }
 
-func (me *Service) GetGearspecId() (role gsid.Identifier, sts status.Status) {
+func (me *Service) GetGearspecId() (role gearspec.Identifier, sts status.Status) {
 	for range only.Once {
 		if me.GearspecId == "" {
 			id, _ := me.GetIdentifier()
@@ -118,10 +118,10 @@ func (me *Service) ParseString(serviceid Identifier) (sts status.Status) {
 
 func (me *Service) Parse(serviceid Identifier) (sts status.Status) {
 	for range only.Once {
-		if me.GearId == nil {
-			me.GearId = gearid.NewGearId()
+		if me.Gear == nil {
+			me.Gear = gear.NewGear()
 		}
-		sts := me.GearId.Parse(gearid.GearIdentifier(serviceid))
+		sts := me.Gear.Parse(gear.Identifier(serviceid))
 		if status.IsError(sts) {
 			break
 		}

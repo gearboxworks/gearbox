@@ -56,7 +56,7 @@
             "MariaDB"
          ]
       },
-      "gearbox.works/lemp/script": {
+      "gearbox.works/lemp/php": {
          "name": "LEMP server-side scripting process VM; PHP, Python or Perl",
          "label": "server-side scripting",
          "examples": [

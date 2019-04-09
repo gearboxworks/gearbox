@@ -1,4 +1,4 @@
-package gearid
+package gear
 
 import (
 	"fmt"
@@ -11,15 +11,15 @@ import (
 	"strings"
 )
 
-type GearIdentifiers []GearIdentifier
-type GearIdentifier string
+type Identifiers []Identifier
+type Identifier string
 
-type GearIder interface {
+type Gearer interface {
 	ParseString(gearid string) (sts status.Status)
-	Parse(gearid GearIdentifier) (sts status.Status)
-	GetIdentifier() GearIdentifier
-	SetRaw(gearid GearIdentifier)
-	GetRaw() GearIdentifier
+	Parse(gearid Identifier) (sts status.Status)
+	GetIdentifier() Identifier
+	SetRaw(gearid Identifier)
+	GetRaw() Identifier
 	GetOrgName() types.OrgName
 	GetType() types.ServiceType
 	GetName() types.ProgramName
@@ -27,23 +27,23 @@ type GearIder interface {
 	String() (id string)
 }
 
-type GearId struct {
-	raw     GearIdentifier
+type Gear struct {
+	raw     Identifier
 	OrgName types.OrgName     `json:"org,omitempty"`
 	Type    types.ServiceType `json:"type,omitempty"`
 	Program types.ProgramName `json:"program,omitempty"`
 	Version *version.Version  `json:"version,omitempty"`
 }
 
-func NewGearId() (id *GearId) {
-	return &GearId{}
+func NewGear() (id *Gear) {
+	return &Gear{}
 }
 
-func (me *GearId) ParseString(gearid string) (sts status.Status) {
-	return me.Parse(GearIdentifier(gearid))
+func (me *Gear) ParseString(gearid string) (sts status.Status) {
+	return me.Parse(Identifier(gearid))
 }
 
-func (me *GearId) Parse(gearid GearIdentifier) (sts status.Status) {
+func (me *Gear) Parse(gearid Identifier) (sts status.Status) {
 	const sharedHelp = "identities can take the form of either " +
 		"<org>/<type>/<program>:<version> or just " +
 		"<org>/<program>:<version>. Examples might include " +
@@ -57,7 +57,7 @@ func (me *GearId) Parse(gearid GearIdentifier) (sts status.Status) {
 	var hlp string
 	for range only.Once {
 		if me == nil {
-			panic("gearid.Parse() called when 'gearid' is nil.")
+			panic("gear.Parse() called when 'gear' is nil.")
 		}
 		v := version.NewVersion()
 		sts = v.ParseString(util.After(string(gearid), ":"))
@@ -107,7 +107,7 @@ func (me *GearId) Parse(gearid GearIdentifier) (sts status.Status) {
 	return sts
 }
 
-func (me *GearId) GetIdentifier() GearIdentifier {
+func (me *Gear) GetIdentifier() Identifier {
 	id := string(me.Program)
 	if me.Type != "" {
 		id = fmt.Sprintf("%s/%s", me.Type, id)
@@ -118,34 +118,34 @@ func (me *GearId) GetIdentifier() GearIdentifier {
 	if me.Version != nil && me.Version.GetRaw() != "" {
 		id = fmt.Sprintf("%s:%s", id, me.Version.String())
 	}
-	return GearIdentifier(id)
+	return Identifier(id)
 }
 
-func (me *GearId) String() (id string) {
+func (me *Gear) String() (id string) {
 	return string(me.GetIdentifier())
 }
 
-func (me *GearId) SetRaw(gearid GearIdentifier) {
+func (me *Gear) SetRaw(gearid Identifier) {
 	me.raw = gearid
 }
 
-func (me *GearId) GetRaw() GearIdentifier {
+func (me *Gear) GetRaw() Identifier {
 	return me.raw
 }
 
-func (me *GearId) GetOrgName() types.OrgName {
+func (me *Gear) GetOrgName() types.OrgName {
 	return me.OrgName
 }
 
-func (me *GearId) GetType() types.ServiceType {
+func (me *Gear) GetType() types.ServiceType {
 	return me.Type
 }
 
-func (me *GearId) GetName() types.ProgramName {
+func (me *Gear) GetName() types.ProgramName {
 	return me.Program
 }
 
-func (me *GearId) GetVersion() *version.Version {
+func (me *Gear) GetVersion() *version.Version {
 	if me.Version == nil {
 		me.Version = version.NewVersion()
 	}

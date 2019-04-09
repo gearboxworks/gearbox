@@ -1,7 +1,7 @@
 package service
 
 import (
-	"gearbox/gearspecid"
+	"gearbox/gearspec"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -9,7 +9,7 @@ import (
 	"gearbox/util"
 )
 
-type StackMap map[gsid.Identifier]*ServicerProxy
+type StackMap map[gearspec.Identifier]*ServicerProxy
 
 func (me StackMap) GetNamedStackIds() (nsids types.StackIds, sts status.Status) {
 	for range only.Once {

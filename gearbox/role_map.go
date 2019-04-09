@@ -2,14 +2,14 @@ package gearbox
 
 import (
 	"gearbox/gears"
-	"gearbox/gearspecid"
+	"gearbox/gearspec"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/types"
 	"strings"
 )
 
-type RoleMap map[gsid.Identifier]*gears.StackRole
+type RoleMap map[gearspec.Identifier]*gears.StackRole
 
 func (me RoleMap) GetStackRoleMap(stackid types.StackId) (rm RoleMap, sts status.Status) {
 	for range only.Once {

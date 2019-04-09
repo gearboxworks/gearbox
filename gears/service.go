@@ -1,8 +1,8 @@
 package gears
 
 import (
-	"gearbox/gearid"
-	gsid "gearbox/gearspecid"
+	"gearbox/gear"
+	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
 	"gearbox/status"
@@ -11,16 +11,16 @@ import (
 	"gearbox/version"
 )
 
-type ServiceBag map[gsid.Identifier]interface{}
+type ServiceBag map[gearspec.Identifier]interface{}
 
-type ServiceMap map[gearid.GearIdentifier]*Service
+type ServiceMap map[gear.Identifier]*Service
 
-type DefaultServiceMap map[gsid.Identifier]*Service
+type DefaultServiceMap map[gearspec.Identifier]*Service
 
 type Services []*Service
 
-func (me Services) ServiceIds() gearid.GearIdentifiers {
-	services := make(gearid.GearIdentifiers, len(me))
+func (me Services) ServiceIds() gear.Identifiers {
+	services := make(gear.Identifiers, len(me))
 	for i, s := range me {
 		services[i] = s.ServiceId
 	}
@@ -28,15 +28,15 @@ func (me Services) ServiceIds() gearid.GearIdentifiers {
 }
 
 type Service struct {
-	ServiceId gearid.GearIdentifier `json:"service_id,omitempty"`
-	OrgName   types.OrgName         `json:"org,omitempty"`
-	Type      types.ServiceType     `json:"type,omitempty"`
-	Program   types.ProgramName     `json:"program,omitempty"`
-	Version   types.Version         `json:"version,omitempty"`
+	ServiceId gear.Identifier   `json:"service_id,omitempty"`
+	OrgName   types.OrgName     `json:"org,omitempty"`
+	Type      types.ServiceType `json:"type,omitempty"`
+	Program   types.ProgramName `json:"program,omitempty"`
+	Version   types.Version     `json:"version,omitempty"`
 }
 type ServiceArgs Service
 
-func NewService(serviceId gearid.GearIdentifier, args ...*ServiceArgs) *Service {
+func NewService(serviceId gear.Identifier, args ...*ServiceArgs) *Service {
 	var _args *ServiceArgs
 	if len(args) == 0 {
 		_args = &ServiceArgs{}
@@ -49,15 +49,15 @@ func NewService(serviceId gearid.GearIdentifier, args ...*ServiceArgs) *Service 
 	return &s
 }
 
-func (me *Service) SetIdentifier(serviceId gearid.GearIdentifier) status.Status {
+func (me *Service) SetIdentifier(serviceId gear.Identifier) status.Status {
 	me.ServiceId = serviceId
 	return me.ApplyDefaults(me)
 }
 
-func (me *Service) Parse() (gid *gearid.GearId, sts status.Status) {
-	gid = gearid.NewGearId()
+func (me *Service) Parse() (gid *gear.Gear, sts status.Status) {
+	gid = gear.NewGear()
 	for range only.Once {
-		sts = gid.Parse(gearid.GearIdentifier(me.ServiceId))
+		sts = gid.Parse(gear.Identifier(me.ServiceId))
 		if status.IsError(sts) {
 			break
 		}
@@ -69,7 +69,7 @@ func (me *Service) Parse() (gid *gearid.GearId, sts status.Status) {
 }
 
 func (me *Service) ApplyDefaults(defaults *Service) (sts status.Status) {
-	var gid *gearid.GearId
+	var gid *gear.Gear
 	for range only.Once {
 		gid, sts = me.Parse()
 		if status.IsError(sts) {
@@ -121,8 +121,8 @@ func (me *Service) ApplyDefaults(defaults *Service) (sts status.Status) {
 	return sts
 }
 
-func (me *Service) CaptureGearId(gid *gearid.GearId) {
-	me.ServiceId = gearid.GearIdentifier(gid.GetIdentifier())
+func (me *Service) CaptureGearId(gid *gear.Gear) {
+	me.ServiceId = gear.Identifier(gid.GetIdentifier())
 	me.OrgName = gid.OrgName
 	me.Type = gid.Type
 	me.Program = gid.Program

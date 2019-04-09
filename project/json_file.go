@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/gears"
-	"gearbox/gearspecid"
+	"gearbox/gearspec"
 	"gearbox/only"
 	"gearbox/service"
 	"gearbox/status"
@@ -146,7 +146,7 @@ func (me *JsonFile) FixupStack() (sts status.Status) {
 //
 // Stacks are loaded as a map[string]interface{} to enable this type of processing.
 //
-func (me *JsonFile) FixupStackItem(item interface{}, role gsid.Identifier) (*service.Service, status.Status) {
+func (me *JsonFile) FixupStackItem(item interface{}, role gearspec.Identifier) (*service.Service, status.Status) {
 	var sts status.Status
 	ss := service.NewService()
 	for range only.Once {

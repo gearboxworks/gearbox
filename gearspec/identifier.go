@@ -1,4 +1,4 @@
-package gsid
+package gearspec
 
 import (
 	"gearbox/global"

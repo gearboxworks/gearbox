@@ -1,4 +1,4 @@
-package models
+package apimodels
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"gearbox/types"
 	"net/http"
 	"reflect"
+	"sort"
 )
 
 const StacksName types.RouteName = "stacks"
@@ -67,12 +68,15 @@ func (me *StackModel) GetList(ctx *apimodeler.Context, filterPath ...apimodeler.
 			break
 		}
 		for _, gbs := range gbnsm {
-			ns := ConvertNamedStack(gbs)
-			list = append(list, ns)
+			ns, sts := NewFromGearsNamedStack(ctx, gbs)
 			if is.Error(sts) {
 				break
 			}
+			list = append(list, ns)
 		}
+		sort.Slice(list, func(i, j int) bool {
+			return list[i].GetId() < list[j].GetId()
+		})
 	}
 	return list, sts
 }
@@ -158,7 +162,10 @@ func (me *StackModel) GetItem(ctx *apimodeler.Context, stackid apimodeler.ItemId
 			})
 			break
 		}
-		ns = ConvertNamedStack(gbns)
+		ns, sts = NewFromGearsNamedStack(ctx, gbns)
+		if is.Error(sts) {
+			break
+		}
 		sts = status.Success("Stack '%s' found", stackid)
 	}
 	return ns, sts

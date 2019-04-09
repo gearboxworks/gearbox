@@ -1,8 +1,9 @@
 package gears
 
 import (
-	"gearbox/gearid"
-	"gearbox/gearspecid"
+	"gearbox/api/global"
+	"gearbox/gear"
+	"gearbox/gearspec"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -41,16 +42,16 @@ var _ = `{
   }
 }`
 
-type RoleServicesMap map[gsid.Identifier]*RoleServices
+type RoleServicesMap map[gearspec.Identifier]*RoleServices
 
 type RoleServices struct {
-	NamedStackId   types.StackId          `json:"-"`
-	OrgName        types.OrgName          `json:"org,omitempty"`
-	Default        gearid.GearIdentifier  `json:"default"`
-	Shareable      ShareableChoices       `json:"shareable"`
-	ServiceIds     gearid.GearIdentifiers `json:"choices,omitempty"`
-	DefaultService *Service               `json:"-"`
-	Services       Services               `json:"-"`
+	NamedStackId   types.StackId           `json:"-"`
+	OrgName        types.OrgName           `json:"org,omitempty"`
+	Default        gear.Identifier         `json:"default"`
+	Shareable      global.ShareableChoices `json:"shareable"`
+	ServiceIds     gear.Identifiers        `json:"choices,omitempty"`
+	DefaultService *Service                `json:"-"`
+	Services       Services                `json:"-"`
 }
 
 func NewRoleServices(nsid types.StackId) *RoleServices {
@@ -61,7 +62,7 @@ func NewRoleServices(nsid types.StackId) *RoleServices {
 
 func (me RoleServicesMap) FilterForNamedStack(stackid types.StackId) (nsrm RoleServicesMap, sts status.Status) {
 	for range only.Once {
-		gsi := gsid.NewGearspecId()
+		gsi := gearspec.NewGearspecId()
 		sts = gsi.SetStackId(stackid)
 		if is.Error(sts) {
 			break
@@ -78,10 +79,10 @@ func (me RoleServicesMap) FilterForNamedStack(stackid types.StackId) (nsrm RoleS
 	return nsrm, sts
 }
 
-func (me *RoleServices) Fixup(id gsid.Identifier) (sts status.Status) {
+func (me *RoleServices) Fixup(id gearspec.Identifier) (sts status.Status) {
 	for range only.Once {
-		gsi := gsid.NewGearspecId()
-		sts = gsi.Parse(gsid.Identifier(id))
+		gsi := gearspec.NewGearspecId()
+		sts = gsi.Parse(gearspec.Identifier(id))
 		if is.Error(sts) {
 			break
 		}
@@ -108,7 +109,7 @@ func (me *RoleServices) Fixup(id gsid.Identifier) (sts status.Status) {
 	return sts
 }
 
-func (me *RoleServices) FixupService(serviceId gearid.GearIdentifier) (s *Service, sts status.Status) {
+func (me *RoleServices) FixupService(serviceId gear.Identifier) (s *Service, sts status.Status) {
 	for range only.Once {
 		s = NewService(serviceId)
 		if me.DefaultService != nil {

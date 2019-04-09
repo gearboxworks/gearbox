@@ -30,7 +30,7 @@ func NewProject(cp *config.Project) (p *Project) {
 		Project: cp,
 
 		//Stack: ConvertServiceMap(p.GetServiceMap()),
-		//Services: ConvertServices(pp.GetServiceMap()),
+		//ServiceIds: ConvertServices(pp.GetServiceMap()),
 		//
 		//Aliases:    pp.GetAliases(),
 	}

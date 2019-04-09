@@ -2,7 +2,7 @@ package gears
 
 import (
 	"fmt"
-	"gearbox/gearspecid"
+	"gearbox/gearspec"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -36,6 +36,23 @@ func NewNamedStack(g *Gears, stackid types.StackId) *NamedStack {
 }
 
 //
+// Get the list of gearspec identifiers
+//
+func (me *NamedStack) GetGearspecIds() (gsids gearspec.Identifiers, sts status.Status) {
+	for range only.Once {
+		gsids = make(gearspec.Identifiers, 0)
+		nsrm, sts := me.Gears.GetNamedStackRoleMap(me.GetIdentifier())
+		if is.Error(sts) {
+			break
+		}
+		for _, r := range nsrm {
+			gsids = append(gsids, r.GetGearspecId())
+		}
+	}
+	return gsids, sts
+}
+
+//
 // Get the available service options for a given named stack
 //
 func (me *NamedStack) GetServiceOptionMap() (rsm RoleServicesMap, sts status.Status) {
@@ -52,7 +69,7 @@ func (me *NamedStack) GetServiceOptionMap() (rsm RoleServicesMap, sts status.Sta
 }
 
 func (me *NamedStack) String() string {
-	return string(me.Stackname)
+	return string(me.GetIdentifier())
 }
 
 func (me *NamedStack) LightweightClone() *NamedStack {
@@ -123,7 +140,7 @@ func (me *NamedStack) Refresh() (sts status.Status) {
 
 func (me *NamedStack) SetIdentifier(stackid types.StackId) (sts status.Status) {
 	for range only.Once {
-		gsi := gsid.NewGearspecId()
+		gsi := gearspec.NewGearspecId()
 		sts := gsi.SetStackId(stackid)
 		if status.IsError(sts) {
 			break

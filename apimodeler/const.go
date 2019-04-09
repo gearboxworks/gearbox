@@ -15,12 +15,13 @@ const (
 	SchemaDcRelType      RelType = "schema.DC"
 	SchemaDcTermsRelType RelType = "schema.DCTERMS"
 	SelfRelType          RelType = "self"
+	AddItemRelType       RelType = "additem"
 	RelatedRelType       RelType = "related"
 	FirstRelType         RelType = "first"
 	LastRelType          RelType = "last"
 	PrevRelType          RelType = "prev"
 	NextRelType          RelType = "next"
-	ListRelType          RelType = "List"
+	ListRelType          RelType = "list"
 	ItemRelType          RelType = "item"
 )
 

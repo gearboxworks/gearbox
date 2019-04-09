@@ -6,22 +6,22 @@ package api
 //	//me.GET___("/meta/endpoints", api.MetaEndpointsResource, me.getMetaEndpointsResponse)
 //	//me.GET___("/meta/methods", api.MetaMethodsResource, me.getMetaMethodsResponse)
 //
-//	sts = me.AddModels(models.NewProjectModel(me.Parent))
+//	sts = me.AddModels(apimodels.NewProjectModel(me.Parent))
 //	if is.Error(sts) {
 //		panic(sts.Message())
 //	}
 //
-//	sts = me.AddModels(models.NewStackConnector(me.Parent))
+//	sts = me.AddModels(apimodels.NewStackConnector(me.Parent))
 //	if is.Error(sts) {
 //		panic(sts.Message())
 //	}
 //	//me.addBasedirRoutes()
-//	//sts := me.AddModels(e,models.NewBasedirFactory(me.Parent))
+//	//sts := me.AddModels(e,apimodels.NewBasedirFactory(me.Parent))
 //	//if is.Error(sts) {
 //	//	panic(sts.Message())
 //	//}
 //	//me.addStackRoutes()
-//	//sts = me.AddModels(e,models.NewStackFactory(me.Parent))
+//	//sts = me.AddModels(e,apimodels.NewStackFactory(me.Parent))
 //	//if is.Error(sts) {
 //	//	panic(sts.Message())
 //	//}

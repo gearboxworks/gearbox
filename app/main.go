@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"gearbox/api"
-	"gearbox/api/models"
+	"gearbox/apimodels"
 	"gearbox/app/cmd"
 	"gearbox/gearbox"
 	"gearbox/os_support"
@@ -21,7 +21,7 @@ func main() {
 	})
 	gearbox.Instance = gb
 	a := api.NewApi(gb)
-	sts := models.AddRoutes(a, gb)
+	sts := apimodels.AddRoutes(a, gb)
 	if is.Error(sts) {
 		panic(sts.Message())
 	}

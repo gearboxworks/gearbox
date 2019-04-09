@@ -1,4 +1,4 @@
-package gsid
+package gearspec
 
 import (
 	"fmt"
@@ -185,7 +185,7 @@ func (me *Id) SetStackId(stackid types.StackId) (sts status.Status) {
 	for range only.Once {
 		tmp := Id{raw: Identifier(stackid)}
 		if me == nil {
-			panic("gearspecid.SetStackId() called when 'spec' is nil.")
+			panic("gearspec.SetStackId() called when 'spec' is nil.")
 		}
 		parts := strings.Split(string(stackid), "/")
 		if len(parts) < 2 {

@@ -1,8 +1,8 @@
-package models
+package apimodels
 
 import (
 	"fmt"
-	"gearbox/gearspecid"
+	"gearbox/gearspec"
 	"gearbox/only"
 	svc "gearbox/service"
 	"gearbox/status"
@@ -11,18 +11,18 @@ import (
 	"gearbox/version"
 )
 
-type ServiceMap map[gsid.Identifier]*Service
+type ServiceMap map[gearspec.Identifier]*Service
 type Services []*Service
 
 type Service struct {
-	ServiceId  types.ServiceId   `json:"service_id"`
-	GearspecId gsid.Identifier   `json:"service_type"`
-	OrgName    types.OrgName     `json:"org"`
-	Program    types.ProgramName `json:"program"`
-	Version    *version.Version  `json:"version"`
+	ServiceId  types.ServiceId     `json:"service_id"`
+	GearspecId gearspec.Identifier `json:"service_type"`
+	OrgName    types.OrgName       `json:"org"`
+	Program    types.ProgramName   `json:"program"`
+	Version    *version.Version    `json:"version"`
 }
 
-func ConvertService(gearspecid gsid.Identifier, ps svc.Servicer) (s *Service, sts status.Status) {
+func ConvertService(gearspecid gearspec.Identifier, ps svc.Servicer) (s *Service, sts status.Status) {
 	var sid svc.Identifier
 	var ss *svc.Service
 	for range only.Once {
@@ -57,7 +57,7 @@ func ConvertService(gearspecid gsid.Identifier, ps svc.Servicer) (s *Service, st
 	return s, sts
 }
 
-func makeServiceFrom(sid svc.Identifier, ss *svc.Service, gsi gsid.Identifier) *Service {
+func makeServiceFrom(sid svc.Identifier, ss *svc.Service, gsi gearspec.Identifier) *Service {
 	return &Service{
 		GearspecId: gsi,
 		ServiceId:  types.ServiceId(sid),

@@ -27,6 +27,10 @@ func (Link) IdentifiesLink() {}
 
 type LinkMap map[RelType]LinkImplementor
 
+func (me LinkMap) AddLink(reltype RelType, link LinkImplementor) {
+	me[reltype] = link
+}
+
 type LinksSetter interface {
 	SetLinks(LinkMap)
 }

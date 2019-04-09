@@ -5,20 +5,20 @@ package api
 //	if !ok {
 //
 //	}
-//	sts := me.AddModels(models.NewProjectModel(gb))
+//	sts := me.AddModels(apimodels.NewProjectModel(gb))
 //	if is.Error(sts) {
 //		panic(sts.Message())
 //	}
 //}
 
 //me.AddModels("/projects", &ab.ResourceArgs{
-//Program:       models.ProjectsRoute,
+//Program:       apimodels.ProjectsRoute,
 //IdParams:   ab.IdParams{"hostname"},
-//Item:       models.ProjectInstance,
-//Factory: models.NewProjectCollection(gb),
+//Item:       apimodels.ProjectInstance,
+//Factory: apimodels.NewProjectCollection(gb),
 //Children: ab.ModelsMap{
 //	ab.NewResource("/aliases", &ab.ResourceArgs{
-//		Program:       models.ProjectAliasesRoute,
+//		Program:       apimodels.ProjectAliasesRoute,
 //		IdParams:   ab.IdParams{"alias"},
 //		ItemType:   reflect.String,
 //	}),
@@ -30,7 +30,7 @@ package api
 //	"gearbox/gearbox"
 //	"gearbox/api"
 //	"gearbox/only"
-//	"gearbox/api/models"
+//	"gearbox/apimodels"
 //	"gearbox/status"
 //	"net/http"
 //)
@@ -51,49 +51,49 @@ package api
 //}
 //func (me *Api) addProjectRoutes() (gb *gearbox.Parent) {
 //
-//	//me.GET___("/projects", models.ProjectsRoute, me.getProjectsResponse)
-//	//me.POST__("/projects/new", models.ProjectDetailsAdd, me.addProjectDetails)
+//	//me.GET___("/projects", apimodels.ProjectsRoute, me.getProjectsResponse)
+//	//me.POST__("/projects/new", apimodels.ProjectDetailsAdd, me.addProjectDetails)
 //	//
-//	//me.GET___("/projects/with-details", models.ProjectsWithDetails, me.getProjectsResponse)
-//	//me.GET___("/projects/enabled", models.EnabledProjects, me.getEnabledProjectsResponse)
-//	//me.GET___("/projects/disabled", models.DisabledProjects, me.getDisabledProjectsResponse)
-//	//me.GET___("/projects/candidates", models.CandidateProjects, me.getCandidateProjectsResponse)
+//	//me.GET___("/projects/with-details", apimodels.ProjectsWithDetails, me.getProjectsResponse)
+//	//me.GET___("/projects/enabled", apimodels.EnabledProjects, me.getEnabledProjectsResponse)
+//	//me.GET___("/projects/disabled", apimodels.DisabledProjects, me.getDisabledProjectsResponse)
+//	//me.GET___("/projects/candidates", apimodels.CandidateProjects, me.getCandidateProjectsResponse)
 //	//
-//	//me.GET___("/projects/:hostname", models.ProjectDetails, me.getProjectDetailsResponse, me.getProjectHostnameValues)
-//	//me.PUT___("/projects/:hostname", models.ProjectDetailsUpdate, me.updateProjectDetails, me.getProjectHostnameValues)
-//	//me.DELETE("/projects/:hostname", models.ProjectDetailsDelete, me.deleteProjectDetails, me.getProjectHostnameValues)
+//	//me.GET___("/projects/:hostname", apimodels.ProjectDetails, me.getProjectDetailsResponse, me.getProjectHostnameValues)
+//	//me.PUT___("/projects/:hostname", apimodels.ProjectDetailsUpdate, me.updateProjectDetails, me.getProjectHostnameValues)
+//	//me.DELETE("/projects/:hostname", apimodels.ProjectDetailsDelete, me.deleteProjectDetails, me.getProjectHostnameValues)
 //	//
-//	//me.GET___("/projects/:hostname/aliases", models.ProjectAliasesRoute, me.getProjectAliasesResponse, me.getProjectHostnameValues)
-//	//me.POST__("/projects/:hostname/aliases/new", models.ProjectAliasAdd, me.addProjectAlias)
-//	//me.PUT___("/projects/:hostname/aliases/:alias", models.ProjectAliasUpdate, me.updateProjectAlias)
-//	//me.DELETE("/projects/:hostname/aliases/:alias", models.ProjectAliasDelete, me.deleteProjectAlias)
+//	//me.GET___("/projects/:hostname/aliases", apimodels.ProjectAliasesRoute, me.getProjectAliasesResponse, me.getProjectHostnameValues)
+//	//me.POST__("/projects/:hostname/aliases/new", apimodels.ProjectAliasAdd, me.addProjectAlias)
+//	//me.PUT___("/projects/:hostname/aliases/:alias", apimodels.ProjectAliasUpdate, me.updateProjectAlias)
+//	//me.DELETE("/projects/:hostname/aliases/:alias", apimodels.ProjectAliasDelete, me.deleteProjectAlias)
 //	//
-//	//me.Relate(models.ProjectsRoute, &api.Related{
-//	//	List: models.ProjectsRoute,
+//	//me.Relate(apimodels.ProjectsRoute, &api.Related{
+//	//	List: apimodels.ProjectsRoute,
 //	//	Others: api.RouteNameMap{
-//	//		models.ProjectsWithDetails: api.ListResource,
-//	//		models.EnabledProjects:     api.ListResource,
-//	//		models.DisabledProjects:    api.ListResource,
-//	//		models.CandidateProjects:   api.ListResource,
+//	//		apimodels.ProjectsWithDetails: api.ListResource,
+//	//		apimodels.EnabledProjects:     api.ListResource,
+//	//		apimodels.DisabledProjects:    api.ListResource,
+//	//		apimodels.CandidateProjects:   api.ListResource,
 //	//	},
 //	//})
 //	//
-//	//me.Relate(models.ProjectDetails, &api.Related{
-//	//	Item:   models.ProjectDetails,
-//	//	List:   models.ProjectsRoute,
-//	//	New:    models.ProjectDetailsAdd,
-//	//	Update: models.ProjectDetailsUpdate,
-//	//	Delete: models.ProjectDetailsDelete,
+//	//me.Relate(apimodels.ProjectDetails, &api.Related{
+//	//	Item:   apimodels.ProjectDetails,
+//	//	List:   apimodels.ProjectsRoute,
+//	//	New:    apimodels.ProjectDetailsAdd,
+//	//	Update: apimodels.ProjectDetailsUpdate,
+//	//	Delete: apimodels.ProjectDetailsDelete,
 //	//	Others: api.RouteNameMap{
-//	//		models.ProjectsWithDetails: api.ItemResource,
+//	//		apimodels.ProjectsWithDetails: api.ItemResource,
 //	//	},
 //	//})
 //	//
-//	//me.Relate(models.ProjectAliasesRoute, &api.Related{
-//	//	List:   models.ProjectAliasesRoute,
-//	//	New:    models.ProjectAliasAdd,
-//	//	Update: models.ProjectAliasUpdate,
-//	//	Delete: models.ProjectAliasDelete,
+//	//me.Relate(apimodels.ProjectAliasesRoute, &api.Related{
+//	//	List:   apimodels.ProjectAliasesRoute,
+//	//	New:    apimodels.ProjectAliasAdd,
+//	//	Update: apimodels.ProjectAliasUpdate,
+//	//	Delete: apimodels.ProjectAliasDelete,
 //	//})
 //
 //	//me.GET___("/projects/:hostname/services", resp.ProjectServicesResource, me.getProjectServicesResponse)
@@ -135,7 +135,7 @@ package api
 //		if status.IsError(sts) {
 //			break
 //		}
-//		response = models.NewProjectStacksResponse(p)
+//		response = apimodels.NewProjectStacksResponse(p)
 //	}
 //	if status.IsError(sts) {
 //		response = sts
@@ -152,7 +152,7 @@ package api
 //			break
 //		}
 //		var sn gearbox.Stackname
-//		sn, sts = models.GetStackname(rc)
+//		sn, sts = apimodels.GetStackname(rc)
 //		if status.IsError(sts) {
 //			break
 //		}
@@ -187,7 +187,7 @@ package api
 //			response = sts
 //			break
 //		}
-//		response = models.NewProjectServices(p.Stack, p)
+//		response = apimodels.NewProjectServices(p.Stack, p)
 //	}
 //	if status.IsError(sts) {
 //		response = sts
@@ -214,7 +214,7 @@ package api
 //		}
 //		if hn == "" {
 //			sts = status.Fail(&status.Args{
-//				Message: fmt.Sprintf("hostname not found for models name '%s'", rc.RouteName),
+//				Message: fmt.Sprintf("hostname not found for apimodels name '%s'", rc.RouteName),
 //			})
 //			break
 //		}
@@ -223,7 +223,7 @@ package api
 //		if status.IsError(sts) {
 //			break
 //		}
-//		response = models.NewProjectAliases(p.Aliases, p)
+//		response = apimodels.NewProjectAliases(p.Aliases, p)
 //	}
 //	if status.IsError(sts) {
 //		response = sts
@@ -251,7 +251,7 @@ package api
 //			break
 //		}
 //		prs = make(api.ListItemResponseMap, len(pm))
-//		withDetails := rc.RouteName == models.ProjectsWithDetailsFilter
+//		withDetails := rc.RouteName == apimodels.ProjectsWithDetailsFilter
 //		for _, p := range pm {
 //			if withDetails {
 //				sts = p.MaybeLoadDetails()
@@ -262,7 +262,7 @@ package api
 //			} else {
 //				p.ClearDetails()
 //			}
-//			prs[string(p.Hostname)] = models.NewProjectList(models.ConvertConfigProject(p))
+//			prs[string(p.Hostname)] = apimodels.NewProjectList(apimodels.ConvertConfigProject(p))
 //		}
 //	}
 //	if !status.IsError(sts) {
@@ -311,7 +311,7 @@ package api
 //		if status.IsError(sts) {
 //			break
 //		}
-//		response = models.ConvertConfigProject(p)
+//		response = apimodels.ConvertConfigProject(p)
 //	}
 //	if status.IsError(sts) {
 //		response = sts

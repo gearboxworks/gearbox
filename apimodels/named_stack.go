@@ -1,12 +1,15 @@
-package models
+package apimodels
 
 import (
 	"fmt"
 	"gearbox/apimodeler"
 	"gearbox/gearbox"
 	"gearbox/gears"
+	"gearbox/gearspec"
+	"gearbox/global"
 	"gearbox/only"
 	"gearbox/status"
+	"gearbox/status/is"
 	"gearbox/types"
 	"strings"
 )
@@ -16,27 +19,42 @@ const NamedStackType = "stack"
 var NilNamedStack = (*NamedStack)(nil)
 var _ apimodeler.Itemer = NilNamedStack
 
+func NewFromGearsNamedStack(ctx *apimodeler.Context, gns *gears.NamedStack) (ns *NamedStack, sts status.Status) {
+	for range only.Once {
+		var gsids gearspec.Identifiers
+		if ctx.GetResponseType() == global.ItemResponse {
+			gsids, sts = gns.GetGearspecIds()
+		}
+		if is.Error(sts) {
+			break
+		}
+		ns = &NamedStack{
+			Authority: gns.Authority,
+			Stackname: gns.Stackname,
+			Members:   gsids,
+			//ServiceMap: gns.RoleServicesMap,
+		}
+	}
+	return ns, sts
+}
+
 type NamedStackMap map[types.Stackname]*NamedStack
 type NamedStacks []*NamedStack
 
 type NamedStack struct {
 	Authority  types.AuthorityDomain `json:"authority"`
 	Stackname  types.Stackname       `json:"stackname"`
-	ServiceMap interface{}           `json:"services"`
+	Members    gearspec.Identifiers  `json:"members,omitempty"`
+	ServiceMap interface{}           `json:"services,omitempty"`
 }
 
 func NewNamedStack(ns *gears.NamedStack) *NamedStack {
 	return &NamedStack{
 		Authority:  ns.Authority,
 		Stackname:  ns.Stackname,
+		Members:    make(gearspec.Identifiers, 0),
 		ServiceMap: newServiceMap(ns.RoleServicesMap),
 	}
-}
-
-func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStack) (gbns *gears.NamedStack, sts status.Status) {
-	gbns = gears.NewNamedStack(gb.GetGears(), types.StackId(ns.GetId()))
-	sts = gbns.Refresh()
-	return gbns, sts
 }
 
 func (me *NamedStack) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
@@ -77,4 +95,10 @@ func (me *NamedStack) SetId(itemid apimodeler.ItemId) (sts status.Status) {
 
 func (me *NamedStack) GetItem() (apimodeler.Itemer, status.Status) {
 	return me, nil
+}
+
+func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStack) (gbns *gears.NamedStack, sts status.Status) {
+	gbns = gears.NewNamedStack(gb.GetGears(), types.StackId(ns.GetId()))
+	sts = gbns.Refresh()
+	return gbns, sts
 }

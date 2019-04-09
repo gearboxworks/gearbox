@@ -1,7 +1,7 @@
 package test
 
 import (
-	"gearbox/gearid"
+	"gearbox/gear"
 	"gearbox/status"
 	"gearbox/test"
 	"testing"
@@ -108,13 +108,13 @@ func (me *IdTest) GetT() *testing.T {
 }
 
 func (me *IdTest) MakeNewObject(f *test.Fixture) (obj interface{}, sts status.Status) {
-	gid := gearid.NewGearId()
+	gid := gear.NewGear()
 	sts = gid.ParseString(f.In)
 	return gid, sts
 }
 
 func (me *IdTest) GetOutput(f *test.Fixture) (got string) {
-	gid := f.Obj.(*gearid.GearId)
+	gid := f.Obj.(*gear.Gear)
 	switch f.Name {
 	case getId:
 		got = gid.String()

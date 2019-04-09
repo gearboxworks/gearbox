@@ -1,7 +1,7 @@
 package service
 
 import (
-	"gearbox/gearid"
+	"gearbox/gear"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -12,8 +12,8 @@ type Identifier string
 
 func (me Identifier) GetPersistableServiceValue() (s Servicer, sts status.Status) {
 	for range only.Once {
-		gid := gearid.NewGearId()
-		sts = gid.Parse(gearid.GearIdentifier(me))
+		gid := gear.NewGear()
+		sts = gid.Parse(gear.Identifier(me))
 		if is.Error(sts) {
 			break
 		}

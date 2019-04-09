@@ -1,7 +1,7 @@
 package gears
 
 import (
-	"gearbox/gearspecid"
+	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
 	"gearbox/status"
@@ -11,29 +11,29 @@ import (
 
 const MaxServicesPerRole = 10
 
-type StackRoleMap map[gsid.Identifier]*StackRole
+type StackRoleMap map[gearspec.Identifier]*StackRole
 type StackRoles []*StackRole
 type StackRole struct {
-	GearspecId gsid.Identifier `json:"-"`
-	Name       string          `json:"program,omitempty"`
-	Label      string          `json:"label,omitempty"`
-	Examples   []string        `json:"examples,omitempty"`
-	Optional   bool            `json:"optional,omitempty"`
-	Minimum    int             `json:"min,omitempty"`
-	Maximum    int             `json:"max,omitempty"`
-	*gsid.Id
+	GearspecId gearspec.Identifier `json:"-"`
+	Name       string              `json:"program,omitempty"`
+	Label      string              `json:"label,omitempty"`
+	Examples   []string            `json:"examples,omitempty"`
+	Optional   bool                `json:"optional,omitempty"`
+	Minimum    int                 `json:"min,omitempty"`
+	Maximum    int                 `json:"max,omitempty"`
+	*gearspec.Id
 }
 type StackRoleArgs StackRole
 
 func NewStackRole() *StackRole {
 	return &StackRole{
-		Id: gsid.NewGearspecId(),
+		Id: gearspec.NewGearspecId(),
 	}
 }
 
 func (me StackRoleMap) FilterByNamedStack(stackid types.StackId) (nsrm StackRoleMap, sts status.Status) {
 	for range only.Once {
-		gsi := gsid.NewGearspecId()
+		gsi := gearspec.NewGearspecId()
 		sts = gsi.SetStackId(stackid)
 		if is.Error(sts) {
 			break
@@ -50,16 +50,16 @@ func (me StackRoleMap) FilterByNamedStack(stackid types.StackId) (nsrm StackRole
 	return nsrm, sts
 }
 
-func (me *StackRole) GetGearspecId() gsid.Identifier {
-	spec := gsid.Id{}
+func (me *StackRole) GetGearspecId() gearspec.Identifier {
+	spec := gearspec.Id{}
 	spec = *me.Id
 	if spec.Authority == "" {
 		spec.Authority = global.DefaultAuthority
 	}
-	return gsid.Identifier(spec.String())
+	return gearspec.Identifier(spec.String())
 }
 
-func (me *StackRole) Fixup(rolespec gsid.Identifier) (sts status.Status) {
+func (me *StackRole) Fixup(rolespec gearspec.Identifier) (sts status.Status) {
 	for range only.Once {
 		sts := me.Parse(rolespec)
 		if status.IsError(sts) {
@@ -86,13 +86,13 @@ func (me *StackRole) NeedsParse() bool {
 	return me.GearspecId == "" || me.Id.Role == ""
 }
 
-func (me *StackRole) Parse(name gsid.Identifier) (sts status.Status) {
+func (me *StackRole) Parse(name gearspec.Identifier) (sts status.Status) {
 	for range only.Once {
 		me.GearspecId = name
 		if me.Id == nil {
-			me.Id = &gsid.Id{}
+			me.Id = &gearspec.Id{}
 		}
-		sts := me.Id.Parse(gsid.Identifier(me.GearspecId))
+		sts := me.Id.Parse(gearspec.Identifier(me.GearspecId))
 		if status.IsError(sts) {
 			break
 		}

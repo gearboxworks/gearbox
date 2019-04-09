@@ -1,7 +1,7 @@
 package test
 
 import (
-	gsid "gearbox/gearspecid"
+	"gearbox/gearspec"
 	"gearbox/status/is"
 	"gearbox/types"
 	"testing"
@@ -9,12 +9,12 @@ import (
 
 type wants struct {
 	StackId     types.StackId
-	Identifier  gsid.Identifier
-	Persistable gsid.Identifier
-	Expanded    gsid.Identifier
+	Identifier  gearspec.Identifier
+	Persistable gearspec.Identifier
+	Expanded    gearspec.Identifier
 }
 
-var results = map[gsid.Identifier]wants{
+var results = map[gearspec.Identifier]wants{
 	"gears.gearbox.works/wordpress/dbserver": wants{
 		StackId:     "gears.gearbox.works/wordpress",
 		Identifier:  "gears.gearbox.works/wordpress/dbserver",
