@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+type GearIdentifiers []GearIdentifier
 type GearIdentifier string
 
 type GearIder interface {

@@ -1,9 +1,9 @@
 package gears
 
 import (
+	"gearbox/gearid"
 	"gearbox/gearspecid"
 	"gearbox/only"
-	"gearbox/service"
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
@@ -41,25 +41,25 @@ var _ = `{
   }
 }`
 
-type ServiceOptionsMap map[gsid.Identifier]*ServiceOptions
+type RoleServicesMap map[gsid.Identifier]*RoleServices
 
-type ServiceOptions struct {
-	NamedStackId   types.StackId       `json:"-"`
-	OrgName        types.OrgName       `json:"org,omitempty"`
-	Default        service.Identifier  `json:"default"`
-	Shareable      ShareableChoices    `json:"shareable"`
-	ServiceIds     service.Identifiers `json:"options,omitempty"`
-	DefaultService *Service            `json:"-"`
-	Services       Services            `json:"-"`
+type RoleServices struct {
+	NamedStackId   types.StackId          `json:"-"`
+	OrgName        types.OrgName          `json:"org,omitempty"`
+	Default        gearid.GearIdentifier  `json:"default"`
+	Shareable      ShareableChoices       `json:"shareable"`
+	ServiceIds     gearid.GearIdentifiers `json:"choices,omitempty"`
+	DefaultService *Service               `json:"-"`
+	Services       Services               `json:"-"`
 }
 
-func NewServiceOptions(nsid types.StackId) *ServiceOptions {
-	return &ServiceOptions{
+func NewRoleServices(nsid types.StackId) *RoleServices {
+	return &RoleServices{
 		NamedStackId: nsid,
 	}
 }
 
-func (me ServiceOptionsMap) FilterForNamedStack(stackid types.StackId) (nsrm ServiceOptionsMap, sts status.Status) {
+func (me RoleServicesMap) FilterForNamedStack(stackid types.StackId) (nsrm RoleServicesMap, sts status.Status) {
 	for range only.Once {
 		gsi := gsid.NewGearspecId()
 		sts = gsi.Parse(gsid.Identifier(stackid))
@@ -67,7 +67,7 @@ func (me ServiceOptionsMap) FilterForNamedStack(stackid types.StackId) (nsrm Ser
 			break
 		}
 		stackid = types.StackId(gsi.String())
-		nsrm = make(ServiceOptionsMap, 0)
+		nsrm = make(RoleServicesMap, 0)
 		for i, so := range me {
 			if so.NamedStackId != stackid {
 				continue
@@ -78,7 +78,7 @@ func (me ServiceOptionsMap) FilterForNamedStack(stackid types.StackId) (nsrm Ser
 	return nsrm, sts
 }
 
-func (me *ServiceOptions) Fixup(id gsid.Identifier) (sts status.Status) {
+func (me *RoleServices) Fixup(id gsid.Identifier) (sts status.Status) {
 	for range only.Once {
 		gsi := gsid.NewGearspecId()
 		sts = gsi.Parse(gsid.Identifier(id))
@@ -108,7 +108,7 @@ func (me *ServiceOptions) Fixup(id gsid.Identifier) (sts status.Status) {
 	return sts
 }
 
-func (me *ServiceOptions) FixupService(serviceId service.Identifier) (s *Service, sts status.Status) {
+func (me *RoleServices) FixupService(serviceId gearid.GearIdentifier) (s *Service, sts status.Status) {
 	for range only.Once {
 		s = NewService(serviceId)
 		if me.DefaultService != nil {

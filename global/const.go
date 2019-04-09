@@ -6,6 +6,7 @@ const (
 	DefaultAuthority = "gears.gearbox.works"
 	DefaultOrgName   = "gearboxworks"
 	Brandname        = "Gearbox"
+	RelPrefix        = "gearbox"
 )
 
 const (

@@ -17,6 +17,7 @@ import (
 
 const HostnameIdParam apimodeler.IdParam = "hostname"
 
+const ProjectsName types.RouteName = "projects"
 const ProjectsBasepath types.Basepath = "/projects"
 
 const ProjectsWithDetailsFilter apimodeler.FilterPath = "/with-details"
@@ -28,6 +29,10 @@ var _ apimodeler.Modeler = NilProjectModel
 
 type ProjectModel struct {
 	Gearbox gearbox.Gearboxer
+}
+
+func (me *ProjectModel) GetName() types.RouteName {
+	return ProjectsName
 }
 
 func (me *ProjectModel) GetListLinkMap(*apimodeler.Context, ...apimodeler.FilterPath) (lm apimodeler.LinkMap, sts status.Status) {
@@ -105,20 +110,20 @@ func (me *ProjectModel) FilterList(ctx *apimodeler.Context, filterPath apimodele
 	return list, sts
 }
 
-func (me *ProjectModel) GetListIds(ctx *apimodeler.Context) (itemIds apimodeler.ItemIds, sts status.Status) {
+func (me *ProjectModel) GetListIds(ctx *apimodeler.Context, filterPath ...apimodeler.FilterPath) (itemids apimodeler.ItemIds, sts status.Status) {
 	for range only.Once {
 		gbpm, sts := me.getGearboxProjectMap()
 		if is.Error(sts) {
 			break
 		}
-		itemIds = make(apimodeler.ItemIds, len(gbpm))
+		itemids = make(apimodeler.ItemIds, len(gbpm))
 		i := 0
 		for _, gbp := range gbpm {
-			itemIds[i] = apimodeler.ItemId(gbp.Hostname)
+			itemids[i] = apimodeler.ItemId(gbp.Hostname)
 			i++
 		}
 	}
-	return itemIds, sts
+	return itemids, sts
 }
 
 func (me *ProjectModel) AddItem(ctx *apimodeler.Context, item apimodeler.Itemer) (sts status.Status) {

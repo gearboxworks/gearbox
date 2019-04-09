@@ -115,6 +115,10 @@ func (me *Gearbox) GetNamedStackMap() (nsm gears.NamedStackMap, sts status.Statu
 		if me.StackMap != nil {
 			break
 		}
+		me.StackMap, sts = me.Gears.GetNamedStackMap()
+		if is.Error(sts) {
+			break
+		}
 	}
 	return me.StackMap, sts
 }

@@ -1,95 +1,81 @@
 package models
 
 import (
+	"fmt"
 	"gearbox/apimodeler"
+	"gearbox/gearbox"
 	"gearbox/gears"
-	"gearbox/gearspecid"
-	"gearbox/service"
+	"gearbox/only"
 	"gearbox/status"
 	"gearbox/types"
+	"strings"
 )
+
+const NamedStackType = "stack"
+
+var NilNamedStack = (*NamedStack)(nil)
+var _ apimodeler.Itemer = NilNamedStack
 
 type NamedStackMap map[types.Stackname]*NamedStack
 type NamedStacks []*NamedStack
 
 type NamedStack struct {
+	StackId    types.StackId         `json:"stack_id"`
 	Authority  types.AuthorityDomain `json:"authority"`
-	StackName  types.Stackname       `json:"name"`
-	RoleMap    interface{}           `json:"roles"`
+	Stackname  types.Stackname       `json:"stackname"`
 	ServiceMap interface{}           `json:"services"`
-}
-
-func (me *NamedStack) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
-	panic("implement me")
 }
 
 func NewNamedStack(ns *gears.NamedStack) *NamedStack {
 	return &NamedStack{
 		Authority:  ns.Authority,
-		StackName:  ns.Stackname,
-		RoleMap:    newRoleMap(ns.RoleMap),
-		ServiceMap: newServiceMap(ns.ServiceMap),
+		Stackname:  ns.Stackname,
+		ServiceMap: newServiceMap(ns.RoleServicesMap),
 	}
 }
 
-type RoleType string
-
-type roleMap map[RoleType]*role
-type role struct {
-	Role     gsid.Identifier `json:"role"`
-	Type     RoleType        `json:"type"`
-	Name     string          `json:"name"`
-	Label    string          `json:"label"`
-	Max      int             `json:"max"`
-	Min      int             `json:"min"`
-	Optional bool            `json:"optional,omitempty"`
-	Examples []string        `json:"examples"`
+func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStack) (gbns *gears.NamedStack, sts status.Status) {
+	gbns = gears.NewNamedStack(gb.GetGears(), types.StackId(ns.GetId()))
+	sts = gbns.Refresh()
+	return gbns, sts
 }
 
-func newRoleMap(srm gears.StackRoleMap) interface{} {
-	rmr := make(map[RoleType]interface{}, len(srm))
-	for gs, r := range srm {
-		t := RoleType(r.GetRole())
-		rmr[t] = &role{
-			Role:     gs,
-			Type:     t,
-			Name:     r.Name,
-			Label:    r.Label,
-			Max:      r.Maximum,
-			Min:      r.Minimum,
-			Optional: r.Optional,
-			Examples: r.Examples,
+func (me *NamedStack) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
+	return apimodeler.LinkMap{}, nil
+}
+
+func (me *NamedStack) GetType() apimodeler.ItemType {
+	return NamedStackType
+}
+
+func (me *NamedStack) GetFullStackname() types.Stackname {
+	return types.Stackname(me.GetId())
+}
+
+func (me *NamedStack) GetId() apimodeler.ItemId {
+	return apimodeler.ItemId(fmt.Sprintf("%s/%s", me.Authority, me.Stackname))
+}
+
+func (me *NamedStack) SetId(itemid apimodeler.ItemId) (sts status.Status) {
+	for range only.Once {
+		parts := strings.Split(string(itemid), "/")
+		if len(parts) < 2 {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("stack ID '%s' missing '/'", itemid),
+			})
+			break
+		} else if len(parts) > 2 {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("stack ID '%s' has too many '/'", itemid),
+			})
+			break
 		}
+		me.Authority = types.AuthorityDomain(parts[0])
+		me.Stackname = types.Stackname(parts[1])
 	}
-	return rmr
+	return sts
 }
 
-type serviceMap map[gsid.Identifier]*_service
-type _service struct {
-	OrgName   types.OrgName          `json:"org,omitempty"`
-	Default   service.Identifier     `json:"default,omitempty"`
-	Shareable gears.ShareableChoices `json:"shareable,omitempty"`
-	Services  service.Identifiers    `json:"options,omitempty"`
-}
-
-func newServiceMap(sm gears.ServiceOptionsMap) interface{} {
-	smr := make(map[gsid.Identifier]interface{}, len(sm))
-	for gs, s := range sm {
-		smr[gs] = &_service{
-			OrgName:   s.OrgName,
-			Default:   s.DefaultService.ServiceId,
-			Shareable: s.Shareable,
-			Services:  s.Services.ServiceIds(),
-		}
-	}
-	return smr
-}
-
-func ConvertNamedStack(gbp *gears.NamedStack) *NamedStack {
-	return &NamedStack{
-		Authority:  gbp.Authority,
-		StackName:  gbp.Stackname,
-		RoleMap:    gbp.RoleMap,
-		ServiceMap: gbp.ServiceMap,
-	}
+func (me *NamedStack) GetItem() (apimodeler.Itemer, status.Status) {
+	return me, nil
 }

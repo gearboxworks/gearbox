@@ -78,6 +78,15 @@ func NewRootDocument(ctx Contexter, responseType types.ResponseType, args ...*Ro
 	return &rd
 }
 
+func (me *RootDocument) AddLink(rel apimodeler.RelType, link apimodeler.LinkImplementor) {
+	me.LinkMap[rel] = link
+}
+func (me *RootDocument) AddLinks(links apimodeler.LinkMap) {
+	for rel, link := range links {
+		me.AddLink(rel, link)
+	}
+}
+
 func (me *RootDocument) GetResponseType() types.ResponseType {
 	return me.ResponseType
 }

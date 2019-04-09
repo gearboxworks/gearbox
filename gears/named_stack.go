@@ -11,30 +11,37 @@ import (
 	"strings"
 )
 
-//type NamedStackMap map[Stackname]StackMap
-
-type ServiceBag map[gsid.Identifier]interface{}
-
-type NamedStackMap map[gsid.Identifier]*NamedStack
+type NamedStackMap map[types.StackId]*NamedStack
 
 type NamedStacks []*NamedStack
 
 type NamedStack struct {
-	Authority  types.AuthorityDomain `json:"authority"`
-	Stackname  types.Stackname       `json:"name"`
-	RoleMap    StackRoleMap          `json:"roles,omitempty"`
-	ServiceMap ServiceOptionsMap     `json:"services,omitempty"`
-	refreshed  bool
-	Gears      *Gears `json:"-"`
+	Authority       types.AuthorityDomain `json:"authority"`
+	Stackname       types.Stackname       `json:"name"`
+	RoleMap         StackRoleMap          `json:"roles,omitempty"`
+	RoleServicesMap RoleServicesMap       `json:"services,omitempty"`
+	refreshed       bool
+	Gears           *Gears `json:"-"`
+}
+
+func NewNamedStack(g *Gears, stackid types.StackId) *NamedStack {
+	stack := NamedStack{
+		RoleMap:         make(StackRoleMap, 0),
+		RoleServicesMap: make(RoleServicesMap, 0),
+		Gears:           g,
+	}
+	// This will split authority out, or do nothing
+	_ = stack.SetIdentifier(stackid)
+	return &stack
 }
 
 //
 // Get the available service options for a given named stack
 //
-func (me *NamedStack) GetServiceOptionMap() (rsm ServiceOptionsMap, sts status.Status) {
+func (me *NamedStack) GetServiceOptionMap() (rsm RoleServicesMap, sts status.Status) {
 	for range only.Once {
-		rsm = make(ServiceOptionsMap, 0)
-		for gs, rso := range me.ServiceMap {
+		rsm = make(RoleServicesMap, 0)
+		for gs, rso := range me.RoleServicesMap {
 			if !strings.HasPrefix(string(gs), string(me.GetIdentifier())) {
 				continue
 			}
@@ -42,17 +49,6 @@ func (me *NamedStack) GetServiceOptionMap() (rsm ServiceOptionsMap, sts status.S
 		}
 	}
 	return rsm, sts
-}
-
-func NewNamedStack(g *Gears, stackid types.StackId) *NamedStack {
-	stack := NamedStack{
-		RoleMap:    make(StackRoleMap, 0),
-		ServiceMap: make(ServiceOptionsMap, 0),
-		Gears:      g,
-	}
-	// This will split authority out, or do nothing
-	_ = stack.SetIdentifier(stackid)
-	return &stack
 }
 
 func (me *NamedStack) String() string {
@@ -65,14 +61,14 @@ func (me *NamedStack) LightweightClone() *NamedStack {
 	return &stack
 }
 
-func (me *NamedStack) GetDefaultServices() (sm StackMap, sts status.Status) {
+func (me *NamedStack) GetDefaultServices() (sm DefaultServiceMap, sts status.Status) {
 	for range only.Once {
-		sm = make(StackMap, 0)
+		sm = make(DefaultServiceMap, 0)
 		sts = me.Refresh()
 		if status.IsError(sts) {
 			break
 		}
-		for gs, s := range me.ServiceMap {
+		for gs, s := range me.RoleServicesMap {
 			if s.DefaultService == nil {
 				continue
 			}
@@ -110,12 +106,12 @@ func (me *NamedStack) Refresh() (sts status.Status) {
 		}
 		me.RoleMap = nsrm
 
-		var som ServiceOptionsMap
+		var som RoleServicesMap
 		som, sts = me.Gears.GetNamedStackServiceOptionMap(me.GetIdentifier())
 		if is.Error(sts) {
 			break
 		}
-		me.ServiceMap = som
+		me.RoleServicesMap = som
 
 		me.refreshed = true
 	}

@@ -2,22 +2,25 @@ package gears
 
 import (
 	"gearbox/gearid"
-	"gearbox/gearspecid"
+	gsid "gearbox/gearspecid"
 	"gearbox/global"
 	"gearbox/only"
-	"gearbox/service"
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
 	"gearbox/version"
 )
 
-type StackMap map[gsid.Identifier]*Service
+type ServiceBag map[gsid.Identifier]interface{}
+
+type ServiceMap map[gearid.GearIdentifier]*Service
+
+type DefaultServiceMap map[gsid.Identifier]*Service
 
 type Services []*Service
 
-func (me Services) ServiceIds() service.Identifiers {
-	services := make(service.Identifiers, len(me))
+func (me Services) ServiceIds() gearid.GearIdentifiers {
+	services := make(gearid.GearIdentifiers, len(me))
 	for i, s := range me {
 		services[i] = s.ServiceId
 	}
@@ -25,15 +28,15 @@ func (me Services) ServiceIds() service.Identifiers {
 }
 
 type Service struct {
-	ServiceId service.Identifier `json:"service_id,omitempty"`
-	OrgName   types.OrgName      `json:"org,omitempty"`
-	Type      types.ServiceType  `json:"type,omitempty"`
-	Program   types.ProgramName  `json:"program,omitempty"`
-	Version   types.Version      `json:"version,omitempty"`
+	ServiceId gearid.GearIdentifier `json:"service_id,omitempty"`
+	OrgName   types.OrgName         `json:"org,omitempty"`
+	Type      types.ServiceType     `json:"type,omitempty"`
+	Program   types.ProgramName     `json:"program,omitempty"`
+	Version   types.Version         `json:"version,omitempty"`
 }
 type ServiceArgs Service
 
-func NewService(serviceId service.Identifier, args ...*ServiceArgs) *Service {
+func NewService(serviceId gearid.GearIdentifier, args ...*ServiceArgs) *Service {
 	var _args *ServiceArgs
 	if len(args) == 0 {
 		_args = &ServiceArgs{}
@@ -46,7 +49,7 @@ func NewService(serviceId service.Identifier, args ...*ServiceArgs) *Service {
 	return &s
 }
 
-func (me *Service) SetIdentifier(serviceId service.Identifier) status.Status {
+func (me *Service) SetIdentifier(serviceId gearid.GearIdentifier) status.Status {
 	me.ServiceId = serviceId
 	return me.ApplyDefaults(me)
 }
@@ -119,7 +122,7 @@ func (me *Service) ApplyDefaults(defaults *Service) (sts status.Status) {
 }
 
 func (me *Service) CaptureGearId(gid *gearid.GearId) {
-	me.ServiceId = service.Identifier(gid.GetIdentifier())
+	me.ServiceId = gearid.GearIdentifier(gid.GetIdentifier())
 	me.OrgName = gid.OrgName
 	me.Type = gid.Type
 	me.Program = gid.Program

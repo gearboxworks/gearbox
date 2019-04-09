@@ -27,6 +27,7 @@ type KeyValueSetter interface {
 }
 
 type Modeler interface {
+	NameGetter
 	BasepathGetter
 	IdParamsGetter
 	ListFiltersGetter
@@ -41,6 +42,9 @@ type Modeler interface {
 	ItemFilterer
 }
 
+type NameGetter interface {
+	GetName() types.RouteName
+}
 type BasepathGetter interface {
 	GetBasepath() types.Basepath
 }
@@ -51,7 +55,7 @@ type ListGetter interface {
 	GetList(*Context, ...FilterPath) (List, status.Status)
 }
 type ListIdsGetter interface {
-	GetListIds(*Context) (ItemIds, status.Status)
+	GetListIds(*Context, ...FilterPath) (ItemIds, status.Status)
 }
 type ListItemAdder interface {
 	AddItem(*Context, Itemer) status.Status
