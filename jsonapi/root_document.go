@@ -20,6 +20,8 @@ const (
 	CollectionResponse ResponseType = "collection"
 )
 
+var _ apimodeler.RootDocumenter = (*RootDocument)(nil)
+
 type RootDocument struct {
 	ResponseType types.ResponseType `json:"-"`
 	JsonApi      *JsonApi           `json:"jsonapi,omitempty"`
@@ -81,6 +83,7 @@ func NewRootDocument(ctx Contexter, responseType types.ResponseType, args ...*Ro
 func (me *RootDocument) AddLink(rel apimodeler.RelType, link apimodeler.LinkImplementor) {
 	me.LinkMap[rel] = link
 }
+
 func (me *RootDocument) AddLinks(links apimodeler.LinkMap) {
 	for rel, link := range links {
 		me.AddLink(rel, link)

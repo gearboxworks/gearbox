@@ -21,19 +21,19 @@ type StackRole struct {
 	Optional   bool                `json:"optional,omitempty"`
 	Minimum    int                 `json:"min,omitempty"`
 	Maximum    int                 `json:"max,omitempty"`
-	*gearspec.Id
+	*gearspec.Gearspec
 }
 type StackRoleArgs StackRole
 
 func NewStackRole() *StackRole {
 	return &StackRole{
-		Id: gearspec.NewGearspecId(),
+		Gearspec: gearspec.NewGearspec(),
 	}
 }
 
 func (me StackRoleMap) FilterByNamedStack(stackid types.StackId) (nsrm StackRoleMap, sts status.Status) {
 	for range only.Once {
-		gsi := gearspec.NewGearspecId()
+		gsi := gearspec.NewGearspec()
 		sts = gsi.SetStackId(stackid)
 		if is.Error(sts) {
 			break
@@ -51,8 +51,8 @@ func (me StackRoleMap) FilterByNamedStack(stackid types.StackId) (nsrm StackRole
 }
 
 func (me *StackRole) GetGearspecId() gearspec.Identifier {
-	spec := gearspec.Id{}
-	spec = *me.Id
+	spec := gearspec.Gearspec{}
+	spec = *me.Gearspec
 	if spec.Authority == "" {
 		spec.Authority = global.DefaultAuthority
 	}
@@ -76,23 +76,23 @@ func (me *StackRole) Fixup(rolespec gearspec.Identifier) (sts status.Status) {
 }
 
 func (me *StackRole) GetStackname() (name types.Stackname) {
-	if me.Id != nil {
-		name = me.Id.GetStackname()
+	if me.Gearspec != nil {
+		name = me.Gearspec.GetStackname()
 	}
 	return name
 }
 
 func (me *StackRole) NeedsParse() bool {
-	return me.GearspecId == "" || me.Id.Role == ""
+	return me.GearspecId == "" || me.Gearspec.Role == ""
 }
 
 func (me *StackRole) Parse(name gearspec.Identifier) (sts status.Status) {
 	for range only.Once {
 		me.GearspecId = name
-		if me.Id == nil {
-			me.Id = &gearspec.Id{}
+		if me.Gearspec == nil {
+			me.Gearspec = &gearspec.Gearspec{}
 		}
-		sts := me.Id.Parse(gearspec.Identifier(me.GearspecId))
+		sts := me.Gearspec.Parse(gearspec.Identifier(me.GearspecId))
 		if status.IsError(sts) {
 			break
 		}

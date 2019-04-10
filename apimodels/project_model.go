@@ -37,7 +37,7 @@ func (me *ProjectModel) GetName() types.RouteName {
 
 func (me *ProjectModel) GetListLinkMap(*apimodeler.Context, ...apimodeler.FilterPath) (lm apimodeler.LinkMap, sts status.Status) {
 	return apimodeler.LinkMap{
-		apimodeler.RelatedRelType: apimodeler.Link("foobarbaz"),
+		//apimodeler.RelatedRelType: apimodeler.Link("http://example.org/"),
 	}, sts
 }
 
@@ -192,7 +192,7 @@ func (me *ProjectModel) GetItem(ctx *apimodeler.Context, hostname apimodeler.Ite
 			break
 		}
 		if ctx.GetResponseType() == global.ItemResponse {
-			sts = p.AddDetails()
+			sts = p.AddDetails(ctx)
 			if is.Error(sts) {
 				break
 			}

@@ -1,8 +1,9 @@
 package gears
 
 const (
+	//	RepoRawBaseUrl = "https://gears.gearbox.works"
 	RepoRawBaseUrl = "https://raw.githubusercontent.com/gearboxworks/gearbox"
-	JsonUrl        = RepoRawBaseUrl + "/master/assets/gears.json"
-
-	CacheKey = "gears"
+	JsonFilename   = "gears.json"
+	JsonUrl        = RepoRawBaseUrl + "/master/assets/" + JsonFilename
+	CacheKey       = "gears"
 )

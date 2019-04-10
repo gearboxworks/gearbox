@@ -62,7 +62,7 @@ func NewRoleServices(nsid types.StackId) *RoleServices {
 
 func (me RoleServicesMap) FilterForNamedStack(stackid types.StackId) (nsrm RoleServicesMap, sts status.Status) {
 	for range only.Once {
-		gsi := gearspec.NewGearspecId()
+		gsi := gearspec.NewGearspec()
 		sts = gsi.SetStackId(stackid)
 		if is.Error(sts) {
 			break
@@ -81,7 +81,7 @@ func (me RoleServicesMap) FilterForNamedStack(stackid types.StackId) (nsrm RoleS
 
 func (me *RoleServices) Fixup(id gearspec.Identifier) (sts status.Status) {
 	for range only.Once {
-		gsi := gearspec.NewGearspecId()
+		gsi := gearspec.NewGearspec()
 		sts = gsi.Parse(gearspec.Identifier(id))
 		if is.Error(sts) {
 			break

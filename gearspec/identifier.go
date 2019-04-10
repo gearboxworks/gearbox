@@ -19,7 +19,7 @@ type Identifier string
 
 func (me Identifier) GetNamedStackId() (sid types.StackId, sts status.Status) {
 	for range only.Once {
-		gsi := &Id{}
+		gsi := &Gearspec{}
 		sts = gsi.Parse(me)
 		if is.Error(sts) {
 			break
@@ -30,7 +30,7 @@ func (me Identifier) GetNamedStackId() (sid types.StackId, sts status.Status) {
 }
 
 func (me Identifier) GetIdentifier() (gs Identifier, sts status.Status) {
-	gsi := Id{}
+	gsi := Gearspec{}
 	sts = gsi.Parse(me)
 	if is.Success(sts) && gsi.Authority == "" {
 		gsi.Authority = global.DefaultAuthority
@@ -47,7 +47,7 @@ func (me Identifier) GetIdentifier() (gs Identifier, sts status.Status) {
 // to keep things simple for the user/reader.
 //
 func (me Identifier) GetPersistableIdentifier() (gs Identifier, sts status.Status) {
-	gsi := Id{}
+	gsi := Gearspec{}
 	sts = gsi.Parse(me)
 	if is.Success(sts) && gsi.Authority == global.DefaultAuthority {
 		gsi.Authority = ""
@@ -58,7 +58,7 @@ func (me Identifier) GetPersistableIdentifier() (gs Identifier, sts status.Statu
 func (me Identifier) GetExpandedIdentifier() (gs Identifier, sts status.Status) {
 	for range only.Once {
 		gs = me
-		gsi := NewGearspecId()
+		gsi := NewGearspec()
 		sts = gsi.Parse(me)
 		if is.Error(sts) {
 			break

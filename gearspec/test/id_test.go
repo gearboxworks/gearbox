@@ -139,13 +139,13 @@ func (me *SpecTest) GetT() *testing.T {
 }
 
 func (me *SpecTest) MakeNewObject(f *test.Fixture) (obj interface{}, sts status.Status) {
-	gsi := gearspec.NewGearspecId()
+	gsi := gearspec.NewGearspec()
 	sts = gsi.ParseString(f.In)
 	return gsi, sts
 }
 
 func (me *SpecTest) GetOutput(f *test.Fixture) (got string) {
-	gsi := f.Obj.(*gearspec.Id)
+	gsi := f.Obj.(*gearspec.Gearspec)
 	switch f.Name {
 	case getSpec:
 		got = gsi.String()

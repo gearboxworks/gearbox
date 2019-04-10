@@ -11,6 +11,7 @@ import (
 	"gearbox/status/is"
 	"gearbox/types"
 	"gearbox/util"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -102,7 +103,17 @@ func (me *Gears) Initialize() (sts status.Status) {
 		var sc int
 		b, sc, sts = util.HttpRequest(JsonUrl)
 		if status.IsError(sts) || sc != http.StatusOK { // @TODO Bundle these as Assets so we will always have some options
-			log.Fatal("Could not download 'gears.json' and no options have previously been stored.")
+			log.Print("Could not download 'gears.json' and no options have previously been stored.")
+			filepath := fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), JsonFilename)
+			var err error
+			log.Printf("Loading included '%s'.", filepath)
+			b, err = ioutil.ReadFile(filepath)
+			if err != nil {
+				sts = status.Fail(&status.Args{
+					Message: fmt.Sprintf("unable to read '%s'", filepath),
+				})
+				break
+			}
 		}
 		sts = store.Set(CacheKey, b, "15m")
 		if is.Error(sts) {

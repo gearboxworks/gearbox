@@ -30,7 +30,7 @@ type Project struct {
 
 func (me *Project) GetItemLinkMap(*apimodeler.Context) (lm apimodeler.LinkMap, sts status.Status) {
 	return apimodeler.LinkMap{
-		apimodeler.RelatedRelType: apimodeler.Link("boofarfaz"),
+		//apimodeler.RelatedRelType: apimodeler.Link("https://example.com"),
 	}, sts
 }
 
@@ -57,7 +57,7 @@ func (me *Project) GetItem() (apimodeler.Itemer, status.Status) {
 	return me, nil
 }
 
-func (me *Project) AddDetails() (sts status.Status) {
+func (me *Project) AddDetails(ctx *apimodeler.Context) (sts status.Status) {
 	for range only.Once {
 		pp := project.NewProject(me.ConfigProject)
 		sts = pp.Load()
@@ -66,7 +66,7 @@ func (me *Project) AddDetails() (sts status.Status) {
 		}
 		me.Aliases = pp.Aliases
 		me.Filepath = pp.Filepath
-		me.Services, sts = ConvertServices(pp.GetServiceMap())
+		me.Services, sts = GetFromServiceStackMap(ctx, pp.GetServiceMap())
 		if is.Error(sts) {
 			break
 		}

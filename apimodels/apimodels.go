@@ -25,6 +25,7 @@ func AddModels(a api.Apier, gb gearbox.Gearboxer) (sts status.Status) {
 		if is.Error(sts) {
 			panic(sts.Message())
 		}
+
 	}
 	return sts
 }

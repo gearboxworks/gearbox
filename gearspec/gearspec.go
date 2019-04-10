@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-type Id struct {
+type Gearspec struct {
 	raw       Identifier
 	Authority types.AuthorityDomain `json:"authority,omitempty"`
 	Stackname types.Stackname       `json:"stack,omitempty"`
@@ -20,10 +20,10 @@ type Id struct {
 	Revision  types.Revision        `json:"revision,omitempty"`
 }
 
-type Args Id
+type Args Gearspec
 
-func NewGearspecId() *Id {
-	return &Id{}
+func NewGearspec() *Gearspec {
+	return &Gearspec{}
 }
 
 type reMap map[string]*regexp.Regexp
@@ -36,11 +36,11 @@ func init() {
 	re["ns_or_r"] = regexp.MustCompile("[^A-Za-z0-9-/]")
 }
 
-func (me *Id) ParseString(gearspecid string) (sts status.Status) {
+func (me *Gearspec) ParseString(gearspecid string) (sts status.Status) {
 	return me.Parse(Identifier(gearspecid))
 }
 
-func (me *Id) ParseStackId(stackid types.StackId) (sts status.Status) {
+func (me *Gearspec) ParseStackId(stackid types.StackId) (sts status.Status) {
 	gearspecid := fmt.Sprintf("%s/%s", stackid, "dummy")
 	sts = me.Parse(Identifier(gearspecid))
 	if is.Success(sts) {
@@ -49,14 +49,14 @@ func (me *Id) ParseStackId(stackid types.StackId) (sts status.Status) {
 	return sts
 }
 
-func (me *Id) Parse(gsi Identifier) (sts status.Status) {
+func (me *Gearspec) Parse(gsi Identifier) (sts status.Status) {
 	var err error
-	tmp := Id{raw: gsi}
+	tmp := Gearspec{raw: gsi}
 	for range only.Once {
 		if me == nil {
 			panic("gsi.Parse() called when 'gsi' is nil.")
 		}
-		*me = Id{}
+		*me = Gearspec{}
 		parts := strings.Split(string(gsi), ":")
 		if len(parts) > 1 {
 			_, err = strconv.Atoi(parts[1])
@@ -136,7 +136,7 @@ func (me *Id) Parse(gsi Identifier) (sts status.Status) {
 	return sts
 }
 
-func (me *Id) String() string {
+func (me *Gearspec) GetIdentifier() Identifier {
 	var s string
 	if me.Authority == "" && me.Stackname == "" && me.Revision == "" {
 		s = string(me.Role)
@@ -151,39 +151,43 @@ func (me *Id) String() string {
 	} else {
 		s = fmt.Sprintf("%s/%s/%s:%s", me.Authority, me.Stackname, me.Role, me.Revision)
 	}
-	return s
+	return Identifier(s)
 }
 
-func (me *Id) GetRaw() Identifier {
+func (me *Gearspec) String() string {
+	return string(me.GetIdentifier())
+}
+
+func (me *Gearspec) GetRaw() Identifier {
 	return me.raw
 }
 
-func (me *Id) GetAuthority() types.AuthorityDomain {
+func (me *Gearspec) GetAuthority() types.AuthorityDomain {
 	return me.Authority
 }
 
-func (me *Id) GetStackname() types.Stackname {
+func (me *Gearspec) GetStackname() types.Stackname {
 	return me.Stackname
 }
 
-func (me *Id) GetRole() types.StackRole {
+func (me *Gearspec) GetRole() types.StackRole {
 	return me.Role
 }
 
-func (me *Id) GetRevision() types.Revision {
+func (me *Gearspec) GetRevision() types.Revision {
 	return me.Revision
 }
 
-func (me *Id) GetStackId() types.StackId {
+func (me *Gearspec) GetStackId() types.StackId {
 	if me.Authority == "" {
 		me.Authority = global.DefaultAuthority
 	}
 	return types.StackId(fmt.Sprintf("%s/%s", me.Authority, me.Stackname))
 }
 
-func (me *Id) SetStackId(stackid types.StackId) (sts status.Status) {
+func (me *Gearspec) SetStackId(stackid types.StackId) (sts status.Status) {
 	for range only.Once {
-		tmp := Id{raw: Identifier(stackid)}
+		tmp := Gearspec{raw: Identifier(stackid)}
 		if me == nil {
 			panic("gearspec.SetStackId() called when 'spec' is nil.")
 		}

@@ -2,7 +2,7 @@ package apimodeler
 
 type Context struct {
 	Contexter
-	RootDocumentGetter
+	RootDocumenter
 	Models *Models
 }
 type ContextArgs Context

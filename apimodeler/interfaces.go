@@ -109,10 +109,13 @@ type ItemLinkMapGetter interface {
 	GetItemLinkMap(*Context) (LinkMap, status.Status)
 }
 
+type RootDocumenter interface {
+	ResponseTypeGetter
+	RootDocumentGetter
+}
 type ResponseTypeGetter interface {
 	GetResponseType() types.ResponseType
 }
 type RootDocumentGetter interface {
-	ResponseTypeGetter
 	GetRootDocument() interface{}
 }

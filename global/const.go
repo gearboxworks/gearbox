@@ -3,7 +3,7 @@ package global
 import "gearbox/types"
 
 const (
-	DefaultAuthority = "gears.gearbox.works"
+	DefaultAuthority = "gearbox.works"
 	DefaultOrgName   = "gearboxworks"
 	Brandname        = "Gearbox"
 	RelPrefix        = "gearbox"
