@@ -36,8 +36,10 @@ func (me *Api) GetRootLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap {
 			continue
 		}
 		s := ms.Self
-		rt := GetQualifiedRelType(apimodeler.RelType(s.GetName()))
-		lm[rt] = apimodeler.Link(s.GetBasepath())
+		lm.AddLink(
+			GetQualifiedRelType(apimodeler.RelType(s.GetName())),
+			apimodeler.Link(s.GetBasepath()),
+		)
 	}
 	return lm
 }
@@ -52,21 +54,37 @@ func (me *Api) GetListLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap {
 		if !ctx.Models.Self.CanAddItem(ctx) {
 			break
 		}
-		rt := GetQualifiedRelType(apimodeler.AddItemRelType)
-		lm[rt] = apimodeler.Link(fmt.Sprintf("%s/new", path))
+		lm.AddLink(
+			GetQualifiedRelType(apimodeler.AddItemRelType),
+			apimodeler.Link(fmt.Sprintf("%s/new", path)),
+		)
+		lm.AddLink(
+			GetQualifiedRelType(apimodeler.ListRelType),
+			apimodeler.Link(fmt.Sprintf("%s", path)),
+		)
 	}
 	return lm
 }
 
 func (me *Api) GetItemLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap {
 	lm := make(apimodeler.LinkMap, 0)
+	lm.AddLink(
+		GetQualifiedRelType(apimodeler.ItemRelType),
+		apimodeler.Link(fmt.Sprintf("%s", me.GetSelfPath(ctx))),
+	)
 	return lm
 }
 
 func (me *Api) GetCommonLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap {
 	lm := make(apimodeler.LinkMap, 0)
-	rt := GetQualifiedRelType(apimodeler.ItemRelType)
-	lm[rt] = apimodeler.Link(fmt.Sprintf("%s", me.GetSelfPath(ctx)))
+	lm.AddLink(
+		GetQualifiedRelType(apimodeler.RootRelType),
+		apimodeler.Link(apimodeler.Basepath),
+	)
+	lm.AddLink(
+		GetQualifiedRelType(apimodeler.CurrentRelType),
+		apimodeler.Link(me.GetSelfPath(ctx)),
+	)
 	return lm
 }
 

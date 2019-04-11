@@ -15,6 +15,7 @@ const (
 	SchemaDcRelType      RelType = "schema.DC"
 	SchemaDcTermsRelType RelType = "schema.DCTERMS"
 	SelfRelType          RelType = "self"
+	RootRelType          RelType = "root"
 	AddItemRelType       RelType = "additem"
 	RelatedRelType       RelType = "related"
 	FirstRelType         RelType = "first"
@@ -23,6 +24,7 @@ const (
 	NextRelType          RelType = "next"
 	ListRelType          RelType = "list"
 	ItemRelType          RelType = "item"
+	CurrentRelType       RelType = "current"
 )
 
 type Metaname string
