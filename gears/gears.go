@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/cache"
+	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
 	"gearbox/os_support"
@@ -69,6 +70,22 @@ func (me *Gears) GetNamedStackIds() (nsids types.StackIds, sts status.Status) {
 	return me.NamedStackIds, sts
 }
 
+func (me *Gears) GetAuthorities() (as types.Authorities, sts status.Status) {
+	as = make(types.Authorities, 0)
+	am := make(map[types.AuthorityDomain]bool, 0)
+	for _, sr := range me.StackRoleMap {
+		_, ok := am[sr.Authority]
+		if ok {
+			continue
+		}
+		am[sr.Authority] = true
+		as = append(as, sr.Authority)
+	}
+	return as, nil
+}
+func (me *Gears) FindAuthority(authority types.AuthorityDomain) (ad types.AuthorityDomain, sts status.Status) {
+	return authority, nil
+}
 func (me *Gears) GetStackRoleMap() (StackRoleMap, status.Status) {
 	return me.StackRoleMap, nil
 }
@@ -180,4 +197,8 @@ func (me *Gears) Unmarshal(b []byte) (sts status.Status) {
 		})
 	}
 	return sts
+}
+
+func (me *Gears) FindGearspec(gsid gearspec.Identifier) (gs *gearspec.Gearspec, sts status.Status) {
+	return nil, nil
 }

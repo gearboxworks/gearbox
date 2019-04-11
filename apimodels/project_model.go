@@ -5,7 +5,6 @@ import (
 	"gearbox/apimodeler"
 	"gearbox/config"
 	"gearbox/gearbox"
-	"gearbox/global"
 	"gearbox/only"
 	"gearbox/project"
 	"gearbox/status"
@@ -25,9 +24,10 @@ const EnabledProjectsFilter apimodeler.FilterPath = "/enabled"
 const DisabledProjectsFilter apimodeler.FilterPath = "/disabled"
 
 var NilProjectModel = (*ProjectModel)(nil)
-var _ apimodeler.Modeler = NilProjectModel
+var _ apimodeler.ApiModeler = NilProjectModel
 
 type ProjectModel struct {
+	apimodeler.BaseModel
 	Gearbox gearbox.Gearboxer
 }
 
@@ -126,7 +126,7 @@ func (me *ProjectModel) GetListIds(ctx *apimodeler.Context, filterPath ...apimod
 	return itemids, sts
 }
 
-func (me *ProjectModel) AddItem(ctx *apimodeler.Context, item apimodeler.Itemer) (sts status.Status) {
+func (me *ProjectModel) AddItem(ctx *apimodeler.Context, item apimodeler.ApiItemer) (sts status.Status) {
 	for range only.Once {
 		var pp *project.Project
 		pp, _, sts = me.extractGearboxProject(ctx, item)
@@ -143,7 +143,7 @@ func (me *ProjectModel) AddItem(ctx *apimodeler.Context, item apimodeler.Itemer)
 	return sts
 }
 
-func (me *ProjectModel) UpdateItem(ctx *apimodeler.Context, item apimodeler.Itemer) (sts status.Status) {
+func (me *ProjectModel) UpdateItem(ctx *apimodeler.Context, item apimodeler.ApiItemer) (sts status.Status) {
 	for range only.Once {
 		var pp *project.Project
 		pp, _, sts = me.extractGearboxProject(ctx, item)
@@ -173,7 +173,7 @@ func (me *ProjectModel) DeleteItem(ctx *apimodeler.Context, hostname apimodeler.
 	return sts
 }
 
-func (me *ProjectModel) GetItem(ctx *apimodeler.Context, hostname apimodeler.ItemId) (list apimodeler.Itemer, sts status.Status) {
+func (me *ProjectModel) GetItem(ctx *apimodeler.Context, hostname apimodeler.ItemId) (list apimodeler.ApiItemer, sts status.Status) {
 	var p *Project
 	for range only.Once {
 		cp, sts := me.Gearbox.GetConfig().FindProject(types.Hostname(hostname))
@@ -191,19 +191,37 @@ func (me *ProjectModel) GetItem(ctx *apimodeler.Context, hostname apimodeler.Ite
 		if is.Error(sts) {
 			break
 		}
-		if ctx.GetResponseType() == global.ItemResponse {
-			sts = p.AddDetails(ctx)
-			if is.Error(sts) {
-				break
-			}
-		}
 		sts = status.Success("project '%s' found", hostname)
 	}
 	return p, sts
-
 }
 
-func (me *ProjectModel) FilterItem(in apimodeler.Itemer, filterPath apimodeler.FilterPath) (out apimodeler.Itemer, sts status.Status) {
+func (me *ProjectModel) GetItemDetails(ctx *apimodeler.Context, itemid apimodeler.ItemId) (item apimodeler.ApiItemer, sts status.Status) {
+	for range only.Once {
+		item, sts = me.GetItem(ctx, itemid)
+		if is.Error(sts) {
+			break
+		}
+		p, ok := item.(*Project)
+		if !ok {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("item '%s' not a project.Project", itemid),
+			})
+			break
+		}
+		sts = p.AddDetails(ctx)
+		if is.Error(sts) {
+			break
+		}
+	}
+	return item, sts
+}
+
+func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context, itemid apimodeler.ItemId) (apimodeler.List, status.Status) {
+	return make(apimodeler.List, 0), nil
+}
+
+func (me *ProjectModel) FilterItem(in apimodeler.ApiItemer, filterPath apimodeler.FilterPath) (out apimodeler.ApiItemer, sts status.Status) {
 	for range only.Once {
 		if filterPath == apimodeler.NoFilterPath {
 			out = in
@@ -234,7 +252,7 @@ func (me *ProjectModel) GetFilterMap() apimodeler.FilterMap {
 		ProjectsWithDetailsFilter: apimodeler.Filter{
 			Label: "Projects with Details",
 			Path:  ProjectsWithDetailsFilter,
-			ItemFilter: func(item apimodeler.Itemer) apimodeler.Itemer {
+			ItemFilter: func(item apimodeler.ApiItemer) apimodeler.ApiItemer {
 				panic(fmt.Sprintf("%s not yet implemented", ProjectsWithDetailsFilter))
 				return nil
 			},
@@ -242,7 +260,7 @@ func (me *ProjectModel) GetFilterMap() apimodeler.FilterMap {
 		EnabledProjectsFilter: apimodeler.Filter{
 			Label: "Enabled Projects",
 			Path:  EnabledProjectsFilter,
-			ItemFilter: func(item apimodeler.Itemer) apimodeler.Itemer {
+			ItemFilter: func(item apimodeler.ApiItemer) apimodeler.ApiItemer {
 				p, sts := AssertProject(item)
 				if is.Success(sts) && p.Enabled {
 					return item
@@ -253,7 +271,7 @@ func (me *ProjectModel) GetFilterMap() apimodeler.FilterMap {
 		DisabledProjectsFilter: apimodeler.Filter{
 			Label: "Disabled Projects",
 			Path:  DisabledProjectsFilter,
-			ItemFilter: func(item apimodeler.Itemer) apimodeler.Itemer {
+			ItemFilter: func(item apimodeler.ApiItemer) apimodeler.ApiItemer {
 				p, sts := AssertProject(item)
 				if is.Success(sts) && !p.Enabled {
 					return item
@@ -271,7 +289,7 @@ func (me *ProjectModel) getGearboxProjectMap() (pm project.Map, sts status.Statu
 	return pm, sts
 }
 
-func (me *ProjectModel) extractGearboxProject(ctx *apimodeler.Context, item apimodeler.Itemer) (gbp *project.Project, list apimodeler.List, sts status.Status) {
+func (me *ProjectModel) extractGearboxProject(ctx *apimodeler.Context, item apimodeler.ApiItemer) (gbp *project.Project, list apimodeler.List, sts status.Status) {
 	var p *Project
 	for range only.Once {
 		list, sts = me.GetList(ctx)
@@ -295,7 +313,7 @@ func MakeGearboxProject(gb gearbox.Gearboxer, prj *Project) (pp *project.Project
 	return pp, sts
 }
 
-func AssertProject(item apimodeler.Itemer) (p *Project, sts status.Status) {
+func AssertProject(item apimodeler.ApiItemer) (p *Project, sts status.Status) {
 	p, ok := item.(*Project)
 	if !ok {
 		sts = status.Fail(&status.Args{

@@ -26,7 +26,7 @@ type KeyValueSetter interface {
 	Set(string, interface{})
 }
 
-type Modeler interface {
+type ApiModeler interface {
 	NameGetter
 	BasepathGetter
 	IdParamsGetter
@@ -37,11 +37,15 @@ type Modeler interface {
 	ListItemUpdater
 	ListItemDeleter
 	ListItemGetter
+	ListItemDetailsGetter
 	ListFilterer
 	ListLinkMapGetter
 	ItemFilterer
+	ItemCanAdder
 }
-
+type ItemCanAdder interface {
+	CanAddItem(*Context) bool
+}
 type NameGetter interface {
 	GetName() types.RouteName
 }
@@ -58,19 +62,22 @@ type ListIdsGetter interface {
 	GetListIds(*Context, ...FilterPath) (ItemIds, status.Status)
 }
 type ListItemAdder interface {
-	AddItem(*Context, Itemer) status.Status
+	AddItem(*Context, ApiItemer) status.Status
 }
 type ListItemUpdater interface {
-	UpdateItem(*Context, Itemer) status.Status
+	UpdateItem(*Context, ApiItemer) status.Status
 }
 type ListItemDeleter interface {
 	DeleteItem(*Context, ItemId) status.Status
 }
 type ListItemGetter interface {
-	GetItem(*Context, ItemId) (Itemer, status.Status)
+	GetItem(*Context, ItemId) (ApiItemer, status.Status)
+}
+type ListItemDetailsGetter interface {
+	GetItemDetails(*Context, ItemId) (ApiItemer, status.Status)
 }
 type ItemFilterer interface {
-	FilterItem(Itemer, FilterPath) (Itemer, status.Status)
+	FilterItem(ApiItemer, FilterPath) (ApiItemer, status.Status)
 }
 type ListFilterer interface {
 	FilterList(*Context, FilterPath) (List, status.Status)
@@ -85,12 +92,13 @@ type ListLinkMapGetter interface {
 	GetListLinkMap(*Context, ...FilterPath) (LinkMap, status.Status)
 }
 
-type Itemer interface {
+type ApiItemer interface {
 	ItemIdGetter
 	ItemIdSetter
 	ItemTypeGetter
 	ItemGetter
 	ItemLinkMapGetter
+	RelatedItemsGetter
 }
 
 type ItemIdGetter interface {
@@ -100,13 +108,16 @@ type ItemTypeGetter interface {
 	GetType() ItemType
 }
 type ItemGetter interface {
-	GetItem() (Itemer, status.Status)
+	GetItem() (ApiItemer, status.Status)
 }
 type ItemIdSetter interface {
 	SetId(ItemId) status.Status
 }
 type ItemLinkMapGetter interface {
 	GetItemLinkMap(*Context) (LinkMap, status.Status)
+}
+type RelatedItemsGetter interface {
+	GetRelatedItems(*Context, ItemId) (List, status.Status)
 }
 
 type RootDocumenter interface {

@@ -11,12 +11,12 @@ import (
 
 type ModelsMap map[types.Basepath]*Models
 type Models struct {
-	Self     Modeler
+	Self     ApiModeler
 	Parent   *Models
 	Children ModelsMap
 }
 
-func NewModels(self Modeler) *Models {
+func NewModels(self ApiModeler) *Models {
 	return &Models{
 		Self:     self,
 		Children: make(ModelsMap, 0),

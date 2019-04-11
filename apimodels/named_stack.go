@@ -17,7 +17,7 @@ import (
 const NamedStackType = "stack"
 
 var NilNamedStack = (*NamedStack)(nil)
-var _ apimodeler.Itemer = NilNamedStack
+var _ apimodeler.ApiItemer = NilNamedStack
 
 func NewFromGearsNamedStack(ctx *apimodeler.Context, gns *gears.NamedStack) (ns *NamedStack, sts status.Status) {
 	for range only.Once {
@@ -93,7 +93,7 @@ func (me *NamedStack) SetId(itemid apimodeler.ItemId) (sts status.Status) {
 	return sts
 }
 
-func (me *NamedStack) GetItem() (apimodeler.Itemer, status.Status) {
+func (me *NamedStack) GetItem() (apimodeler.ApiItemer, status.Status) {
 	return me, nil
 }
 
@@ -101,4 +101,9 @@ func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStack) (gbns *gears.NamedSt
 	gbns = gears.NewNamedStack(gb.GetGears(), types.StackId(ns.GetId()))
 	sts = gbns.Refresh()
 	return gbns, sts
+}
+
+func (me *NamedStack) GetRelatedItems(ctx *apimodeler.Context, itemid apimodeler.ItemId) (list apimodeler.List, sts status.Status) {
+	list = make(apimodeler.List, 0)
+	return list, sts
 }

@@ -9,7 +9,7 @@ import (
 const Rootname = "root"
 
 var NilRootModel = (*RootModel)(nil)
-var _ apimodeler.Modeler = NilRootModel
+var _ apimodeler.ApiModeler = NilRootModel
 
 type RootModel struct {
 	*apimodeler.BaseModel

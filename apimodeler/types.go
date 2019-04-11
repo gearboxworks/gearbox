@@ -12,7 +12,7 @@ type Filters []Filter
 type Filter struct {
 	Label      FilterLabel
 	Path       FilterPath
-	ItemFilter func(Itemer) Itemer
+	ItemFilter func(ApiItemer) ApiItemer
 	ListFilter func(List) List
 }
 

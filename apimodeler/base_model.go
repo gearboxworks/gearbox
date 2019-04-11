@@ -12,7 +12,7 @@ import (
 const Basename = "base"
 const Basepath types.Basepath = "/"
 
-var _ Modeler = (*BaseModel)(nil)
+var _ ApiModeler = (*BaseModel)(nil)
 
 type BaseModel struct {
 	LinkMap LinkMap
@@ -33,6 +33,10 @@ func (me *BaseModel) AddLinks(links LinkMap) {
 }
 func (me *BaseModel) GetListLinkMap(*Context, ...FilterPath) (lm LinkMap, sts status.Status) {
 	return me.LinkMap, sts
+}
+
+func (me *BaseModel) CanAddItem(*Context) bool {
+	return true
 }
 
 func (me *BaseModel) GetName() types.RouteName {
@@ -65,14 +69,14 @@ func (me *BaseModel) GetListIds(ctx *Context, filterPath ...FilterPath) (itemids
 	return itemids, sts
 }
 
-func (me *BaseModel) AddItem(ctx *Context, item Itemer) (sts status.Status) {
+func (me *BaseModel) AddItem(ctx *Context, item ApiItemer) (sts status.Status) {
 	return status.Fail(&status.Args{
 		Message:    "not supported",
 		HttpStatus: http.StatusMethodNotAllowed,
 	})
 }
 
-func (me *BaseModel) UpdateItem(ctx *Context, item Itemer) (sts status.Status) {
+func (me *BaseModel) UpdateItem(ctx *Context, item ApiItemer) (sts status.Status) {
 	return status.Fail(&status.Args{
 		Message:    "not supported",
 		HttpStatus: http.StatusMethodNotAllowed,
@@ -86,12 +90,19 @@ func (me *BaseModel) DeleteItem(ctx *Context, hostname ItemId) (sts status.Statu
 	})
 }
 
-func (me *BaseModel) GetItem(ctx *Context, hostname ItemId) (item Itemer, sts status.Status) {
+func (me *BaseModel) GetItem(ctx *Context, hostname ItemId) (item ApiItemer, sts status.Status) {
 	return item, status.Success("Root found", hostname)
-
 }
 
-func (me *BaseModel) FilterItem(in Itemer, filterPath FilterPath) (out Itemer, sts status.Status) {
+func (me *BaseModel) GetItemDetails(ctx *Context, hostname ItemId) (ApiItemer, status.Status) {
+	return me.GetItem(ctx, hostname)
+}
+
+func (me *BaseModel) GetRelatedItems(ctx *Context, filterPath ...FilterPath) (List, status.Status) {
+	return make(List, 0), nil
+}
+
+func (me *BaseModel) FilterItem(in ApiItemer, filterPath FilterPath) (out ApiItemer, sts status.Status) {
 	for range only.Once {
 		if filterPath == NoFilterPath {
 			out = in

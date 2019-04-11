@@ -13,7 +13,7 @@ import (
 const ProjectTypeName = "project"
 
 var ProjectInstance = (*Project)(nil)
-var _ apimodeler.Itemer = ProjectInstance
+var _ apimodeler.ApiItemer = ProjectInstance
 
 type Project struct {
 	Hostname      apimodeler.ItemId       `json:"hostname"`
@@ -53,7 +53,7 @@ func (me *Project) SetId(hostname apimodeler.ItemId) status.Status {
 	return nil
 }
 
-func (me *Project) GetItem() (apimodeler.Itemer, status.Status) {
+func (me *Project) GetItem() (apimodeler.ApiItemer, status.Status) {
 	return me, nil
 }
 
@@ -72,6 +72,11 @@ func (me *Project) AddDetails(ctx *apimodeler.Context) (sts status.Status) {
 		}
 	}
 	return sts
+}
+
+func (me *Project) GetRelatedItems(ctx *apimodeler.Context, itemid apimodeler.ItemId) (list apimodeler.List, sts status.Status) {
+	list = make(apimodeler.List, 0)
+	return list, sts
 }
 
 func ConvertProject(cp *config.Project) (p *Project, sts status.Status) {

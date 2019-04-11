@@ -44,8 +44,17 @@ func (me *Api) GetRootLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap {
 
 func (me *Api) GetListLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap {
 	lm := make(apimodeler.LinkMap, 0)
-	rt := GetQualifiedRelType(apimodeler.AddItemRelType)
-	lm[rt] = apimodeler.Link(fmt.Sprintf("%s/new", me.GetSelfPath(ctx)))
+	for range only.Once {
+		path := me.GetSelfPath(ctx)
+		if types.Basepath(path) == apimodeler.Basepath {
+			break
+		}
+		if !ctx.Models.Self.CanAddItem(ctx) {
+			break
+		}
+		rt := GetQualifiedRelType(apimodeler.AddItemRelType)
+		lm[rt] = apimodeler.Link(fmt.Sprintf("%s/new", path))
+	}
 	return lm
 }
 
@@ -168,8 +177,8 @@ func (me *Api) ConnectRoutes() {
 				if is.Error(sts) {
 					break
 				}
-				var item apimodeler.Itemer
-				item, sts = ms.Self.GetItem(ctx, id)
+				var item apimodeler.ApiItemer
+				item, sts = ms.Self.GetItemDetails(ctx, id)
 				if is.Error(sts) {
 					break
 				}
@@ -182,7 +191,7 @@ func (me *Api) ConnectRoutes() {
 	}
 }
 
-func (me *Api) GetItemUrl(ctx *apimodeler.Context, item apimodeler.Itemer) (u types.UrlTemplate, sts status.Status) {
+func (me *Api) GetItemUrl(ctx *apimodeler.Context, item apimodeler.ApiItemer) (u types.UrlTemplate, sts status.Status) {
 	for range only.Once {
 		//
 		// @TODO This may need to be make more robust later
@@ -288,7 +297,7 @@ func (me *Api) JsonMarshalHandler(ctx *apimodeler.Context, sts status.Status) st
 	return sts
 }
 
-func (me *Api) AddModels(models apimodeler.Modeler) (sts status.Status) {
+func (me *Api) AddModels(models apimodeler.ApiModeler) (sts status.Status) {
 	for range only.Once {
 		getter, ok := models.(apimodeler.BasepathGetter)
 		if !ok {
@@ -339,7 +348,7 @@ func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.S
 	return ro, sts
 }
 
-func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.Itemer) (sts status.Status) {
+func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.ApiItemer) (sts status.Status) {
 	for range only.Once {
 		itemId := item.GetId()
 		sts = ro.SetId(ja.ResourceId(itemId))
