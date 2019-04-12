@@ -10,13 +10,13 @@ import (
 	"gearbox/types"
 )
 
-const ProjectTypeName = "project"
+const ProjectTypeName apimodeler.ItemType = "project"
 
 var ProjectInstance = (*Project)(nil)
 var _ apimodeler.ApiItemer = ProjectInstance
 
 type Project struct {
-	Hostname      apimodeler.ItemId       `json:"hostname"`
+	Hostname      types.Hostname          `json:"hostname"`
 	Enabled       bool                    `json:"enabled"`
 	Basedir       types.Nickname          `json:"basedir"`
 	Notes         string                  `json:"notes"`
@@ -28,15 +28,9 @@ type Project struct {
 	ConfigProject *config.Project         `json:"-"`
 }
 
-func (me *Project) GetItemLinkMap(*apimodeler.Context) (lm apimodeler.LinkMap, sts status.Status) {
-	return apimodeler.LinkMap{
-		//apimodeler.RelatedRelType: apimodeler.Link("https://example.com"),
-	}, sts
-}
-
 func NewProject(hostname apimodeler.ItemId) *Project {
 	return &Project{
-		Hostname: hostname,
+		Hostname: types.Hostname(hostname),
 	}
 }
 
@@ -45,16 +39,27 @@ func (me *Project) GetType() apimodeler.ItemType {
 }
 
 func (me *Project) GetId() apimodeler.ItemId {
-	return me.Hostname
+	return apimodeler.ItemId(me.Hostname)
 }
 
 func (me *Project) SetId(hostname apimodeler.ItemId) status.Status {
-	me.Hostname = hostname
+	me.Hostname = types.Hostname(hostname)
 	return nil
 }
 
 func (me *Project) GetItem() (apimodeler.ApiItemer, status.Status) {
 	return me, nil
+}
+
+func (me *Project) GetItemLinkMap(*apimodeler.Context) (lm apimodeler.LinkMap, sts status.Status) {
+	return apimodeler.LinkMap{
+		//apimodeler.RelatedRelType: apimodeler.Link("https://example.com"),
+	}, sts
+}
+
+func (me *Project) GetRelatedItems(ctx *apimodeler.Context, itemid apimodeler.ItemId) (list apimodeler.List, sts status.Status) {
+	list = make(apimodeler.List, 0)
+	return list, sts
 }
 
 func (me *Project) AddDetails(ctx *apimodeler.Context) (sts status.Status) {
@@ -74,19 +79,14 @@ func (me *Project) AddDetails(ctx *apimodeler.Context) (sts status.Status) {
 	return sts
 }
 
-func (me *Project) GetRelatedItems(ctx *apimodeler.Context, itemid apimodeler.ItemId) (list apimodeler.List, sts status.Status) {
-	list = make(apimodeler.List, 0)
-	return list, sts
-}
-
-func ConvertProject(cp *config.Project) (p *Project, sts status.Status) {
+func NewFromConfigProject(cp *config.Project) (p *Project, sts status.Status) {
 	for range only.Once {
 		pd, sts := cp.GetDir()
 		if is.Error(sts) {
 			break
 		}
 		p = &Project{
-			Hostname:      apimodeler.ItemId(cp.Hostname),
+			Hostname:      cp.Hostname,
 			Basedir:       cp.Basedir,
 			Notes:         cp.Notes,
 			Path:          cp.Path,

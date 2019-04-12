@@ -70,7 +70,7 @@
             "gearbox.works/lemp/mysql": {
                "links": {},
                "data": {
-                  "org": "gearboxworks",
+                  "orgname": "gearboxworks",
                   "default": "gearboxworks/mariadb",
                   "options": [
                      "gearboxworks/mariadb:5.5",
@@ -88,7 +88,7 @@
             "gearbox.works/lemp/nginx": {
                "links": {},
                "data": {
-                  "org": "gearboxworks",
+                  "orgname": "gearboxworks",
                   "default": "gearboxworks/nginx",
                   "options": [
                      "gearboxworks/nginx:1.12",
@@ -101,7 +101,7 @@
             "gearbox.works/lemp/p-script": {
                "links": {},
                "data": {
-                  "org": "gearboxworks",
+                  "orgname": "gearboxworks",
                   "default": "gearboxworks/php",
                   "options": [
                      "gearboxworks/php:5.2",

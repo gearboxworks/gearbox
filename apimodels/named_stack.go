@@ -98,7 +98,8 @@ func (me *NamedStack) GetItem() (apimodeler.ApiItemer, status.Status) {
 }
 
 func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStack) (gbns *gears.NamedStack, sts status.Status) {
-	gbns = gears.NewNamedStack(gb.GetGears(), types.StackId(ns.GetId()))
+	//	gbns = gears.NewNamedStack(gb.GetGears(), types.StackId(ns.GetId()))
+	gbns = gears.NewNamedStack(types.StackId(ns.GetId()))
 	sts = gbns.Refresh()
 	return gbns, sts
 }

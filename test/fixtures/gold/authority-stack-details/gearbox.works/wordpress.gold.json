@@ -71,16 +71,16 @@
       },
       "role_services": {
          "gearbox.works/wordpress/cacheserver": {
-            "org": "gearboxworks"
+            "orgname": "gearboxworks"
          },
          "gearbox.works/wordpress/dbserver": {
-            "org": "gearboxworks"
+            "orgname": "gearboxworks"
          },
          "gearbox.works/wordpress/processvm": {
-            "org": "gearboxworks"
+            "orgname": "gearboxworks"
          },
          "gearbox.works/wordpress/webserver": {
-            "org": "gearboxworks"
+            "orgname": "gearboxworks"
          }
       }
    }

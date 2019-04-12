@@ -2,7 +2,6 @@ package gears
 
 import (
 	"gearbox/api/global"
-	"gearbox/gear"
 	"gearbox/gearspec"
 	"gearbox/only"
 	"gearbox/status"
@@ -13,14 +12,14 @@ import (
 // Example from gears.json/services
 var _ = `{
   "gearbox.works/lamp/apache": {
-	 "org": "gearboxworks",
+	 "orgname": "gearboxworks",
 	 "default": "apache",
 	 "options": [
 		"apache:2.4"
 	 ]
   },
   "gearbox.works/lamp/mysql": {
-	 "org": "gearboxworks",
+	 "orgname": "gearboxworks",
 	 "default": "mysql",
 	 "options": [
 		"mysql:5.5",
@@ -30,7 +29,7 @@ var _ = `{
 	 ]
   },
   "gearbox.works/lamp/php": {
-	 "org": "gearboxworks",
+	 "orgname": "gearboxworks",
 	 "default": "php",
 	 "options": [
 		"php:5.2",
@@ -46,10 +45,11 @@ type RoleServicesMap map[gearspec.Identifier]*RoleServices
 
 type RoleServices struct {
 	NamedStackId   types.StackId           `json:"-"`
-	OrgName        types.OrgName           `json:"org,omitempty"`
-	Default        gear.Identifier         `json:"default"`
+	Orgname        types.Orgname           `json:"orgname,omitempty"`
+	ServiceType    types.ServiceType       `json:"service_type,omitempty"`
+	Default        types.ServiceId         `json:"default"`
 	Shareable      global.ShareableChoices `json:"shareable"`
-	ServiceIds     gear.Identifiers        `json:"choices,omitempty"`
+	ServiceIds     types.ServiceIds        `json:"options,omitempty"`
 	DefaultService *Service                `json:"-"`
 	Services       Services                `json:"-"`
 }
@@ -81,47 +81,36 @@ func (me RoleServicesMap) FilterForNamedStack(stackid types.StackId) (nsrm RoleS
 
 func (me *RoleServices) Fixup(id gearspec.Identifier) (sts status.Status) {
 	for range only.Once {
-		gsi := gearspec.NewGearspec()
-		sts = gsi.Parse(gearspec.Identifier(id))
+		gs := gearspec.NewGearspec()
+		sts = gs.Parse(gearspec.Identifier(id))
 		if is.Error(sts) {
 			break
 		}
-		me.NamedStackId = gsi.GetStackId()
+		me.NamedStackId = gs.GetStackId()
 		if me.Default != "" {
 			me.DefaultService, sts = me.FixupService(me.Default)
 			if is.Error(sts) {
 				break
 			}
-			if me.DefaultService.OrgName == "" {
-				me.DefaultService.OrgName = me.OrgName
-			}
 		}
 		me.Default = ""
 		me.Services = make(Services, len(me.ServiceIds))
 		for i, sid := range me.ServiceIds {
-			me.Services[i], sts = me.FixupService(sid)
+			var s *Service
+			s, sts = me.FixupService(sid)
 			if is.Error(sts) {
 				break
 			}
+			s.GearspecId = gs.GetIdentifier()
+			me.Services[i] = s
 		}
 		me.ServiceIds = nil
 	}
 	return sts
 }
 
-func (me *RoleServices) FixupService(serviceId gear.Identifier) (s *Service, sts status.Status) {
-	for range only.Once {
-		s = NewService(serviceId)
-		if me.DefaultService != nil {
-			sts = s.ApplyDefaults(me.DefaultService)
-			break
-		}
-		me.DefaultService = NewService(serviceId)
-		_, sts = me.DefaultService.Parse()
-		if is.Error(sts) {
-			break
-		}
-		sts = s.ApplyDefaults(me.DefaultService)
-	}
+func (me *RoleServices) FixupService(serviceId types.ServiceId) (s *Service, sts status.Status) {
+	s = NewService()
+	sts = s.Parse(serviceId)
 	return s, sts
 }

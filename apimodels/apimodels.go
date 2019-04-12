@@ -15,6 +15,7 @@ func AddModels(a api.Apier, gb gearbox.Gearboxer) (sts status.Status) {
 		models := []apimodeler.ApiModeler{
 			NewProjectModel(gb),
 			NewStackModel(gb),
+			NewServiceModel(gb),
 			NewGearspecModel(gb),
 			NewAuthorityModel(gb),
 			NewRootModel(gb),

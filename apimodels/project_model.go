@@ -77,7 +77,7 @@ func (me *ProjectModel) GetList(ctx *apimodeler.Context, filterPath ...apimodele
 			break
 		}
 		for _, cp := range cpm {
-			pp, sts := ConvertProject(cp)
+			pp, sts := NewFromConfigProject(cp)
 			if is.Error(sts) {
 				break
 			}
@@ -187,7 +187,7 @@ func (me *ProjectModel) GetItem(ctx *apimodeler.Context, hostname apimodeler.Ite
 			})
 			break
 		}
-		p, sts = ConvertProject(cp)
+		p, sts = NewFromConfigProject(cp)
 		if is.Error(sts) {
 			break
 		}

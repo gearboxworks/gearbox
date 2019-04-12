@@ -91,7 +91,7 @@
             "gearbox.works/wordpress/cacheserver": {
                "links": {},
                "data": {
-                  "org": "gearboxworks",
+                  "orgname": "gearboxworks",
                   "options": [
                      "gearboxworks/memcached:1.5",
                      "gearboxworks/redis:3.2",
@@ -102,7 +102,7 @@
             "gearbox.works/wordpress/dbserver": {
                "links": {},
                "data": {
-                  "org": "gearboxworks",
+                  "orgname": "gearboxworks",
                   "default": "gearboxworks/mariadb",
                   "options": [
                      "gearboxworks/mariadb:5.5",
@@ -120,7 +120,7 @@
             "gearbox.works/wordpress/processvm": {
                "links": {},
                "data": {
-                  "org": "gearboxworks",
+                  "orgname": "gearboxworks",
                   "default": "gearboxworks/php",
                   "options": [
                      "gearboxworks/php:5.2",
@@ -134,7 +134,7 @@
             "gearbox.works/wordpress/webserver": {
                "links": {},
                "data": {
-                  "org": "gearboxworks",
+                  "orgname": "gearboxworks",
                   "default": "gearboxworks/nginx",
                   "options": [
                      "gearboxworks/apache:2.4",

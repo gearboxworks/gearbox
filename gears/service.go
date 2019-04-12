@@ -13,14 +13,14 @@ import (
 
 type ServiceBag map[gearspec.Identifier]interface{}
 
-type ServiceMap map[gear.Identifier]*Service
+type ServiceMap map[types.ServiceId]*Service
 
 type DefaultServiceMap map[gearspec.Identifier]*Service
 
 type Services []*Service
 
-func (me Services) ServiceIds() gear.Identifiers {
-	services := make(gear.Identifiers, len(me))
+func (me Services) ServiceIds() types.ServiceIds {
+	services := make(types.ServiceIds, len(me))
 	for i, s := range me {
 		services[i] = s.ServiceId
 	}
@@ -28,70 +28,84 @@ func (me Services) ServiceIds() gear.Identifiers {
 }
 
 type Service struct {
-	ServiceId gear.Identifier   `json:"service_id,omitempty"`
-	OrgName   types.OrgName     `json:"org,omitempty"`
-	Type      types.ServiceType `json:"type,omitempty"`
-	Program   types.ProgramName `json:"program,omitempty"`
-	Version   types.Version     `json:"version,omitempty"`
+	ServiceId   types.ServiceId     `json:"service_id,omitempty"`
+	Orgname     types.Orgname       `json:"org,omitempty"`
+	ServiceType types.ServiceType   `json:"type,omitempty"`
+	Program     types.ProgramName   `json:"program,omitempty"`
+	Version     types.Version       `json:"version,omitempty"`
+	GearspecId  gearspec.Identifier `json:"gearspec_id,omitempty"`
 }
 type ServiceArgs Service
 
-func NewService(serviceId gear.Identifier, args ...*ServiceArgs) *Service {
-	var _args *ServiceArgs
-	if len(args) == 0 {
-		_args = &ServiceArgs{}
-	} else {
-		_args = args[0]
-	}
-	_args.ServiceId = serviceId
-	s := Service{}
-	s = Service(*_args)
-	return &s
+func NewService() *Service {
+	return &Service{}
 }
 
-func (me *Service) SetIdentifier(serviceId gear.Identifier) status.Status {
+func (me *Service) Clone() *Service {
+	_s := Service{}
+	_s = *me
+	return &_s
+}
+
+func (me *Service) GetIdentifier() (serviceId types.ServiceId) {
+	return me.ServiceId
+}
+
+func (me *Service) SetIdentifier(serviceId types.ServiceId) status.Status {
 	me.ServiceId = serviceId
 	return me.ApplyDefaults(me)
 }
 
-func (me *Service) Parse() (gid *gear.Gear, sts status.Status) {
-	gid = gear.NewGear()
-	for range only.Once {
-		sts = gid.Parse(gear.Identifier(me.ServiceId))
-		if status.IsError(sts) {
-			break
-		}
+func (me *Service) Parse(serviceId types.ServiceId) (sts status.Status) {
+	return me.SetIdentifier(serviceId)
+}
+
+func (me *Service) CaptureGearId(g *gear.Gear) {
+	me.ServiceId = types.ServiceId(g.GetIdentifier())
+	me.Orgname = g.OrgName
+	me.ServiceType = g.ServiceType
+	me.Program = g.Program
+	if g.Version == nil {
+		me.Version = ""
+	} else {
+		me.Version = types.Version(g.Version.String())
 	}
-	if is.Success(sts) {
-		me.CaptureGearId(gid)
-	}
-	return gid, sts
+}
+
+func (me *Service) GetGear(serviceId types.ServiceId) (g *gear.Gear, sts status.Status) {
+	g = gear.NewGear()
+	sts = g.Parse(gear.Identifier(serviceId))
+	return g, sts
 }
 
 func (me *Service) ApplyDefaults(defaults *Service) (sts status.Status) {
-	var gid *gear.Gear
+	var g *gear.Gear
 	for range only.Once {
-		gid, sts = me.Parse()
-		if status.IsError(sts) {
-			break
+		if defaults == nil {
+			g = gear.NewGear()
+		} else {
+			g, sts = me.GetGear(defaults.GetIdentifier())
+			if status.IsError(sts) {
+				break
+			}
 		}
-		if gid.OrgName == "" {
-			if defaults != nil && defaults.OrgName != "" {
-				gid.OrgName = defaults.OrgName
-			} else if me.OrgName != "" {
-				gid.OrgName = me.OrgName
+		if g.OrgName == "" {
+			if defaults != nil && defaults.Orgname != "" {
+				g.OrgName = defaults.Orgname
+			} else if me.Orgname != "" {
+				g.OrgName = me.Orgname
 			} else {
-				gid.OrgName = global.DefaultOrgName
+				g.OrgName = global.DefaultOrgName
 			}
 		}
 		if defaults == nil {
 			break
 		}
-		if gid.Program == "" {
-			gid.Program = defaults.Program
+		if g.Program == "" {
+			g.Program = defaults.Program
 		}
-		if gid.Type == "" {
-			gid.Type = defaults.Type
+		if g.ServiceType == "" {
+			g.ServiceType = defaults.ServiceType
 		}
 		if defaults.Version == "" {
 			break
@@ -101,7 +115,7 @@ func (me *Service) ApplyDefaults(defaults *Service) (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
-		serviceVersion := gid.Version
+		serviceVersion := g.Version
 		if serviceVersion.Revision == "" {
 			serviceVersion.Revision = defaultVersion.Revision
 			if serviceVersion.Patch == "" {
@@ -116,15 +130,7 @@ func (me *Service) ApplyDefaults(defaults *Service) (sts status.Status) {
 		}
 	}
 	if is.Success(sts) {
-		me.CaptureGearId(gid)
+		me.CaptureGearId(g)
 	}
 	return sts
-}
-
-func (me *Service) CaptureGearId(gid *gear.Gear) {
-	me.ServiceId = gear.Identifier(gid.GetIdentifier())
-	me.OrgName = gid.OrgName
-	me.Type = gid.Type
-	me.Program = gid.Program
-	me.Version = types.Version(gid.Version.String())
 }

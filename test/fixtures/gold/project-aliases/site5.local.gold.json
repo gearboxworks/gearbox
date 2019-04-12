@@ -32,7 +32,7 @@
                "service_id": "gearboxworks/mysql",
                "authority": "gearbox.works",
                "stack": "wordpress",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "mysql",
                "version": {}
             },
@@ -40,7 +40,7 @@
                "service_id": "gearboxworks/php:7.2",
                "authority": "gearbox.works",
                "stack": "wordpress",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "php",
                "version": {
                   "major": "7",
@@ -51,7 +51,7 @@
                "service_id": "gearboxworks/apache",
                "authority": "gearbox.works",
                "stack": "wordpress",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "apache",
                "version": {}
             }

@@ -2,7 +2,6 @@ package apimodels
 
 import (
 	"gearbox/api/global"
-	"gearbox/gear"
 	"gearbox/gears"
 	"gearbox/gearspec"
 	"gearbox/types"
@@ -42,17 +41,17 @@ func newRoleMap(srm gears.StackRoleMap) interface{} {
 
 type serviceMap map[gearspec.Identifier]*_service
 type _service struct {
-	OrgName   types.OrgName           `json:"org,omitempty"`
-	Default   gear.Identifier         `json:"default,omitempty"`
+	Orgname   types.Orgname           `json:"org,omitempty"`
+	Default   types.ServiceId         `json:"default,omitempty"`
 	Shareable global.ShareableChoices `json:"shareable,omitempty"`
-	Services  gear.Identifiers        `json:"choices,omitempty"`
+	Services  types.ServiceIds        `json:"options,omitempty"`
 }
 
 func newServiceMap(sm gears.RoleServicesMap) interface{} {
 	smr := make(map[gearspec.Identifier]interface{}, len(sm))
 	for gs, s := range sm {
 		smr[gs] = &_service{
-			OrgName:   s.OrgName,
+			Orgname:   s.Orgname,
 			Default:   s.DefaultService.ServiceId,
 			Shareable: s.Shareable,
 			Services:  s.Services.ServiceIds(),

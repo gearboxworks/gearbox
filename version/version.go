@@ -261,7 +261,7 @@ func (me *Version) GetMajorMinor() MajorMinor {
 	return mm
 }
 
-func (me *Version) GetVersion() types.Version {
+func (me *Version) GetIdentifier() types.Version {
 	me.checkParsed("Version")
 	return types.Version(me.String())
 }

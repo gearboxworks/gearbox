@@ -7,7 +7,6 @@ import (
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
-	"net/http"
 	"strings"
 )
 
@@ -20,15 +19,16 @@ type NamedStack struct {
 	Stackname       types.Stackname       `json:"name"`
 	RoleMap         StackRoleMap          `json:"roles,omitempty"`
 	RoleServicesMap RoleServicesMap       `json:"services,omitempty"`
+	Gears           *Gears                `json:"-"`
 	refreshed       bool
-	Gears           *Gears `json:"-"`
 }
 
-func NewNamedStack(g *Gears, stackid types.StackId) *NamedStack {
+//func NewNamedStack(gears *Gears, stackid types.StackId) *NamedStack {
+func NewNamedStack(stackid types.StackId) *NamedStack {
 	stack := NamedStack{
 		RoleMap:         make(StackRoleMap, 0),
 		RoleServicesMap: make(RoleServicesMap, 0),
-		Gears:           g,
+		//		Gears:           gears,
 	}
 	// This will split authority out, or do nothing
 	_ = stack.SetIdentifier(stackid)
@@ -89,16 +89,10 @@ func (me *NamedStack) GetDefaultServices() (sm DefaultServiceMap, sts status.Sta
 			if s.DefaultService == nil {
 				continue
 			}
-			sm[gs] = MakeService(s.DefaultService)
+			sm[gs] = s.DefaultService.Clone()
 		}
 	}
 	return sm, sts
-}
-
-func MakeService(s *Service) *Service {
-	var x *Service
-	_, _ = x.Parse() // Cause a crash so we can implement what is needed here.
-	return s
 }
 
 func (me *NamedStack) AddStackRole(sr *StackRole) (sts status.Status) {
@@ -153,46 +147,4 @@ func (me *NamedStack) SetIdentifier(stackid types.StackId) (sts status.Status) {
 
 func (me *NamedStack) GetIdentifier() types.StackId {
 	return types.StackId(fmt.Sprintf("%s/%s", me.Authority, me.Stackname))
-}
-
-func (me *Gears) ValidateNamedStackId(stackid types.StackId) (sts status.Status) {
-	for range only.Once {
-		var ok bool
-		for _, nsid := range me.NamedStackIds {
-			if nsid == stackid {
-				ok = true
-				break
-			}
-		}
-		if !ok {
-			sts = status.Fail(&status.Args{
-				Message:    fmt.Sprintf("named stack ID '%s' not found", stackid),
-				HttpStatus: http.StatusNotFound,
-				Help:       fmt.Sprintf("see valid named stack IDs at %s", JsonUrl),
-			})
-		} else {
-			sts = status.Success("named stack ID '%s' found", stackid)
-		}
-	}
-	return sts
-}
-
-func (me *Gears) FindNamedStack(stackid types.StackId) (stack *NamedStack, sts status.Status) {
-	var tmp *NamedStack
-	for range only.Once {
-		sts = me.ValidateNamedStackId(stackid)
-		if is.Error(sts) {
-			break
-		}
-		tmp = NewNamedStack(me, stackid)
-		sts = tmp.Refresh()
-		if is.Error(sts) {
-			break
-		}
-	}
-	if !status.IsError(sts) && tmp != nil {
-		stack = &NamedStack{}
-		*stack = *tmp
-	}
-	return stack, sts
 }

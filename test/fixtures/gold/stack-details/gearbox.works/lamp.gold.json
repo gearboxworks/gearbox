@@ -69,7 +69,7 @@
             "gearbox.works/lamp/apache": {
                "links": {},
                "data": {
-                  "org": "gearboxworks",
+                  "orgname": "gearboxworks",
                   "default": "gearboxworks/apache",
                   "options": [
                      "gearboxworks/apache:2.4"
@@ -79,7 +79,7 @@
             "gearbox.works/lamp/mysql": {
                "links": {},
                "data": {
-                  "org": "gearboxworks",
+                  "orgname": "gearboxworks",
                   "default": "gearboxworks/mysql",
                   "options": [
                      "gearboxworks/mysql:5.5",
@@ -92,7 +92,7 @@
             "gearbox.works/lamp/php": {
                "links": {},
                "data": {
-                  "org": "gearboxworks",
+                  "orgname": "gearboxworks",
                   "default": "gearboxworks/php",
                   "options": [
                      "gearboxworks/php:5.2",

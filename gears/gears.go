@@ -21,13 +21,18 @@ type Gear interface {
 	GetName() string
 }
 
+type serviceIdsMapGearspecIds map[types.ServiceId]gearspec.Identifier
+
 type Gears struct {
 	Authorities       types.Authorities `json:"authorities"`
 	NamedStackIds     types.StackIds    `json:"stacks"`
-	OsSupport         oss.OsSupporter   `json:"-"`
 	StackRoleMap      StackRoleMap      `json:"roles"`
 	ServiceOptionsMap RoleServicesMap   `json:"services"`
 	GlobalOptions     global.Options    `json:"-"`
+	ServiceIds        types.ServiceIds  `json:"-"`
+	ServiceMap        ServiceMap        `json:"-"`
+	OsSupport         oss.OsSupporter   `json:"-"`
+	serviceIds        serviceIdsMapGearspecIds
 	refreshed         bool
 }
 
@@ -40,34 +45,6 @@ func NewGears(ossup oss.OsSupporter) *Gears {
 		ServiceOptionsMap: make(RoleServicesMap, 0),
 	}
 
-}
-
-func (me *Gears) GetNamedStackMap() (nsm NamedStackMap, sts status.Status) {
-	for range only.Once {
-		nsm = make(NamedStackMap, len(me.NamedStackIds))
-		for _, nsid := range me.NamedStackIds {
-			ns := NewNamedStack(me, nsid)
-			sts = ns.Refresh()
-			if is.Error(sts) {
-				break
-			}
-			nsm[nsid] = ns
-		}
-	}
-	return nsm, sts
-}
-
-func (me *Gears) GetNamedStackIds() (nsids types.StackIds, sts status.Status) {
-	for range only.Once {
-		for i, nsid := range me.NamedStackIds {
-			me.NamedStackIds[i] = nsid
-		}
-		me.NamedStackIds.Sort()
-	}
-	if is.Success(sts) {
-		sts = status.Success("got named stack IDs")
-	}
-	return me.NamedStackIds, sts
 }
 
 func (me *Gears) GetAuthorities() (as types.Authorities, sts status.Status) {
@@ -201,4 +178,183 @@ func (me *Gears) Unmarshal(b []byte) (sts status.Status) {
 
 func (me *Gears) FindGearspec(gsid gearspec.Identifier) (gs *gearspec.Gearspec, sts status.Status) {
 	return nil, nil
+}
+
+func (me *Gears) GetNamedStackMap() (nsm NamedStackMap, sts status.Status) {
+	for range only.Once {
+		nsm = make(NamedStackMap, len(me.NamedStackIds))
+		for _, nsid := range me.NamedStackIds {
+			//			ns := NewNamedStack(me, nsid)
+			ns := NewNamedStack(nsid)
+			sts = ns.Refresh()
+			if is.Error(sts) {
+				break
+			}
+			nsm[nsid] = ns
+		}
+	}
+	return nsm, sts
+}
+
+func (me *Gears) GetNamedStackIds() (nsids types.StackIds, sts status.Status) {
+	for range only.Once {
+		for i, nsid := range me.NamedStackIds {
+			me.NamedStackIds[i] = nsid
+		}
+		me.NamedStackIds.Sort()
+	}
+	if is.Success(sts) {
+		sts = status.Success("got named stack IDs")
+	}
+	return me.NamedStackIds, sts
+}
+
+func (me *Gears) ValidateNamedStackId(stackid types.StackId) (sts status.Status) {
+	for range only.Once {
+		var ok bool
+		for _, nsid := range me.NamedStackIds {
+			if nsid == stackid {
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			sts = status.Fail(&status.Args{
+				Message:    fmt.Sprintf("named stack ID '%s' not found", stackid),
+				HttpStatus: http.StatusNotFound,
+				Help:       fmt.Sprintf("see valid named stack IDs at %s", JsonUrl),
+			})
+		} else {
+			sts = status.Success("named stack ID '%s' found", stackid)
+		}
+	}
+	return sts
+}
+
+func (me *Gears) FindNamedStack(stackid types.StackId) (stack *NamedStack, sts status.Status) {
+	var tmp *NamedStack
+	for range only.Once {
+		sts = me.ValidateNamedStackId(stackid)
+		if is.Error(sts) {
+			break
+		}
+		//		tmp = NewNamedStack(me, stackid)
+		tmp = NewNamedStack(stackid)
+		sts = tmp.Refresh()
+		if is.Error(sts) {
+			break
+		}
+	}
+	if !status.IsError(sts) && tmp != nil {
+		stack = &NamedStack{}
+		*stack = *tmp
+	}
+	return stack, sts
+}
+
+func (me *Gears) GetServiceMap() (sm ServiceMap, sts status.Status) {
+	for range only.Once {
+		// @TODO UNcomment after debug
+		//if me.ServiceMap != nil {
+		//	break
+		//}
+		me.ServiceMap = make(ServiceMap, 0)
+		sids, sts := me.getServiceIdsMapGearspecIds()
+		for sid, gsid := range sids {
+			if is.Error(sts) {
+				break
+			}
+			s := NewService()
+			sts = s.SetIdentifier(sid)
+			if is.Error(sts) {
+				break
+			}
+			s.GearspecId = gsid
+			me.ServiceMap[sid] = s
+		}
+	}
+	return me.ServiceMap, sts
+}
+
+func (me *Gears) getServiceIdsMapGearspecIds() (sids serviceIdsMapGearspecIds, sts status.Status) {
+	for range only.Once {
+		// @TODO UNcomment after debug
+		//if me.serviceIds != nil {
+		//	break
+		//}
+		me.serviceIds = make(serviceIdsMapGearspecIds, 0)
+		for gsid, so := range me.ServiceOptionsMap {
+			for _, s := range so.Services {
+				me.serviceIds[s.ServiceId] = gsid
+			}
+		}
+	}
+	return me.serviceIds, sts
+}
+
+func (me *Gears) GetServiceIds() (sids types.ServiceIds, sts status.Status) {
+	var ids serviceIdsMapGearspecIds
+	for range only.Once {
+		// @TODO uncomment after debugging
+		//if me.ServiceIds != nil {
+		//	break
+		//}
+		ids, sts = me.getServiceIdsMapGearspecIds()
+		if is.Error(sts) {
+			break
+		}
+		i := 0
+		for sid := range ids {
+			me.ServiceIds[i] = sid
+			i++
+		}
+		me.ServiceIds.Sort()
+	}
+	if is.Success(sts) {
+		sts = status.Success("got service IDs")
+	}
+	return me.ServiceIds, sts
+}
+
+func (me *Gears) ValidateServiceId(serviceid types.ServiceId) (sts status.Status) {
+	for range only.Once {
+		var ok bool
+		for _, nsid := range me.ServiceIds {
+			if nsid == serviceid {
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			sts = status.Fail(&status.Args{
+				Message:    fmt.Sprintf("service ID '%s' not found", serviceid),
+				HttpStatus: http.StatusNotFound,
+				Help:       fmt.Sprintf("see valid service IDs at %s", JsonUrl),
+			})
+		} else {
+			sts = status.Success("service ID '%s' found", serviceid)
+		}
+	}
+	return sts
+}
+
+func (me *Gears) FindService(serviceid types.ServiceId) (service *Service, sts status.Status) {
+	var tmp *Service
+	for range only.Once {
+		sts = me.ValidateServiceId(serviceid)
+		if is.Error(sts) {
+			break
+		}
+		tmp = NewService()
+		sts = tmp.Parse(serviceid)
+		if is.Error(sts) {
+			break
+		}
+	}
+	if !status.IsError(sts) && tmp != nil {
+		service = &Service{}
+		*service = *tmp
+	}
+	return service, sts
+
 }

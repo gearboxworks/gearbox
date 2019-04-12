@@ -44,12 +44,14 @@ type Gearboxer interface {
 	DeleteNamedStack(stackid types.StackId) status.Status
 	DeleteProject(hostname types.Hostname) status.Status
 	FindNamedStack(stackid types.StackId) (*gears.NamedStack, status.Status)
+	FindService(serviceid types.ServiceId) (*gears.Service, status.Status)
 	FindProject(hostname types.Hostname) (*project.Project, status.Status)
 	GetConfig() config.Configer
 	GetGears() *gears.Gears
 	GetGlobalOptions() *global.Options
 	GetApi() api.Apier
 	GetNamedStackMap() (gears.NamedStackMap, status.Status)
+	GetServiceMap() (gears.ServiceMap, status.Status)
 	GetNamedStackRoleMap(types.StackId) (gears.StackRoleMap, status.Status)
 	GetOsSupport() oss.OsSupporter
 	GetProjectMap() (project.Map, status.Status)
@@ -78,6 +80,7 @@ type Gearbox struct {
 	Config        config.Configer
 	OsSupport     oss.OsSupporter
 	StackMap      gears.NamedStackMap
+	ServiceMap    gears.ServiceMap
 	GlobalOptions *global.Options
 	Api           api.Apier
 	RouteName     types.RouteName
@@ -110,12 +113,25 @@ func NewGearbox(args *Args) Gearboxer {
 	return &gb
 }
 
-func (me *Gearbox) GetNamedStackMap() (nsm gears.NamedStackMap, sts status.Status) {
+func (me *Gearbox) GetServiceMap() (nsm gears.ServiceMap, sts status.Status) {
 	for range only.Once {
 		// @TODO Remove these comments after debugging
-		//if me.StackMap != nil {
+		//if me.ServiceMap != nil {
 		//	break
 		//}
+		me.ServiceMap, sts = me.Gears.GetServiceMap()
+		if is.Error(sts) {
+			break
+		}
+	}
+	return me.ServiceMap, sts
+}
+
+func (me *Gearbox) GetNamedStackMap() (nsm gears.NamedStackMap, sts status.Status) {
+	for range only.Once {
+		if me.StackMap != nil {
+			break
+		}
 		me.StackMap, sts = me.Gears.GetNamedStackMap()
 		if is.Error(sts) {
 			break
@@ -138,6 +154,10 @@ func (me *Gearbox) DeleteNamedStack(stackid types.StackId) status.Status {
 
 func (me *Gearbox) FindNamedStack(stackid types.StackId) (stack *gears.NamedStack, sts status.Status) {
 	return me.Gears.FindNamedStack(stackid)
+}
+
+func (me *Gearbox) FindService(serviceid types.ServiceId) (service *gears.Service, sts status.Status) {
+	return me.Gears.FindService(serviceid)
 }
 
 func (me *Gearbox) FindProject(hostname types.Hostname) (pp *project.Project, sts status.Status) {

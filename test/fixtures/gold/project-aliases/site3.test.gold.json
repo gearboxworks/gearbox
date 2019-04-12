@@ -36,7 +36,7 @@
                "service_id": "gearboxworks/mariadb",
                "authority": "gearbox.works",
                "stack": "wordpress",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "mariadb",
                "version": {}
             },
@@ -44,7 +44,7 @@
                "service_id": "gearboxworks/php",
                "authority": "gearbox.works",
                "stack": "wordpress",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "php",
                "version": {}
             },
@@ -52,7 +52,7 @@
                "service_id": "gearboxworks/nginx",
                "authority": "gearbox.works",
                "stack": "wordpress",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "nginx",
                "version": {}
             }

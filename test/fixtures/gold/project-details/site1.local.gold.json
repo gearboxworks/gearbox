@@ -26,7 +26,7 @@
       "stack": {
          "gearbox.works/wordpress/cacheserver": {
             "service_id": "gearboxworks/redis:4.0.9",
-            "org": "gearboxworks",
+            "orgname": "gearboxworks",
             "program": "redis",
             "version": {
                "major": "4",
@@ -36,7 +36,7 @@
          },
          "gearbox.works/wordpress/dbserver": {
             "service_id": "gearboxworks/mysql:5.5.60",
-            "org": "gearboxworks",
+            "orgname": "gearboxworks",
             "program": "mysql",
             "version": {
                "major": "5",
@@ -46,7 +46,7 @@
          },
          "gearbox.works/wordpress/processvm": {
             "service_id": "gearboxworks/php:7.1.18",
-            "org": "gearboxworks",
+            "orgname": "gearboxworks",
             "program": "php",
             "version": {
                "major": "7",
@@ -56,7 +56,7 @@
          },
          "gearbox.works/wordpress/webserver": {
             "service_id": "gearboxworks/nginx:1.14.0",
-            "org": "gearboxworks",
+            "orgname": "gearboxworks",
             "program": "nginx",
             "version": {
                "major": "1",

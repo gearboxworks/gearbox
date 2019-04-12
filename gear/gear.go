@@ -20,7 +20,7 @@ type Gearer interface {
 	GetIdentifier() Identifier
 	SetRaw(gearid Identifier)
 	GetRaw() Identifier
-	GetOrgName() types.OrgName
+	GetOrgName() types.Orgname
 	GetType() types.ServiceType
 	GetName() types.ProgramName
 	GetVersion() *version.Version
@@ -28,11 +28,11 @@ type Gearer interface {
 }
 
 type Gear struct {
-	raw     Identifier
-	OrgName types.OrgName     `json:"org,omitempty"`
-	Type    types.ServiceType `json:"type,omitempty"`
-	Program types.ProgramName `json:"program,omitempty"`
-	Version *version.Version  `json:"version,omitempty"`
+	raw         Identifier
+	OrgName     types.Orgname     `json:"org,omitempty"`
+	ServiceType types.ServiceType `json:"type,omitempty"`
+	Program     types.ProgramName `json:"program,omitempty"`
+	Version     *version.Version  `json:"version,omitempty"`
 }
 
 func NewGear() (id *Gear) {
@@ -50,7 +50,7 @@ func (me *Gear) Parse(gearid Identifier) (sts status.Status) {
 		"'google/flutter:1.3.8' or 'wordpress/plugins/akismet:4.1.1'"
 
 	var parts []string
-	var on types.OrgName
+	var on types.Orgname
 	var t types.ServiceType
 	var p types.ProgramName
 	var msg string
@@ -74,10 +74,10 @@ func (me *Gear) Parse(gearid Identifier) (sts status.Status) {
 			on = global.DefaultOrgName
 			p = types.ProgramName(parts[0])
 		case 2:
-			on = types.OrgName(parts[0])
+			on = types.Orgname(parts[0])
 			p = types.ProgramName(parts[1])
 		case 3:
-			on = types.OrgName(parts[0])
+			on = types.Orgname(parts[0])
 			t = types.ServiceType(parts[1])
 			p = types.ProgramName(parts[2])
 		default:
@@ -94,7 +94,7 @@ func (me *Gear) Parse(gearid Identifier) (sts status.Status) {
 		}
 		me.raw = gearid
 		me.OrgName = on
-		me.Type = t
+		me.ServiceType = t
 		me.Program = p
 		me.Version = v
 	}
@@ -109,8 +109,8 @@ func (me *Gear) Parse(gearid Identifier) (sts status.Status) {
 
 func (me *Gear) GetIdentifier() Identifier {
 	id := string(me.Program)
-	if me.Type != "" {
-		id = fmt.Sprintf("%s/%s", me.Type, id)
+	if me.ServiceType != "" {
+		id = fmt.Sprintf("%s/%s", me.ServiceType, id)
 	}
 	if me.OrgName != "" {
 		id = fmt.Sprintf("%s/%s", me.OrgName, id)
@@ -133,12 +133,12 @@ func (me *Gear) GetRaw() Identifier {
 	return me.raw
 }
 
-func (me *Gear) GetOrgName() types.OrgName {
+func (me *Gear) GetOrgName() types.Orgname {
 	return me.OrgName
 }
 
 func (me *Gear) GetType() types.ServiceType {
-	return me.Type
+	return me.ServiceType
 }
 
 func (me *Gear) GetName() types.ProgramName {

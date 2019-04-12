@@ -32,7 +32,7 @@
                "service_id": "gearboxworks/redis:4.0.9",
                "authority": "gearbox.works",
                "stack": "wordpress",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "redis",
                "version": {
                   "major": "4",
@@ -44,7 +44,7 @@
                "service_id": "gearboxworks/mysql:5.5.60",
                "authority": "gearbox.works",
                "stack": "wordpress",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "mysql",
                "version": {
                   "major": "5",
@@ -56,7 +56,7 @@
                "service_id": "gearboxworks/php:7.1.18",
                "authority": "gearbox.works",
                "stack": "wordpress",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "php",
                "version": {
                   "major": "7",
@@ -68,7 +68,7 @@
                "service_id": "gearboxworks/nginx:1.14.0",
                "authority": "gearbox.works",
                "stack": "wordpress",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "nginx",
                "version": {
                   "major": "1",

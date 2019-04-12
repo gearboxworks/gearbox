@@ -53,13 +53,13 @@
       },
       "role_services": {
          "gearbox.works/lamp/apache": {
-            "org": "gearboxworks"
+            "orgname": "gearboxworks"
          },
          "gearbox.works/lamp/mysql": {
-            "org": "gearboxworks"
+            "orgname": "gearboxworks"
          },
          "gearbox.works/lamp/php": {
-            "org": "gearboxworks"
+            "orgname": "gearboxworks"
          }
       }
    }

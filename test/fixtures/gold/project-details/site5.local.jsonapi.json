@@ -27,12 +27,12 @@
          "stack": {
             "gearbox.works/wordpress/dbserver": {
                "service_id": "gearboxworks/mysql",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "mysql"
             },
             "gearbox.works/wordpress/processvm": {
                "service_id": "gearboxworks/php:7.2",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "php",
                "version": {
                   "major": "7",
@@ -41,7 +41,7 @@
             },
             "gearbox.works/wordpress/webserver": {
                "service_id": "gearboxworks/apache",
-               "org": "gearboxworks",
+               "orgname": "gearboxworks",
                "program": "apache"
             }
          }

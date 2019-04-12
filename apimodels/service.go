@@ -3,6 +3,7 @@ package apimodels
 import (
 	"fmt"
 	"gearbox/apimodeler"
+	"gearbox/gears"
 	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
@@ -10,21 +11,64 @@ import (
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
-	"gearbox/version"
 )
 
-const ServicesName types.RouteName = "services"
-const ServicesBasepath types.Basepath = "/services"
+const ServiceTypeName apimodeler.ItemType = "service"
+
+var ServiceInstance = (*Service)(nil)
+var _ apimodeler.ApiItemer = ServiceInstance
 
 type ServiceMap map[gearspec.Identifier]*Service
 type Services []*Service
 
 type Service struct {
-	GearspecId gearspec.Identifier `json:"gearspec_id,omitempty"`
-	ServiceId  types.ServiceId     `json:"service_id,omitempty"`
-	OrgName    types.OrgName       `json:"orgname,omitempty"`
-	Program    types.ProgramName   `json:"program,omitempty"`
-	Version    *version.Version    `json:"version,omitempty"`
+	GearspecId  gearspec.Identifier  `json:"gearspec_id,omitempty"`
+	ServiceId   types.ServiceId      `json:"service_id,omitempty"`
+	ServiceType types.ServiceType    `json:"service_type,omitempty"`
+	Orgname     types.Orgname        `json:"orgname,omitempty"`
+	Program     types.ProgramName    `json:"program,omitempty"`
+	Version     types.Version        `json:"version,omitempty"`
+	GearspecIds gearspec.Identifiers `json:"gearspec_ids,omitempty"`
+	Gears       *gears.Gears         `json:"-"`
+}
+
+func (me *Service) GetId() apimodeler.ItemId {
+	return apimodeler.ItemId(me.ServiceId)
+}
+
+func (me *Service) SetId(apimodeler.ItemId) status.Status {
+	panic("implement me")
+}
+
+func (me *Service) GetType() apimodeler.ItemType {
+	return ServiceTypeName
+}
+
+func (me *Service) GetItem() (apimodeler.ApiItemer, status.Status) {
+	return me, nil
+}
+
+func (me *Service) GetItemLinkMap(*apimodeler.Context) (lm apimodeler.LinkMap, sts status.Status) {
+	return apimodeler.LinkMap{
+		//apimodeler.RelatedRelType: apimodeler.Link("https://example.com"),
+	}, sts
+}
+
+func (me *Service) GetRelatedItems(*apimodeler.Context, apimodeler.ItemId) (list apimodeler.List, sts status.Status) {
+	list = make(apimodeler.List, 0)
+	return list, sts
+}
+
+func NewFromGearsService(ctx *apimodeler.Context, gsvc *gears.Service) (s *Service, sts status.Status) {
+	s = &Service{
+		GearspecId:  gsvc.GearspecId,
+		ServiceId:   gsvc.ServiceId,
+		Orgname:     gsvc.Orgname,
+		Program:     gsvc.Program,
+		Version:     gsvc.Version,
+		ServiceType: gsvc.ServiceType,
+	}
+	return s, sts
 }
 
 func GetFromServiceStackMap(ctx *apimodeler.Context, sm svc.StackMap) (rss Services, sts status.Status) {
@@ -89,10 +133,12 @@ func GetFromServiceService(ctx *apimodeler.Context, gearspecid gearspec.Identifi
 			}
 			if ctx.Models.Self.GetBasepath() != ServicesBasepath {
 				break
+
 			}
-			s.OrgName = ss.OrgName
+			s.Orgname = ss.OrgName
+			s.ServiceType = ss.ServiceType
 			s.Program = ss.Program
-			s.Version = ss.Version
+			s.Version = ss.Version.GetIdentifier()
 		}
 	}
 	return s, sts

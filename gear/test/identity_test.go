@@ -14,7 +14,7 @@ func TestIdentity(t *testing.T) {
 func (me *IdTest) GetData() test.Table {
 	return test.Table{
 		test.NewFixture(&test.Fixture{
-			Label: "No OrgName",
+			Label: "No Orgname",
 			In:    "php:7",
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "gearboxworks/php:7"},
@@ -38,7 +38,7 @@ func (me *IdTest) GetData() test.Table {
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "OrgName/Type/Program/Version",
+			Label: "Orgname/Type/Program/Version",
 			In:    "wordpress/plugins/akismet:4.1.1",
 			Out: test.Out{
 				getId:      test.Args{Fail: false, Want: "wordpress/plugins/akismet:4.1.1"},

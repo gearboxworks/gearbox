@@ -54,13 +54,13 @@
       },
       "role_services": {
          "gearbox.works/lemp/mysql": {
-            "org": "gearboxworks"
+            "orgname": "gearboxworks"
          },
          "gearbox.works/lemp/nginx": {
-            "org": "gearboxworks"
+            "orgname": "gearboxworks"
          },
          "gearbox.works/lemp/p-script": {
-            "org": "gearboxworks"
+            "orgname": "gearboxworks"
          }
       }
    }

@@ -28,19 +28,19 @@
       "stack": {
          "gearbox.works/wordpress/dbserver": {
             "service_id": "gearboxworks/mariadb",
-            "org": "gearboxworks",
+            "orgname": "gearboxworks",
             "program": "mariadb",
             "version": {}
          },
          "gearbox.works/wordpress/processvm": {
             "service_id": "gearboxworks/php",
-            "org": "gearboxworks",
+            "orgname": "gearboxworks",
             "program": "php",
             "version": {}
          },
          "gearbox.works/wordpress/webserver": {
             "service_id": "gearboxworks/nginx",
-            "org": "gearboxworks",
+            "orgname": "gearboxworks",
             "program": "nginx",
             "version": {}
          }

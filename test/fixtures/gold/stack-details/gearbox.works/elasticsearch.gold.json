@@ -41,7 +41,7 @@
             "gearbox.works/elasticsearch/elasticsearch": {
                "links": {},
                "data": {
-                  "org": "gearboxworks",
+                  "orgname": "gearboxworks",
                   "default": "gearboxworks/elasticsearch",
                   "options": [
                      "gearboxworks/elasticsearch:6.6.2"

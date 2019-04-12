@@ -222,7 +222,7 @@ func (me *VerTest) GetOutput(f *test.Fixture) (got string) {
 	ver := f.Obj.(*version.Version)
 	switch f.Name {
 	case parseDv:
-		got = string(ver.GetVersion())
+		got = string(ver.GetIdentifier())
 
 	case getMajorMinor:
 		got = string(ver.GetMajorMinor())
