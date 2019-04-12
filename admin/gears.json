@@ -103,21 +103,21 @@
    },
    "services": {
       "gearbox.works/elasticsearch/elasticsearch": {
-         "org": "gearboxworks",
+         "orgname": "gearboxworks",
          "default": "elasticsearch",
          "options": [
             "elasticsearch:6.6.2"
          ]
       },
       "gearbox.works/lamp/apache": {
-         "org": "gearboxworks",
+         "orgname": "gearboxworks",
          "default": "apache",
          "options": [
             "apache:2.4"
          ]
       },
       "gearbox.works/lamp/mysql": {
-         "org": "gearboxworks",
+         "orgname": "gearboxworks",
          "program": "elasticsearch",
          "default": "mysql",
          "options": [
@@ -128,7 +128,7 @@
          ]
       },
       "gearbox.works/lamp/php": {
-         "org": "gearboxworks",
+         "orgname": "gearboxworks",
          "program": "elasticsearch",
          "default": "php",
          "options": [
@@ -140,7 +140,7 @@
          ]
       },
       "gearbox.works/lemp/nginx": {
-         "org": "gearboxworks",
+         "orgname": "gearboxworks",
          "default": "nginx",
          "options": [
             "nginx:1.12",
@@ -150,7 +150,7 @@
          ]
       },
       "gearbox.works/lemp/mysql": {
-         "org": "gearboxworks",
+         "orgname": "gearboxworks",
          "default": "mariadb",
          "options": [
             "mariadb:5.5",
@@ -165,7 +165,7 @@
          ]
       },
       "gearbox.works/lemp/script": {
-         "org": "gearboxworks",
+         "orgname": "gearboxworks",
          "default": "php",
          "options": [
             "php:5.2",
@@ -176,7 +176,7 @@
          ]
       },
       "gearbox.works/wordpress/webserver": {
-         "org": "gearboxworks",
+         "orgname": "gearboxworks",
          "default": "nginx",
          "options": [
             "apache:2.4",
@@ -187,7 +187,7 @@
          ]
       },
       "gearbox.works/wordpress/dbserver": {
-         "org": "gearboxworks",
+         "orgname": "gearboxworks",
          "default": "mariadb",
          "options": [
             "mariadb:5.5",
@@ -202,7 +202,7 @@
          ]
       },
       "gearbox.works/wordpress/processvm": {
-         "org": "gearboxworks",
+         "orgname": "gearboxworks",
          "default": "php",
          "options": [
             "php:5.2",
@@ -213,7 +213,7 @@
          ]
       },
       "gearbox.works/wordpress/cacheserver": {
-         "org": "gearboxworks",
+         "orgname": "gearboxworks",
          "default": "",
          "options": [
             "memcached:1.5",
