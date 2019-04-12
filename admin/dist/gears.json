@@ -118,7 +118,6 @@
       },
       "gearbox.works/lamp/mysql": {
          "orgname": "gearboxworks",
-         "program": "elasticsearch",
          "default": "mysql",
          "options": [
             "mysql:5.5",
@@ -129,7 +128,6 @@
       },
       "gearbox.works/lamp/php": {
          "orgname": "gearboxworks",
-         "program": "elasticsearch",
          "default": "php",
          "options": [
             "php:5.2",
@@ -177,7 +175,6 @@
       },
       "gearbox.works/wordpress/webserver": {
          "orgname": "gearboxworks",
-         "default": "nginx",
          "default": "nginx",
          "options": [
             "apache:2.4",
