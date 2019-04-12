@@ -162,7 +162,7 @@ func (me *Api) ConnectRoutes() {
 					break
 				}
 				for rt, lnk := range lm {
-					rd.LinkMap[rt] = lnk
+					rd.AddLink(rt, lnk)
 				}
 				err = me.JsonMarshalHandler(c, sts)
 			}
@@ -200,7 +200,12 @@ func (me *Api) ConnectRoutes() {
 				if is.Error(sts) {
 					break
 				}
-				sts = me.setItemData(ctx, ro, item)
+				var list apimodeler.List
+				list, sts = ms.Self.GetRelatedItems(ctx, item)
+				if is.Error(sts) {
+					break
+				}
+				sts = me.setItemData(ctx, ro, item, list)
 				rd.Data = ro
 			}
 			return me.JsonMarshalHandler(ctx, sts)
@@ -366,7 +371,7 @@ func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.S
 	return ro, sts
 }
 
-func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.ApiItemer) (sts status.Status) {
+func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.ApiItemer, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
 		itemId := item.GetId()
 		sts = ro.SetId(ja.ResourceId(itemId))
@@ -387,6 +392,11 @@ func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item 
 			break
 		}
 
+		sts = ro.SetRelatedItems(ctx, list)
+		if is.Error(sts) {
+			break
+		}
+
 		if rootdoc.ResponseType == global.ItemResponse {
 			break
 		}
@@ -395,18 +405,18 @@ func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item 
 		if is.Error(sts) {
 			break
 		}
-		lmg, ok := item.(apimodeler.ItemLinkMapGetter)
+		getter, ok := item.(apimodeler.ItemLinkMapGetter)
 		if !ok {
 			sts = status.Fail(&status.Args{
 				Message: "item does not implement apimodeler.ItemLinkMapGetter",
 			})
 			break
 		}
-		lm, sts := lmg.GetItemLinkMap(ctx)
+		lm, sts := getter.GetItemLinkMap(ctx)
 		if is.Error(sts) {
 			break
 		}
-		lm[apimodeler.SelfRelType] = apimodeler.Link(su)
+		lm.AddLink(apimodeler.SelfRelType, apimodeler.Link(su))
 		ro.SetLinks(lm)
 	}
 	return sts
@@ -432,7 +442,7 @@ func (me *Api) setListData(ctx *apimodeler.Context, data interface{}) (sts statu
 		}
 		for _, item := range coll {
 			ro := ja.NewResourceObject()
-			sts = me.setItemData(ctx, ro, item)
+			sts = me.setItemData(ctx, ro, item, nil)
 			if is.Error(sts) {
 				break
 			}

@@ -64,7 +64,6 @@ func (me *Authority) GetItem() (apimodeler.ApiItemer, status.Status) {
 	return me, nil
 }
 
-func (me *Authority) GetRelatedItems(ctx *apimodeler.Context, itemid apimodeler.ItemId) (list apimodeler.List, sts status.Status) {
-	list = make(apimodeler.List, 0)
-	return list, sts
+func (me *Authority) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.ApiItemer) (list apimodeler.List, sts status.Status) {
+	return make(apimodeler.List, 0), sts
 }

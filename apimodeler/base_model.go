@@ -98,7 +98,7 @@ func (me *BaseModel) GetItemDetails(ctx *Context, hostname ItemId) (ApiItemer, s
 	return me.GetItem(ctx, hostname)
 }
 
-func (me *BaseModel) GetRelatedItems(ctx *Context, filterPath ...FilterPath) (List, status.Status) {
+func (me *BaseModel) GetRelatedItems(ctx *Context, item ApiItemer) (list List, sts status.Status) {
 	return make(List, 0), nil
 }
 

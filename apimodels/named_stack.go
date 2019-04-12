@@ -104,7 +104,6 @@ func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStack) (gbns *gears.NamedSt
 	return gbns, sts
 }
 
-func (me *NamedStack) GetRelatedItems(ctx *apimodeler.Context, itemid apimodeler.ItemId) (list apimodeler.List, sts status.Status) {
-	list = make(apimodeler.List, 0)
-	return list, sts
+func (me *NamedStack) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.ApiItemer) (list apimodeler.List, sts status.Status) {
+	return make(apimodeler.List, 0), sts
 }

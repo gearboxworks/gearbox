@@ -217,7 +217,7 @@ func (me *ProjectModel) GetItemDetails(ctx *apimodeler.Context, itemid apimodele
 	return item, sts
 }
 
-func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context, itemid apimodeler.ItemId) (apimodeler.List, status.Status) {
+func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.ApiItemer) (list apimodeler.List, sts status.Status) {
 	return make(apimodeler.List, 0), nil
 }
 

@@ -6,6 +6,7 @@ import (
 	"gearbox/global"
 	"gearbox/only"
 	"gearbox/status"
+	"gearbox/status/is"
 	"gearbox/types"
 	"reflect"
 )
@@ -22,13 +23,54 @@ const (
 
 var _ apimodeler.RootDocumenter = (*RootDocument)(nil)
 
+var _ apimodeler.ApiItemer = (*IncludedItem)(nil)
+
+type IncludedList []*IncludedItem
+type IncludedItem ResourceObject
+
+func (me *IncludedItem) GetId() apimodeler.ItemId {
+	panic("implement me")
+}
+func (me *IncludedItem) SetId(apimodeler.ItemId) status.Status {
+	panic("implement me")
+}
+func (me *IncludedItem) GetType() apimodeler.ItemType {
+	panic("implement me")
+}
+func (me *IncludedItem) GetItem() (apimodeler.ApiItemer, status.Status) {
+	panic("implement me")
+}
+func (me *IncludedItem) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
+	panic("implement me")
+}
+
+func (me IncludedList) AppendItem(item apimodeler.ApiItemer) (inc IncludedList, sts status.Status) {
+	inc = me
+	for range only.Once {
+		ii, ok := item.(*IncludedItem)
+		if !ok {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("item '%s' does not implement ja.ResourceObject", item.GetId()),
+			})
+			break
+		}
+
+		if len(inc) < cap(inc) {
+			inc[len(inc)] = ii
+			break
+		}
+		inc = append(me, ii)
+	}
+	return inc, sts
+}
+
 type RootDocument struct {
 	ResponseType types.ResponseType `json:"-"`
 	JsonApi      *JsonApi           `json:"jsonapi,omitempty"`
 	MetaMap      MetaMap            `json:"meta,omitempty"`
 	LinkMap      apimodeler.LinkMap `json:"links,omitempty"`
 	Data         ResourceContainer  `json:"data,omitempty"`
-	Included     ResourceObjects    `json:"included,omitempty"`
+	Included     IncludedList       `json:"included,omitempty"`
 	Errors       Errors             `json:"errors,omitempty"`
 }
 
@@ -67,7 +109,7 @@ func NewRootDocument(ctx Contexter, responseType types.ResponseType, args ...*Ro
 	rd.MetaMap[apimodeler.MetaDcType] = responseType
 
 	if rd.Included == nil {
-		rd.Included = make(ResourceObjects, 0)
+		rd.Included = make(IncludedList, 0)
 	}
 
 	if rd.LinkMap == nil {
@@ -88,6 +130,20 @@ func (me *RootDocument) AddLinks(links apimodeler.LinkMap) {
 	for rel, link := range links {
 		me.AddLink(rel, link)
 	}
+}
+
+func (me *RootDocument) SetIncluded(ctx *apimodeler.Context, list apimodeler.List) (sts status.Status) {
+	for range only.Once {
+		inc := make(IncludedList, len(list))
+		for _, item := range list {
+			inc, sts = inc.AppendItem(item)
+			if is.Error(sts) {
+				break
+			}
+		}
+		me.Included = inc
+	}
+	return sts
 }
 
 func (me *RootDocument) GetResponseType() types.ResponseType {
@@ -151,10 +207,7 @@ func (me *RootDocument) SetMeta(meta MetaMap) (sts status.Status) {
 	me.MetaMap = meta
 	return nil
 }
-func (me *RootDocument) SetIncluded(included ResourceObjects) (sts status.Status) {
-	me.Included = included
-	return nil
-}
+
 func (me *RootDocument) SetLinks(linkmap apimodeler.LinkMap) (sts status.Status) {
 	me.LinkMap = linkmap
 	return nil

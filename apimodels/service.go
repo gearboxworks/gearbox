@@ -54,9 +54,8 @@ func (me *Service) GetItemLinkMap(*apimodeler.Context) (lm apimodeler.LinkMap, s
 	}, sts
 }
 
-func (me *Service) GetRelatedItems(*apimodeler.Context, apimodeler.ItemId) (list apimodeler.List, sts status.Status) {
-	list = make(apimodeler.List, 0)
-	return list, sts
+func (me *Service) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.ApiItemer) (list apimodeler.List, sts status.Status) {
+	return make(apimodeler.List, 0), sts
 }
 
 func NewFromGearsService(ctx *apimodeler.Context, gsvc *gears.Service) (s *Service, sts status.Status) {

@@ -11,11 +11,19 @@ const (
 	ToManyType RelationshipType = "to-many"
 )
 
-type RelationshipMap map[Fieldname]Relationship
+type RelationshipMap map[Fieldname]*Relationship
 
 type Relationship struct {
 	Type    RelationshipType   `json:"-"`
 	Meta    MetaMap            `json:"meta,omitempty"`
 	Data    ResourceIdentifier `json:"data,omitempty"`
 	LinkMap apimodeler.LinkMap `json:"links,omitempty"`
+}
+
+func NewRelationship() *Relationship {
+	return &Relationship{
+		Meta:    make(MetaMap, 0),
+		LinkMap: make(apimodeler.LinkMap, 0),
+	}
+
 }

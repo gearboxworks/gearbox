@@ -44,7 +44,6 @@ func NewGears(ossup oss.OsSupporter) *Gears {
 		StackRoleMap:      make(StackRoleMap, 0),
 		ServiceOptionsMap: make(RoleServicesMap, 0),
 	}
-
 }
 
 func (me *Gears) GetAuthorities() (as types.Authorities, sts status.Status) {

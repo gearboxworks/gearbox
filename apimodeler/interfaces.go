@@ -42,6 +42,7 @@ type ApiModeler interface {
 	ListLinkMapGetter
 	ItemFilterer
 	ItemCanAdder
+	RelatedItemsGetter
 }
 type ItemCanAdder interface {
 	CanAddItem(*Context) bool
@@ -91,6 +92,9 @@ type ItemIdsGetter interface {
 type ListLinkMapGetter interface {
 	GetListLinkMap(*Context, ...FilterPath) (LinkMap, status.Status)
 }
+type RelatedItemsGetter interface {
+	GetRelatedItems(ctx *Context, item ApiItemer) (list List, sts status.Status)
+}
 
 type ApiItemer interface {
 	ItemIdGetter
@@ -98,7 +102,6 @@ type ApiItemer interface {
 	ItemTypeGetter
 	ItemGetter
 	ItemLinkMapGetter
-	RelatedItemsGetter
 }
 
 type ItemIdGetter interface {
@@ -116,17 +119,17 @@ type ItemIdSetter interface {
 type ItemLinkMapGetter interface {
 	GetItemLinkMap(*Context) (LinkMap, status.Status)
 }
-type RelatedItemsGetter interface {
-	GetRelatedItems(*Context, ItemId) (List, status.Status)
-}
-
 type RootDocumenter interface {
 	ResponseTypeGetter
 	RootDocumentGetter
+	IncludedSetter
 }
 type ResponseTypeGetter interface {
 	GetResponseType() types.ResponseType
 }
 type RootDocumentGetter interface {
 	GetRootDocument() interface{}
+}
+type IncludedSetter interface {
+	SetIncluded(*Context, List) status.Status
 }

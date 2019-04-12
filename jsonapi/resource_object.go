@@ -5,6 +5,7 @@ import (
 	"gearbox/apimodeler"
 	"gearbox/only"
 	"gearbox/status"
+	"gearbox/status/is"
 )
 
 var _ ResourceContainer = (*ResourceObject)(nil)
@@ -26,6 +27,45 @@ func NewResourceObject() *ResourceObject {
 	}
 	return &ro
 }
+
+func (me *ResourceObject) SetRelatedItems(ctx *apimodeler.Context, list apimodeler.List) (sts status.Status) {
+	for range only.Once {
+		var data ResourceIdentifier
+		switch len(list) {
+		case 0:
+			break
+		case 1:
+			data = NewResourceIdObject()
+		default:
+			data = &ResourceIdObjects{}
+		}
+
+		rm := make(RelationshipMap, 0)
+		for _, item := range list {
+			r := NewRelationship()
+			r.Data = data
+			rm[Fieldname(item.GetType())] = r
+		}
+		me.RelationshipMap = rm
+
+		for i, item := range list {
+			ro := NewResourceObject()
+			sts = ro.SetId(ResourceId(item.GetId()))
+			if is.Error(sts) {
+				break
+			}
+			sts = ro.SetType(ResourceType(item.GetType()))
+			if is.Error(sts) {
+				break
+			}
+			ii := IncludedItem(*ro)
+			list[i] = &ii
+		}
+		sts = ctx.RootDocumenter.SetIncluded(ctx, list)
+	}
+	return nil
+}
+
 func (me *ResourceObject) SetId(id ResourceId) status.Status {
 	me.ResourceId = id
 	return nil
