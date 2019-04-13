@@ -146,7 +146,7 @@ func (me *Api) WireRoutes() {
 				rd := ja.NewRootDocument(ctx, global.ListResponse)
 				c := apimodeler.NewContext(&apimodeler.ContextArgs{
 					Contexter:      ctx,
-					RootDocumenter: rd,
+					RootDocumentor: rd,
 					Controller:     ctlr,
 				})
 				data, sts := ctlr.GetList(c)
@@ -185,7 +185,7 @@ func (me *Api) WireRoutes() {
 			rd := ja.NewRootDocument(ec, global.ItemResponse)
 			ctx := apimodeler.NewContext(&apimodeler.ContextArgs{
 				Contexter:      ec,
-				RootDocumenter: rd,
+				RootDocumentor: rd,
 				Controller:     ctlr,
 			})
 			for range only.Once {
@@ -198,13 +198,13 @@ func (me *Api) WireRoutes() {
 				if is.Error(sts) {
 					break
 				}
-				var item apimodeler.Itemer
+				var item apimodeler.ItemModeler
 				item, sts = ctlr.GetItemDetails(ctx, id)
 				if is.Error(sts) {
 					break
 				}
 				var list apimodeler.List
-				list, sts = ctlr.GetRelatedItems(ctx, item)
+				list, sts = item.GetRelatedItems(ctx)
 				if is.Error(sts) {
 					break
 				}
@@ -217,7 +217,7 @@ func (me *Api) WireRoutes() {
 	}
 }
 
-func (me *Api) GetItemUrl(ctx *apimodeler.Context, item apimodeler.Itemer) (u types.UrlTemplate, sts status.Status) {
+func (me *Api) GetItemUrl(ctx *apimodeler.Context, item apimodeler.ItemModeler) (u types.UrlTemplate, sts status.Status) {
 	for range only.Once {
 		//
 		// @TODO This may need to be make more robust later
@@ -323,7 +323,7 @@ func (me *Api) JsonMarshalHandler(ctx *apimodeler.Context, sts status.Status) st
 	return sts
 }
 
-func (me *Api) AddController(controller apimodeler.ApiController) (sts status.Status) {
+func (me *Api) AddController(controller apimodeler.ListController) (sts status.Status) {
 	for range only.Once {
 		getter, ok := controller.(apimodeler.BasepathGetter)
 		if !ok {
@@ -374,7 +374,7 @@ func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.S
 	return ro, sts
 }
 
-func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.Itemer, list apimodeler.List) (sts status.Status) {
+func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.ItemModeler, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
 		itemId := item.GetId()
 		sts = ro.SetId(ja.ResourceId(itemId))

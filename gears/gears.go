@@ -8,6 +8,7 @@ import (
 	"gearbox/global"
 	"gearbox/only"
 	"gearbox/os_support"
+	"gearbox/service"
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
@@ -21,17 +22,17 @@ type Gear interface {
 	GetName() string
 }
 
-type serviceIdsMapGearspecIds map[types.ServiceId]gearspec.Identifier
+type serviceIdsMapGearspecIds map[service.Identifier]gearspec.Identifier
 
 type Gears struct {
-	Authorities       types.Authorities `json:"authorities"`
-	NamedStackIds     types.StackIds    `json:"stacks"`
-	StackRoleMap      StackRoleMap      `json:"roles"`
-	ServiceOptionsMap RoleServicesMap   `json:"services"`
-	GlobalOptions     global.Options    `json:"-"`
-	ServiceIds        types.ServiceIds  `json:"-"`
-	ServiceMap        ServiceMap        `json:"-"`
-	OsSupport         oss.OsSupporter   `json:"-"`
+	Authorities       types.Authorities   `json:"authorities"`
+	NamedStackIds     types.StackIds      `json:"stacks"`
+	StackRoleMap      StackRoleMap        `json:"roles"`
+	ServiceOptionsMap RoleServicesMap     `json:"services"`
+	GlobalOptions     global.Options      `json:"-"`
+	ServiceIds        service.Identifiers `json:"-"`
+	ServiceMap        ServiceMap          `json:"-"`
+	OsSupport         oss.OsSupporter     `json:"-"`
 	serviceIds        serviceIdsMapGearspecIds
 	refreshed         bool
 }
@@ -253,10 +254,9 @@ func (me *Gears) FindNamedStack(stackid types.StackId) (stack *NamedStack, sts s
 
 func (me *Gears) GetServiceMap() (sm ServiceMap, sts status.Status) {
 	for range only.Once {
-		// @TODO UNcomment after debug
-		//if me.ServiceMap != nil {
-		//	break
-		//}
+		if me.ServiceMap != nil {
+			break
+		}
 		me.ServiceMap = make(ServiceMap, 0)
 		sids, sts := me.getServiceIdsMapGearspecIds()
 		for sid, gsid := range sids {
@@ -277,10 +277,9 @@ func (me *Gears) GetServiceMap() (sm ServiceMap, sts status.Status) {
 
 func (me *Gears) getServiceIdsMapGearspecIds() (sids serviceIdsMapGearspecIds, sts status.Status) {
 	for range only.Once {
-		// @TODO UNcomment after debug
-		//if me.serviceIds != nil {
-		//	break
-		//}
+		if me.serviceIds != nil {
+			break
+		}
 		me.serviceIds = make(serviceIdsMapGearspecIds, 0)
 		for gsid, so := range me.ServiceOptionsMap {
 			for _, s := range so.Services {
@@ -291,13 +290,12 @@ func (me *Gears) getServiceIdsMapGearspecIds() (sids serviceIdsMapGearspecIds, s
 	return me.serviceIds, sts
 }
 
-func (me *Gears) GetServiceIds() (sids types.ServiceIds, sts status.Status) {
+func (me *Gears) GetServiceIds() (sids service.Identifiers, sts status.Status) {
 	var ids serviceIdsMapGearspecIds
 	for range only.Once {
-		// @TODO uncomment after debugging
-		//if me.ServiceIds != nil {
-		//	break
-		//}
+		if me.ServiceIds != nil {
+			break
+		}
 		ids, sts = me.getServiceIdsMapGearspecIds()
 		if is.Error(sts) {
 			break
@@ -315,7 +313,7 @@ func (me *Gears) GetServiceIds() (sids types.ServiceIds, sts status.Status) {
 	return me.ServiceIds, sts
 }
 
-func (me *Gears) ValidateServiceId(serviceid types.ServiceId) (sts status.Status) {
+func (me *Gears) ValidateServiceId(serviceid service.Identifier) (sts status.Status) {
 	for range only.Once {
 		var ok bool
 		for _, nsid := range me.ServiceIds {
@@ -337,7 +335,7 @@ func (me *Gears) ValidateServiceId(serviceid types.ServiceId) (sts status.Status
 	return sts
 }
 
-func (me *Gears) FindService(serviceid types.ServiceId) (service *Service, sts status.Status) {
+func (me *Gears) FindService(serviceid service.Identifier) (service *Service, sts status.Status) {
 	var tmp *Service
 	for range only.Once {
 		sts = me.ValidateServiceId(serviceid)

@@ -3,8 +3,10 @@ package apimvc
 import (
 	"gearbox/apimodeler"
 	"gearbox/config"
+	"gearbox/gearspec"
 	"gearbox/only"
 	"gearbox/project"
+	"gearbox/service"
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
@@ -13,7 +15,7 @@ import (
 const ProjectModelType apimodeler.ItemType = "project"
 
 var NilProjectModel = (*ProjectModel)(nil)
-var _ apimodeler.Itemer = NilProjectModel
+var _ apimodeler.ItemModeler = NilProjectModel
 
 type ProjectModelMap map[types.Hostname]*ProjectModel
 type ProjectModels []*ProjectModel
@@ -67,7 +69,7 @@ func (me *ProjectModel) SetId(hostname apimodeler.ItemId) status.Status {
 	return nil
 }
 
-func (me *ProjectModel) GetItem() (apimodeler.Itemer, status.Status) {
+func (me *ProjectModel) GetItem() (apimodeler.ItemModeler, status.Status) {
 	return me, nil
 }
 
@@ -75,10 +77,6 @@ func (me *ProjectModel) GetItemLinkMap(*apimodeler.Context) (lm apimodeler.LinkM
 	return apimodeler.LinkMap{
 		//apimodeler.RelatedRelType: apimodeler.Link("https://example.com"),
 	}, sts
-}
-
-func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.Itemer) (list apimodeler.List, sts status.Status) {
-	return make(apimodeler.List, 0), sts
 }
 
 func (me *ProjectModel) AddDetails(ctx *apimodeler.Context) (sts status.Status) {
@@ -96,6 +94,37 @@ func (me *ProjectModel) AddDetails(ctx *apimodeler.Context) (sts status.Status) 
 		}
 	}
 	return sts
+}
+
+func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
+	for range only.Once {
+		list = make(apimodeler.List, 0)
+		for _, s := range me.Services {
+			gsgs := gearspec.NewGearspec()
+			sts = gsgs.Parse(s.GearspecId)
+			if is.Error(sts) {
+				break
+			}
+			gsm, sts := NewModelFromGearspecGearspec(ctx, gsgs)
+			if is.Error(sts) {
+				break
+			}
+			list = append(list, gsm)
+
+			ss := service.NewService()
+			sts = ss.Parse(s.ServiceId)
+			if is.Error(sts) {
+				break
+			}
+			sm, sts := NewModelFromServiceServicer(ctx, ss)
+			if is.Error(sts) {
+				break
+			}
+			sm.GearspecId = gsm.GearspecId
+			list = append(list, sm)
+		}
+	}
+	return list, nil
 }
 
 //var ProjectsInstance = (Projects)(nil)
@@ -308,7 +337,7 @@ func (me *ProjectModel) AddDetails(ctx *apimodeler.Context) (sts status.Status) 
 //	//me.PUT___("/projects/:hostname/aliases/:alias", apimvc.ProjectAliasUpdate, me.updateProjectAlias)
 //	//me.DELETE("/projects/:hostname/aliases/:alias", apimvc.ProjectAliasDelete, me.deleteProjectAlias)
 //	//
-//	//me.Relate(apimvc.ProjectsRoute, &api.Related{
+//	//me.Relate(apimvc.ProjectsRoute, &api.RelatedField{
 //	//	List: apimvc.ProjectsRoute,
 //	//	Others: api.RouteNameMap{
 //	//		apimvc.ProjectsWithDetails: api.ListResource,
@@ -318,7 +347,7 @@ func (me *ProjectModel) AddDetails(ctx *apimodeler.Context) (sts status.Status) 
 //	//	},
 //	//})
 //	//
-//	//me.Relate(apimvc.ProjectDetails, &api.Related{
+//	//me.Relate(apimvc.ProjectDetails, &api.RelatedField{
 //	//	Item:   apimvc.ProjectDetails,
 //	//	List:   apimvc.ProjectsRoute,
 //	//	New:    apimvc.ProjectDetailsAdd,
@@ -329,7 +358,7 @@ func (me *ProjectModel) AddDetails(ctx *apimodeler.Context) (sts status.Status) 
 //	//	},
 //	//})
 //	//
-//	//me.Relate(apimvc.ProjectAliasesRoute, &api.Related{
+//	//me.Relate(apimvc.ProjectAliasesRoute, &api.RelatedField{
 //	//	List:   apimvc.ProjectAliasesRoute,
 //	//	New:    apimvc.ProjectAliasAdd,
 //	//	Update: apimvc.ProjectAliasUpdate,

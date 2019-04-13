@@ -1,9 +1,10 @@
 package gears
 
 import (
-	"gearbox/api/global"
 	"gearbox/gearspec"
+	"gearbox/global"
 	"gearbox/only"
+	"gearbox/service"
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
@@ -47,9 +48,9 @@ type RoleServices struct {
 	NamedStackId   types.StackId           `json:"-"`
 	Orgname        types.Orgname           `json:"orgname,omitempty"`
 	ServiceType    types.ServiceType       `json:"service_type,omitempty"`
-	Default        types.ServiceId         `json:"default"`
+	Default        service.Identifier      `json:"default"`
 	Shareable      global.ShareableChoices `json:"shareable"`
-	ServiceIds     types.ServiceIds        `json:"options,omitempty"`
+	ServiceIds     service.Identifiers     `json:"options,omitempty"`
 	DefaultService *Service                `json:"-"`
 	Services       Services                `json:"-"`
 }
@@ -109,8 +110,8 @@ func (me *RoleServices) Fixup(id gearspec.Identifier) (sts status.Status) {
 	return sts
 }
 
-func (me *RoleServices) FixupService(serviceId types.ServiceId) (s *Service, sts status.Status) {
+func (me *RoleServices) FixupService(serviceid service.Identifier) (s *Service, sts status.Status) {
 	s = NewService()
-	sts = s.Parse(serviceId)
+	sts = s.Parse(serviceid)
 	return s, sts
 }

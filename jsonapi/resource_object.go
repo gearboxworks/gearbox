@@ -80,10 +80,22 @@ func (me *ResourceObject) SetRelatedItems(ctx *apimodeler.Context, list apimodel
 			if is.Error(sts) {
 				break
 			}
+			b, err := json.Marshal(item)
+			if err != nil {
+				sts = status.OurBad("cannot marshal related item '%s", item.GetId())
+				break
+			}
+			am := make(AttributeMap, 0)
+			err = json.Unmarshal(b, &am)
+			if err != nil {
+				sts = status.OurBad("cannot unmarshal related item '%s'", item.GetId())
+				break
+			}
+			ro.AttributeMap = am
 			ii := IncludedItem(*ro)
 			list[i] = &ii
 		}
-		sts = ctx.RootDocumenter.SetIncluded(ctx, list)
+		sts = ctx.RootDocumentor.SetIncluded(ctx, list)
 	}
 	return nil
 }

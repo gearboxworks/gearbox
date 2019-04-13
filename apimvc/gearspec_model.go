@@ -10,10 +10,10 @@ import (
 	"strings"
 )
 
-const GearspecTypeName = "gearspec"
+const GearspecModelType = "gearspec"
 
 var NilGearspecModel = (*GearspecModel)(nil)
-var _ apimodeler.Itemer = NilGearspecModel
+var _ apimodeler.ItemModeler = NilGearspecModel
 
 type GearspecModelMap map[types.Stackname]*GearspecModel
 type GearspecModels []*GearspecModel
@@ -47,7 +47,7 @@ func (me *GearspecModel) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap
 }
 
 func (me *GearspecModel) GetType() apimodeler.ItemType {
-	return GearspecTypeName
+	return GearspecModelType
 }
 
 func (me *GearspecModel) GetFullStackname() types.Stackname {
@@ -78,10 +78,10 @@ func (me *GearspecModel) SetId(itemid apimodeler.ItemId) (sts status.Status) {
 	return sts
 }
 
-func (me *GearspecModel) GetItem() (apimodeler.Itemer, status.Status) {
+func (me *GearspecModel) GetItem() (apimodeler.ItemModeler, status.Status) {
 	return me, nil
 }
 
-func (me *GearspecModel) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.Itemer) (list apimodeler.List, sts status.Status) {
+func (me *GearspecModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
 	return make(apimodeler.List, 0), sts
 }

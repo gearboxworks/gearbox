@@ -21,12 +21,16 @@ const (
 	CollectionResponse ResponseType = "collection"
 )
 
-var _ apimodeler.RootDocumenter = (*RootDocument)(nil)
+var _ apimodeler.RootDocumentor = (*RootDocument)(nil)
 
-var _ apimodeler.Itemer = (*IncludedItem)(nil)
+var _ apimodeler.ItemModeler = (*IncludedItem)(nil)
 
 type IncludedList []*IncludedItem
 type IncludedItem ResourceObject
+
+func (me *IncludedItem) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
+	panic("implement me")
+}
 
 func (me *IncludedItem) GetId() apimodeler.ItemId {
 	panic("implement me")
@@ -37,14 +41,14 @@ func (me *IncludedItem) SetId(apimodeler.ItemId) status.Status {
 func (me *IncludedItem) GetType() apimodeler.ItemType {
 	panic("implement me")
 }
-func (me *IncludedItem) GetItem() (apimodeler.Itemer, status.Status) {
+func (me *IncludedItem) GetItem() (apimodeler.ItemModeler, status.Status) {
 	panic("implement me")
 }
 func (me *IncludedItem) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
 	panic("implement me")
 }
 
-func (me IncludedList) AppendItem(item apimodeler.Itemer) (inc IncludedList, sts status.Status) {
+func (me IncludedList) AppendItem(item apimodeler.ItemModeler) (inc IncludedList, sts status.Status) {
 	inc = me
 	for range only.Once {
 		ii, ok := item.(*IncludedItem)

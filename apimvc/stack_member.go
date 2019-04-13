@@ -1,9 +1,9 @@
 package apimvc
 
 import (
-	"gearbox/api/global"
 	"gearbox/gear"
 	"gearbox/gearspec"
+	"gearbox/global"
 	"gearbox/types"
 )
 

@@ -5,9 +5,22 @@ import (
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
+	"sort"
 )
 
 type Identifiers []Identifier
+
+func (me Identifiers) Sort() {
+	sns := make([]string, len(me))
+	for i, sn := range me {
+		sns[i] = string(sn)
+	}
+	sort.Strings(sns)
+	for i, sn := range sns {
+		me[i] = Identifier(sn)
+	}
+}
+
 type Identifier string
 
 func (me Identifier) GetPersistableServiceValue() (s Servicer, sts status.Status) {

@@ -12,7 +12,7 @@ import (
 const AuthorityModelType = "authority"
 
 var NilAuthorityModel = (*AuthorityModel)(nil)
-var _ apimodeler.Itemer = NilAuthorityModel
+var _ apimodeler.ItemModeler = NilAuthorityModel
 
 type AuthorityModelMap map[types.Stackname]*AuthorityModel
 type AuthorityModels []*AuthorityModel
@@ -60,10 +60,10 @@ func (me *AuthorityModel) SetId(itemid apimodeler.ItemId) (sts status.Status) {
 	return sts
 }
 
-func (me *AuthorityModel) GetItem() (apimodeler.Itemer, status.Status) {
+func (me *AuthorityModel) GetItem() (apimodeler.ItemModeler, status.Status) {
 	return me, nil
 }
 
-func (me *AuthorityModel) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.Itemer) (list apimodeler.List, sts status.Status) {
+func (me *AuthorityModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
 	return make(apimodeler.List, 0), sts
 }

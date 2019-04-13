@@ -12,9 +12,9 @@ import (
 const Basename = "controller"
 const Basepath types.Basepath = "/"
 
-var _ ApiController = (*Controller)(nil)
+var _ ListController = (*Controller)(nil)
 
-type ControllerMap map[types.Basepath]ApiController
+type ControllerMap map[types.Basepath]ListController
 
 type Controller struct {
 	LinkMap  LinkMap
@@ -22,7 +22,11 @@ type Controller struct {
 	Children ControllerMap
 }
 
-func (me *Controller) GetParent() ApiController {
+func (me *Controller) GetRelatedFields() RelatedFields {
+	return RelatedFields{}
+}
+
+func (me *Controller) GetParent() ListController {
 	return me.Parent
 }
 
@@ -92,14 +96,14 @@ func (me *Controller) GetListIds(ctx *Context, filterPath ...FilterPath) (itemid
 	return itemids, sts
 }
 
-func (me *Controller) AddItem(ctx *Context, item Itemer) (sts status.Status) {
+func (me *Controller) AddItem(ctx *Context, item ItemModeler) (sts status.Status) {
 	return status.Fail(&status.Args{
 		Message:    "not supported",
 		HttpStatus: http.StatusMethodNotAllowed,
 	})
 }
 
-func (me *Controller) UpdateItem(ctx *Context, item Itemer) (sts status.Status) {
+func (me *Controller) UpdateItem(ctx *Context, item ItemModeler) (sts status.Status) {
 	return status.Fail(&status.Args{
 		Message:    "not supported",
 		HttpStatus: http.StatusMethodNotAllowed,
@@ -113,19 +117,19 @@ func (me *Controller) DeleteItem(ctx *Context, hostname ItemId) (sts status.Stat
 	})
 }
 
-func (me *Controller) GetItem(ctx *Context, hostname ItemId) (item Itemer, sts status.Status) {
+func (me *Controller) GetItem(ctx *Context, hostname ItemId) (item ItemModeler, sts status.Status) {
 	return item, status.Success("Root found", hostname)
 }
 
-func (me *Controller) GetItemDetails(ctx *Context, hostname ItemId) (Itemer, status.Status) {
+func (me *Controller) GetItemDetails(ctx *Context, hostname ItemId) (ItemModeler, status.Status) {
 	return me.GetItem(ctx, hostname)
 }
 
-func (me *Controller) GetRelatedItems(ctx *Context, item Itemer) (list List, sts status.Status) {
+func (me *Controller) GetRelatedItems(ctx *Context, item ItemModeler) (list List, sts status.Status) {
 	return make(List, 0), nil
 }
 
-func (me *Controller) FilterItem(in Itemer, filterPath FilterPath) (out Itemer, sts status.Status) {
+func (me *Controller) FilterItem(in ItemModeler, filterPath FilterPath) (out ItemModeler, sts status.Status) {
 	for range only.Once {
 		if filterPath == NoFilterPath {
 			out = in

@@ -11,6 +11,7 @@ import (
 	"gearbox/only"
 	"gearbox/os_support"
 	"gearbox/project"
+	"gearbox/service"
 	"gearbox/ssh"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -44,7 +45,7 @@ type Gearboxer interface {
 	DeleteNamedStack(stackid types.StackId) status.Status
 	DeleteProject(hostname types.Hostname) status.Status
 	FindNamedStack(stackid types.StackId) (*gears.NamedStack, status.Status)
-	FindService(serviceid types.ServiceId) (*gears.Service, status.Status)
+	FindService(serviceid service.Identifier) (*gears.Service, status.Status)
 	FindProject(hostname types.Hostname) (*project.Project, status.Status)
 	GetConfig() config.Configer
 	GetGears() *gears.Gears
@@ -156,7 +157,7 @@ func (me *Gearbox) FindNamedStack(stackid types.StackId) (stack *gears.NamedStac
 	return me.Gears.FindNamedStack(stackid)
 }
 
-func (me *Gearbox) FindService(serviceid types.ServiceId) (service *gears.Service, sts status.Status) {
+func (me *Gearbox) FindService(serviceid service.Identifier) (service *gears.Service, sts status.Status) {
 	return me.Gears.FindService(serviceid)
 }
 

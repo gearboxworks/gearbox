@@ -6,7 +6,7 @@ import (
 )
 
 var NilTestableItem = (*TestableItem)(nil)
-var _ apimodeler.Itemer = NilTestableItem
+var _ apimodeler.ItemModeler = NilTestableItem
 
 type TestableItem struct {
 	Id   apimodeler.ItemId
@@ -26,6 +26,6 @@ func (me *TestableItem) GetType() apimodeler.ItemType {
 	return me.Type
 }
 
-func (me *TestableItem) GetItem() (apimodeler.Itemer, status.Status) {
+func (me *TestableItem) GetItem() (apimodeler.ItemModeler, status.Status) {
 	return me, nil
 }

@@ -19,7 +19,7 @@ const GearspecsBasepath types.Basepath = "/gearspecs"
 const RoleIdParam apimodeler.IdParam = "role"
 
 var NilGearspecController = (*GearspecController)(nil)
-var _ apimodeler.ApiController = NilGearspecController
+var _ apimodeler.ListController = NilGearspecController
 
 type GearspecController struct {
 	apimodeler.Controller
@@ -31,6 +31,10 @@ func NewGearspecController(gb gearbox.Gearboxer) *GearspecController {
 		Gearbox: gb,
 	}
 }
+func (me *GearspecController) GetRelatedFields() apimodeler.RelatedFields {
+	return apimodeler.RelatedFields{}
+}
+
 func (me *GearspecController) CanAddItem(*apimodeler.Context) bool {
 	return false
 }
@@ -104,7 +108,7 @@ func (me *GearspecController) GetListIds(ctx *apimodeler.Context, filterPath ...
 	return itemids, sts
 }
 
-func (me *GearspecController) GetItem(ctx *apimodeler.Context, gearspecid apimodeler.ItemId) (list apimodeler.Itemer, sts status.Status) {
+func (me *GearspecController) GetItem(ctx *apimodeler.Context, gearspecid apimodeler.ItemId) (list apimodeler.ItemModeler, sts status.Status) {
 	var ns *GearspecModel
 	for range only.Once {
 		gbgs, sts := me.Gearbox.GetGears().FindGearspec(gearspec.Identifier(gearspecid))
@@ -124,11 +128,11 @@ func (me *GearspecController) GetItem(ctx *apimodeler.Context, gearspecid apimod
 	return ns, sts
 }
 
-func (me *GearspecController) GetItemDetails(ctx *apimodeler.Context, itemid apimodeler.ItemId) (apimodeler.Itemer, status.Status) {
+func (me *GearspecController) GetItemDetails(ctx *apimodeler.Context, itemid apimodeler.ItemId) (apimodeler.ItemModeler, status.Status) {
 	return me.GetItem(ctx, itemid)
 }
 
-func (me *GearspecController) FilterItem(in apimodeler.Itemer, filterPath apimodeler.FilterPath) (out apimodeler.Itemer, sts status.Status) {
+func (me *GearspecController) FilterItem(in apimodeler.ItemModeler, filterPath apimodeler.FilterPath) (out apimodeler.ItemModeler, sts status.Status) {
 	out = in
 	return out, sts
 }
@@ -137,7 +141,7 @@ func (me *GearspecController) GetFilterMap() apimodeler.FilterMap {
 	return apimodeler.FilterMap{}
 }
 
-func assertGearspec(item apimodeler.Itemer) (s *GearspecModel, sts status.Status) {
+func assertGearspec(item apimodeler.ItemModeler) (s *GearspecModel, sts status.Status) {
 	s, ok := item.(*GearspecModel)
 	if !ok {
 		sts = status.Fail(&status.Args{

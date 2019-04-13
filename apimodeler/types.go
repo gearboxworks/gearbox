@@ -12,7 +12,7 @@ type Filters []Filter
 type Filter struct {
 	Label      FilterLabel
 	Path       FilterPath
-	ItemFilter func(Itemer) Itemer
+	ItemFilter func(ItemModeler) ItemModeler
 	ListFilter func(List) List
 }
 
@@ -33,4 +33,13 @@ func (me LinkMap) AddLink(reltype RelType, link LinkImplementor) {
 
 type LinksSetter interface {
 	SetLinks(LinkMap)
+}
+
+type Fieldname string
+type RelatedFields []*RelatedField
+type RelatedField struct {
+	Fieldname   Fieldname
+	LinkMap     LinkMap
+	IncludeType ItemType
+	Include     func(ItemModeler) bool
 }

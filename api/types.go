@@ -7,10 +7,10 @@ import (
 )
 
 type Apier interface {
-	AddController(apimodeler.ApiController) status.Status
+	AddController(apimodeler.ListController) status.Status
 	SetParent(interface{})
 	GetBaseUrl() types.UrlTemplate
-	GetItemUrl(ctx *apimodeler.Context, id apimodeler.Itemer) (types.UrlTemplate, status.Status)
+	GetItemUrl(ctx *apimodeler.Context, id apimodeler.ItemModeler) (types.UrlTemplate, status.Status)
 	Start()
 	Stop()
 	GetRootLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap

@@ -1,9 +1,10 @@
 package apimvc
 
 import (
-	"gearbox/api/global"
 	"gearbox/gears"
 	"gearbox/gearspec"
+	"gearbox/global"
+	"gearbox/service"
 	"gearbox/types"
 )
 
@@ -42,9 +43,9 @@ func newRoleMap(srm gears.StackRoleMap) interface{} {
 type serviceMap map[gearspec.Identifier]*_service
 type _service struct {
 	Orgname   types.Orgname           `json:"org,omitempty"`
-	Default   types.ServiceId         `json:"default,omitempty"`
+	Default   service.Identifier      `json:"default,omitempty"`
 	Shareable global.ShareableChoices `json:"shareable,omitempty"`
-	Services  types.ServiceIds        `json:"options,omitempty"`
+	Services  service.Identifiers     `json:"options,omitempty"`
 }
 
 func newServiceMap(sm gears.RoleServicesMap) interface{} {

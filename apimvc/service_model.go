@@ -5,9 +5,8 @@ import (
 	"gearbox/apimodeler"
 	"gearbox/gears"
 	"gearbox/gearspec"
-	"gearbox/global"
 	"gearbox/only"
-	svc "gearbox/service"
+	"gearbox/service"
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
@@ -16,20 +15,20 @@ import (
 const ServiceModelType apimodeler.ItemType = "service"
 
 var NilServiceModel = (*ServiceModel)(nil)
-var _ apimodeler.Itemer = NilServiceModel
+var _ apimodeler.ItemModeler = NilServiceModel
 
 type ServiceModelMap map[gearspec.Identifier]*ServiceModel
 type ServiceModels []*ServiceModel
 
 type ServiceModel struct {
-	GearspecId  gearspec.Identifier  `json:"gearspec_id,omitempty"`
-	ServiceId   types.ServiceId      `json:"service_id,omitempty"`
-	ServiceType types.ServiceType    `json:"service_type,omitempty"`
-	Orgname     types.Orgname        `json:"orgname,omitempty"`
-	Program     types.ProgramName    `json:"program,omitempty"`
-	Version     types.Version        `json:"version,omitempty"`
-	GearspecIds gearspec.Identifiers `json:"gearspec_ids,omitempty"`
-	Gears       *gears.Gears         `json:"-"`
+	GearspecId  gearspec.Identifier `json:"gearspec_id,omitempty"`
+	ServiceId   service.Identifier  `json:"service_id,omitempty"`
+	ServiceType types.ServiceType   `json:"service_type,omitempty"`
+	Orgname     types.Orgname       `json:"orgname,omitempty"`
+	Program     types.ProgramName   `json:"program,omitempty"`
+	Version     types.Version       `json:"version,omitempty"`
+	//GearspecIds gearspec.Identifiers `json:"gearspec_ids,omitempty"`
+	Gears *gears.Gears `json:"-"`
 }
 
 func NewModelFromGearsService(ctx *apimodeler.Context, gsvc *gears.Service) (s *ServiceModel, sts status.Status) {
@@ -44,30 +43,30 @@ func NewModelFromGearsService(ctx *apimodeler.Context, gsvc *gears.Service) (s *
 	return s, sts
 }
 
-func NewFromServiceService(ctx *apimodeler.Context, gearspecid gearspec.Identifier, ps svc.Servicer) (s *ServiceModel, sts status.Status) {
-	var sid svc.Identifier
-	var ss *svc.Service
+func NewModelFromServiceServicer(ctx *apimodeler.Context, ps service.Servicer) (s *ServiceModel, sts status.Status) {
+	var sid service.Identifier
+	var ss *service.Service
 	for range only.Once {
-		_ps, ok := ps.(*svc.ServicerProxy)
+		_ps, ok := ps.(*service.ServicerProxy)
 		if ok {
 			ps = _ps.Servicer
 		}
-		ss, ok = ps.(*svc.Service)
+		ss, ok = ps.(*service.Service)
 		if ok {
 			sid = ss.Identifier
 			break
 		}
-		sid, ok = ps.(svc.Identifier)
+		sid, ok = ps.(service.Identifier)
 		if !ok {
 			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("unable to get identifier for service '%s'", gearspecid),
+				Message: "unable to get identifier for unknown service",
 			})
 			break
 		}
-		ss = svc.NewService()
+		ss = service.NewService()
 		sts = ss.Parse(sid)
 		if is.Error(sts) {
-			sts = status.Fail(&status.Args{
+			sts = status.Wrap(sts, &status.Args{
 				Message: fmt.Sprintf("cannot parse identifier for service '%s'", sid),
 			})
 			break
@@ -78,26 +77,22 @@ func NewFromServiceService(ctx *apimodeler.Context, gearspecid gearspec.Identifi
 			break
 		}
 	}
-	gs := gearspec.NewGearspec()
-	sts = gs.Parse(gearspecid)
-	if is.Success(sts) {
-		s = &ServiceModel{
-			GearspecId: gs.GetIdentifier(),
-			ServiceId:  types.ServiceId(sid),
-		}
-		for range only.Once {
-			if ctx.GetResponseType() != global.ItemResponse {
-				break
-			}
-			if ctx.Controller.GetBasepath() != ServicesBasepath {
-				break
-
-			}
-			s.Orgname = ss.OrgName
-			s.ServiceType = ss.ServiceType
-			s.Program = ss.Program
-			s.Version = ss.Version.GetIdentifier()
-		}
+	s = &ServiceModel{
+		ServiceId: service.Identifier(sid),
+	}
+	for range only.Once {
+		// @TODO Add something here
+		//if ctx.GetResponseType() != global.ItemResponse {
+		//	break
+		//}
+		//if ctx.Controller.GetBasepath() != ServicesBasepath {
+		//	break
+		//
+		//}
+		s.Orgname = ss.OrgName
+		s.ServiceType = ss.ServiceType
+		s.Program = ss.Program
+		s.Version = ss.Version.GetIdentifier()
 	}
 	return s, sts
 }
@@ -114,7 +109,7 @@ func (me *ServiceModel) GetType() apimodeler.ItemType {
 	return ServiceModelType
 }
 
-func (me *ServiceModel) GetItem() (apimodeler.Itemer, status.Status) {
+func (me *ServiceModel) GetItem() (apimodeler.ItemModeler, status.Status) {
 	return me, nil
 }
 
@@ -124,19 +119,20 @@ func (me *ServiceModel) GetItemLinkMap(*apimodeler.Context) (lm apimodeler.LinkM
 	}, sts
 }
 
-func (me *ServiceModel) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.Itemer) (list apimodeler.List, sts status.Status) {
+func (me *ServiceModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
 	return make(apimodeler.List, 0), sts
 }
 
-func GetServiceModelsFromServiceStackMap(ctx *apimodeler.Context, sm svc.StackMap) (sms ServiceModels, sts status.Status) {
+func GetServiceModelsFromServiceStackMap(ctx *apimodeler.Context, sm service.StackMap) (sms ServiceModels, sts status.Status) {
 	sms = make(ServiceModels, len(sm))
 	i := 0
 	for gs, gbs := range sm {
 		var s *ServiceModel
-		s, sts = NewFromServiceService(ctx, gs, gbs)
+		s, sts = NewModelFromServiceServicer(ctx, gbs)
 		if is.Error(sts) {
 			break
 		}
+		s.GearspecId = gs
 		sms[i] = s
 		i++
 	}

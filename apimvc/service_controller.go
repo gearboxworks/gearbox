@@ -5,6 +5,7 @@ import (
 	"gearbox/apimodeler"
 	"gearbox/gearbox"
 	"gearbox/only"
+	"gearbox/service"
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
@@ -21,7 +22,7 @@ const ServiceTypeIdParam apimodeler.IdParam = "svctype"
 const ProgramVersionIdParam apimodeler.IdParam = "progver"
 
 var NilServiceController = (*ServiceController)(nil)
-var _ apimodeler.ApiController = NilServiceController
+var _ apimodeler.ListController = NilServiceController
 
 type ServiceController struct {
 	apimodeler.Controller
@@ -34,13 +35,17 @@ func NewServiceController(gb gearbox.Gearboxer) *ServiceController {
 	}
 }
 
+func (me *ServiceController) GetRelatedFields() apimodeler.RelatedFields {
+	return apimodeler.RelatedFields{}
+}
+
 func (me *ServiceController) GetName() types.RouteName {
 	return ServicesName
 }
 
 func (me *ServiceController) GetListLinkMap(*apimodeler.Context, ...apimodeler.FilterPath) (lm apimodeler.LinkMap, sts status.Status) {
 	return apimodeler.LinkMap{
-		//apimodeler.RelatedRelType: apimodeler.Link("foobarbaz"),
+		//apimodeler.RelatedRelType: apimodeler.Link("http://example.com"),
 	}, sts
 }
 
@@ -103,10 +108,10 @@ func (me *ServiceController) GetListIds(ctx *apimodeler.Context, filterPath ...a
 	return itemids, sts
 }
 
-func (me *ServiceController) GetItem(ctx *apimodeler.Context, serviceid apimodeler.ItemId) (list apimodeler.Itemer, sts status.Status) {
+func (me *ServiceController) GetItem(ctx *apimodeler.Context, serviceid apimodeler.ItemId) (list apimodeler.ItemModeler, sts status.Status) {
 	var ns *ServiceModel
 	for range only.Once {
-		gbns, sts := me.Gearbox.FindService(types.ServiceId(serviceid))
+		gbns, sts := me.Gearbox.FindService(service.Identifier(serviceid))
 		if is.Error(sts) {
 			sts = status.Wrap(sts, &status.Args{
 				Message:    fmt.Sprintf("Service '%s' not found", serviceid),
@@ -123,11 +128,11 @@ func (me *ServiceController) GetItem(ctx *apimodeler.Context, serviceid apimodel
 	return ns, sts
 }
 
-func (me *ServiceController) GetItemDetails(ctx *apimodeler.Context, itemid apimodeler.ItemId) (apimodeler.Itemer, status.Status) {
+func (me *ServiceController) GetItemDetails(ctx *apimodeler.Context, itemid apimodeler.ItemId) (apimodeler.ItemModeler, status.Status) {
 	return me.GetItem(ctx, itemid)
 }
 
-func (me *ServiceController) FilterItem(in apimodeler.Itemer, filterPath apimodeler.FilterPath) (out apimodeler.Itemer, sts status.Status) {
+func (me *ServiceController) FilterItem(in apimodeler.ItemModeler, filterPath apimodeler.FilterPath) (out apimodeler.ItemModeler, sts status.Status) {
 	out = in
 	return out, sts
 }
@@ -140,7 +145,7 @@ func GetServiceFilterMap() apimodeler.FilterMap {
 	return apimodeler.FilterMap{}
 }
 
-func assertService(item apimodeler.Itemer) (s *ServiceModel, sts status.Status) {
+func assertService(item apimodeler.ItemModeler) (s *ServiceModel, sts status.Status) {
 	s, ok := item.(*ServiceModel)
 	if !ok {
 		sts = status.Fail(&status.Args{

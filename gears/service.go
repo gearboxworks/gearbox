@@ -5,6 +5,7 @@ import (
 	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
+	"gearbox/service"
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
@@ -13,14 +14,14 @@ import (
 
 type ServiceBag map[gearspec.Identifier]interface{}
 
-type ServiceMap map[types.ServiceId]*Service
+type ServiceMap map[service.Identifier]*Service
 
 type DefaultServiceMap map[gearspec.Identifier]*Service
 
 type Services []*Service
 
-func (me Services) ServiceIds() types.ServiceIds {
-	services := make(types.ServiceIds, len(me))
+func (me Services) ServiceIds() service.Identifiers {
+	services := make(service.Identifiers, len(me))
 	for i, s := range me {
 		services[i] = s.ServiceId
 	}
@@ -28,7 +29,7 @@ func (me Services) ServiceIds() types.ServiceIds {
 }
 
 type Service struct {
-	ServiceId   types.ServiceId     `json:"service_id,omitempty"`
+	ServiceId   service.Identifier  `json:"service_id,omitempty"`
 	Orgname     types.Orgname       `json:"org,omitempty"`
 	ServiceType types.ServiceType   `json:"type,omitempty"`
 	Program     types.ProgramName   `json:"program,omitempty"`
@@ -47,21 +48,21 @@ func (me *Service) Clone() *Service {
 	return &_s
 }
 
-func (me *Service) GetIdentifier() (serviceId types.ServiceId) {
+func (me *Service) GetIdentifier() (serviceId service.Identifier) {
 	return me.ServiceId
 }
 
-func (me *Service) SetIdentifier(serviceId types.ServiceId) status.Status {
+func (me *Service) SetIdentifier(serviceId service.Identifier) status.Status {
 	me.ServiceId = serviceId
 	return me.ApplyDefaults(me)
 }
 
-func (me *Service) Parse(serviceId types.ServiceId) (sts status.Status) {
+func (me *Service) Parse(serviceId service.Identifier) (sts status.Status) {
 	return me.SetIdentifier(serviceId)
 }
 
 func (me *Service) CaptureGearId(g *gear.Gear) {
-	me.ServiceId = types.ServiceId(g.GetIdentifier())
+	me.ServiceId = service.Identifier(g.GetIdentifier())
 	me.Orgname = g.OrgName
 	me.ServiceType = g.ServiceType
 	me.Program = g.Program
@@ -72,7 +73,7 @@ func (me *Service) CaptureGearId(g *gear.Gear) {
 	}
 }
 
-func (me *Service) GetGear(serviceId types.ServiceId) (g *gear.Gear, sts status.Status) {
+func (me *Service) GetGear(serviceId service.Identifier) (g *gear.Gear, sts status.Status) {
 	g = gear.NewGear()
 	sts = g.Parse(gear.Identifier(serviceId))
 	return g, sts

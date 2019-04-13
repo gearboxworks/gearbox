@@ -2,8 +2,8 @@ package apimodeler
 
 type Context struct {
 	Contexter
-	RootDocumenter
-	Controller ApiController
+	RootDocumentor
+	Controller ListController
 }
 type ContextArgs Context
 

@@ -12,7 +12,7 @@ import (
 func AddControllers(a api.Apier, gb gearbox.Gearboxer) (sts status.Status) {
 	for range only.Once {
 
-		controllers := []apimodeler.ApiController{
+		controllers := []apimodeler.ListController{
 			NewProjectController(gb),
 			NewStackController(gb),
 			NewServiceController(gb),

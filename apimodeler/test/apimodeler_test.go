@@ -417,7 +417,7 @@ func TestModeler(t *testing.T) {
 
 }
 
-func getItem(coll apimodeler.List, itemid apimodeler.ItemId) (item apimodeler.Itemer) {
+func getItem(coll apimodeler.List, itemid apimodeler.ItemId) (item apimodeler.ItemModeler) {
 	for _, i := range coll {
 		if i.GetId() != itemid {
 			continue

@@ -17,7 +17,7 @@ import (
 const NamedStackType = "stack"
 
 var NilNamedStackModel = (*NamedStackModel)(nil)
-var _ apimodeler.Itemer = NilNamedStackModel
+var _ apimodeler.ItemModeler = NilNamedStackModel
 
 type NamedStackModelMap map[types.Stackname]*NamedStackModel
 type NamedStackModels []*NamedStackModel
@@ -93,7 +93,7 @@ func (me *NamedStackModel) SetId(itemid apimodeler.ItemId) (sts status.Status) {
 	return sts
 }
 
-func (me *NamedStackModel) GetItem() (apimodeler.Itemer, status.Status) {
+func (me *NamedStackModel) GetItem() (apimodeler.ItemModeler, status.Status) {
 	return me, nil
 }
 
@@ -104,6 +104,6 @@ func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStackModel) (gbns *gears.Na
 	return gbns, sts
 }
 
-func (me *NamedStackModel) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.Itemer) (list apimodeler.List, sts status.Status) {
+func (me *NamedStackModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
 	return make(apimodeler.List, 0), sts
 }
