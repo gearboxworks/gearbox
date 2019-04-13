@@ -1,6 +1,102 @@
-package apimodels
+package apimvc
 
-type Projects []*Project
+import (
+	"gearbox/apimodeler"
+	"gearbox/config"
+	"gearbox/only"
+	"gearbox/project"
+	"gearbox/status"
+	"gearbox/status/is"
+	"gearbox/types"
+)
+
+const ProjectModelType apimodeler.ItemType = "project"
+
+var NilProjectModel = (*ProjectModel)(nil)
+var _ apimodeler.Itemer = NilProjectModel
+
+type ProjectModelMap map[types.Hostname]*ProjectModel
+type ProjectModels []*ProjectModel
+type ProjectModel struct {
+	Hostname      types.Hostname          `json:"hostname"`
+	Enabled       bool                    `json:"enabled"`
+	Basedir       types.Nickname          `json:"basedir"`
+	Notes         string                  `json:"notes"`
+	Path          types.RelativePath      `json:"path"`
+	ProjectDir    types.AbsoluteDir       `json:"project_dir"`
+	Filepath      types.AbsoluteFilepath  `json:"filepath"`
+	Aliases       project.HostnameAliases `json:"aliases,omitempty"`
+	Services      ServiceModels           `json:"stack,omitempty"`
+	ConfigProject *config.Project         `json:"-"`
+}
+
+func NewModelFromConfigProject(cp *config.Project) (p *ProjectModel, sts status.Status) {
+	for range only.Once {
+		pd, sts := cp.GetDir()
+		if is.Error(sts) {
+			break
+		}
+		p = &ProjectModel{
+			Hostname:      cp.Hostname,
+			Basedir:       cp.Basedir,
+			Notes:         cp.Notes,
+			Path:          cp.Path,
+			ProjectDir:    pd,
+			ConfigProject: cp,
+		}
+	}
+	return p, sts
+}
+
+func NewProjectModel(hostname apimodeler.ItemId) *ProjectModel {
+	return &ProjectModel{
+		Hostname: types.Hostname(hostname),
+	}
+}
+
+func (me *ProjectModel) GetType() apimodeler.ItemType {
+	return ProjectModelType
+}
+
+func (me *ProjectModel) GetId() apimodeler.ItemId {
+	return apimodeler.ItemId(me.Hostname)
+}
+
+func (me *ProjectModel) SetId(hostname apimodeler.ItemId) status.Status {
+	me.Hostname = types.Hostname(hostname)
+	return nil
+}
+
+func (me *ProjectModel) GetItem() (apimodeler.Itemer, status.Status) {
+	return me, nil
+}
+
+func (me *ProjectModel) GetItemLinkMap(*apimodeler.Context) (lm apimodeler.LinkMap, sts status.Status) {
+	return apimodeler.LinkMap{
+		//apimodeler.RelatedRelType: apimodeler.Link("https://example.com"),
+	}, sts
+}
+
+func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.Itemer) (list apimodeler.List, sts status.Status) {
+	return make(apimodeler.List, 0), sts
+}
+
+func (me *ProjectModel) AddDetails(ctx *apimodeler.Context) (sts status.Status) {
+	for range only.Once {
+		pp := project.NewProject(me.ConfigProject)
+		sts = pp.Load()
+		if is.Error(sts) {
+			break
+		}
+		me.Aliases = pp.Aliases
+		me.Filepath = pp.Filepath
+		me.Services, sts = GetServiceModelsFromServiceStackMap(ctx, pp.GetServiceMap())
+		if is.Error(sts) {
+			break
+		}
+	}
+	return sts
+}
 
 //var ProjectsInstance = (Projects)(nil)
 //var _ ab.ItemCollection = ProjectsInstance
@@ -149,20 +245,20 @@ type Projects []*Project
 //	if !ok {
 //
 //	}
-//	sts := me.AddModels(apimodels.NewProjectModel(gb))
+//	sts := me.AddController(apimvc.NewProjectController(gb))
 //	if is.Error(sts) {
 //		panic(sts.Message())
 //	}
 //}
 
-//me.AddModels("/projects", &ab.ResourceArgs{
-//Program:       apimodels.ProjectsRoute,
+//me.AddController("/projects", &ab.ResourceArgs{
+//Program:       apimvc.ProjectsRoute,
 //IdParams:   ab.IdParams{"hostname"},
-//Item:       apimodels.ProjectInstance,
-//Factory: apimodels.NewProjectCollection(gb),
-//Children: ab.ModelsMap{
+//Item:       apimvc.NilProjectModel,
+//Factory: apimvc.NewProjectCollection(gb),
+//Children: ab.ControllerMap{
 //	ab.NewResource("/aliases", &ab.ResourceArgs{
-//		Program:       apimodels.ProjectAliasesRoute,
+//		Program:       apimvc.ProjectAliasesRoute,
 //		IdParams:   ab.IdParams{"alias"},
 //		ItemType:   reflect.String,
 //	}),
@@ -174,7 +270,7 @@ type Projects []*Project
 //	"gearbox/gearbox"
 //	"gearbox/api"
 //	"gearbox/only"
-//	"gearbox/apimodels"
+//	"gearbox/apimvc"
 //	"gearbox/status"
 //	"net/http"
 //)
@@ -195,49 +291,49 @@ type Projects []*Project
 //}
 //func (me *Api) addProjectRoutes() (gb *gearbox.Parent) {
 //
-//	//me.GET___("/projects", apimodels.ProjectsRoute, me.getProjectsResponse)
-//	//me.POST__("/projects/new", apimodels.ProjectDetailsAdd, me.addProjectDetails)
+//	//me.GET___("/projects", apimvc.ProjectsRoute, me.getProjectsResponse)
+//	//me.POST__("/projects/new", apimvc.ProjectDetailsAdd, me.addProjectDetails)
 //	//
-//	//me.GET___("/projects/with-details", apimodels.ProjectsWithDetails, me.getProjectsResponse)
-//	//me.GET___("/projects/enabled", apimodels.EnabledProjects, me.getEnabledProjectsResponse)
-//	//me.GET___("/projects/disabled", apimodels.DisabledProjects, me.getDisabledProjectsResponse)
-//	//me.GET___("/projects/candidates", apimodels.CandidateProjects, me.getCandidateProjectsResponse)
+//	//me.GET___("/projects/with-details", apimvc.ProjectsWithDetails, me.getProjectsResponse)
+//	//me.GET___("/projects/enabled", apimvc.EnabledProjects, me.getEnabledProjectsResponse)
+//	//me.GET___("/projects/disabled", apimvc.DisabledProjects, me.getDisabledProjectsResponse)
+//	//me.GET___("/projects/candidates", apimvc.CandidateProjects, me.getCandidateProjectsResponse)
 //	//
-//	//me.GET___("/projects/:hostname", apimodels.ProjectDetails, me.getProjectDetailsResponse, me.getProjectHostnameValues)
-//	//me.PUT___("/projects/:hostname", apimodels.ProjectDetailsUpdate, me.updateProjectDetails, me.getProjectHostnameValues)
-//	//me.DELETE("/projects/:hostname", apimodels.ProjectDetailsDelete, me.deleteProjectDetails, me.getProjectHostnameValues)
+//	//me.GET___("/projects/:hostname", apimvc.ProjectDetails, me.getProjectDetailsResponse, me.getProjectHostnameValues)
+//	//me.PUT___("/projects/:hostname", apimvc.ProjectDetailsUpdate, me.updateProjectDetails, me.getProjectHostnameValues)
+//	//me.DELETE("/projects/:hostname", apimvc.ProjectDetailsDelete, me.deleteProjectDetails, me.getProjectHostnameValues)
 //	//
-//	//me.GET___("/projects/:hostname/aliases", apimodels.ProjectAliasesRoute, me.getProjectAliasesResponse, me.getProjectHostnameValues)
-//	//me.POST__("/projects/:hostname/aliases/new", apimodels.ProjectAliasAdd, me.addProjectAlias)
-//	//me.PUT___("/projects/:hostname/aliases/:alias", apimodels.ProjectAliasUpdate, me.updateProjectAlias)
-//	//me.DELETE("/projects/:hostname/aliases/:alias", apimodels.ProjectAliasDelete, me.deleteProjectAlias)
+//	//me.GET___("/projects/:hostname/aliases", apimvc.ProjectAliasesRoute, me.getProjectAliasesResponse, me.getProjectHostnameValues)
+//	//me.POST__("/projects/:hostname/aliases/new", apimvc.ProjectAliasAdd, me.addProjectAlias)
+//	//me.PUT___("/projects/:hostname/aliases/:alias", apimvc.ProjectAliasUpdate, me.updateProjectAlias)
+//	//me.DELETE("/projects/:hostname/aliases/:alias", apimvc.ProjectAliasDelete, me.deleteProjectAlias)
 //	//
-//	//me.Relate(apimodels.ProjectsRoute, &api.Related{
-//	//	List: apimodels.ProjectsRoute,
+//	//me.Relate(apimvc.ProjectsRoute, &api.Related{
+//	//	List: apimvc.ProjectsRoute,
 //	//	Others: api.RouteNameMap{
-//	//		apimodels.ProjectsWithDetails: api.ListResource,
-//	//		apimodels.EnabledProjects:     api.ListResource,
-//	//		apimodels.DisabledProjects:    api.ListResource,
-//	//		apimodels.CandidateProjects:   api.ListResource,
+//	//		apimvc.ProjectsWithDetails: api.ListResource,
+//	//		apimvc.EnabledProjects:     api.ListResource,
+//	//		apimvc.DisabledProjects:    api.ListResource,
+//	//		apimvc.CandidateProjects:   api.ListResource,
 //	//	},
 //	//})
 //	//
-//	//me.Relate(apimodels.ProjectDetails, &api.Related{
-//	//	Item:   apimodels.ProjectDetails,
-//	//	List:   apimodels.ProjectsRoute,
-//	//	New:    apimodels.ProjectDetailsAdd,
-//	//	Update: apimodels.ProjectDetailsUpdate,
-//	//	Delete: apimodels.ProjectDetailsDelete,
+//	//me.Relate(apimvc.ProjectDetails, &api.Related{
+//	//	Item:   apimvc.ProjectDetails,
+//	//	List:   apimvc.ProjectsRoute,
+//	//	New:    apimvc.ProjectDetailsAdd,
+//	//	Update: apimvc.ProjectDetailsUpdate,
+//	//	Delete: apimvc.ProjectDetailsDelete,
 //	//	Others: api.RouteNameMap{
-//	//		apimodels.ProjectsWithDetails: api.ItemResource,
+//	//		apimvc.ProjectsWithDetails: api.ItemResource,
 //	//	},
 //	//})
 //	//
-//	//me.Relate(apimodels.ProjectAliasesRoute, &api.Related{
-//	//	List:   apimodels.ProjectAliasesRoute,
-//	//	New:    apimodels.ProjectAliasAdd,
-//	//	Update: apimodels.ProjectAliasUpdate,
-//	//	Delete: apimodels.ProjectAliasDelete,
+//	//me.Relate(apimvc.ProjectAliasesRoute, &api.Related{
+//	//	List:   apimvc.ProjectAliasesRoute,
+//	//	New:    apimvc.ProjectAliasAdd,
+//	//	Update: apimvc.ProjectAliasUpdate,
+//	//	Delete: apimvc.ProjectAliasDelete,
 //	//})
 //
 //	//me.GET___("/projects/:hostname/services", resp.ProjectServicesResource, me.getProjectServicesResponse)
@@ -279,7 +375,7 @@ type Projects []*Project
 //		if status.IsError(sts) {
 //			break
 //		}
-//		response = apimodels.NewProjectStacksResponse(p)
+//		response = apimvc.NewProjectStacksResponse(p)
 //	}
 //	if status.IsError(sts) {
 //		response = sts
@@ -296,7 +392,7 @@ type Projects []*Project
 //			break
 //		}
 //		var sn gearbox.Stackname
-//		sn, sts = apimodels.GetStackname(rc)
+//		sn, sts = apimvc.GetStackname(rc)
 //		if status.IsError(sts) {
 //			break
 //		}
@@ -331,7 +427,7 @@ type Projects []*Project
 //			response = sts
 //			break
 //		}
-//		response = apimodels.NewProjectServices(p.Stack, p)
+//		response = apimvc.NewProjectServices(p.Stack, p)
 //	}
 //	if status.IsError(sts) {
 //		response = sts
@@ -358,7 +454,7 @@ type Projects []*Project
 //		}
 //		if hn == "" {
 //			sts = status.Fail(&status.Args{
-//				Message: fmt.Sprintf("hostname not found for apimodels name '%s'", rc.RouteName),
+//				Message: fmt.Sprintf("hostname not found for apimvc name '%s'", rc.RouteName),
 //			})
 //			break
 //		}
@@ -367,7 +463,7 @@ type Projects []*Project
 //		if status.IsError(sts) {
 //			break
 //		}
-//		response = apimodels.NewProjectAliases(p.Aliases, p)
+//		response = apimvc.NewProjectAliases(p.Aliases, p)
 //	}
 //	if status.IsError(sts) {
 //		response = sts
@@ -395,7 +491,7 @@ type Projects []*Project
 //			break
 //		}
 //		prs = make(api.ListItemResponseMap, len(pm))
-//		withDetails := rc.RouteName == apimodels.ProjectsWithDetailsFilter
+//		withDetails := rc.RouteName == apimvc.ProjectsWithDetailsFilter
 //		for _, p := range pm {
 //			if withDetails {
 //				sts = p.MaybeLoadDetails()
@@ -406,7 +502,7 @@ type Projects []*Project
 //			} else {
 //				p.ClearDetails()
 //			}
-//			prs[string(p.Hostname)] = apimodels.NewProjectList(apimodels.ConvertConfigProject(p))
+//			prs[string(p.Hostname)] = apimvc.NewProjectList(apimvc.ConvertConfigProject(p))
 //		}
 //	}
 //	if !status.IsError(sts) {
@@ -455,7 +551,7 @@ type Projects []*Project
 //		if status.IsError(sts) {
 //			break
 //		}
-//		response = apimodels.ConvertConfigProject(p)
+//		response = apimvc.ConvertConfigProject(p)
 //	}
 //	if status.IsError(sts) {
 //		response = sts

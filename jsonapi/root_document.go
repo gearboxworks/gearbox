@@ -23,7 +23,7 @@ const (
 
 var _ apimodeler.RootDocumenter = (*RootDocument)(nil)
 
-var _ apimodeler.ApiItemer = (*IncludedItem)(nil)
+var _ apimodeler.Itemer = (*IncludedItem)(nil)
 
 type IncludedList []*IncludedItem
 type IncludedItem ResourceObject
@@ -37,14 +37,14 @@ func (me *IncludedItem) SetId(apimodeler.ItemId) status.Status {
 func (me *IncludedItem) GetType() apimodeler.ItemType {
 	panic("implement me")
 }
-func (me *IncludedItem) GetItem() (apimodeler.ApiItemer, status.Status) {
+func (me *IncludedItem) GetItem() (apimodeler.Itemer, status.Status) {
 	panic("implement me")
 }
 func (me *IncludedItem) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
 	panic("implement me")
 }
 
-func (me IncludedList) AppendItem(item apimodeler.ApiItemer) (inc IncludedList, sts status.Status) {
+func (me IncludedList) AppendItem(item apimodeler.Itemer) (inc IncludedList, sts status.Status) {
 	inc = me
 	for range only.Once {
 		ii, ok := item.(*IncludedItem)
@@ -52,11 +52,6 @@ func (me IncludedList) AppendItem(item apimodeler.ApiItemer) (inc IncludedList, 
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("item '%s' does not implement ja.ResourceObject", item.GetId()),
 			})
-			break
-		}
-
-		if len(inc) < cap(inc) {
-			inc[len(inc)] = ii
 			break
 		}
 		inc = append(me, ii)
@@ -134,7 +129,7 @@ func (me *RootDocument) AddLinks(links apimodeler.LinkMap) {
 
 func (me *RootDocument) SetIncluded(ctx *apimodeler.Context, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
-		inc := make(IncludedList, len(list))
+		inc := make(IncludedList, 0, len(list))
 		for _, item := range list {
 			inc, sts = inc.AppendItem(item)
 			if is.Error(sts) {

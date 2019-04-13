@@ -10,13 +10,13 @@ import (
 )
 
 var NilTestableModel = (*TestableModel)(nil)
-var _ apimodeler.ApiModeler = NilTestableModel
+var _ apimodeler.ApiController = NilTestableModel
 
 type TestableModel struct {
 	List apimodeler.List
 }
 
-func NewTestableModel() *TestableModel {
+func NewTestableController() *TestableModel {
 	tm := TestableModel{
 		List: make(apimodeler.List, 0),
 	}
@@ -58,7 +58,7 @@ func (me *TestableModel) GetFilterMap() apimodeler.FilterMap {
 		UnicornFilter: apimodeler.Filter{
 			Label: "Items of Unicorn type",
 			Path:  UnicornFilter,
-			ItemFilter: func(item apimodeler.ApiItemer) apimodeler.ApiItemer {
+			ItemFilter: func(item apimodeler.Itemer) apimodeler.Itemer {
 				if item.GetType() != UnicornType {
 					return nil
 				}
@@ -72,7 +72,7 @@ func (me *TestableModel) GetList(filter ...apimodeler.FilterPath) (coll apimodel
 	return me.List, sts
 }
 
-func (me *TestableModel) AddItem(item apimodeler.ApiItemer) status.Status {
+func (me *TestableModel) AddItem(item apimodeler.Itemer) status.Status {
 	me.List = append(me.List, item)
 	return nil
 }
@@ -88,7 +88,7 @@ func (me *TestableModel) DeleteItem(itemid apimodeler.ItemId) (sts status.Status
 	return sts
 }
 
-func (me *TestableModel) GetItem(itemid apimodeler.ItemId) (item apimodeler.ApiItemer, sts status.Status) {
+func (me *TestableModel) GetItem(itemid apimodeler.ItemId) (item apimodeler.Itemer, sts status.Status) {
 	for range only.Once {
 		index, sts := me.getItemIndex(itemid)
 		if is.Error(sts) {
@@ -101,7 +101,7 @@ func (me *TestableModel) GetItem(itemid apimodeler.ItemId) (item apimodeler.ApiI
 
 func (me *TestableModel) getItemIndex(itemid apimodeler.ItemId) (index int, sts status.Status) {
 	found := false
-	var item apimodeler.ApiItemer
+	var item apimodeler.Itemer
 	for index, item = range me.List {
 		if item.GetId() != itemid {
 			continue
@@ -126,7 +126,7 @@ func (me *TestableModel) GetListIds() (apimodeler.ItemIds, status.Status) {
 	return cids, nil
 }
 
-func (me *TestableModel) UpdateItem(item apimodeler.ApiItemer) (sts status.Status) {
+func (me *TestableModel) UpdateItem(item apimodeler.Itemer) (sts status.Status) {
 	for range only.Once {
 		var index int
 		index, sts = me.getItemIndex(item.GetId())
@@ -138,7 +138,7 @@ func (me *TestableModel) UpdateItem(item apimodeler.ApiItemer) (sts status.Statu
 	return sts
 }
 
-func (me *TestableModel) FilterItem(item apimodeler.ApiItemer, filter apimodeler.FilterPath) (_item apimodeler.ApiItemer, sts status.Status) {
+func (me *TestableModel) FilterItem(item apimodeler.Itemer, filter apimodeler.FilterPath) (_item apimodeler.Itemer, sts status.Status) {
 	for range only.Once {
 		_item = item
 		f, sts := me.getFilter(filter)

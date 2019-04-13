@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"gearbox/api"
-	"gearbox/apimodels"
+	"gearbox/apimvc"
 	"gearbox/app/cmd"
 	"gearbox/gearbox"
 	"gearbox/os_support"
@@ -21,11 +21,11 @@ func main() {
 	})
 	gearbox.Instance = gb
 	a := api.NewApi(gb)
-	sts := apimodels.AddModels(a, gb)
+	sts := apimvc.AddControllers(a, gb)
 	if is.Error(sts) {
 		panic(sts.Message())
 	}
-	a.ConnectRoutes()
+	a.WireRoutes()
 	gb.SetApi(a)
 	sts = gb.Initialize()
 	if status.IsError(sts) {

@@ -2,7 +2,7 @@ package apimodeler
 
 import "gearbox/status"
 
-type List []ApiItemer
+type List []Itemer
 
 //func (List) ContainsResource() {}
 //

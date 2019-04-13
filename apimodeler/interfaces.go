@@ -26,7 +26,7 @@ type KeyValueSetter interface {
 	Set(string, interface{})
 }
 
-type ApiModeler interface {
+type ApiController interface {
 	NameGetter
 	BasepathGetter
 	IdParamsGetter
@@ -43,7 +43,11 @@ type ApiModeler interface {
 	ItemFilterer
 	ItemCanAdder
 	RelatedItemsGetter
+	ParentGetter
+	LinkAdder
+	LinksAdder
 }
+
 type ItemCanAdder interface {
 	CanAddItem(*Context) bool
 }
@@ -63,22 +67,22 @@ type ListIdsGetter interface {
 	GetListIds(*Context, ...FilterPath) (ItemIds, status.Status)
 }
 type ListItemAdder interface {
-	AddItem(*Context, ApiItemer) status.Status
+	AddItem(*Context, Itemer) status.Status
 }
 type ListItemUpdater interface {
-	UpdateItem(*Context, ApiItemer) status.Status
+	UpdateItem(*Context, Itemer) status.Status
 }
 type ListItemDeleter interface {
 	DeleteItem(*Context, ItemId) status.Status
 }
 type ListItemGetter interface {
-	GetItem(*Context, ItemId) (ApiItemer, status.Status)
+	GetItem(*Context, ItemId) (Itemer, status.Status)
 }
 type ListItemDetailsGetter interface {
-	GetItemDetails(*Context, ItemId) (ApiItemer, status.Status)
+	GetItemDetails(*Context, ItemId) (Itemer, status.Status)
 }
 type ItemFilterer interface {
-	FilterItem(ApiItemer, FilterPath) (ApiItemer, status.Status)
+	FilterItem(Itemer, FilterPath) (Itemer, status.Status)
 }
 type ListFilterer interface {
 	FilterList(*Context, FilterPath) (List, status.Status)
@@ -93,10 +97,21 @@ type ListLinkMapGetter interface {
 	GetListLinkMap(*Context, ...FilterPath) (LinkMap, status.Status)
 }
 type RelatedItemsGetter interface {
-	GetRelatedItems(ctx *Context, item ApiItemer) (list List, sts status.Status)
+	GetRelatedItems(ctx *Context, item Itemer) (list List, sts status.Status)
 }
 
-type ApiItemer interface {
+type ParentGetter interface {
+	GetParent() ApiController
+}
+
+type LinkAdder interface {
+	AddLink(rel RelType, link LinkImplementor)
+}
+type LinksAdder interface {
+	AddLinks(links LinkMap)
+}
+
+type Itemer interface {
 	ItemIdGetter
 	ItemIdSetter
 	ItemTypeGetter
@@ -111,7 +126,7 @@ type ItemTypeGetter interface {
 	GetType() ItemType
 }
 type ItemGetter interface {
-	GetItem() (ApiItemer, status.Status)
+	GetItem() (Itemer, status.Status)
 }
 type ItemIdSetter interface {
 	SetId(ItemId) status.Status

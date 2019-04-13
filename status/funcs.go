@@ -89,6 +89,20 @@ func Fail(args *Args) Status {
 	return NewStatus(args)
 }
 
+func YourBad(msg string, args ...interface{}) Status {
+	return Fail(&Args{
+		Message:    fmt.Sprintf(msg, args...),
+		HttpStatus: http.StatusBadRequest,
+	})
+}
+
+func OurBad(msg string, args ...interface{}) Status {
+	return Fail(&Args{
+		Message:    fmt.Sprintf(msg, args...),
+		HttpStatus: http.StatusInternalServerError,
+	})
+}
+
 func NewStatus(args *Args) (sts *S) {
 	for range only.Once {
 		sts = &S{

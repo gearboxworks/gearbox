@@ -1,4 +1,4 @@
-package apimodels
+package apimvc
 
 import (
 	"fmt"
@@ -10,15 +10,15 @@ import (
 	"strings"
 )
 
-const GearspecType = "gearspec"
+const GearspecTypeName = "gearspec"
 
-var NilGearspec = (*Gearspec)(nil)
-var _ apimodeler.ApiItemer = NilGearspec
+var NilGearspecModel = (*GearspecModel)(nil)
+var _ apimodeler.Itemer = NilGearspecModel
 
-type GearspecMap map[types.Stackname]*Gearspec
-type Gearspecs []*Gearspec
+type GearspecModelMap map[types.Stackname]*GearspecModel
+type GearspecModels []*GearspecModel
 
-type Gearspec struct {
+type GearspecModel struct {
 	GearspecId gearspec.Identifier   `json:"gearspec_id"`
 	StackId    types.StackId         `json:"stack_id,omitempty"`
 	Authority  types.AuthorityDomain `json:"authority,omitempty"`
@@ -27,38 +27,38 @@ type Gearspec struct {
 	Revision   types.Revision        `json:"revision"`
 }
 
-func NewFromGearsGearspec(ctx *apimodeler.Context, gsgs *gearspec.Gearspec) (gs *Gearspec, sts status.Status) {
-	return NewGearspec(gsgs), sts
-}
-
-func NewGearspec(gsgs *gearspec.Gearspec) *Gearspec {
-	return &Gearspec{
+func NewModelFromGearspecGearspec(ctx *apimodeler.Context, gsgs *gearspec.Gearspec) (gs *GearspecModel, sts status.Status) {
+	return &GearspecModel{
 		GearspecId: gsgs.GetIdentifier(),
 		StackId:    gsgs.GetStackId(),
 		Authority:  gsgs.Authority,
 		Stackname:  gsgs.Stackname,
 		Role:       gsgs.Role,
 		Revision:   gsgs.Revision,
-	}
+	}, sts
 }
 
-func (me *Gearspec) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
+func NewGearspec() *GearspecModel {
+	return &GearspecModel{}
+}
+
+func (me *GearspecModel) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
 	return apimodeler.LinkMap{}, nil
 }
 
-func (me *Gearspec) GetType() apimodeler.ItemType {
-	return GearspecType
+func (me *GearspecModel) GetType() apimodeler.ItemType {
+	return GearspecTypeName
 }
 
-func (me *Gearspec) GetFullStackname() types.Stackname {
+func (me *GearspecModel) GetFullStackname() types.Stackname {
 	return types.Stackname(me.GetId())
 }
 
-func (me *Gearspec) GetId() apimodeler.ItemId {
+func (me *GearspecModel) GetId() apimodeler.ItemId {
 	return apimodeler.ItemId(me.GearspecId)
 }
 
-func (me *Gearspec) SetId(itemid apimodeler.ItemId) (sts status.Status) {
+func (me *GearspecModel) SetId(itemid apimodeler.ItemId) (sts status.Status) {
 	for range only.Once {
 		parts := strings.Split(string(itemid), "/")
 		if len(parts) < 2 {
@@ -78,10 +78,10 @@ func (me *Gearspec) SetId(itemid apimodeler.ItemId) (sts status.Status) {
 	return sts
 }
 
-func (me *Gearspec) GetItem() (apimodeler.ApiItemer, status.Status) {
+func (me *GearspecModel) GetItem() (apimodeler.Itemer, status.Status) {
 	return me, nil
 }
 
-func (me *Gearspec) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.ApiItemer) (list apimodeler.List, sts status.Status) {
+func (me *GearspecModel) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.Itemer) (list apimodeler.List, sts status.Status) {
 	return make(apimodeler.List, 0), sts
 }

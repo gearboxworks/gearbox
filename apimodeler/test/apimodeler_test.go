@@ -20,19 +20,19 @@ func TestIdParams(t *testing.T) {
 func TestModels(t *testing.T) {
 
 	t.Run("GetBasepath()", func(t *testing.T) {
-		ms := apimodeler.NewModels(NewTestableModel())
-		if ms.Self.GetBasepath() != testableModelBasepath {
+		ms := apimodeler.NewController(NewTestableController())
+		if ms.GetBasepath() != testableModelBasepath {
 			t.Errorf("List basepath is not '%s'", testableModelBasepath)
 		}
-		if ms.Self.GetBasepath() != testableModelBasepath {
+		if ms.GetBasepath() != testableModelBasepath {
 			t.Errorf("List basepath is not '%s'", testableModelBasepath)
 		}
 	})
 
 	t.Run("GetIdFromUrl()", func(t *testing.T) {
-		ms := apimodeler.NewModels(NewTestableModel())
+		ms := apimodeler.NewController(NewTestableController())
 		ctx := &TestableContext{}
-		itemid, sts := ms.GetIdFromUrl(ctx)
+		itemid, sts := apimodeler.GetIdFromUrl(ctx, ms)
 		if is.Error(sts) {
 			t.Errorf("unable to get item Id from context: %s", sts.Message())
 			return
@@ -44,8 +44,8 @@ func TestModels(t *testing.T) {
 	})
 
 	t.Run("GetIdTemplate()", func(t *testing.T) {
-		ms := apimodeler.NewModels(NewTestableModel())
-		template := ms.GetIdTemplate()
+		ms := apimodeler.NewController(NewTestableController())
+		template := apimodeler.GetIdTemplate(ms)
 		wanted := types.UrlTemplate(":foo/:bar")
 		if template != wanted {
 			t.Errorf("template; got '%s', wanted: '%s'", template, wanted)
@@ -54,8 +54,8 @@ func TestModels(t *testing.T) {
 	})
 
 	t.Run("GetIdParams()", func(t *testing.T) {
-		ms := apimodeler.NewModels(NewTestableModel())
-		params := ms.GetIdParams()
+		ms := apimodeler.NewController(NewTestableController())
+		params := apimodeler.GetIdParams(ms)
 		if len(params) != len(testableModelIdParams) {
 			t.Errorf("len(GetIdParams()); got '%d', wanted: '%d'", len(params), len(testableModelIdParams))
 			return
@@ -67,7 +67,7 @@ func TestModels(t *testing.T) {
 		}
 	})
 	t.Run("GetResourceUrlTemplate()", func(t *testing.T) {
-		ms := apimodeler.NewModels(NewTestableModel())
+		ms := apimodeler.NewController(NewTestableController())
 		template := ms.GetResourceUrlTemplate()
 		wanted := types.UrlTemplate("/foo/:foo/:bar")
 		if template != wanted {
@@ -75,13 +75,13 @@ func TestModels(t *testing.T) {
 		}
 	})
 	t.Run("GetRouteNamePrefix()", func(t *testing.T) {
-		ms := apimodeler.NewModels(NewTestableModel())
-		prefix := ms.GetRouteNamePrefix()
+		ms := apimodeler.NewController(NewTestableController())
+		prefix := apimodeler.GetRouteNamePrefix(ms)
 		wanted := "foo"
 		if prefix != wanted {
 			t.Errorf("template; got '%s', wanted: '%s'", prefix, wanted)
 		}
-		//@TODO Test when Models have children
+		//@TODO Test when Controller have children
 	})
 
 }
@@ -116,14 +116,14 @@ func TestItem(t *testing.T) {
 func TestModeler(t *testing.T) {
 
 	t.Run("GetBasepath()", func(t *testing.T) {
-		m := apimodeler.NewModels(NewTestableModel())
+		m := apimodeler.NewController(NewTestableController())
 		if m.GetBasepath() != testableModelBasepath {
 			t.Errorf("connections.GetBasepath(); got '%s', wanted: '%s'", m.GetBasepath(), testableModelBasepath)
 		}
 	})
 
 	t.Run("GetIdParams()", func(t *testing.T) {
-		m := apimodeler.NewModels(NewTestableModel())
+		m := apimodeler.NewController(NewTestableController())
 		for range only.Once {
 			idp := m.GetIdParams()
 
@@ -142,8 +142,8 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("GetList()", func(t *testing.T) {
-		m := apimodeler.NewModels(NewTestableModel())
-		coll, sts := m.Self.GetList()
+		m := apimodeler.NewController(NewTestableController())
+		coll, sts := m.GetList()
 		if is.Error(sts) {
 			t.Errorf(sts.Message())
 		}
@@ -171,17 +171,17 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("AddItem()", func(t *testing.T) {
-		m := apimodeler.NewModels(NewTestableModel())
+		m := apimodeler.NewController(NewTestableController())
 		ti := &TestableItem{
 			Id:   "42",
 			Type: "hitchhiker",
 		}
-		sts := m.Self.AddItem(ti)
+		sts := m.AddItem(ti)
 		if is.Error(sts) {
 			t.Errorf("unable to add testable item ID %s: %s", ti.Id, sts.Message())
 			return
 		}
-		coll, sts := m.Self.GetList()
+		coll, sts := m.GetList()
 		if is.Error(sts) {
 			t.Error(sts.Message())
 			return
@@ -209,20 +209,20 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("DeleteItem()", func(t *testing.T) {
-		m := apimodeler.NewModels(NewTestableModel())
-		coll, sts := m.Self.GetList()
+		m := apimodeler.NewController(NewTestableController())
+		coll, sts := m.GetList()
 		if is.Error(sts) {
 			t.Error(sts.Message())
 			return
 		}
 		wantLen := len(coll) - 1
 		item := coll[wantLen]
-		sts = m.Self.DeleteItem(item.GetId())
+		sts = m.DeleteItem(item.GetId())
 		if is.Error(sts) {
 			t.Errorf("item '%s' not found in List", item.GetId())
 			return
 		}
-		coll2, _ := m.Self.GetList()
+		coll2, _ := m.GetList()
 		if wantLen != len(coll2) {
 			t.Errorf("got len: %d, wanted: %d", len(coll2), wantLen)
 		}
@@ -235,8 +235,8 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("UpdateItem()", func(t *testing.T) {
-		m := apimodeler.NewModels(NewTestableModel())
-		coll, sts := m.Self.GetList()
+		m := apimodeler.NewController(NewTestableController())
+		coll, sts := m.GetList()
 		if is.Error(sts) {
 			t.Error(sts.Message())
 			return
@@ -254,12 +254,12 @@ func TestModeler(t *testing.T) {
 			Id:   item.GetId(),
 			Type: apimodeler.ItemType(newtype),
 		}
-		sts = m.Self.UpdateItem(newitem)
+		sts = m.UpdateItem(newitem)
 		if is.Error(sts) {
 			t.Errorf("item '%s' not found", item.GetId())
 			return
 		}
-		coll2, _ := m.Self.GetList()
+		coll2, _ := m.GetList()
 		if len(coll) != len(coll2) {
 			t.Errorf("got len: %d, wanted: %d", len(coll2), len(coll))
 			return
@@ -280,8 +280,8 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("GetFilterMap()", func(t *testing.T) {
-		m := apimodeler.NewModels(NewTestableModel())
-		fm := m.Self.GetFilterMap()
+		m := apimodeler.NewController(NewTestableController())
+		fm := m.GetFilterMap()
 		if len(fm) != 2 {
 			t.Errorf("filter map len; got: %d, wanted: %d", len(fm), 2)
 		}
@@ -316,8 +316,8 @@ func TestModeler(t *testing.T) {
 
 	t.Run("GetListIds()", func(t *testing.T) {
 		for range only.Once {
-			m := apimodeler.NewModels(NewTestableModel())
-			cids, sts := m.Self.GetListIds()
+			m := apimodeler.NewController(NewTestableController())
+			cids, sts := m.GetListIds()
 			if is.Error(sts) {
 				t.Error(sts.Message())
 				break
@@ -335,8 +335,8 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("GetItem()", func(t *testing.T) {
-		m := apimodeler.NewModels(NewTestableModel())
-		coll, sts := m.Self.GetList()
+		m := apimodeler.NewController(NewTestableController())
+		coll, sts := m.GetList()
 		if is.Error(sts) {
 			t.Error(sts.Message())
 			return
@@ -346,7 +346,7 @@ func TestModeler(t *testing.T) {
 			return
 		}
 		ti := coll[0]
-		ti2, sts := m.Self.GetItem(ti.GetId())
+		ti2, sts := m.GetItem(ti.GetId())
 		if is.Error(sts) {
 			t.Error(sts.Message())
 			return
@@ -361,8 +361,8 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("FilterList()", func(t *testing.T) {
-		m := apimodeler.NewModels(NewTestableModel())
-		fc, sts := m.Self.FilterList(FrobinatorsFilter)
+		m := apimodeler.NewController(NewTestableController())
+		fc, sts := m.FilterList(FrobinatorsFilter)
 		if is.Error(sts) {
 			t.Errorf("unable to filter List on '%s': %s", FrobinatorsFilter, sts.Message())
 		}
@@ -381,8 +381,8 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("FilterItem()", func(t *testing.T) {
-		m := apimodeler.NewModels(NewTestableModel())
-		coll, sts := m.Self.GetList()
+		m := apimodeler.NewController(NewTestableController())
+		coll, sts := m.GetList()
 		if is.Error(sts) {
 			t.Error("unable to get List")
 			return
@@ -390,7 +390,7 @@ func TestModeler(t *testing.T) {
 		wantLen := countValues(UnicornType)
 		filtered := make(apimodeler.List, 0)
 		for i, item := range coll {
-			fi, sts := m.Self.FilterItem(item, UnicornFilter)
+			fi, sts := m.FilterItem(item, UnicornFilter)
 			if is.Error(sts) {
 				t.Errorf("unable to filter item: %s", sts.Message())
 				return
@@ -417,7 +417,7 @@ func TestModeler(t *testing.T) {
 
 }
 
-func getItem(coll apimodeler.List, itemid apimodeler.ItemId) (item apimodeler.ApiItemer) {
+func getItem(coll apimodeler.List, itemid apimodeler.ItemId) (item apimodeler.Itemer) {
 	for _, i := range coll {
 		if i.GetId() != itemid {
 			continue

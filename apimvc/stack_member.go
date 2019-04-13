@@ -1,4 +1,4 @@
-package apimodels
+package apimvc
 
 import (
 	"gearbox/api/global"

@@ -32,6 +32,13 @@ type AttributesSetter interface {
 type DataSourcer interface {
 	SourcesData()
 }
+
+type Resourcer interface {
+	IdentifiesResource()
+	ResourceIdGetter()
+	ResourceTypeGetter()
+}
+
 type ResourceIdentifier interface {
 	IdentifiesResource()
 }

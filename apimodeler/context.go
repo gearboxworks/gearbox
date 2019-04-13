@@ -3,7 +3,7 @@ package apimodeler
 type Context struct {
 	Contexter
 	RootDocumenter
-	Models *Models
+	Controller ApiController
 }
 type ContextArgs Context
 

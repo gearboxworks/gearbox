@@ -7,6 +7,8 @@ const (
 	DefaultLanguage      = "en-US"
 )
 
+const NoFilterPath FilterPath = "/"
+
 const RelTypePattern = "%s.%s"
 
 type RelType string

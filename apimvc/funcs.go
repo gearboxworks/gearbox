@@ -1,3 +1,3 @@
-package apimodels
+package apimvc
 
 func noop(i ...interface{}) {}

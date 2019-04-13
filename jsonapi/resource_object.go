@@ -14,9 +14,9 @@ func (*ResourceObject) ContainsResource() {}
 
 type ResourceObject struct {
 	ResourceIdObject
-	LinkMap         apimodeler.LinkMap `json:"links,omitempty"`
-	AttributeMap    `json:"attributes"`
-	RelationshipMap `json:"relationships,omitempty"`
+	apimodeler.LinkMap `json:"links,omitempty"`
+	AttributeMap       `json:"attributes"`
+	RelationshipMap    `json:"relationships,omitempty"`
 }
 
 func NewResourceObject() *ResourceObject {
@@ -28,26 +28,48 @@ func NewResourceObject() *ResourceObject {
 	return &ro
 }
 
+func (me *ResourceObject) getRelationshipTypesData(list apimodeler.List) RelationshipMap {
+	fnitms := make(map[Fieldname]apimodeler.List, 0)
+	for _, item := range list {
+		fn := Fieldname(item.GetType())
+		if _, ok := fnitms[fn]; !ok {
+			fnitms[fn] = make(apimodeler.List, 0)
+		}
+		fnitms[fn] = append(fnitms[fn], item)
+	}
+	rm := make(RelationshipMap, 0)
+	for fn, fnlst := range fnitms {
+		r := NewRelationship()
+		r.Data = me.getResourceIdentifier(fnlst)
+		rm[fn] = r
+	}
+	return rm
+}
+
+func (me *ResourceObject) getResourceIdentifier(list apimodeler.List) (ri ResourceIdentifier) {
+	switch len(list) {
+	case 0:
+		break
+	case 1:
+		rio := &ResourceIdObject{}
+		item := list[0]
+		rio.ResourceId = ResourceId(item.GetId())
+		rio.ResourceType = ResourceType(item.GetType())
+		ri = rio
+	default:
+		rios := make(ResourceIdObjects, len(list))
+		for i, item := range list {
+			oil := apimodeler.List{item}
+			rios[i] = me.getResourceIdentifier(oil).(*ResourceIdObject)
+		}
+		ri = rios
+	}
+	return ri
+}
+
 func (me *ResourceObject) SetRelatedItems(ctx *apimodeler.Context, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
-		var data ResourceIdentifier
-		switch len(list) {
-		case 0:
-			break
-		case 1:
-			data = NewResourceIdObject()
-		default:
-			data = &ResourceIdObjects{}
-		}
-
-		rm := make(RelationshipMap, 0)
-		for _, item := range list {
-			r := NewRelationship()
-			r.Data = data
-			rm[Fieldname(item.GetType())] = r
-		}
-		me.RelationshipMap = rm
-
+		me.RelationshipMap = me.getRelationshipTypesData(list)
 		for i, item := range list {
 			ro := NewResourceObject()
 			sts = ro.SetId(ResourceId(item.GetId()))

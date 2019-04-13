@@ -1,4 +1,4 @@
-package apimodels
+package apimvc
 
 import (
 	"fmt"
@@ -16,10 +16,20 @@ import (
 
 const NamedStackType = "stack"
 
-var NilNamedStack = (*NamedStack)(nil)
-var _ apimodeler.ApiItemer = NilNamedStack
+var NilNamedStackModel = (*NamedStackModel)(nil)
+var _ apimodeler.Itemer = NilNamedStackModel
 
-func NewFromGearsNamedStack(ctx *apimodeler.Context, gns *gears.NamedStack) (ns *NamedStack, sts status.Status) {
+type NamedStackModelMap map[types.Stackname]*NamedStackModel
+type NamedStackModels []*NamedStackModel
+
+type NamedStackModel struct {
+	Authority  types.AuthorityDomain `json:"authority"`
+	Stackname  types.Stackname       `json:"stackname"`
+	Members    gearspec.Identifiers  `json:"members,omitempty"`
+	ServiceMap interface{}           `json:"services,omitempty"`
+}
+
+func NewModelFromGearsNamedStack(ctx *apimodeler.Context, gns *gears.NamedStack) (ns *NamedStackModel, sts status.Status) {
 	for range only.Once {
 		var gsids gearspec.Identifiers
 		if ctx.GetResponseType() == global.ItemResponse {
@@ -28,28 +38,18 @@ func NewFromGearsNamedStack(ctx *apimodeler.Context, gns *gears.NamedStack) (ns 
 		if is.Error(sts) {
 			break
 		}
-		ns = &NamedStack{
+		ns = &NamedStackModel{
 			Authority: gns.Authority,
 			Stackname: gns.Stackname,
 			Members:   gsids,
-			//ServiceMap: gns.RoleServicesMap,
+			//ServiceModelMap: gns.RoleServicesMap,
 		}
 	}
 	return ns, sts
 }
 
-type NamedStackMap map[types.Stackname]*NamedStack
-type NamedStacks []*NamedStack
-
-type NamedStack struct {
-	Authority  types.AuthorityDomain `json:"authority"`
-	Stackname  types.Stackname       `json:"stackname"`
-	Members    gearspec.Identifiers  `json:"members,omitempty"`
-	ServiceMap interface{}           `json:"services,omitempty"`
-}
-
-func NewNamedStack(ns *gears.NamedStack) *NamedStack {
-	return &NamedStack{
+func NewNamedStack(ns *gears.NamedStack) *NamedStackModel {
+	return &NamedStackModel{
 		Authority:  ns.Authority,
 		Stackname:  ns.Stackname,
 		Members:    make(gearspec.Identifiers, 0),
@@ -57,23 +57,23 @@ func NewNamedStack(ns *gears.NamedStack) *NamedStack {
 	}
 }
 
-func (me *NamedStack) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
+func (me *NamedStackModel) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
 	return apimodeler.LinkMap{}, nil
 }
 
-func (me *NamedStack) GetType() apimodeler.ItemType {
+func (me *NamedStackModel) GetType() apimodeler.ItemType {
 	return NamedStackType
 }
 
-func (me *NamedStack) GetFullStackname() types.Stackname {
+func (me *NamedStackModel) GetFullStackname() types.Stackname {
 	return types.Stackname(me.GetId())
 }
 
-func (me *NamedStack) GetId() apimodeler.ItemId {
+func (me *NamedStackModel) GetId() apimodeler.ItemId {
 	return apimodeler.ItemId(fmt.Sprintf("%s/%s", me.Authority, me.Stackname))
 }
 
-func (me *NamedStack) SetId(itemid apimodeler.ItemId) (sts status.Status) {
+func (me *NamedStackModel) SetId(itemid apimodeler.ItemId) (sts status.Status) {
 	for range only.Once {
 		parts := strings.Split(string(itemid), "/")
 		if len(parts) < 2 {
@@ -93,17 +93,17 @@ func (me *NamedStack) SetId(itemid apimodeler.ItemId) (sts status.Status) {
 	return sts
 }
 
-func (me *NamedStack) GetItem() (apimodeler.ApiItemer, status.Status) {
+func (me *NamedStackModel) GetItem() (apimodeler.Itemer, status.Status) {
 	return me, nil
 }
 
-func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStack) (gbns *gears.NamedStack, sts status.Status) {
+func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStackModel) (gbns *gears.NamedStack, sts status.Status) {
 	//	gbns = gears.NewNamedStack(gb.GetGears(), types.StackId(ns.GetId()))
 	gbns = gears.NewNamedStack(types.StackId(ns.GetId()))
 	sts = gbns.Refresh()
 	return gbns, sts
 }
 
-func (me *NamedStack) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.ApiItemer) (list apimodeler.List, sts status.Status) {
+func (me *NamedStackModel) GetRelatedItems(ctx *apimodeler.Context, item apimodeler.Itemer) (list apimodeler.List, sts status.Status) {
 	return make(apimodeler.List, 0), sts
 }

@@ -22,20 +22,20 @@ const Rootname types.RouteName = "root"
 var _ Apier = (*Api)(nil)
 
 type Api struct {
-	Config    config.Configer
-	Port      string
-	Echo      *echo.Echo
-	Parent    interface{}
-	ModelsMap apimodeler.ModelsMap
+	Config        config.Configer
+	Port          string
+	Echo          *echo.Echo
+	Parent        interface{}
+	ControllerMap apimodeler.ControllerMap
 }
 
 func (me *Api) GetRootLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap {
 	lm := make(apimodeler.LinkMap, 0)
-	for k, ms := range me.ModelsMap {
+	for k, ms := range me.ControllerMap {
 		if k == apimodeler.Basepath {
 			continue
 		}
-		s := ms.Self
+		s := ms
 		lm.AddLink(
 			GetQualifiedRelType(apimodeler.RelType(s.GetName())),
 			apimodeler.Link(s.GetBasepath()),
@@ -51,7 +51,7 @@ func (me *Api) GetListLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap {
 		if types.Basepath(path) == apimodeler.Basepath {
 			break
 		}
-		if !ctx.Models.Self.CanAddItem(ctx) {
+		if !ctx.Controller.CanAddItem(ctx) {
 			break
 		}
 		lm.AddLink(
@@ -99,10 +99,10 @@ func NewApi(parent interface{}) *Api {
 	}
 
 	a := Api{
-		Config:    c.GetConfig(),
-		Echo:      newConfiguredEcho(),
-		Parent:    parent,
-		ModelsMap: make(apimodeler.ModelsMap, 0),
+		Config:        c.GetConfig(),
+		Echo:          newConfiguredEcho(),
+		Parent:        parent,
+		ControllerMap: make(apimodeler.ControllerMap, 0),
 	}
 	a.Port = Port
 	return &a
@@ -126,19 +126,19 @@ func newConfiguredEcho() *echo.Echo {
 	return e
 }
 
-func (me *Api) ConnectRoutes() {
-	for _, _ms := range me.ModelsMap {
+func (me *Api) WireRoutes() {
+	for _, _c := range me.ControllerMap {
 
 		// Copy to allow different values in closures
-		ms := _ms
+		ctlr := _c
 
 		e := me.Echo
 
-		prefix := ms.GetRouteNamePrefix()
+		prefix := string(apimodeler.GetRouteNamePrefix(ctlr))
 
 		var route *echo.Route
 
-		path := string(ms.GetBasepath())
+		path := string(apimodeler.GetBasepath(ctlr))
 
 		// Collection Route
 		route = e.GET(path, func(ctx echo.Context) (err error) {
@@ -147,9 +147,9 @@ func (me *Api) ConnectRoutes() {
 				c := apimodeler.NewContext(&apimodeler.ContextArgs{
 					Contexter:      ctx,
 					RootDocumenter: rd,
-					Models:         ms,
+					Controller:     ctlr,
 				})
-				data, sts := ms.Self.GetList(c)
+				data, sts := ctlr.GetList(c)
 				if is.Error(sts) {
 					break
 				}
@@ -157,7 +157,7 @@ func (me *Api) ConnectRoutes() {
 				if is.Error(sts) {
 					break
 				}
-				lm, sts := ms.Self.GetListLinkMap(c)
+				lm, sts := ctlr.GetListLinkMap(c)
 				if is.Error(sts) {
 					break
 				}
@@ -174,7 +174,10 @@ func (me *Api) ConnectRoutes() {
 			route.Name = fmt.Sprintf("%s-list", inflector.Pluralize(prefix))
 		}
 
-		urlTemplate := string(ms.GetResourceUrlTemplate())
+		urlTemplate := string(apimodeler.GetResourceUrlTemplate(ctlr))
+		if urlTemplate == string(apimodeler.Basepath) {
+			continue
+		}
 
 		// Single Item Route
 		route = e.GET(urlTemplate, func(ec echo.Context) error {
@@ -183,10 +186,10 @@ func (me *Api) ConnectRoutes() {
 			ctx := apimodeler.NewContext(&apimodeler.ContextArgs{
 				Contexter:      ec,
 				RootDocumenter: rd,
-				Models:         ms,
+				Controller:     ctlr,
 			})
 			for range only.Once {
-				id, sts := ms.GetIdFromUrl(ctx)
+				id, sts := apimodeler.GetIdFromUrl(ctx, ctlr)
 				if is.Error(sts) {
 					break
 				}
@@ -195,13 +198,13 @@ func (me *Api) ConnectRoutes() {
 				if is.Error(sts) {
 					break
 				}
-				var item apimodeler.ApiItemer
-				item, sts = ms.Self.GetItemDetails(ctx, id)
+				var item apimodeler.Itemer
+				item, sts = ctlr.GetItemDetails(ctx, id)
 				if is.Error(sts) {
 					break
 				}
 				var list apimodeler.List
-				list, sts = ms.Self.GetRelatedItems(ctx, item)
+				list, sts = ctlr.GetRelatedItems(ctx, item)
 				if is.Error(sts) {
 					break
 				}
@@ -214,14 +217,14 @@ func (me *Api) ConnectRoutes() {
 	}
 }
 
-func (me *Api) GetItemUrl(ctx *apimodeler.Context, item apimodeler.ApiItemer) (u types.UrlTemplate, sts status.Status) {
+func (me *Api) GetItemUrl(ctx *apimodeler.Context, item apimodeler.Itemer) (u types.UrlTemplate, sts status.Status) {
 	for range only.Once {
 		//
 		// @TODO This may need to be make more robust later
 		//
 		u = types.UrlTemplate(fmt.Sprintf("%s/%s",
 			// me.GetBaseUrl(),
-			ctx.Models.GetBasepath(),
+			ctx.Controller.GetBasepath(),
 			item.GetId(),
 		))
 	}
@@ -320,9 +323,9 @@ func (me *Api) JsonMarshalHandler(ctx *apimodeler.Context, sts status.Status) st
 	return sts
 }
 
-func (me *Api) AddModels(models apimodeler.ApiModeler) (sts status.Status) {
+func (me *Api) AddController(controller apimodeler.ApiController) (sts status.Status) {
 	for range only.Once {
-		getter, ok := models.(apimodeler.BasepathGetter)
+		getter, ok := controller.(apimodeler.BasepathGetter)
 		if !ok {
 			sts = status.Fail(&status.Args{
 				Message: "model does not implement apimodeler.BasepathGetter",
@@ -330,7 +333,7 @@ func (me *Api) AddModels(models apimodeler.ApiModeler) (sts status.Status) {
 			break
 		}
 		path := getter.GetBasepath()
-		me.ModelsMap[path] = apimodeler.NewModels(models)
+		me.ControllerMap[path] = controller
 	}
 	return sts
 }
@@ -371,7 +374,7 @@ func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.S
 	return ro, sts
 }
 
-func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.ApiItemer, list apimodeler.List) (sts status.Status) {
+func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.Itemer, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
 		itemId := item.GetId()
 		sts = ro.SetId(ja.ResourceId(itemId))
