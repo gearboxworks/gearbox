@@ -5,7 +5,7 @@ import (
 	"gearbox/apimodeler"
 	"gearbox/config"
 	"gearbox/global"
-	"gearbox/jsonapi"
+	"gearbox/jsonapi" // @TODO Refactor this out to interface{}s
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -245,7 +245,7 @@ func (me *Api) GetSelfPath(ctx *apimodeler.Context) types.UrlTemplate {
 	return types.UrlTemplate(ctx.Request().RequestURI)
 }
 
-func (me *Api) GetContentType(ctx *apimodeler.Context) string {
+func (me *Api) GetContentType(ctx *apimodeler.Context) apimodeler.HttpHeaderValue {
 	return ja.ContentType + "; " + apimodeler.CharsetUTF8
 }
 
@@ -258,68 +258,52 @@ const (
 )
 
 func (me *Api) JsonMarshalHandler(ctx *apimodeler.Context, sts status.Status) status.Status {
-	var err error
-	var rootdoc *ja.RootDocument
-	ec, ok := ctx.Contexter.(echo.Context)
 	for range only.Once {
-		if !ok {
-			sts = status.Fail(&status.Args{
-				Message: "context does not implement echo.Context",
-			})
+		sts = ctx.SetResponseHeader(echo.HeaderContentType, me.GetContentType(ctx))
+		if is.Error(sts) {
 			break
 		}
-		ec.Response().Header().Set(echo.HeaderContentType, me.GetContentType(ctx))
-
-		rd := ctx.GetRootDocument()
-		rootdoc, ok = rd.(*ja.RootDocument)
+		_, ok := ctx.GetRootDocument().(*ja.RootDocument)
 		if !ok {
 			sts = status.Fail(&status.Args{
 				Message: "context.RootDocument() does not implement ja.RootDocument",
 			})
 			break
 		}
-
+		route, sts := me.getRouteName(ctx)
+		if is.Error(sts) {
+			break
+		}
+		if route == Rootname {
+			ctx.AddLinks(me.GetRootLinkMap(ctx))
+		}
+		ctx.AddMeta(MetaGearboxApiSchema, route)
 	}
-	if rootdoc == nil {
-		rootdoc = &ja.RootDocument{}
-	}
-	route := me.getRouteName(ec)
-	if route == Rootname {
-		rootdoc.AddLinks(me.GetRootLinkMap(ctx))
-	}
-	if rootdoc.GetResponseType() == global.ListResponse {
-		rootdoc.AddLinks(me.GetListLinkMap(ctx))
-	}
-	if rootdoc.GetResponseType() == global.ItemResponse {
-		rootdoc.AddLinks(me.GetItemLinkMap(ctx))
-	}
-	rootdoc.AddLinks(me.GetCommonLinkMap(ctx))
 
-	rootdoc.MetaMap[apimodeler.MetaDcCreator] = GearboxApiIdentifier
+	switch ctx.GetResponseType() {
+	case global.ListResponse:
+		ctx.AddLinks(me.GetListLinkMap(ctx))
+	case global.ItemResponse:
+		ctx.AddLinks(me.GetItemLinkMap(ctx))
+	}
 
-	rootdoc.MetaMap[apimodeler.MetaDcTermsIdentifier] = me.GetSelfUrl(ctx)
-	rootdoc.MetaMap[apimodeler.MetaDcLanguage] = apimodeler.DefaultLanguage
+	ctx.AddLinks(me.GetCommonLinkMap(ctx))
 
-	rootdoc.LinkMap[apimodeler.SelfRelType] = apimodeler.Link(me.GetSelfPath(ctx))
-	rootdoc.LinkMap[apimodeler.SchemaDcRelType] = apimodeler.DcSchema
-	rootdoc.LinkMap[apimodeler.SchemaDcTermsRelType] = apimodeler.DcTermsSchema
+	ctx.AddLink(apimodeler.SelfRelType, apimodeler.Link(me.GetSelfPath(ctx)))
+	ctx.AddLink(apimodeler.SchemaDcRelType, apimodeler.DcSchema)
+	ctx.AddLink(apimodeler.SchemaDcTermsRelType, apimodeler.DcTermsSchema)
+	ctx.AddLink(SchemaGearboxApiRelationType, GearboxApiSchema)
 
-	rootdoc.LinkMap[SchemaGearboxApiRelationType] = GearboxApiSchema
-	rootdoc.MetaMap[MetaGearboxBaseurl] = me.GetBaseUrl()
-	rootdoc.MetaMap[MetaGearboxApiSchema] = route
+	ctx.AddMeta(apimodeler.MetaDcCreator, GearboxApiIdentifier)
+	ctx.AddMeta(apimodeler.MetaDcTermsIdentifier, me.GetSelfUrl(ctx))
+	ctx.AddMeta(apimodeler.MetaDcLanguage, apimodeler.DefaultLanguage)
+	ctx.AddMeta(MetaGearboxBaseurl, me.GetBaseUrl())
 
 	if is.Error(sts) {
-		ec.Response().Status = sts.HttpStatus()
-		_ = rootdoc.SetError(sts)
+		_ = ctx.SetResponseStatus(sts.HttpStatus())
+		ctx.SetErrors(sts)
 	}
-	err = ec.JSONPretty(ec.Response().Status, rootdoc, "   ")
-	if err != nil {
-		sts = status.Wrap(err, &status.Args{
-			Message: fmt.Sprintf("error when sending output for '%s'",
-				ec.Path(),
-			),
-		})
-	}
+	sts = ctx.SendResponse()
 	return sts
 }
 
@@ -376,21 +360,15 @@ func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.S
 
 func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.ItemModeler, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
-		itemId := item.GetId()
-		sts = ro.SetId(ja.ResourceId(itemId))
+		sts = ro.SetId(item.GetId())
 		if is.Error(sts) {
 			break
 		}
-		typ := item.GetType()
-		sts = ro.SetType(ja.ResourceType(typ))
+		sts = ro.SetType(item.GetType())
 		if is.Error(sts) {
 			break
 		}
 		sts = ro.SetAttributes(item)
-		if is.Error(sts) {
-			break
-		}
-		rootdoc, sts := assertRootDoc(ctx)
 		if is.Error(sts) {
 			break
 		}
@@ -400,7 +378,7 @@ func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item 
 			break
 		}
 
-		if rootdoc.ResponseType == global.ItemResponse {
+		if ctx.GetResponseType() == global.ItemResponse {
 			break
 		}
 		var su types.UrlTemplate
@@ -439,17 +417,13 @@ func (me *Api) setListData(ctx *apimodeler.Context, data interface{}) (sts statu
 		if is.Error(sts) {
 			break
 		}
-		rootdoc, sts := assertRootDoc(ctx)
-		if is.Error(sts) {
-			break
-		}
 		for _, item := range coll {
 			ro := ja.NewResourceObject()
 			sts = me.setItemData(ctx, ro, item, nil)
 			if is.Error(sts) {
 				break
 			}
-			sts = rootdoc.AddResourceObject(ro)
+			sts = ctx.AddResponseItem(ro)
 			if is.Error(sts) {
 				break
 			}
@@ -458,30 +432,23 @@ func (me *Api) setListData(ctx *apimodeler.Context, data interface{}) (sts statu
 	return sts
 }
 
-func (me *Api) getRouteName(ctx echo.Context) (name types.RouteName) {
-	rts := me.Echo.Routes()
-	path := ctx.Path()
-	for _, rt := range rts {
-		if rt.Path == path {
-			name = types.RouteName(rt.Name)
+func (me *Api) getRouteName(ctx *apimodeler.Context) (name types.RouteName, sts status.Status) {
+	for range only.Once {
+		rts := me.Echo.Routes()
+		path, sts := ctx.GetRequestPath()
+		if is.Error(sts) {
 			break
 		}
+		for _, rt := range rts {
+			if rt.Path == string(path) {
+				name = types.RouteName(rt.Name)
+				break
+			}
+		}
 	}
-	return name
+	return name, sts
 }
 
-func assertRootDoc(ctx *apimodeler.Context) (rootdoc *ja.RootDocument, sts status.Status) {
-	var ok bool
-	rd := ctx.GetRootDocument()
-	rootdoc, ok = rd.(*ja.RootDocument)
-	if !ok {
-		sts = status.Fail(&status.Args{
-			Message: "context.GetRootDocument() does not implement ja.RootDocument",
-		})
-	}
-	return rootdoc, sts
-
-}
 func GetQualifiedRelType(reltype apimodeler.RelType) apimodeler.RelType {
 	rt := fmt.Sprintf(apimodeler.RelTypePattern, GearboxApiIdentifier, reltype)
 	return apimodeler.RelType(rt)

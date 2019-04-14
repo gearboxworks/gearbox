@@ -5,18 +5,18 @@ import (
 	"gearbox/types"
 )
 
-type ApiBaseUrls struct {
+type ApiBaseurls struct {
 	HostUrl types.UrlTemplate `json:"host_url"`
 	VmUrl   types.UrlTemplate `json:"vm_url"`
 }
 
-func NewApiBaseUrls(hostUrl, vmUrl types.UrlTemplate) *ApiBaseUrls {
-	return &ApiBaseUrls{
+func NewApiBaseurls(hostUrl, vmUrl types.UrlTemplate) *ApiBaseurls {
+	return &ApiBaseurls{
 		HostUrl: hostUrl,
 		VmUrl:   vmUrl,
 	}
 }
-func (me *ApiBaseUrls) Bytes() []byte {
+func (me *ApiBaseurls) Bytes() []byte {
 	b, _ := json.Marshal(me)
 	return b
 }

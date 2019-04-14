@@ -43,3 +43,7 @@ type RelatedField struct {
 	IncludeType ItemType
 	Include     func(ItemModeler) bool
 }
+
+type HttpHeaderName string
+type HttpHeaderValue string
+type HttpResponseBody interface{}

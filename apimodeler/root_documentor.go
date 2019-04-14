@@ -8,7 +8,18 @@ import (
 type RootDocumentor interface {
 	ResponseTypeGetter
 	RootDocumentGetter
-	IncludedSetter
+	ResponseItemAdder
+	RelatedSetter
+	MetaAdder
+	LinkAdder
+	LinksAdder
+	ErrorsSetter
+}
+type ErrorsSetter interface {
+	SetErrors(error)
+}
+type ResponseItemAdder interface {
+	AddResponseItem(ItemModeler) status.Status
 }
 type ResponseTypeGetter interface {
 	GetResponseType() types.ResponseType
@@ -16,6 +27,9 @@ type ResponseTypeGetter interface {
 type RootDocumentGetter interface {
 	GetRootDocument() interface{}
 }
-type IncludedSetter interface {
-	SetIncluded(*Context, List) status.Status
+type RelatedSetter interface {
+	SetRelated(*Context, List) status.Status
+}
+type ResponseHeaderSetter interface {
+	SetResponseHeader(key, value string)
 }

@@ -20,13 +20,12 @@ func main() {
 		GlobalOptions: cmd.GlobalOptions,
 	})
 	gearbox.Instance = gb
-	a := api.NewApi(gb)
-	sts := apimvc.AddControllers(a, gb)
+	gb.SetApi(api.NewApi(gb))
+	sts := apimvc.AddControllers(gb)
 	if is.Error(sts) {
 		panic(sts.Message())
 	}
-	a.WireRoutes()
-	gb.SetApi(a)
+	gb.GetApi().WireRoutes()
 	sts = gb.Initialize()
 	if status.IsError(sts) {
 		fmt.Println(sts.Message())

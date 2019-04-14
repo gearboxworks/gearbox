@@ -17,4 +17,5 @@ type Apier interface {
 	GetListLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap
 	GetItemLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap
 	GetCommonLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap
+	WireRoutes()
 }

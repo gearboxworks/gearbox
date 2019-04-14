@@ -87,3 +87,6 @@ type LinkAdder interface {
 type LinksAdder interface {
 	AddLinks(links LinkMap)
 }
+type MetaAdder interface {
+	AddMeta(Metaname, MetaValue)
+}

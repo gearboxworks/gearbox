@@ -170,7 +170,7 @@ func (me *AdminUi) WriteApiBaseUrls() {
 	var err error
 	url := me.api.GetBaseUrl()
 	file := me.GetApiBaseUrlsFilepath()
-	err = ioutil.WriteFile(file, NewApiBaseUrls(url, url).Bytes(), os.ModePerm)
+	err = ioutil.WriteFile(file, NewApiBaseurls(url, url).Bytes(), os.ModePerm)
 	if err != nil {
 		log.Printf("error writing API bootrap file '%s': %s\n",
 			me.GetApiBaseUrlsFilepath(),

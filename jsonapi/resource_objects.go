@@ -1,6 +1,7 @@
 package ja
 
 import (
+	"gearbox/apimodeler"
 	"gearbox/status"
 	"gearbox/status/is"
 )
@@ -20,7 +21,7 @@ func (me ResourceObjects) AppendResourceObject(ro *ResourceObject) (ResourceObje
 
 func (me ResourceObjects) SetIds(ids ResourceIds) (sts status.Status) {
 	for i, ro := range me {
-		sts = ro.SetId(ids[i])
+		sts = ro.SetId(apimodeler.ItemId(ids[i]))
 		if is.Error(sts) {
 			break
 		}
@@ -30,7 +31,7 @@ func (me ResourceObjects) SetIds(ids ResourceIds) (sts status.Status) {
 
 func (me ResourceObjects) SetTypes(types ResourceTypes) (sts status.Status) {
 	for i, ro := range me {
-		sts = ro.SetType(types[i])
+		sts = ro.SetType(apimodeler.ItemType(types[i]))
 		if is.Error(sts) {
 			break
 		}

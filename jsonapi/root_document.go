@@ -121,6 +121,10 @@ func NewRootDocument(ctx Contexter, responseType types.ResponseType, args ...*Ro
 	return &rd
 }
 
+func (me *RootDocument) AddMeta(name apimodeler.Metaname, value apimodeler.MetaValue) {
+	me.MetaMap[name] = value
+}
+
 func (me *RootDocument) AddLink(rel apimodeler.RelType, link apimodeler.LinkImplementor) {
 	me.LinkMap[rel] = link
 }
@@ -131,7 +135,7 @@ func (me *RootDocument) AddLinks(links apimodeler.LinkMap) {
 	}
 }
 
-func (me *RootDocument) SetIncluded(ctx *apimodeler.Context, list apimodeler.List) (sts status.Status) {
+func (me *RootDocument) SetRelated(ctx *apimodeler.Context, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
 		inc := make(IncludedList, 0, len(list))
 		for _, item := range list {
@@ -153,9 +157,16 @@ func (me *RootDocument) GetRootDocument() interface{} {
 	return me
 }
 
-func (me *RootDocument) AddResourceObject(ro *ResourceObject) (sts status.Status) {
+func (me *RootDocument) AddResponseItem(item apimodeler.ItemModeler) (sts status.Status) {
 	for range only.Once {
 		appender, ok := me.Data.(ResourceObjectAppender)
+		if !ok {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("cannot add resource objects to a '%s' response type", me.ResponseType),
+			})
+			break
+		}
+		ro, ok := item.(*ResourceObject)
 		if !ok {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("cannot add resource objects to a '%s' response type", me.ResponseType),
@@ -211,10 +222,10 @@ func (me *RootDocument) SetLinks(linkmap apimodeler.LinkMap) (sts status.Status)
 	me.LinkMap = linkmap
 	return nil
 }
-func (me *RootDocument) SetError(sts status.Status) status.Status {
-	me.Errors = Errors{sts}
+func (me *RootDocument) SetErrors(err error) {
+	me.Errors = Errors{err}
 	me.Data = nil
-	return nil
+	return
 }
 func (me *RootDocument) SetAttributes(attrs interface{}) (sts status.Status) {
 	setter, ok := me.Data.(AttributesSetter)

@@ -9,6 +9,7 @@ import (
 )
 
 var _ ResourceContainer = (*ResourceObject)(nil)
+var _ apimodeler.ItemModeler = (*ResourceObject)(nil)
 
 func (*ResourceObject) ContainsResource() {}
 
@@ -17,6 +18,39 @@ type ResourceObject struct {
 	apimodeler.LinkMap `json:"links,omitempty"`
 	AttributeMap       `json:"attributes"`
 	RelationshipMap    `json:"relationships,omitempty"`
+}
+
+func (me *ResourceObject) GetId() apimodeler.ItemId {
+	return apimodeler.ItemId(me.ResourceId)
+}
+
+func (me *ResourceObject) SetId(itemid apimodeler.ItemId) (sts status.Status) {
+	me.ResourceId = ResourceId(itemid)
+	return sts
+}
+
+func (me *ResourceObject) GetType() apimodeler.ItemType {
+	return apimodeler.ItemType(me.ResourceType)
+}
+
+func (me *ResourceObject) SetType(typ apimodeler.ItemType) (sts status.Status) {
+	me.ResourceType = ResourceType(typ)
+	return nil
+}
+
+func (me *ResourceObject) GetItem() (apimodeler.ItemModeler, status.Status) {
+	panic("implement me")
+	return nil, nil
+}
+
+func (me *ResourceObject) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
+	panic("implement me")
+	return nil, nil
+}
+
+func (me *ResourceObject) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
+	panic("implement me")
+	return nil, nil
 }
 
 func NewResourceObject() *ResourceObject {
@@ -72,11 +106,11 @@ func (me *ResourceObject) SetRelatedItems(ctx *apimodeler.Context, list apimodel
 		me.RelationshipMap = me.getRelationshipTypesData(list)
 		for i, item := range list {
 			ro := NewResourceObject()
-			sts = ro.SetId(ResourceId(item.GetId()))
+			sts = ro.SetId(item.GetId())
 			if is.Error(sts) {
 				break
 			}
-			sts = ro.SetType(ResourceType(item.GetType()))
+			sts = ro.SetType(item.GetType())
 			if is.Error(sts) {
 				break
 			}
@@ -95,26 +129,8 @@ func (me *ResourceObject) SetRelatedItems(ctx *apimodeler.Context, list apimodel
 			ii := IncludedItem(*ro)
 			list[i] = &ii
 		}
-		sts = ctx.RootDocumentor.SetIncluded(ctx, list)
+		sts = ctx.RootDocumentor.SetRelated(ctx, list)
 	}
-	return nil
-}
-
-func (me *ResourceObject) SetId(id ResourceId) status.Status {
-	me.ResourceId = id
-	return nil
-}
-
-func (me *ResourceObject) GetId() ResourceId {
-	return me.ResourceId
-}
-
-func (me *ResourceObject) GetType() ResourceType {
-	return me.ResourceType
-}
-
-func (me *ResourceObject) SetType(_typ ResourceType) (sts status.Status) {
-	me.ResourceType = _typ
 	return nil
 }
 

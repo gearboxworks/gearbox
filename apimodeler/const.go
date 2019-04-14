@@ -30,6 +30,7 @@ const (
 )
 
 type Metaname string
+type MetaValue interface{}
 
 const (
 	MetaDcLanguage        Metaname = "DC.language"

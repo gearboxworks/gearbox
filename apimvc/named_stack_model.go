@@ -8,6 +8,7 @@ import (
 	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
+	"gearbox/service"
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
@@ -55,6 +56,26 @@ func NewNamedStack(ns *gears.NamedStack) *NamedStackModel {
 		Members:    make(gearspec.Identifiers, 0),
 		ServiceMap: newServiceMap(ns.RoleServicesMap),
 	}
+}
+
+type _service struct {
+	Orgname   types.Orgname           `json:"org,omitempty"`
+	Default   service.Identifier      `json:"default,omitempty"`
+	Shareable global.ShareableChoices `json:"shareable,omitempty"`
+	Services  service.Identifiers     `json:"options,omitempty"`
+}
+
+func newServiceMap(sm gears.RoleServicesMap) interface{} {
+	smr := make(map[gearspec.Identifier]interface{}, len(sm))
+	for gs, s := range sm {
+		smr[gs] = &_service{
+			Orgname:   s.Orgname,
+			Default:   s.DefaultService.ServiceId,
+			Shareable: s.Shareable,
+			Services:  s.Services.ServiceIds(),
+		}
+	}
+	return smr
 }
 
 func (me *NamedStackModel) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
