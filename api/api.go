@@ -203,6 +203,7 @@ func (me *Api) WireRoutes() {
 				if is.Error(sts) {
 					break
 				}
+
 				var list apimodeler.List
 				list, sts = item.GetRelatedItems(ctx)
 				if is.Error(sts) {
@@ -360,14 +361,17 @@ func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.S
 
 func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.ItemModeler, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
+
 		sts = ro.SetId(item.GetId())
 		if is.Error(sts) {
 			break
 		}
+
 		sts = ro.SetType(item.GetType())
 		if is.Error(sts) {
 			break
 		}
+
 		sts = ro.SetAttributes(item)
 		if is.Error(sts) {
 			break

@@ -62,24 +62,39 @@ func NewResourceObject() *ResourceObject {
 	return &ro
 }
 
-func (me *ResourceObject) getRelationshipTypesData(list apimodeler.List) RelationshipMap {
-	fnitms := make(map[Fieldname]apimodeler.List, 0)
-	for _, item := range list {
-		fn := Fieldname(item.GetType())
-		if _, ok := fnitms[fn]; !ok {
+func (me *ResourceObject) getRelationshipTypesData(ctx *apimodeler.Context, list apimodeler.List) (rm RelationshipMap) {
+
+	for range only.Once {
+		fnitms := make(map[Fieldname]apimodeler.List, 0)
+		rfs := ctx.Controller.GetRelatedFields()
+		for _, rf := range rfs {
+			if rf.Include == nil && rf.IncludeType == "" {
+				panic("related fields has neither Include callback or IncludeType")
+			}
+			fn := Fieldname(rf.Fieldname)
 			fnitms[fn] = make(apimodeler.List, 0)
+			for _, item := range list {
+				fn = Fieldname(rf.Fieldname)
+				if item.GetType() == rf.IncludeType {
+					fnitms[fn] = append(fnitms[fn], item)
+				} else if rf.Include != nil && rf.Include(item) {
+					fnitms[fn] = append(fnitms[fn], item)
+				}
+			}
 		}
-		fnitms[fn] = append(fnitms[fn], item)
-	}
-	rm := make(RelationshipMap, 0)
-	for fn, fnlst := range fnitms {
-		r := NewRelationship()
-		r.Data = me.getResourceIdentifier(fnlst)
-		rm[fn] = r
+		rm = make(RelationshipMap, 0)
+		for fn, fnlst := range fnitms {
+			r := NewRelationship()
+			r.Data = me.getResourceIdentifier(fnlst)
+			rm[fn] = r
+		}
 	}
 	return rm
 }
 
+//
+// Recursive function to return either a ResourceIdObject or a slice of ResourceIdObjects
+//
 func (me *ResourceObject) getResourceIdentifier(list apimodeler.List) (ri ResourceIdentifier) {
 	switch len(list) {
 	case 0:
@@ -103,7 +118,7 @@ func (me *ResourceObject) getResourceIdentifier(list apimodeler.List) (ri Resour
 
 func (me *ResourceObject) SetRelatedItems(ctx *apimodeler.Context, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
-		me.RelationshipMap = me.getRelationshipTypesData(list)
+		me.RelationshipMap = me.getRelationshipTypesData(ctx, list)
 		for i, item := range list {
 			ro := NewResourceObject()
 			sts = ro.SetId(item.GetId())

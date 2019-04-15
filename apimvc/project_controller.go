@@ -51,8 +51,8 @@ func (me *ProjectController) GetRelatedFields() apimodeler.RelatedFields {
 			IncludeType: ServiceModelType,
 		},
 	}
-
 }
+
 func (me *ProjectController) GetName() types.RouteName {
 	return ProjectsName
 }

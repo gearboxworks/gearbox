@@ -21,8 +21,6 @@ const (
 	CollectionResponse ResponseType = "collection"
 )
 
-var _ apimodeler.RootDocumentor = (*RootDocument)(nil)
-
 var _ apimodeler.ItemModeler = (*IncludedItem)(nil)
 
 type IncludedList []*IncludedItem
