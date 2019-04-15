@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+type Gearspecs []*Gearspec
 type Gearspec struct {
 	raw       Identifier
 	Authority types.AuthorityDomain `json:"authority,omitempty"`

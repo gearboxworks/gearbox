@@ -19,7 +19,7 @@ type GearspecModelMap map[types.Stackname]*GearspecModel
 type GearspecModels []*GearspecModel
 
 type GearspecModel struct {
-	GearspecId gearspec.Identifier   `json:"gearspec_id"`
+	GearspecId gearspec.Identifier   `json:"-"`
 	StackId    types.StackId         `json:"stack_id,omitempty"`
 	Authority  types.AuthorityDomain `json:"authority,omitempty"`
 	Stackname  types.Stackname       `json:"stackname,omitempty"`
@@ -27,7 +27,7 @@ type GearspecModel struct {
 	Revision   types.Revision        `json:"revision"`
 }
 
-func NewModelFromGearspecGearspec(ctx *apimodeler.Context, gsgs *gearspec.Gearspec) (gs *GearspecModel, sts status.Status) {
+func NewGearspecModelFromGearspecGearspec(ctx *apimodeler.Context, gsgs *gearspec.Gearspec) (gs *GearspecModel, sts status.Status) {
 	return &GearspecModel{
 		GearspecId: gsgs.GetIdentifier(),
 		StackId:    gsgs.GetStackId(),
@@ -38,7 +38,7 @@ func NewModelFromGearspecGearspec(ctx *apimodeler.Context, gsgs *gearspec.Gearsp
 	}, sts
 }
 
-func NewGearspec() *GearspecModel {
+func NewGearspecModel() *GearspecModel {
 	return &GearspecModel{}
 }
 
@@ -58,7 +58,7 @@ func (me *GearspecModel) GetId() apimodeler.ItemId {
 	return apimodeler.ItemId(me.GearspecId)
 }
 
-func (me *GearspecModel) SetId(itemid apimodeler.ItemId) (sts status.Status) {
+func (me *GearspecModel) SetStackId(itemid apimodeler.ItemId) (sts status.Status) {
 	for range only.Once {
 		parts := strings.Split(string(itemid), "/")
 		if len(parts) < 2 {

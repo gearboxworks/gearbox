@@ -14,7 +14,7 @@ import (
 	"sort"
 )
 
-const GearspecsName types.RouteName = "gearspecs"
+const GearspecControllerName types.RouteName = "gearspecs"
 const GearspecsBasepath types.Basepath = "/gearspecs"
 const RoleIdParam apimodeler.IdParam = "role"
 
@@ -40,7 +40,7 @@ func (me *GearspecController) CanAddItem(*apimodeler.Context) bool {
 }
 
 func (me *GearspecController) GetName() types.RouteName {
-	return GearspecsName
+	return GearspecControllerName
 }
 
 func (me *GearspecController) GetListLinkMap(*apimodeler.Context, ...apimodeler.FilterPath) (lm apimodeler.LinkMap, sts status.Status) {
@@ -72,7 +72,7 @@ func (me *GearspecController) GetList(ctx *apimodeler.Context, filterPath ...api
 			break
 		}
 		for _, gbgs := range gbgsrm {
-			ns, sts := NewModelFromGearspecGearspec(ctx, gbgs.Gearspec)
+			ns, sts := NewGearspecModelFromGearspecGearspec(ctx, gbgs.Gearspec)
 			if is.Error(sts) {
 				break
 			}
@@ -119,7 +119,7 @@ func (me *GearspecController) GetItem(ctx *apimodeler.Context, gearspecid apimod
 			})
 			break
 		}
-		ns, sts = NewModelFromGearspecGearspec(ctx, gbgs)
+		ns, sts = NewGearspecModelFromGearspecGearspec(ctx, gbgs)
 		if is.Error(sts) {
 			break
 		}

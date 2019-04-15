@@ -28,7 +28,7 @@ type ProjectModel struct {
 	ProjectDir    types.AbsoluteDir       `json:"project_dir"`
 	Filepath      types.AbsoluteFilepath  `json:"filepath"`
 	Aliases       project.HostnameAliases `json:"aliases,omitempty"`
-	Services      ServiceModels           `json:"stack,omitempty"`
+	Stack         ProjectStackItems       `json:"stack,omitempty"`
 	ConfigProject *config.Project         `json:"-"`
 }
 
@@ -64,7 +64,7 @@ func (me *ProjectModel) GetId() apimodeler.ItemId {
 	return apimodeler.ItemId(me.Hostname)
 }
 
-func (me *ProjectModel) SetId(hostname apimodeler.ItemId) status.Status {
+func (me *ProjectModel) SetStackId(hostname apimodeler.ItemId) status.Status {
 	me.Hostname = types.Hostname(hostname)
 	return nil
 }
@@ -88,9 +88,14 @@ func (me *ProjectModel) AddDetails(ctx *apimodeler.Context) (sts status.Status) 
 		}
 		me.Aliases = pp.Aliases
 		me.Filepath = pp.Filepath
-		me.Services, sts = GetServiceModelsFromServiceStackMap(ctx, pp.GetServiceMap())
+		var sms ServiceModels
+		sms, sts = GetServiceModelsFromServiceServicerMap(ctx, pp.GetServicerMap())
 		if is.Error(sts) {
 			break
+		}
+		me.Stack = make(ProjectStackItems, len(sms))
+		for i, sm := range sms {
+			me.Stack[i] = NewProjectStackItemFromServiceModel(sm)
 		}
 	}
 	return sts
@@ -99,13 +104,13 @@ func (me *ProjectModel) AddDetails(ctx *apimodeler.Context) (sts status.Status) 
 func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
 	for range only.Once {
 		list = make(apimodeler.List, 0)
-		for _, s := range me.Services {
+		for _, s := range me.Stack {
 			gsgs := gearspec.NewGearspec()
 			sts = gsgs.Parse(s.GearspecId)
 			if is.Error(sts) {
 				break
 			}
-			gsm, sts := NewModelFromGearspecGearspec(ctx, gsgs)
+			gsm, sts := NewGearspecModelFromGearspecGearspec(ctx, gsgs)
 			if is.Error(sts) {
 				break
 			}
@@ -124,7 +129,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 			list = append(list, sm)
 		}
 	}
-	return list, nil
+	return list, sts
 }
 
 //var ProjectsInstance = (Projects)(nil)

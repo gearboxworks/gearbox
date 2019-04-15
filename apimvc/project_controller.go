@@ -16,7 +16,7 @@ import (
 
 const HostnameIdParam apimodeler.IdParam = "hostname"
 
-const ProjectsName types.RouteName = "projects"
+const ProjectControllerName types.RouteName = "projects"
 const ProjectsBasepath types.Basepath = "/projects"
 
 const ProjectsWithDetailsFilter apimodeler.FilterPath = "/with-details"
@@ -54,7 +54,7 @@ func (me *ProjectController) GetRelatedFields() apimodeler.RelatedFields {
 }
 
 func (me *ProjectController) GetName() types.RouteName {
-	return ProjectsName
+	return ProjectControllerName
 }
 
 func (me *ProjectController) GetListLinkMap(*apimodeler.Context, ...apimodeler.FilterPath) (lm apimodeler.LinkMap, sts status.Status) {

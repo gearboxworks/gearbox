@@ -12,7 +12,7 @@ type AbsoluteEntry string
 
 type CacheKey string
 
-type ServiceType string
+type ServiceType string //@TODO Merge with StackRole?
 type ProgramName string
 type Orgname string
 type Version string

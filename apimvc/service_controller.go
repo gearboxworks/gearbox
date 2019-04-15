@@ -14,7 +14,7 @@ import (
 	"sort"
 )
 
-const ServicesName types.RouteName = "services"
+const ServiceControllerName types.RouteName = "services"
 const ServicesBasepath types.Basepath = "/services"
 
 const OrgnameIdParam apimodeler.IdParam = "orgname"
@@ -40,7 +40,7 @@ func (me *ServiceController) GetRelatedFields() apimodeler.RelatedFields {
 }
 
 func (me *ServiceController) GetName() types.RouteName {
-	return ServicesName
+	return ServiceControllerName
 }
 
 func (me *ServiceController) GetListLinkMap(*apimodeler.Context, ...apimodeler.FilterPath) (lm apimodeler.LinkMap, sts status.Status) {

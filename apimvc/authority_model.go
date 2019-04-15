@@ -47,7 +47,7 @@ func (me *AuthorityModel) GetId() apimodeler.ItemId {
 	return apimodeler.ItemId(me.AuthorityId)
 }
 
-func (me *AuthorityModel) SetId(itemid apimodeler.ItemId) (sts status.Status) {
+func (me *AuthorityModel) SetStackId(itemid apimodeler.ItemId) (sts status.Status) {
 	for range only.Once {
 		if !strings.Contains(string(itemid), ".") {
 			sts = status.Fail(&status.Args{

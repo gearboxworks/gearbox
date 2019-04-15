@@ -25,7 +25,7 @@ type ItemGetter interface {
 	GetItem() (ItemModeler, status.Status)
 }
 type ItemIdSetter interface {
-	SetId(ItemId) status.Status
+	SetStackId(ItemId) status.Status
 }
 type ItemLinkMapGetter interface {
 	GetItemLinkMap(*Context) (LinkMap, status.Status)

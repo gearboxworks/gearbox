@@ -33,7 +33,7 @@ func (me *IncludedItem) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 func (me *IncludedItem) GetId() apimodeler.ItemId {
 	panic("implement me")
 }
-func (me *IncludedItem) SetId(apimodeler.ItemId) status.Status {
+func (me *IncludedItem) SetStackId(apimodeler.ItemId) status.Status {
 	panic("implement me")
 }
 func (me *IncludedItem) GetType() apimodeler.ItemType {
@@ -180,10 +180,10 @@ func (me *RootDocument) AddResponseItem(item apimodeler.ItemModeler) (sts status
 //	return sts
 //}
 
-//func (me *RootDocument) SetId(id ResourceId) (sts status.Status) {
+//func (me *RootDocument) SetStackId(id ResourceId) (sts status.Status) {
 //	setter, ok := me.Data.(ResourceIdSetter)
 //	if ok {
-//		sts = setter.SetId(id)
+//		sts = setter.SetStackId(id)
 //	}
 //	return sts
 //}

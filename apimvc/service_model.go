@@ -22,7 +22,7 @@ type ServiceModels []*ServiceModel
 
 type ServiceModel struct {
 	GearspecId  gearspec.Identifier `json:"gearspec_id,omitempty"`
-	ServiceId   service.Identifier  `json:"service_id,omitempty"`
+	ServiceId   service.Identifier  `json:"-"`
 	ServiceType types.ServiceType   `json:"service_type,omitempty"`
 	Orgname     types.Orgname       `json:"orgname,omitempty"`
 	Program     types.ProgramName   `json:"program,omitempty"`
@@ -101,7 +101,7 @@ func (me *ServiceModel) GetId() apimodeler.ItemId {
 	return apimodeler.ItemId(me.ServiceId)
 }
 
-func (me *ServiceModel) SetId(apimodeler.ItemId) status.Status {
+func (me *ServiceModel) SetStackId(apimodeler.ItemId) status.Status {
 	panic("implement me")
 }
 
@@ -123,16 +123,21 @@ func (me *ServiceModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 	return make(apimodeler.List, 0), sts
 }
 
-func GetServiceModelsFromServiceStackMap(ctx *apimodeler.Context, sm service.StackMap) (sms ServiceModels, sts status.Status) {
+func GetServiceModelsFromServiceServicerMap(ctx *apimodeler.Context, sm service.ServicerMap) (sms ServiceModels, sts status.Status) {
 	sms = make(ServiceModels, len(sm))
 	i := 0
-	for gs, gbs := range sm {
+	for smgs, gbs := range sm {
 		var s *ServiceModel
 		s, sts = NewModelFromServiceServicer(ctx, gbs)
 		if is.Error(sts) {
 			break
 		}
-		s.GearspecId = gs
+		gs := gearspec.NewGearspec()
+		sts = gs.Parse(smgs)
+		if is.Error(sts) {
+			break
+		}
+		s.GearspecId = gs.GetIdentifier()
 		sms[i] = s
 		i++
 	}

@@ -21,7 +21,7 @@ func (me ResourceObjects) AppendResourceObject(ro *ResourceObject) (ResourceObje
 
 func (me ResourceObjects) SetIds(ids ResourceIds) (sts status.Status) {
 	for i, ro := range me {
-		sts = ro.SetId(apimodeler.ItemId(ids[i]))
+		sts = ro.SetStackId(apimodeler.ItemId(ids[i]))
 		if is.Error(sts) {
 			break
 		}

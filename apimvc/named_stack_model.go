@@ -5,17 +5,14 @@ import (
 	"gearbox/apimodeler"
 	"gearbox/gearbox"
 	"gearbox/gears"
-	"gearbox/gearspec"
-	"gearbox/global"
 	"gearbox/only"
-	"gearbox/service"
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
 	"strings"
 )
 
-const NamedStackType = "stack"
+const NamedStackType apimodeler.ItemType = "stack"
 
 var NilNamedStackModel = (*NamedStackModel)(nil)
 var _ apimodeler.ItemModeler = NilNamedStackModel
@@ -24,58 +21,49 @@ type NamedStackModelMap map[types.Stackname]*NamedStackModel
 type NamedStackModels []*NamedStackModel
 
 type NamedStackModel struct {
-	Authority  types.AuthorityDomain `json:"authority"`
-	Stackname  types.Stackname       `json:"stackname"`
-	Members    gearspec.Identifiers  `json:"members,omitempty"`
-	ServiceMap interface{}           `json:"services,omitempty"`
+	Authority types.AuthorityDomain `json:"authority"`
+	Stackname types.Stackname       `json:"stackname"`
+	Members   StackMembers          `json:"members,omitempty"`
 }
 
-func NewModelFromGearsNamedStack(ctx *apimodeler.Context, gns *gears.NamedStack) (ns *NamedStackModel, sts status.Status) {
+func NewNamedStackModelFromGearsNamedStack(ctx *apimodeler.Context, gns *gears.NamedStack) (ns *NamedStackModel, sts status.Status) {
 	for range only.Once {
-		var gsids gearspec.Identifiers
-		if ctx.GetResponseType() == global.ItemResponse {
-			gsids, sts = gns.GetGearspecIds()
-		}
+
+		gsom, sts := gns.GetServiceOptionMap()
 		if is.Error(sts) {
 			break
+		}
+		gsrm, sts := gns.GetRoleMap()
+		if is.Error(sts) {
+			break
+		}
+		sms := make(StackMembers, len(gsom))
+		i := 0
+		for gs, gso := range gsom {
+			sr, ok := gsrm[gs]
+			if !ok {
+				sr = &gears.StackRole{}
+			}
+			var sm *StackMember
+			sm = NewStackMemberFromGearsStackRoleServices(ctx, gso, sr)
+			sms[i] = sm
+			i++
 		}
 		ns = &NamedStackModel{
 			Authority: gns.Authority,
 			Stackname: gns.Stackname,
-			Members:   gsids,
-			//ServiceModelMap: gns.RoleServicesMap,
+			Members:   sms,
 		}
 	}
 	return ns, sts
 }
 
-func NewNamedStack(ns *gears.NamedStack) *NamedStackModel {
+func NewNamedStackModel(ns *gears.NamedStack) *NamedStackModel {
 	return &NamedStackModel{
-		Authority:  ns.Authority,
-		Stackname:  ns.Stackname,
-		Members:    make(gearspec.Identifiers, 0),
-		ServiceMap: newServiceMap(ns.RoleServicesMap),
+		Authority: ns.Authority,
+		Stackname: ns.Stackname,
+		Members:   make(StackMembers, 0),
 	}
-}
-
-type _service struct {
-	Orgname   types.Orgname           `json:"org,omitempty"`
-	Default   service.Identifier      `json:"default,omitempty"`
-	Shareable global.ShareableChoices `json:"shareable,omitempty"`
-	Services  service.Identifiers     `json:"options,omitempty"`
-}
-
-func newServiceMap(sm gears.RoleServicesMap) interface{} {
-	smr := make(map[gearspec.Identifier]interface{}, len(sm))
-	for gs, s := range sm {
-		smr[gs] = &_service{
-			Orgname:   s.Orgname,
-			Default:   s.DefaultService.ServiceId,
-			Shareable: s.Shareable,
-			Services:  s.Services.ServiceIds(),
-		}
-	}
-	return smr
 }
 
 func (me *NamedStackModel) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
@@ -94,7 +82,7 @@ func (me *NamedStackModel) GetId() apimodeler.ItemId {
 	return apimodeler.ItemId(fmt.Sprintf("%s/%s", me.Authority, me.Stackname))
 }
 
-func (me *NamedStackModel) SetId(itemid apimodeler.ItemId) (sts status.Status) {
+func (me *NamedStackModel) SetStackId(itemid apimodeler.ItemId) (sts status.Status) {
 	for range only.Once {
 		parts := strings.Split(string(itemid), "/")
 		if len(parts) < 2 {
@@ -119,12 +107,40 @@ func (me *NamedStackModel) GetItem() (apimodeler.ItemModeler, status.Status) {
 }
 
 func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStackModel) (gbns *gears.NamedStack, sts status.Status) {
-	//	gbns = gears.NewNamedStack(gb.GetGears(), types.StackId(ns.GetId()))
+	//	gbns = gears.NewNamedStackModel(gb.GetGears(), types.StackId(ns.GetId()))
 	gbns = gears.NewNamedStack(types.StackId(ns.GetId()))
-	sts = gbns.Refresh()
+	sts = gbns.Refresh(gb.GetGears())
 	return gbns, sts
 }
 
 func (me *NamedStackModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
-	return make(apimodeler.List, 0), sts
+	//for range only.Once {
+	//	list = make(apimodeler.List, 0)
+	//	for _, si := range me.ProjectStackItems {
+	//		gsgs := gearspec.NewGearspec()
+	//		sts = gsgs.Parse(si.GearspecId)
+	//		if is.Error(sts) {
+	//			break
+	//		}
+	//		gsm, sts := NewGearspecModelFromGearspecGearspec(ctx, gsgs)
+	//		if is.Error(sts) {
+	//			break
+	//		}
+	//		list = append(list, gsm)
+	//
+	//		ss := service.NewService()
+	//		sts = ss.Parse(si.ServiceId)
+	//		if is.Error(sts) {
+	//			break
+	//		}
+	//		sm, sts := NewModelFromServiceServicer(ctx, ss)
+	//		if is.Error(sts) {
+	//			break
+	//		}
+	//		sm.GearspecId = gsm.GearspecId
+	//		list = append(list, sm)
+	//	}
+	//}
+	return list, sts
+
 }

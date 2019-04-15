@@ -26,14 +26,14 @@ type JsonFile struct {
 	Hostname   types.Hostname         `json:"hostname"`
 	Aliases    HostnameAliases        `json:"aliases"`
 	ServiceBag gears.ServiceBag       `json:"stack"`
-	Stack      service.StackMap       `json:"-"`
+	Stack      service.ServicerMap    `json:"-"`
 	Filepath   types.AbsoluteFilepath `json:"-"`
 }
 
 func NewJsonFile(filepath types.AbsoluteFilepath) *JsonFile {
 	return &JsonFile{
 		Filepath: filepath,
-		Stack:    make(service.StackMap, 0),
+		Stack:    make(service.ServicerMap, 0),
 	}
 }
 
@@ -119,7 +119,7 @@ func (me *JsonFile) Unmarshal(j []byte) (sts status.Status) {
 }
 
 func (me *JsonFile) FixupStack() (sts status.Status) {
-	me.Stack = make(service.StackMap, len(me.ServiceBag))
+	me.Stack = make(service.ServicerMap, len(me.ServiceBag))
 	for gsi, item := range me.ServiceBag {
 		var svc *service.Service
 		svc, sts = me.FixupStackItem(item, gsi)

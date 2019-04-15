@@ -40,16 +40,54 @@ func NewNamedStack(stackid types.StackId) *NamedStack {
 //
 func (me *NamedStack) GetGearspecIds() (gsids gearspec.Identifiers, sts status.Status) {
 	for range only.Once {
-		gsids = make(gearspec.Identifiers, 0)
+		var gss gearspec.Gearspecs
+		gss, sts = me.GetGearspecs()
+		if is.Error(sts) {
+			break
+		}
+		for _, r := range gss {
+			gsids = append(gsids, r.GetIdentifier())
+		}
+	}
+	return gsids, sts
+}
+
+//
+// Get the list of gearspecs
+//
+func (me *NamedStack) GetGearspecs() (gss gearspec.Gearspecs, sts status.Status) {
+	for range only.Once {
+		gss = make(gearspec.Gearspecs, 0)
 		nsrm, sts := me.Gears.GetNamedStackRoleMap(me.GetIdentifier())
 		if is.Error(sts) {
 			break
 		}
 		for _, r := range nsrm {
-			gsids = append(gsids, r.GetGearspecId())
+			gs := gearspec.NewGearspec()
+			sts = gs.Parse(r.GetGearspecId())
+			if is.Error(sts) {
+				break
+			}
+			gss = append(gss, gs)
 		}
 	}
-	return gsids, sts
+	return gss, sts
+}
+
+//
+// Get the available service options for a given named stack
+//
+func (me *NamedStack) GetRoleMap() (srm StackRoleMap, sts status.Status) {
+	for range only.Once {
+		srm = make(StackRoleMap, 0)
+		for gs, rso := range me.RoleMap {
+			if !strings.HasPrefix(string(gs), string(me.GetIdentifier())) {
+				continue
+			}
+			srm[gs] = rso
+		}
+	}
+	return srm, sts
 }
 
 //
@@ -78,22 +116,22 @@ func (me *NamedStack) LightweightClone() *NamedStack {
 	return &stack
 }
 
-func (me *NamedStack) GetDefaultServices() (sm DefaultServiceMap, sts status.Status) {
-	for range only.Once {
-		sm = make(DefaultServiceMap, 0)
-		sts = me.Refresh()
-		if status.IsError(sts) {
-			break
-		}
-		for gs, s := range me.RoleServicesMap {
-			if s.DefaultService == nil {
-				continue
-			}
-			sm[gs] = s.DefaultService.Clone()
-		}
-	}
-	return sm, sts
-}
+//func (me *NamedStack) GetDefaultServices() (sm DefaultServiceMap, sts status.Status) {
+//	for range only.Once {
+//		sm = make(DefaultServiceMap, 0)
+//		sts = me.Refresh()
+//		if status.IsError(sts) {
+//			break
+//		}
+//		for gs, s := range me.RoleServicesMap {
+//			if s.DefaultService == nil {
+//				continue
+//			}
+//			sm[gs] = s.DefaultService.Clone()
+//		}
+//	}
+//	return sm, sts
+//}
 
 func (me *NamedStack) AddStackRole(sr *StackRole) (sts status.Status) {
 	me.RoleMap[sr.GetGearspecId()] = sr
@@ -104,25 +142,25 @@ func (me *NamedStack) NeedsRefresh() bool {
 	return !me.refreshed
 }
 
-func (me *NamedStack) Refresh() (sts status.Status) {
+func (me *NamedStack) Refresh(gears *Gears) (sts status.Status) {
 	for range only.Once {
 		if !me.NeedsRefresh() {
 			break
 		}
 
 		var nsrm StackRoleMap
-		nsrm, sts = me.Gears.GetNamedStackRoleMap(me.GetIdentifier())
+		nsrm, sts = gears.GetNamedStackRoleMap(me.GetIdentifier())
 		if is.Error(sts) {
 			break
 		}
 		me.RoleMap = nsrm
 
-		var som RoleServicesMap
-		som, sts = me.Gears.GetNamedStackServiceOptionMap(me.GetIdentifier())
+		var rsm RoleServicesMap
+		rsm, sts = gears.GetNamedStackRoleServicesMap(me.GetIdentifier())
 		if is.Error(sts) {
 			break
 		}
-		me.RoleServicesMap = som
+		me.RoleServicesMap = rsm
 
 		me.refreshed = true
 	}

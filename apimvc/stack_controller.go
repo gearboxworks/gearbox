@@ -14,10 +14,12 @@ import (
 	"sort"
 )
 
-const StacksName types.RouteName = "stacks"
+const StackControllerName types.RouteName = "stacks"
 const StacksBasepath types.Basepath = "/stacks"
 const AuthorityIdParam apimodeler.IdParam = "authority"
 const StacknameIdParam apimodeler.IdParam = "stackname"
+
+const StackRolesField apimodeler.Fieldname = "stack_roles"
 
 var NilStackController = (*StackController)(nil)
 var _ apimodeler.ListController = NilStackController
@@ -34,11 +36,16 @@ func NewStackController(gb gearbox.Gearboxer) *StackController {
 }
 
 func (me *StackController) GetRelatedFields() apimodeler.RelatedFields {
-	return apimodeler.RelatedFields{}
+	return apimodeler.RelatedFields{
+		&apimodeler.RelatedField{
+			Fieldname:   StackRolesField,
+			IncludeType: NamedStackType,
+		},
+	}
 }
 
 func (me *StackController) GetName() types.RouteName {
-	return StacksName
+	return StackControllerName
 }
 
 func (me *StackController) GetListLinkMap(*apimodeler.Context, ...apimodeler.FilterPath) (lm apimodeler.LinkMap, sts status.Status) {
@@ -68,8 +75,8 @@ func (me *StackController) GetList(ctx *apimodeler.Context, filterPath ...apimod
 		if is.Error(sts) {
 			break
 		}
-		for _, gbs := range gbnsm {
-			ns, sts := NewModelFromGearsNamedStack(ctx, gbs)
+		for _, gbns := range gbnsm {
+			ns, sts := NewNamedStackModelFromGearsNamedStack(ctx, gbns)
 			if is.Error(sts) {
 				break
 			}
@@ -163,7 +170,7 @@ func (me *StackController) GetItem(ctx *apimodeler.Context, stackid apimodeler.I
 			})
 			break
 		}
-		ns, sts = NewModelFromGearsNamedStack(ctx, gbns)
+		ns, sts = NewNamedStackModelFromGearsNamedStack(ctx, gbns)
 		if is.Error(sts) {
 			break
 		}

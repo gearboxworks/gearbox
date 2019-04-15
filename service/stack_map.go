@@ -9,9 +9,9 @@ import (
 	"gearbox/util"
 )
 
-type StackMap map[gearspec.Identifier]*ServicerProxy
+type ServicerMap map[gearspec.Identifier]*ServicerProxy
 
-func (me StackMap) GetNamedStackIds() (nsids types.StackIds, sts status.Status) {
+func (me ServicerMap) GetNamedStackIds() (nsids types.StackIds, sts status.Status) {
 	for range only.Once {
 		names := util.NewUniqueStrings(len(me))
 		for gs := range me {

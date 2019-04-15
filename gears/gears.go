@@ -25,25 +25,25 @@ type Gear interface {
 type serviceIdsMapGearspecIds map[service.Identifier]gearspec.Identifier
 
 type Gears struct {
-	Authorities       types.Authorities   `json:"authorities"`
-	NamedStackIds     types.StackIds      `json:"stacks"`
-	StackRoleMap      StackRoleMap        `json:"roles"`
-	ServiceOptionsMap RoleServicesMap     `json:"services"`
-	GlobalOptions     global.Options      `json:"-"`
-	ServiceIds        service.Identifiers `json:"-"`
-	ServiceMap        ServiceMap          `json:"-"`
-	OsSupport         oss.OsSupporter     `json:"-"`
-	serviceIds        serviceIdsMapGearspecIds
-	refreshed         bool
+	Authorities      types.Authorities   `json:"authorities"`
+	NamedStackIds    types.StackIds      `json:"stacks"`
+	StackRoleMap     StackRoleMap        `json:"roles"`
+	RoleServicesMaps RoleServicesMap     `json:"services"`
+	GlobalOptions    global.Options      `json:"-"`
+	ServiceIds       service.Identifiers `json:"-"`
+	ServiceMap       ServiceMap          `json:"-"`
+	OsSupport        oss.OsSupporter     `json:"-"`
+	serviceIds       serviceIdsMapGearspecIds
+	refreshed        bool
 }
 
 func NewGears(ossup oss.OsSupporter) *Gears {
 	return &Gears{
-		OsSupport:         ossup,
-		Authorities:       make(types.Authorities, 0),
-		NamedStackIds:     make(types.StackIds, 0),
-		StackRoleMap:      make(StackRoleMap, 0),
-		ServiceOptionsMap: make(RoleServicesMap, 0),
+		OsSupport:        ossup,
+		Authorities:      make(types.Authorities, 0),
+		NamedStackIds:    make(types.StackIds, 0),
+		StackRoleMap:     make(StackRoleMap, 0),
+		RoleServicesMaps: make(RoleServicesMap, 0),
 	}
 }
 
@@ -67,8 +67,8 @@ func (me *Gears) GetStackRoleMap() (StackRoleMap, status.Status) {
 	return me.StackRoleMap, nil
 }
 
-func (me *Gears) GetNamedStackServiceOptionMap(stackid types.StackId) (rsm RoleServicesMap, sts status.Status) {
-	return me.ServiceOptionsMap.FilterForNamedStack(stackid)
+func (me *Gears) GetNamedStackRoleServicesMap(stackid types.StackId) (rsm RoleServicesMap, sts status.Status) {
+	return me.RoleServicesMaps.FilterForNamedStack(stackid)
 }
 
 func (me *Gears) GetNamedStackRoleMap(stackid types.StackId) (StackRoleMap, status.Status) {
@@ -132,7 +132,7 @@ func (me *Gears) Initialize() (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
-		for rs, ro := range me.ServiceOptionsMap {
+		for rs, ro := range me.RoleServicesMaps {
 			sr, ok := me.StackRoleMap[rs]
 			if !ok {
 				continue // @TODO Log error here and communicate back to home base
@@ -186,7 +186,7 @@ func (me *Gears) GetNamedStackMap() (nsm NamedStackMap, sts status.Status) {
 		for _, nsid := range me.NamedStackIds {
 			//			ns := NewNamedStack(me, nsid)
 			ns := NewNamedStack(nsid)
-			sts = ns.Refresh()
+			sts = ns.Refresh(me)
 			if is.Error(sts) {
 				break
 			}
@@ -240,7 +240,7 @@ func (me *Gears) FindNamedStack(stackid types.StackId) (stack *NamedStack, sts s
 		}
 		//		tmp = NewNamedStack(me, stackid)
 		tmp = NewNamedStack(stackid)
-		sts = tmp.Refresh()
+		sts = tmp.Refresh(me)
 		if is.Error(sts) {
 			break
 		}
@@ -248,6 +248,7 @@ func (me *Gears) FindNamedStack(stackid types.StackId) (stack *NamedStack, sts s
 	if !status.IsError(sts) && tmp != nil {
 		stack = &NamedStack{}
 		*stack = *tmp
+		stack.Gears = me
 	}
 	return stack, sts
 }
@@ -281,7 +282,7 @@ func (me *Gears) getServiceIdsMapGearspecIds() (sids serviceIdsMapGearspecIds, s
 			break
 		}
 		me.serviceIds = make(serviceIdsMapGearspecIds, 0)
-		for gsid, so := range me.ServiceOptionsMap {
+		for gsid, so := range me.RoleServicesMaps {
 			for _, s := range so.Services {
 				me.serviceIds[s.ServiceId] = gsid
 			}

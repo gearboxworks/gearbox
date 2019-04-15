@@ -362,7 +362,7 @@ func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.S
 func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.ItemModeler, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
 
-		sts = ro.SetId(item.GetId())
+		sts = ro.SetStackId(item.GetId())
 		if is.Error(sts) {
 			break
 		}
@@ -377,6 +377,9 @@ func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item 
 			break
 		}
 
+		if list == nil {
+			break
+		}
 		sts = ro.SetRelatedItems(ctx, list)
 		if is.Error(sts) {
 			break

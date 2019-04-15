@@ -22,15 +22,15 @@ type Project struct {
 	*config.Project
 	Filepath types.AbsoluteFilepath `json:"filepath"`
 	Aliases  HostnameAliases        `json:"aliases"`
-	Stack    service.StackMap       `json:"stack"`
+	Stack    service.ServicerMap    `json:"stack"`
 }
 
 func NewProject(cp *config.Project) (p *Project) {
 	p = &Project{
 		Project: cp,
 
-		//Stack: ConvertServiceMap(p.GetServiceMap()),
-		//ServiceIds: ConvertServices(pp.GetServiceMap()),
+		//Stack: ConvertServiceMap(p.GetServicerMap()),
+		//ServiceIds: ConvertServices(pp.GetServicerMap()),
 		//
 		//Aliases:    pp.GetAliases(),
 	}
@@ -121,7 +121,7 @@ func (me *Project) GetAliases() (aliases HostnameAliases) {
 	return me.Aliases
 }
 
-func (me *Project) GetServiceMap() (svcmap service.StackMap) {
+func (me *Project) GetServicerMap() (simap service.ServicerMap) {
 	return me.Stack
 }
 

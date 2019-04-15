@@ -15,7 +15,7 @@ type Servicer interface {
 	GetPersistableServiceValue() (Servicer, status.Status)
 	GetServiceValue() (Servicer, status.Status)
 	GetServiceId() (Identifier, status.Status)
-	//GetGearspecId() (gears.Gearspec, status.Status)
+	//GetGearspecId() (gearspec.Gearspec, status.Status)
 }
 
 type Services []*Service

@@ -24,7 +24,7 @@ func (me *ResourceObject) GetId() apimodeler.ItemId {
 	return apimodeler.ItemId(me.ResourceId)
 }
 
-func (me *ResourceObject) SetId(itemid apimodeler.ItemId) (sts status.Status) {
+func (me *ResourceObject) SetStackId(itemid apimodeler.ItemId) (sts status.Status) {
 	me.ResourceId = ResourceId(itemid)
 	return sts
 }
@@ -121,7 +121,7 @@ func (me *ResourceObject) SetRelatedItems(ctx *apimodeler.Context, list apimodel
 		me.RelationshipMap = me.getRelationshipTypesData(ctx, list)
 		for i, item := range list {
 			ro := NewResourceObject()
-			sts = ro.SetId(item.GetId())
+			sts = ro.SetStackId(item.GetId())
 			if is.Error(sts) {
 				break
 			}

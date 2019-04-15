@@ -13,8 +13,8 @@ import (
 	"sort"
 )
 
-const AuthoritiesName types.RouteName = "authorities"
-const AuthoritysBasepath types.Basepath = "/authorities"
+const AuthorityControllerName types.RouteName = "authorities"
+const AuthoritiesBasepath types.Basepath = "/authorities"
 
 var NilAuthorityController = (*AuthorityController)(nil)
 var _ apimodeler.ListController = NilAuthorityController
@@ -39,7 +39,7 @@ func (me *AuthorityController) CanAddItem(*apimodeler.Context) bool {
 }
 
 func (me *AuthorityController) GetName() types.RouteName {
-	return AuthoritiesName
+	return AuthorityControllerName
 }
 
 func (me *AuthorityController) GetListLinkMap(*apimodeler.Context, ...apimodeler.FilterPath) (lm apimodeler.LinkMap, sts status.Status) {
@@ -49,7 +49,7 @@ func (me *AuthorityController) GetListLinkMap(*apimodeler.Context, ...apimodeler
 }
 
 func (me *AuthorityController) GetBasepath() types.Basepath {
-	return AuthoritysBasepath
+	return AuthoritiesBasepath
 }
 
 func (me *AuthorityController) GetItemType() reflect.Kind {
