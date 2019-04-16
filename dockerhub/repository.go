@@ -1,8 +1,8 @@
 package dockerhub
 
-type Repositories []*Respository
+type Repositories []*Repository
 
-type Respository struct {
+type Repository struct {
 	User           string `json:"user"`
 	Name           string `json:"name"`
 	Namespace      string `json:"namespace"`

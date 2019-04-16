@@ -1,0 +1,151 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/stack-details",
+      "route": "stack-details"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/stacks/gearbox.works/wordpress"
+   },
+   "data": {
+      "authority": "gearbox.works",
+      "name": "wordpress",
+      "roles": {
+         "links": {},
+         "data": {
+            "cacheserver": {
+               "links": {},
+               "data": {
+                  "role": "gearbox.works/wordpress/cacheserver",
+                  "type": "cacheserver",
+                  "name": "Cache server for WordPress",
+                  "label": "Cache server",
+                  "max": 1,
+                  "min": 0,
+                  "optional": true,
+                  "examples": [
+                     "Redis",
+                     "Memcached"
+                  ]
+               }
+            },
+            "dbserver": {
+               "links": {},
+               "data": {
+                  "role": "gearbox.works/wordpress/dbserver",
+                  "type": "dbserver",
+                  "name": "Database server for WordPress",
+                  "label": "DB server",
+                  "max": 10,
+                  "min": 1,
+                  "examples": [
+                     "MySQL",
+                     "MariaDB",
+                     "Percona"
+                  ]
+               }
+            },
+            "processvm": {
+               "links": {},
+               "data": {
+                  "role": "gearbox.works/wordpress/processvm",
+                  "type": "processvm",
+                  "name": "ProcessVM (PHP) for WordPress",
+                  "label": "PHP",
+                  "max": 10,
+                  "min": 1,
+                  "examples": [
+                     "PHP",
+                     "HHVM"
+                  ]
+               }
+            },
+            "webserver": {
+               "links": {},
+               "data": {
+                  "role": "gearbox.works/wordpress/webserver",
+                  "type": "webserver",
+                  "name": "Web server for WordPress",
+                  "label": "Web server",
+                  "max": 10,
+                  "min": 1,
+                  "examples": [
+                     "Apache",
+                     "Nginx",
+                     "Caddy",
+                     "Lighttpd"
+                  ]
+               }
+            }
+         }
+      },
+      "services": {
+         "links": {},
+         "data": {
+            "gearbox.works/wordpress/cacheserver": {
+               "links": {},
+               "data": {
+                  "orgname": "gearboxworks",
+                  "options": [
+                     "gearboxworks/memcached:1.5",
+                     "gearboxworks/redis:3.2",
+                     "gearboxworks/redis:4.0"
+                  ]
+               }
+            },
+            "gearbox.works/wordpress/dbserver": {
+               "links": {},
+               "data": {
+                  "orgname": "gearboxworks",
+                  "default": "gearboxworks/mariadb",
+                  "options": [
+                     "gearboxworks/mariadb:5.5",
+                     "gearboxworks/mariadb:10.0",
+                     "gearboxworks/mariadb:10.1",
+                     "gearboxworks/mariadb:10.2",
+                     "gearboxworks/mariadb:10.3",
+                     "gearboxworks/mysql:5.5",
+                     "gearboxworks/mysql:5.6",
+                     "gearboxworks/mysql:5.7",
+                     "gearboxworks/mysql:8.0"
+                  ]
+               }
+            },
+            "gearbox.works/wordpress/processvm": {
+               "links": {},
+               "data": {
+                  "orgname": "gearboxworks",
+                  "default": "gearboxworks/php",
+                  "options": [
+                     "gearboxworks/php:5.2",
+                     "gearboxworks/php:5.6",
+                     "gearboxworks/php:7.0",
+                     "gearboxworks/php:7.1",
+                     "gearboxworks/php:7.2"
+                  ]
+               }
+            },
+            "gearbox.works/wordpress/webserver": {
+               "links": {},
+               "data": {
+                  "orgname": "gearboxworks",
+                  "default": "gearboxworks/nginx",
+                  "options": [
+                     "gearboxworks/apache:2.4",
+                     "gearboxworks/nginx:1.12",
+                     "gearboxworks/nginx:1.13",
+                     "gearboxworks/nginx:1.14",
+                     "gearboxworks/nginx:1.15"
+                  ]
+               }
+            }
+         }
+      }
+   }
+}

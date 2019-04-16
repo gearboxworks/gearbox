@@ -1,0 +1,72 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/meta-methods",
+      "route": "meta-methods"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/meta/methods"
+   },
+   "data": {
+      "DELETE": {
+         "basedir-delete": "/basedirs/{nickname}",
+         "project-aliases-delete": "/projects/{hostname}/aliases/{alias}",
+         "project-delete": "/projects/{hostname}"
+      },
+      "GET": {
+         "basedirs": "/basedirs",
+         "links": "/",
+         "meta-endpoints": "/meta/endpoints",
+         "meta-methods": "/meta/methods",
+         "project-aliases": "/projects/{hostname}/aliases",
+         "project-candidates": "/projects/candidates",
+         "project-details": "/projects/{hostname}",
+         "projects": "/projects",
+         "projects-disabled": "/projects/disabled",
+         "projects-enabled": "/projects/enabled",
+         "projects-with-details": "/projects/with-details",
+         "stack-details": "/stacks/{authority}/{stack}",
+         "stacks": "/stacks"
+      },
+      "OPTIONS": {
+         "basedir-add": "/basedirs/new",
+         "basedir-delete": "/basedirs/{nickname}",
+         "basedir-update": "/basedirs/{nickname}",
+         "basedirs": "/basedirs",
+         "links": "/",
+         "meta-endpoints": "/meta/endpoints",
+         "meta-methods": "/meta/methods",
+         "project-add": "/projects/new",
+         "project-aliases": "/projects/{hostname}/aliases",
+         "project-aliases-add": "/projects/{hostname}/aliases/new",
+         "project-aliases-delete": "/projects/{hostname}/aliases/{alias}",
+         "project-aliases-update": "/projects/{hostname}/aliases/{alias}",
+         "project-candidates": "/projects/candidates",
+         "project-delete": "/projects/{hostname}",
+         "project-details": "/projects/{hostname}",
+         "project-update": "/projects/{hostname}",
+         "projects": "/projects",
+         "projects-disabled": "/projects/disabled",
+         "projects-enabled": "/projects/enabled",
+         "projects-with-details": "/projects/with-details",
+         "stack-details": "/stacks/{authority}/{stack}",
+         "stacks": "/stacks"
+      },
+      "POST": {
+         "basedir-add": "/basedirs/new",
+         "project-add": "/projects/new",
+         "project-aliases-add": "/projects/{hostname}/aliases/new"
+      },
+      "PUT": {
+         "basedir-update": "/basedirs/{nickname}",
+         "project-aliases-update": "/projects/{hostname}/aliases/{alias}",
+         "project-update": "/projects/{hostname}"
+      }
+   }
+}

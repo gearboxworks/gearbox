@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"gearbox"
+	gopt "gearbox/global"
 	"github.com/spf13/cobra"
 )
 
-var GlobalOptions *gearbox.GlobalOptions
+var GlobalOptions *gopt.Options
 
 var RootCmd = &cobra.Command{
 	Use:   "gearbox",
@@ -13,7 +13,7 @@ var RootCmd = &cobra.Command{
 }
 
 func init() {
-	GlobalOptions = &gearbox.GlobalOptions{}
+	GlobalOptions = &gopt.Options{}
 	pf := RootCmd.PersistentFlags()
 	pf.BoolVarP(&GlobalOptions.IsDebug, "debug", "", false, "Debug mode")
 	pf.BoolVarP(&GlobalOptions.NoCache, "no-cache", "", false, "Disable caching")

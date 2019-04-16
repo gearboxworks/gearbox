@@ -2,24 +2,53 @@ package util
 
 import (
 	"fmt"
+	"gearbox/help"
 	"gearbox/only"
-	"gearbox/stat"
+
+	"gearbox/status"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
 
 func CloseResponseBody(response *http.Response) {
 	err := response.Body.Close()
 	if err != nil {
 		log.Printf(
-			"Could not close response body from HttpGet: %s\n",
+			"Could not close response body from HttpRequest: %s\n",
 			err.Error(),
 		)
 	}
 }
 
-func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
+type HttpArgs struct {
+	Method      string
+	Body        io.Reader
+	ContentType string
+	Timeout     *time.Duration
+}
+
+func HttpRequest(url string, args ...*HttpArgs) (body []byte, statusCode int, sts status.Status) {
+
+	var _args HttpArgs
+	if len(args) == 0 {
+		_args = HttpArgs{}
+	} else {
+		_args = *args[0]
+	}
+	if _args.Method == "" {
+		_args.Method = "GET"
+	}
+	if _args.ContentType == "" {
+		_args.ContentType = "application/json; charset=utf-8"
+	}
+	if _args.Timeout == nil {
+		var d time.Duration
+		d = time.Second * 3
+		_args.Timeout = &d
+	}
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -28,26 +57,27 @@ func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
 	}()
 
 	for range only.Once {
-		request, err := http.NewRequest("GET", url, nil)
+		request, err := http.NewRequest(_args.Method, url, _args.Body)
 		if err != nil {
-			status = stat.NewFailStatus(&stat.Args{
-				Error:   err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("invalid URL '%s'", url),
-				Help:    "if you provided this URL please correct it, otherwise " + stat.ContactSupportHelp(),
+				Help:    fmt.Sprintf("if you provided this URL please correct it, otherwise %s", help.ContactSupportHelp()),
 			})
 			break
 		}
+
 		//request.SetBasicAuth(_api.User, _api.Password)
-		request.Header.Set("Content-Type", "application/json; charset=utf-8")
-		cli := &http.Client{}
+		request.Header.Set("Content-Type", _args.ContentType)
+		cli := &http.Client{
+			Timeout: *_args.Timeout,
+		}
 		response, err := cli.Do(request)
 		statusCode = response.StatusCode
 		data := map[string]interface{}{
 			"status_code": statusCode,
 		}
 		if err != nil {
-			status = stat.NewFailStatus(&stat.Args{
-				Error: err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("http status code %d; unable to retrieve '%s': ",
 					statusCode,
 					url,
@@ -59,8 +89,7 @@ func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
 		defer CloseResponseBody(response)
 		body, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			status = stat.NewFailStatus(&stat.Args{
-				Error: err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("http status code %d; unable to retrieve '%s': ",
 					statusCode,
 					url,
@@ -73,51 +102,47 @@ func HttpGet(url string) (body []byte, statusCode int, status stat.Status) {
 		switch statusCode {
 		case 200:
 			if err != nil {
-				status = stat.NewFailStatus(&stat.Args{
-					Error: err,
+				sts = status.Wrap(err, &status.Args{
 					Message: fmt.Sprintf("http status code 200 but no content returned for '%s'",
 						url,
 					),
-					Help: stat.ContactSupportHelp(),
+					Help: help.ContactSupportHelp(),
 					Data: data,
 				})
 				break
 			}
 
 		case 401:
-			status = stat.NewFailStatus(&stat.Args{
-				Error: err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("invalid credentials provided for '%s'",
 					url,
 				),
-				Help: stat.ContactSupportHelp(),
+				Help: help.ContactSupportHelp(),
 				Data: data,
 			})
 			break
 
 		case 403:
-			status = stat.NewFailStatus(&stat.Args{
-				Error: err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("permission denied for '%s'",
 					url,
 				),
-				Help: stat.ContactSupportHelp(),
+				Help: help.ContactSupportHelp(),
 				Data: data,
 			})
 			break
 
 		default:
-			status = stat.NewFailStatus(&stat.Args{
-				Error: err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("permission denied for '%s'",
 					url,
 				),
-				Help: stat.ContactSupportHelp(),
+				Help: help.ContactSupportHelp(),
 				Data: data,
 			})
 			break
 		}
 
 	}
-	return body, statusCode, status
+	return body, statusCode, sts
 }

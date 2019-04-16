@@ -1,0 +1,28 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/stacks",
+      "route": "stacks"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/stacks",
+      "stacks": {
+         "stack-details[gearbox.works][elasticsearch]": "/stacks/gearbox.works/elasticsearch",
+         "stack-details[gearbox.works][lamp]": "/stacks/gearbox.works/lamp",
+         "stack-details[gearbox.works][lemp]": "/stacks/gearbox.works/lemp",
+         "stack-details[gearbox.works][wordpress]": "/stacks/gearbox.works/wordpress"
+      }
+   },
+   "data": [
+      "gearbox.works/elasticsearch",
+      "gearbox.works/lamp",
+      "gearbox.works/lemp",
+      "gearbox.works/wordpress"
+   ]
+}

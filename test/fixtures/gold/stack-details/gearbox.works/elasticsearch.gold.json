@@ -1,0 +1,54 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/stack-details",
+      "route": "stack-details"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/stacks/gearbox.works/elasticsearch"
+   },
+   "data": {
+      "authority": "gearbox.works",
+      "name": "elasticsearch",
+      "roles": {
+         "links": {},
+         "data": {
+            "elasticsearch": {
+               "links": {},
+               "data": {
+                  "role": "gearbox.works/elasticsearch/elasticsearch",
+                  "type": "elasticsearch",
+                  "name": "Elasticsearch",
+                  "label": "Elasticsearch",
+                  "max": 10,
+                  "min": 1,
+                  "examples": [
+                     "Elasticsearch"
+                  ]
+               }
+            }
+         }
+      },
+      "services": {
+         "links": {},
+         "data": {
+            "gearbox.works/elasticsearch/elasticsearch": {
+               "links": {},
+               "data": {
+                  "orgname": "gearboxworks",
+                  "default": "gearboxworks/elasticsearch",
+                  "options": [
+                     "gearboxworks/elasticsearch:6.6.2"
+                  ]
+               }
+            }
+         }
+      }
+   }
+}
