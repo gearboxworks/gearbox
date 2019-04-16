@@ -2,10 +2,12 @@ package ja
 
 import (
 	"encoding/json"
+	"fmt"
 	"gearbox/apimodeler"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
+	"gearbox/util"
 )
 
 var _ ResourceContainer = (*ResourceObject)(nil)
@@ -18,6 +20,18 @@ type ResourceObject struct {
 	apimodeler.LinkMap `json:"links,omitempty"`
 	AttributeMap       `json:"attributes"`
 	RelationshipMap    `json:"relationships,omitempty"`
+}
+
+func (me *ResourceObject) GetRelationshipsLinkMap() (lm apimodeler.LinkMap, sts status.Status) {
+	lm = make(apimodeler.LinkMap, 0)
+	for fn, f := range me.RelationshipMap {
+		link, ok := f.LinkMap[apimodeler.SelfRelType]
+		if !ok {
+			panic(fmt.Sprintf("relationship '%s' does not have a 'self' link.", fn))
+		}
+		lm[apimodeler.RelType(fn)] = link
+	}
+	return lm, sts
 }
 
 func (me *ResourceObject) GetId() apimodeler.ItemId {
@@ -55,15 +69,25 @@ func (me *ResourceObject) GetRelatedItems(ctx *apimodeler.Context) (list apimode
 
 func NewResourceObject() *ResourceObject {
 	ro := ResourceObject{
-		AttributeMap:     make(AttributeMap, 0),
-		RelationshipMap:  make(RelationshipMap, 0),
 		ResourceIdObject: *NewResourceIdObject(),
 	}
+	ro.Renew()
 	return &ro
 }
 
-func (me *ResourceObject) getRelationshipTypesData(ctx *apimodeler.Context, list apimodeler.List) (rm RelationshipMap) {
+func (me *ResourceObject) Renew() {
+	if me.LinkMap == nil {
+		me.LinkMap = make(apimodeler.LinkMap, 0)
+	}
+	if me.AttributeMap == nil {
+		me.AttributeMap = make(AttributeMap, 0)
+	}
+	if me.RelationshipMap == nil {
+		me.RelationshipMap = make(RelationshipMap, 0)
+	}
+}
 
+func (me *ResourceObject) getRelationshipTypesData(ctx *apimodeler.Context, item apimodeler.ItemModeler, list apimodeler.List) (rm RelationshipMap) {
 	for range only.Once {
 		fnitms := make(map[Fieldname]apimodeler.List, 0)
 		rfs := ctx.Controller.GetRelatedFields()
@@ -85,7 +109,8 @@ func (me *ResourceObject) getRelationshipTypesData(ctx *apimodeler.Context, list
 		rm = make(RelationshipMap, 0)
 		for fn, fnlst := range fnitms {
 			r := NewRelationship()
-			r.Data = me.getResourceIdentifier(fnlst)
+			r.Data = me.getResourceIdentifier(ctx, item, fnlst)
+			r.LinkMap.AddLink(apimodeler.SelfRelType, me.getRelationshipSelfLink(ctx, fn))
 			rm[fn] = r
 		}
 	}
@@ -93,9 +118,24 @@ func (me *ResourceObject) getRelationshipTypesData(ctx *apimodeler.Context, list
 }
 
 //
+//
+//
+func (me *ResourceObject) getRelationshipSelfLink(ctx *apimodeler.Context, fieldname Fieldname) (link apimodeler.Link) {
+	for range only.Once {
+		baseurl, sts := ctx.GetRequestPath()
+		if is.Error(sts) {
+			break
+		}
+		path := util.Dashify(string(fieldname))
+		link = apimodeler.Link(fmt.Sprintf("%s/%s/", baseurl, path))
+	}
+	return link
+}
+
+//
 // Recursive function to return either a ResourceIdObject or a slice of ResourceIdObjects
 //
-func (me *ResourceObject) getResourceIdentifier(list apimodeler.List) (ri ResourceIdentifier) {
+func (me *ResourceObject) getResourceIdentifier(ctx *apimodeler.Context, item apimodeler.ItemModeler, list apimodeler.List) (ri ResourceIdentifier) {
 	switch len(list) {
 	case 0:
 		break
@@ -109,16 +149,16 @@ func (me *ResourceObject) getResourceIdentifier(list apimodeler.List) (ri Resour
 		rios := make(ResourceIdObjects, len(list))
 		for i, item := range list {
 			oil := apimodeler.List{item}
-			rios[i] = me.getResourceIdentifier(oil).(*ResourceIdObject)
+			rios[i] = me.getResourceIdentifier(ctx, item, oil).(*ResourceIdObject)
 		}
 		ri = rios
 	}
 	return ri
 }
 
-func (me *ResourceObject) SetRelatedItems(ctx *apimodeler.Context, list apimodeler.List) (sts status.Status) {
+func (me *ResourceObject) SetRelatedItems(ctx *apimodeler.Context, item apimodeler.ItemModeler, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
-		me.RelationshipMap = me.getRelationshipTypesData(ctx, list)
+		me.RelationshipMap = me.getRelationshipTypesData(ctx, item, list)
 		for i, item := range list {
 			ro := NewResourceObject()
 			sts = ro.SetStackId(item.GetId())

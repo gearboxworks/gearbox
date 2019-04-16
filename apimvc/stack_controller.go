@@ -76,6 +76,7 @@ func (me *StackController) GetList(ctx *apimodeler.Context, filterPath ...apimod
 			break
 		}
 		for _, gbns := range gbnsm {
+
 			ns, sts := NewNamedStackModelFromGearsNamedStack(ctx, gbns)
 			if is.Error(sts) {
 				break

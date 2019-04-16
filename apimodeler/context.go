@@ -30,6 +30,17 @@ func (me *Context) GetRequestPath() (path types.UrlTemplate, sts status.Status) 
 		if is.Error(sts) {
 			break
 		}
+		path = types.UrlTemplate(ec.Request().RequestURI)
+	}
+	return path, sts
+}
+
+func (me *Context) GetRequestTemplatePath() (path types.UrlTemplate, sts status.Status) {
+	for range only.Once {
+		ec, sts := me.assertEchoContext()
+		if is.Error(sts) {
+			break
+		}
 		path = types.UrlTemplate(ec.Path())
 	}
 	return path, sts

@@ -1,6 +1,9 @@
 package ja
 
-import "gearbox/status"
+import (
+	"gearbox/apimodeler"
+	"gearbox/status"
+)
 
 type ResourceObjectAppender interface {
 	AppendResourceObject(*ResourceObject) (ResourceObjects, status.Status)
@@ -42,6 +45,11 @@ type Resourcer interface {
 type ResourceIdentifier interface {
 	IdentifiesResource()
 }
+
 type ResourceContainer interface {
 	ContainsResource()
+	RelationshipsLinkMapGetter
+}
+type RelationshipsLinkMapGetter interface {
+	GetRelationshipsLinkMap() (apimodeler.LinkMap, status.Status)
 }

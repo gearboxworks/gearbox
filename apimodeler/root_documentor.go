@@ -14,6 +14,7 @@ type RootDocumentor interface {
 	LinkAdder
 	LinksAdder
 	ErrorsSetter
+	DataRelationshipsLinkMapGetter
 }
 type ErrorsSetter interface {
 	SetErrors(error)
@@ -32,4 +33,7 @@ type RelatedSetter interface {
 }
 type ResponseHeaderSetter interface {
 	SetResponseHeader(key, value string)
+}
+type DataRelationshipsLinkMapGetter interface {
+	GetDataRelationshipsLinkMap() (LinkMap, status.Status)
 }

@@ -356,6 +356,7 @@ func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.S
 			Message: "root document does not contain a single resource object",
 		})
 	}
+	ro.Renew()
 	return ro, sts
 }
 
@@ -380,7 +381,13 @@ func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item 
 		if list == nil {
 			break
 		}
-		sts = ro.SetRelatedItems(ctx, list)
+
+		sts = ro.SetRelatedItems(ctx, item, list)
+		if is.Error(sts) {
+			break
+		}
+
+		sts = me.SetRelationshipLinkMap(ctx, item, ro)
 		if is.Error(sts) {
 			break
 		}
@@ -406,6 +413,24 @@ func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item 
 		}
 		lm.AddLink(apimodeler.SelfRelType, apimodeler.Link(su))
 		ro.SetLinks(lm)
+	}
+	return sts
+}
+
+func (me *Api) SetRelationshipLinkMap(ctx *apimodeler.Context, item apimodeler.ItemModeler, ro *ja.ResourceObject) (sts status.Status) {
+	for range only.Once {
+		lm, sts := ctx.RootDocumentor.GetDataRelationshipsLinkMap()
+		if is.Error(sts) {
+			break
+		}
+		name := item.GetType()
+
+		for rel, link := range lm {
+
+			rel = apimodeler.RelType(fmt.Sprintf("%s.%s", name, rel))
+
+			ctx.RootDocumentor.AddLink(GetQualifiedRelType(rel), link)
+		}
 	}
 	return sts
 }
@@ -442,7 +467,7 @@ func (me *Api) setListData(ctx *apimodeler.Context, data interface{}) (sts statu
 func (me *Api) getRouteName(ctx *apimodeler.Context) (name types.RouteName, sts status.Status) {
 	for range only.Once {
 		rts := me.Echo.Routes()
-		path, sts := ctx.GetRequestPath()
+		path, sts := ctx.GetRequestTemplatePath()
 		if is.Error(sts) {
 			break
 		}

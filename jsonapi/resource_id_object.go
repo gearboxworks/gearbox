@@ -1,13 +1,11 @@
 package ja
 
 var _ ResourceIdentifier = (ResourceIdObjects)(nil)
-
-func (ResourceIdObjects) IdentifiesResource() {}
+var _ ResourceIdentifier = (*ResourceIdObject)(nil)
 
 type ResourceIdObjects []*ResourceIdObject
 
-var _ ResourceIdentifier = (*ResourceIdObject)(nil)
-
+func (ResourceIdObjects) IdentifiesResource() {}
 func (*ResourceIdObject) IdentifiesResource() {}
 
 type ResourceIdObject struct {

@@ -23,8 +23,8 @@ const ProjectsWithDetailsFilter apimodeler.FilterPath = "/with-details"
 const EnabledProjectsFilter apimodeler.FilterPath = "/enabled"
 const DisabledProjectsFilter apimodeler.FilterPath = "/disabled"
 
-const ProjectsStackRolesField apimodeler.Fieldname = "stack_roles"
-const ProjectsStackServicesField apimodeler.Fieldname = "stack_services"
+const ProjectsServiceTypesField apimodeler.Fieldname = "service_types"
+const ProjectsServicesField apimodeler.Fieldname = "services"
 
 var NilProjectController = (*ProjectController)(nil)
 var _ apimodeler.ListController = NilProjectController
@@ -43,11 +43,11 @@ func NewProjectController(gb gearbox.Gearboxer) *ProjectController {
 func (me *ProjectController) GetRelatedFields() apimodeler.RelatedFields {
 	return apimodeler.RelatedFields{
 		&apimodeler.RelatedField{
-			Fieldname:   ProjectsStackRolesField,
+			Fieldname:   ProjectsServiceTypesField,
 			IncludeType: GearspecModelType,
 		},
 		&apimodeler.RelatedField{
-			Fieldname:   ProjectsStackServicesField,
+			Fieldname:   ProjectsServicesField,
 			IncludeType: ServiceModelType,
 		},
 	}

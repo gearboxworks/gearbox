@@ -61,6 +61,8 @@ func (me IncludedList) AppendItem(item apimodeler.ItemModeler) (inc IncludedList
 	return inc, sts
 }
 
+var _ apimodeler.RootDocumentor = (*RootDocument)(nil)
+
 type RootDocument struct {
 	ResponseType types.ResponseType `json:"-"`
 	JsonApi      *JsonApi           `json:"jsonapi,omitempty"`
@@ -69,6 +71,10 @@ type RootDocument struct {
 	Data         ResourceContainer  `json:"data,omitempty"`
 	Included     IncludedList       `json:"included,omitempty"`
 	Errors       Errors             `json:"errors,omitempty"`
+}
+
+func (me *RootDocument) GetDataRelationshipsLinkMap() (apimodeler.LinkMap, status.Status) {
+	return me.Data.GetRelationshipsLinkMap()
 }
 
 type RootDocArgs RootDocument

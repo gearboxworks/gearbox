@@ -10,11 +10,26 @@ var _ ResourceContainer = (ResourceObjects)(nil)
 
 type ResourceObjects []*ResourceObject
 
+func (me ResourceObjects) GetRelationshipsLinkMap() (lm apimodeler.LinkMap, sts status.Status) {
+	lm = make(apimodeler.LinkMap, 0)
+	for fn, _lm := range me {
+		for rel, link := range _lm.LinkMap {
+			if rel != apimodeler.SelfRelType {
+				continue
+			}
+			lm[apimodeler.RelType(fn)] = link
+		}
+	}
+	return lm, sts
+}
+
 func (ResourceObjects) ContainsResource() {}
+
 func (me ResourceObjects) SetAttributes(attrs interface{}) (sts status.Status) {
 	panic("Not yet implemented")
 	return nil
 }
+
 func (me ResourceObjects) AppendResourceObject(ro *ResourceObject) (ResourceObjects, status.Status) {
 	return append(me, ro), nil
 }
