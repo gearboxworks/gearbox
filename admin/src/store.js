@@ -87,6 +87,56 @@ export default new Vuex.Store({
         })
       }
       return options
+    },
+    projectServiceDefaults: (state) => (serviceName, stackName) => {
+      const org = serviceName.substring(0, serviceName.indexOf('/'))
+      const service = state.gearServices[serviceName]
+
+      /**
+       * Resolve default option:
+       * - if exact match is found, use it
+       * - otherwise, use the last in the list that have the specified name mentioned (hopefully that will be the latest version)
+       */
+      let firstFound = -1
+      let exactFound = -1
+      if (service.default) {
+        for (var i = service.options.length; i--;) {
+          if (service.options[i].indexOf(service.default) !== -1) {
+            if (firstFound === -1) {
+              firstFound = i
+            }
+            if (service.options[i] === service.default) {
+              exactFound = i
+              break
+            }
+          }
+        }
+      }
+      const defaultOpt = (firstFound !== -1)
+        ? service.options[ exactFound !== -1 ? exactFound : firstFound ]
+        : ''
+
+      const ver = defaultOpt ? defaultOpt.split(':')[1].split('.') : ''
+
+      const newService = {
+        'authority': org,
+        'org': org.replace('.', ''),
+        'stack': stackName.substring(stackName.indexOf('/') + 1),
+        'service_id': defaultOpt ? service.org + '/' + defaultOpt : '',
+        'program': defaultOpt ? defaultOpt.substring(0, defaultOpt.indexOf(':')) : '',
+        'version': {}
+      }
+
+      if (ver.length > 0) {
+        newService.version.major = ver[0]
+      }
+      if (ver.length > 1) {
+        newService.version.minor = ver[1]
+      }
+      if (ver.length > 2) {
+        newService.version.patch = ver[2]
+      }
+      return newService
     }
   },
   actions: {
@@ -401,60 +451,10 @@ export default new Vuex.Store({
     ADD_PROJECT_STACK (state, payload) {
       const { projectHostname, stackName } = payload
       const project = this.getters.projectBy('hostname', projectHostname)
+      const genericServiceName = serviceName.substring(serviceName.indexOf('/') + 1)
       if (project) {
         for (const serviceName in this.getters.stackServices(stackName)) {
-          const genericServiceName = serviceName.substring(serviceName.indexOf('/') + 1)
-          const org = serviceName.substring(0, serviceName.indexOf('/'))
-          const service = state.gearServices[serviceName]
-
-          /**
-           * Resolve default option:
-           * - if exact match is found, use it
-           * - otherwise, use the last in the list that have the specified name mentioned (hopefully that will be the latest version)
-           */
-          let firstFound = -1
-          let exactFound = -1
-          for (var i = service.options.length; i--;) {
-            if (service.options[i].indexOf(service.default) !== -1) {
-              if (firstFound === -1) {
-                firstFound = i
-              }
-              if (service.options[i] === service.default) {
-                exactFound = i
-                break
-              }
-            }
-          }
-          const defaultOpt = (firstFound !== -1)
-            ? service.options[ exactFound !== -1 ? exactFound : firstFound ]
-            : ''
-
-          const ver = defaultOpt.split(':')[1].split('.')
-
-          const newService = {
-            'authority': org,
-            'org': org.replace('.', ''),
-            'stack': stackName.substring(stackName.indexOf('/') + 1),
-            'service_id': service.org + '/' + defaultOpt,
-            'program': defaultOpt.substring(0, defaultOpt.indexOf(':')),
-            'version': {}
-          }
-
-          if (ver.length > 0) {
-            newService.version.major = ver[0]
-          }
-          if (ver.length > 1) {
-            newService.version.minor = ver[1]
-          }
-          if (ver.length > 2) {
-            newService.version.patch = ver[2]
-          }
-
-          /**
-           * Set it in a reactive way!
-           */
-          console.log(project.hostname, genericServiceName, newService)
-          Vue.set(project.stack, genericServiceName, newService)
+          Vue.set(project.stack, genericServiceName, this.projectServiceDefaults(stackName, serviceName))
         }
       }
     },
@@ -491,30 +491,44 @@ export default new Vuex.Store({
       const service = state.gearServices[serviceName]
       if (project && service) {
         const serviceRole = serviceName.substring(serviceName.indexOf('/') + 1)
-        const newService = project.stack[serviceRole]
-        const programVer = serviceId.split('/')[1]
-        newService.program = programVer.split(':')[0]
-        newService.version = {}
-        const ver = serviceId.split(':')[1].split('.')
-        if (ver.length > 0) {
-          newService.version.major = ver[0]
+        if (!serviceId) {
+          Vue.delete(project.stack, serviceRole)
+        } else {
+          const programVer = serviceId.split('/')[1]
+          const ver = serviceId.split(':')[1].split('.')
+/*
+          const newService = project.stack[serviceRole] || {
+            'authority': org,
+            'org': org.replace('.', ''),
+            'stack': stackName.substring(stackName.indexOf('/') + 1),
+            'service_id': defaultOpt ? service.org + '/' + defaultOpt : '',
+            'program': defaultOpt ? defaultOpt.substring(0, defaultOpt.indexOf(':')) : '',
+            'version': {}
+          }
+
+          newService.program = programVer.split(':')[0]
+          newService.version = {}
+          if (ver.length > 0) {
+            newService.version.major = ver[0]
+          }
+          if (ver.length > 1) {
+            newService.version.minor = ver[1]
+          }
+          if (ver.length > 2) {
+            newService.version.patch = ver[2]
+          }
+          Vue.set(project.stack, serviceRole, newService)
+*/
         }
-        if (ver.length > 1) {
-          newService.version.minor = ver[1]
-        }
-        if (ver.length > 2) {
-          newService.version.patch = ver[2]
-        }
-        Vue.set(project.stack, serviceRole, newService)
       }
     },
     CHANGE_PROJECT_STATE (state, payload) {
       const { projectHostname, isEnabled } = payload
       const project = this.getters.projectBy('hostname', projectHostname)
       if (project) {
-        console.log(project.enabled)
+        // console.log(project.enabled)
         Vue.set(project, 'enabled', !!isEnabled)
-        console.log(project.enabled)
+        // console.log(project.enabled)
       }
     }
   }

@@ -35,7 +35,7 @@
       </a>
 
       <a target="_blank"
-         :href="'http://'+hostname+'/'"
+         :href="`http://${hostname}/`"
          title="Open Frontend"
          v-b-tooltip.hover
          :class="['titlebar-icon', 'titlebar-icon--frontend', {'is-disabled': enabled}]"
@@ -46,7 +46,7 @@
       </a>
 
       <a target="_blank"
-         :href="'http://'+hostname+'/wp-admin'"
+         :href="`http://${hostname}/wp-admin/`"
          title="Open Dashboard"
          v-b-tooltip.hover
          :class="['titlebar-icon', 'titlebar-icon--dashboard', {'is-disabled': enabled}]"
@@ -56,31 +56,17 @@
         />
       </a>
 
-      <!--a target="_blank"
-         href="#"
-         title="Settings"
-         v-b-tooltip.hover
-         @click.prevent = ""
-         class="titlebar-icon titlebar-icon--details"
-         v-b-toggle="projectBase + '_advanced'"
-      >
-        <font-awesome-icon
-          :icon="['fa', 'ellipsis-h']"
-        />
-      </a-->
-
-      <b-collapse :id="projectBase + '_advanced'" role="tabpanel" :visible="showingDetails">
-
+      <b-collapse :id="`${projectBase}advanced`" role="tabpanel" :visible="showingDetails">
         <b-form-group
-          :id="projectBase + 'location-group'"
-          :label-for="projectBase+'location-input'"
+          :id="`${projectBase}location-group`"
+          :label-for="`${projectBase}location-input`"
           label=""
           description="Location"
         >
           <b-form-input
             disabled
-            :id="projectBase+'location-input'"
-            :value="resolvePath(baseDir, path)"
+            :id="`${projectBase}location-input`"
+            :value="resolveDir(baseDir, path)"
             class="location-input"
           />
           <a target="_blank"
@@ -98,45 +84,53 @@
 
         <b-popover
           :target="`${projectBase}change-location`"
-          :container="projectBase + '-advanced'"
-          :ref="projectBase + 'location-popover'"
+          :container="`${projectBase}advanced`"
+          :ref="`${projectBase}location-popover`"
           triggers="focus"
           placement="bottom"
         >
           <template slot="title">
-            <b-button @click="onClosePopoverFor(`${projectBase}location-group`)" class="close" aria-label="Close">
+            <b-button @click="onClosePopoverFor(`${projectBase}change-location`)" class="close" aria-label="Close">
               <span class="d-inline-block" aria-hidden="true">&times;</span>
             </b-button>
             Change location
           </template>
 
           <b-form-group
-            id="basedirGroup1"
-            label="Base directory"
+            label="Base directory:"
             label-for="basedirInput"
-            description=""
+            description="Go to Preferences page to add more directories."
           >
             <b-form-select
               @change="maybeSubmit"
               v-model="baseDir"
               required
+              v-if="Object.entries(this.$store.getters.baseDirsAsOptions).length>1"
               :options="this.$store.getters.baseDirsAsOptions"
             />
+            <b-form-input
+              @change="maybeSubmit"
+              required
+              disabled
+              v-else
+              :value="this.$store.state.baseDirs[baseDir] ? this.$store.state.baseDirs[baseDir].text : ''"
+            />
+
           </b-form-group>
 
           <b-form-group
-            id="pathGroup"
             label="Path:"
             label-for="dirNameInput"
             description=""
           >
             <b-form-input
-              id="dirNameInput"
               type="text"
               v-model="path"
-              @change="maybeSubmit"
               required
-              placeholder="" />
+              placeholder=""
+              @input = "path = sanitizePath(path)"
+              @change="maybeSubmit"
+            />
           </b-form-group>
 
         </b-popover>
@@ -150,14 +144,20 @@
           <b-form-textarea
             id="textarea"
             v-model="notes"
-            @change="maybeSubmit"
             placeholder="Notes..."
             rows="3"
             max-rows="6"
+            @change="maybeSubmit"
           />
         </b-form-group>
 
-        <b-form-select v-model="selectedService" :required="true" @change="addProjectStack" :disabled="!hasUnusedStacks" class="add-stack">
+        <b-form-select
+          class="add-stack"
+          v-model="selectedService"
+          :disabled="!hasUnusedStacks"
+          :required="true"
+          @change="addProjectStack"
+        >
           <option value="" disabled>{{hasUnusedStacks ? 'Add Stack...' : 'No more stacks to add'}}</option>
           <option
             v-for="(stack,stackName) in stacksNotUnusedInProject"
@@ -174,6 +174,7 @@
 <script>
 
 import { mapGetters } from 'vuex'
+import filenamify from 'filenamify'
 
 export default {
   name: 'ProjectDetails',
@@ -218,9 +219,14 @@ export default {
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
-    resolvePath (baseDir, path) {
-      return typeof this.$store.state.baseDirs[baseDir] !== 'undefined'
-        ? (this.$store.state.baseDirs[baseDir].text + '/' + path)
+    resolveDir (baseDir, projectPath) {
+      const dir = this.$store.state.baseDirs[baseDir]
+      const slash = (typeof dir !== 'undefined')
+        ? ((dir.text.indexOf('/') !== -1) ? '/' : '\\')
+        : '/'
+      // console.log(this.$store.state.baseDirs[baseDir])
+      return (typeof dir !== 'undefined')
+        ? (dir.text + slash + projectPath)
         : ''
     },
     showDetails () {
@@ -243,11 +249,15 @@ export default {
       )
     },
     onClosePopoverFor (triggerElementId) {
-      this.$root.$emit('bv::popover::hide', triggerElementId)
+      this.$root.$emit('bv::hide::popover', triggerElementId)
     },
     addProjectStack (stackName) {
       this.selectedService = ''
       this.$store.dispatch('addProjectStack', { 'projectHostname': this.hostname, stackName })
+    },
+    sanitizePath (path) {
+      const sanitized = filenamify(path).trim()
+      return sanitized || 'project'
     }
   }
 }
