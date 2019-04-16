@@ -1,0 +1,20 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/authority-stack-details",
+      "resource_type": "authority-stack-details"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/stacks/gearbox.works/lamp"
+   },
+   "data": {
+      "authority": "",
+      "name": "gearbox.works/lamp"
+   }
+}

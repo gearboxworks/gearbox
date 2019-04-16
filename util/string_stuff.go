@@ -38,6 +38,7 @@ type UniqueStrings map[string]bool
 func NewUniqueStrings(size int) UniqueStrings {
 	return make(UniqueStrings, size)
 }
+
 func (me UniqueStrings) ToSlice() []string {
 	keys := make([]string, len(me))
 	i := 0
@@ -46,4 +47,9 @@ func (me UniqueStrings) ToSlice() []string {
 		i++
 	}
 	return keys
+}
+
+func Dashify(s string) string {
+	r := strings.NewReplacer(" ", "-", "_", "-")
+	return r.Replace(s)
 }

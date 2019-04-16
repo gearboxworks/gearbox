@@ -3,7 +3,8 @@ package util
 import (
 	"fmt"
 	"gearbox/only"
-	"gearbox/stat"
+	"gearbox/status"
+	"gearbox/types"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,43 +12,42 @@ import (
 	"syscall"
 )
 
-func FileExists(file string) bool {
-	return EntryExists(file)
+func FileExists(file types.AbsoluteFilepath) bool {
+	return EntryExists(types.AbsoluteEntry(file))
 }
-func GetExecutableFilepath() string {
+func GetExecutableFilepath() types.AbsoluteFilepath {
 	fp, err := filepath.Abs(os.Args[0])
 	if err != nil {
 		log.Fatal(err)
 	}
-	return fp
+	return types.AbsoluteFilepath(fp)
 }
 
 //func GetProjectDir() string {
-//	return filepath.Dir(GetExecutableDir())
+//	return util.FileDir(GetExecutableDir())
 //}
 func ErrorIsFileDoesNotExist(err error) bool {
 	pe, ok := err.(*os.PathError)
 	return ok && pe.Op == "open" && pe.Err == syscall.ENOENT
 }
 
-func ReadBytes(filepath string) (b []byte, status stat.Status) {
+func ReadBytes(filepath types.AbsoluteFilepath) (b []byte, sts status.Status) {
 	for range only.Once {
 		var err error
-		b, err = ioutil.ReadFile(filepath)
+		b, err = ioutil.ReadFile(string(filepath))
 		if err != nil && ErrorIsFileDoesNotExist(err) {
-			status = stat.NewOkStatus("read %d bytes from '%s'",
+			sts = status.Success("read %d bytes from '%s'",
 				len(b),
 				filepath,
 			)
 		}
 		if err != nil {
-			status = stat.NewFailStatus(&stat.Args{
-				Error:   err,
+			sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("cannot read from '%s' file", filepath),
 				Help:    fmt.Sprintf("confirm file '%s' is readable", filepath),
 			})
 			break
 		}
 	}
-	return b, status
+	return b, sts
 }

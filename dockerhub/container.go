@@ -12,7 +12,7 @@ type Container struct {
 	Id          int           `json:"id"`
 	Name        ContainerName `json:"name"`
 	FullSize    int           `json:"full_size"`
-	Respository int           `json:"respository"`
+	Repository  int           `json:"repository"`
 	Creator     int           `json:"creator"`
 	LastUpdater int           `json:"last_updater"`
 	LastUpdated string        `json:"last_updated"`

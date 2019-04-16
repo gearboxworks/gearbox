@@ -1,0 +1,82 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/project-aliases",
+      "route": "project-aliases"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/projects/site1.local/aliases"
+   },
+   "data": {
+      "Aliases": [
+         "www.{hostname}"
+      ],
+      "Project": {
+         "hostname": "site1.local",
+         "enabled": false,
+         "basedir": "primary",
+         "notes": "",
+         "path": "site1.local",
+         "filepath": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site1.local/gearbox.json",
+         "aliases": [
+            "www.{hostname}"
+         ],
+         "stack": {
+            "wordpress/cacheserver": {
+               "service_id": "gearboxworks/redis:4.0.9",
+               "authority": "gearbox.works",
+               "stack": "wordpress",
+               "orgname": "gearboxworks",
+               "program": "redis",
+               "version": {
+                  "major": "4",
+                  "minor": "0",
+                  "patch": "9"
+               }
+            },
+            "wordpress/dbserver": {
+               "service_id": "gearboxworks/mysql:5.5.60",
+               "authority": "gearbox.works",
+               "stack": "wordpress",
+               "orgname": "gearboxworks",
+               "program": "mysql",
+               "version": {
+                  "major": "5",
+                  "minor": "5",
+                  "patch": "60"
+               }
+            },
+            "wordpress/processvm": {
+               "service_id": "gearboxworks/php:7.1.18",
+               "authority": "gearbox.works",
+               "stack": "wordpress",
+               "orgname": "gearboxworks",
+               "program": "php",
+               "version": {
+                  "major": "7",
+                  "minor": "1",
+                  "patch": "18"
+               }
+            },
+            "wordpress/webserver": {
+               "service_id": "gearboxworks/nginx:1.14.0",
+               "authority": "gearbox.works",
+               "stack": "wordpress",
+               "orgname": "gearboxworks",
+               "program": "nginx",
+               "version": {
+                  "major": "1",
+                  "minor": "14",
+                  "patch": "0"
+               }
+            }
+         }
+      }
+   }
+}

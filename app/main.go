@@ -2,24 +2,36 @@ package main
 
 import (
 	"fmt"
-	"gearbox"
+	"gearbox/api"
+	"gearbox/apimvc"
 	"gearbox/app/cmd"
-	"gearbox/host"
+	"gearbox/gearbox"
+	"gearbox/os_support"
+	"gearbox/status"
+	"gearbox/status/is"
 	"os"
 )
 
-//go:generate go-bindata -dev -o assets.go -pkg gearbox admin/dist/...
+//go:generate go-bindata -dev -o gearbox/assets.go -pkg gearbox admin/dist/...
 
 func main() {
-	gearbox.Instance = gearbox.NewApp(&gearbox.Args{
-		HostConnector: host.GetConnector(),
+	gb := gearbox.NewGearbox(&gearbox.Args{
+		OsSupport:     oss.Get(),
 		GlobalOptions: cmd.GlobalOptions,
 	})
-	status := gearbox.Instance.Initialize()
-	if status.IsError() {
-		fmt.Println(status.Message)
-		if status.CliHelp != "" {
-			fmt.Println(status.CliHelp)
+	gearbox.Instance = gb
+	gb.SetApi(api.NewApi(gb))
+	sts := apimvc.AddControllers(gb)
+	if is.Error(sts) {
+		panic(sts.Message())
+	}
+	gb.GetApi().WireRoutes()
+	sts = gb.Initialize()
+	if status.IsError(sts) {
+		fmt.Println(sts.Message())
+		help := sts.GetHelp(status.CliHelp)
+		if help != "" {
+			fmt.Println(help)
 		}
 		os.Exit(1)
 	}

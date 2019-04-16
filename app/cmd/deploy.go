@@ -6,8 +6,8 @@ import (
 
 var deployCmd = &cobra.Command{
 	Use:   "deploy",
-	Short: "Deploy a Gearbox project to a web host.",
-	Long:  "This is a planned feature of Gearbox. The more people adopt Gearbox, the sooner we can implement it",
+	Short: "Deploy a Parent project to a web host.",
+	Long:  "This is a planned feature of Parent. The more people adopt Parent, the sooner we can implement it",
 }
 
 func init() {

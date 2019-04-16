@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"gearbox"
+	"gearbox/gearbox"
+	"gearbox/ssh"
 	"github.com/spf13/cobra"
 )
 
@@ -21,15 +22,15 @@ var sshCmd = &cobra.Command{
 	},
 }
 
-var sshArgs gearbox.SSHArgs
+var sshArgs ssh.Args
 
 func init() {
 
 	RootCmd.AddCommand(sshCmd)
 
-	sshCmd.PersistentFlags().StringVarP(&sshArgs.Username, "user", "u", gearbox.SshDefaultUsername, "Alternate Gearbox SSH username.")
-	sshCmd.PersistentFlags().StringVarP(&sshArgs.Password, "password", "p", gearbox.SshDefaultPassword, "Alternate Gearbox SSH password.")
-	sshCmd.PersistentFlags().StringVarP(&sshArgs.PublicKey, "key-file", "k", gearbox.SshDefaultKeyFile, "Gearbox SSH public key file.")
-	sshCmd.PersistentFlags().BoolVarP(&sshArgs.StatusLine.Disable, "no-status", "", false, "Disable Gearbox status line.")
+	sshCmd.PersistentFlags().StringVarP(&sshArgs.Username, "user", "u", ssh.DefaultUsername, "Alternate Parent SSH username.")
+	sshCmd.PersistentFlags().StringVarP(&sshArgs.Password, "password", "p", ssh.DefaultPassword, "Alternate Parent SSH password.")
+	sshCmd.PersistentFlags().StringVarP(&sshArgs.PublicKey, "key-file", "k", ssh.DefaultKeyFile, "Parent SSH public key file.")
+	sshCmd.PersistentFlags().BoolVarP(&sshArgs.StatusLine.Disable, "no-status", "", false, "Disable Parent status line.")
 
 }

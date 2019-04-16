@@ -1,0 +1,153 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/projects-with-details",
+      "route": "projects-with-details"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/projects/with-details"
+   },
+   "data": {
+      "site1.local": {
+         "links": {
+            "self": "/projects/site1.local"
+         },
+         "data": {
+            "hostname": "site1.local",
+            "enabled": false,
+            "basedir": "primary",
+            "notes": "",
+            "path": "site1.local",
+            "project_dir": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site1.local",
+            "aliases": [
+               "www.{hostname}"
+            ],
+            "stack": {
+               "gearbox.works/wordpress/cacheserver": {
+                  "service_id": "gearboxworks/redis:4.0.9",
+                  "orgname": "gearboxworks",
+                  "program": "redis",
+                  "version": {
+                     "major": "4",
+                     "minor": "0",
+                     "patch": "9"
+                  }
+               },
+               "gearbox.works/wordpress/dbserver": {
+                  "service_id": "gearboxworks/mysql:5.5.60",
+                  "orgname": "gearboxworks",
+                  "program": "mysql",
+                  "version": {
+                     "major": "5",
+                     "minor": "5",
+                     "patch": "60"
+                  }
+               },
+               "gearbox.works/wordpress/processvm": {
+                  "service_id": "gearboxworks/php:7.1.18",
+                  "orgname": "gearboxworks",
+                  "program": "php",
+                  "version": {
+                     "major": "7",
+                     "minor": "1",
+                     "patch": "18"
+                  }
+               },
+               "gearbox.works/wordpress/webserver": {
+                  "service_id": "gearboxworks/nginx:1.14.0",
+                  "orgname": "gearboxworks",
+                  "program": "nginx",
+                  "version": {
+                     "major": "1",
+                     "minor": "14",
+                     "patch": "0"
+                  }
+               }
+            }
+         }
+      },
+      "site3.test": {
+         "links": {
+            "self": "/projects/site3.test"
+         },
+         "data": {
+            "hostname": "site3.test",
+            "enabled": false,
+            "basedir": "primary",
+            "notes": "",
+            "path": "site3.test",
+            "project_dir": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site3.test",
+            "aliases": [
+               "www.{hostname}",
+               "docs.{hostname}",
+               "api.{hostname}"
+            ],
+            "stack": {
+               "gearbox.works/wordpress/dbserver": {
+                  "service_id": "gearboxworks/mariadb",
+                  "orgname": "gearboxworks",
+                  "program": "mariadb",
+                  "version": {}
+               },
+               "gearbox.works/wordpress/processvm": {
+                  "service_id": "gearboxworks/php",
+                  "orgname": "gearboxworks",
+                  "program": "php",
+                  "version": {}
+               },
+               "gearbox.works/wordpress/webserver": {
+                  "service_id": "gearboxworks/nginx",
+                  "orgname": "gearboxworks",
+                  "program": "nginx",
+                  "version": {}
+               }
+            }
+         }
+      },
+      "site5.local": {
+         "links": {
+            "self": "/projects/site5.local"
+         },
+         "data": {
+            "hostname": "site5.local",
+            "enabled": false,
+            "basedir": "primary",
+            "notes": "",
+            "path": "site5",
+            "project_dir": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site5",
+            "aliases": [
+               "www.{hostname}"
+            ],
+            "stack": {
+               "gearbox.works/wordpress/dbserver": {
+                  "service_id": "gearboxworks/mysql",
+                  "orgname": "gearboxworks",
+                  "program": "mysql",
+                  "version": {}
+               },
+               "gearbox.works/wordpress/processvm": {
+                  "service_id": "gearboxworks/php:7.2",
+                  "orgname": "gearboxworks",
+                  "program": "php",
+                  "version": {
+                     "major": "7",
+                     "minor": "2"
+                  }
+               },
+               "gearbox.works/wordpress/webserver": {
+                  "service_id": "gearboxworks/apache",
+                  "orgname": "gearboxworks",
+                  "program": "apache",
+                  "version": {}
+               }
+            }
+         }
+      }
+   }
+}
