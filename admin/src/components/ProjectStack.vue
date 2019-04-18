@@ -10,37 +10,51 @@
       <!--project-stack-header :projectHostname = "projectHostname" :stackName = "stackName" :stackRoles = "projectServices"></project-stack-header-->
       <ul class="service-list">
         <li
-            v-for="(service, serviceRole,serviceIndex) in stackServices(stackName)"
-            :key="projectBase + escAttr(serviceRole)"
-            :id="projectBase + escAttr(serviceRole)"
+            v-for="(service, serviceRole, serviceIndex) in stackServices(stackName)"
+            :key="projectBase + serviceRole"
+            :id="projectBase + serviceRole"
             class="service-item"
             :tabindex="projectIndex*100+stackIndex*10+serviceIndex+1"
-            v-b-tooltip.hover
-            :title="projectServices[serviceRole] ? projectServices[serviceRole].service_id.replace('gearboxworks/', ''): null"
+
         >
-          <img :src="require('../assets/'+projectServices[serviceRole].program+'.svg')" class="service-program" />
+          <img v-if="projectServices[serviceRole] && projectServices[serviceRole].program" :src="require('../assets/'+projectServices[serviceRole].program+'.svg')" class="service-program" />
+          <font-awesome-icon
+            v-else
+            :icon="['fa', 'expand']"
+          />
+
           <h6 class="service-role">{{stackRoles(stackName)[serviceRole].label}}</h6>
+          <b-tooltip
+            triggers="hover"
+            :target="projectBase + serviceRole"
+            :title="programTooltip(projectServices[serviceRole])"
+            :key="projectServices[serviceRole] ? projectServices[serviceRole].service_id: null"
+          />
           <b-popover
-            :target="projectBase + escAttr(serviceRole)"
+            :target="projectBase + serviceRole"
             :container="`${projectHostname}stack`"
-            :ref="projectBase + escAttr(serviceRole) + '-popover'"
+            :ref="projectBase + serviceRole + '-popover'"
             triggers="focus"
             placement="bottom"
           >
             <template slot="title">
-              <b-button @click="onClosePopoverFor(projectBase + escAttr(serviceRole))" class="close" aria-label="Close">
+              <b-button @click="onClosePopoverFor(projectBase + serviceRole)" class="close" aria-label="Close">
                 <span class="d-inline-block" aria-hidden="true">&times;</span>
               </b-button>
-              {{stackRoles(stackName)[serviceRole].program}}
+              Change service
             </template>
 
             <div>
+              <label :for="projectBase + serviceRole+'_input'">
+              {{stackRoles(stackName)[serviceRole] ? stackRoles(stackName)[serviceRole].program:''}}:
+              </label>
               <b-form-select
-                :id="projectBase + escAttr(serviceRole)+'_input'"
+                :id="projectBase + serviceRole+'_input'"
                 :value="projectServices[serviceRole] ? projectServices[serviceRole].service_id: null"
-                @change="changeProjectService(serviceRole,$event)"
                 :tabindex="projectIndex*100+stackIndex*10+serviceIndex+9"
+                @change="changeProjectService(serviceRole,$event)"
               >
+                <option value="" v-if="!$store.state.gearServices[serviceRole].default">Do not run this service</option>
                 <option disabled value="">Select service...</option>
                 <optgroup v-for="(options, groupLabel) in optionGroups(service.options)" :label="groupLabel" :key="groupLabel">
                   <option v-for="serviceVer in options" :value="service.org + '/' + serviceVer" :key="serviceVer">{{serviceVer}}</option>
@@ -117,12 +131,15 @@ export default {
       }
       return result
     },
+    programTooltip (service) {
+      return service ? (service.program ? service.service_id.replace('gearboxworks/', '') : 'Not selected') : 'Not selected'
+    },
     changeProjectService (serviceName, serviceId) {
       this.$store.dispatch('changeProjectService', { 'projectHostname': this.projectHostname, serviceName, serviceId })
+      this.onClosePopoverFor(this.projectBase + this.escAttr(serviceName))
     },
     onClosePopoverFor (triggerElementId) {
-      console.log('onClosePopoverFor', triggerElementId)
-      this.$root.$emit('bv::popover::hide', triggerElementId)
+      this.$root.$emit('bv::hide::popover', triggerElementId)
     },
     removeProjectStack (stackName) {
       this.$store.dispatch('removeProjectStack', { 'projectHostname': this.projectHostname, stackName })
@@ -193,5 +210,12 @@ export default {
   .service-program {
     height: 64px;
     width: 64px;
+  }
+  [data-icon="expand"]{
+    height: 40px;
+    width: 40px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    color: silver;
   }
 </style>
