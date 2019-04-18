@@ -99,26 +99,9 @@ func (me *AdminUi) Initialize() {
 	me.webListener = me.GetWebListener()
 	me.webServer = me.GetWebServer()
 	me.api = me.Gearbox.GetApi()
-	me.WriteAssetsToAdminWebRoot()
+	me.WriteApiBaseUrls()
 	me.ErrorLog = &ErrorLog{Gearbox: me.Gearbox}
 	log.SetOutput(me.ErrorLog)
-}
-
-func (me *AdminUi) WriteAssetsToAdminWebRoot() {
-	hc := me.OsSupport
-	if hc == nil {
-		log.Fatal("Parent has no os_support connector. (End users should never see this; it is a programming error.)")
-	}
-	for _, afn := range AssetNames() {
-		err := RestoreAsset(string(hc.GetUserConfigDir()), afn)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("Could not restore asset '%s/%s'",
-				hc.GetUserConfigDir(),
-				afn,
-			))
-		}
-	}
-	me.WriteApiBaseUrls()
 }
 
 func (me *AdminUi) StartApi() {

@@ -2,6 +2,7 @@ package gearbox
 
 import (
 	"encoding/json"
+	"fmt"
 	"gearbox/api"
 	"gearbox/box"
 	"gearbox/config"
@@ -16,6 +17,7 @@ import (
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
+	"log"
 )
 
 type JsonFileScope string
@@ -259,6 +261,8 @@ func (me *Gearbox) SetConfig(config config.Configer) {
 
 func (me *Gearbox) Initialize() (sts status.Status) {
 	for range only.Once {
+		me.WriteAssetsToAdminWebRoot()
+
 		sts = me.Gears.Initialize()
 		if is.Error(sts) {
 			break
@@ -269,6 +273,23 @@ func (me *Gearbox) Initialize() (sts status.Status) {
 		}
 	}
 	return sts
+}
+
+func (me *Gearbox) WriteAssetsToAdminWebRoot() {
+	hc := me.OsSupport
+	if hc == nil {
+		log.Fatal("Parent has no os_support connector. (End users should never see this; it is a programming error.)")
+	}
+	for _, afn := range AssetNames() {
+		err := RestoreAsset(string(hc.GetUserConfigDir()), afn)
+		if err != nil {
+			log.Fatal(fmt.Sprintf("Could not restore asset '%s/%s'",
+				hc.GetUserConfigDir(),
+				afn,
+			))
+		}
+	}
+
 }
 
 func (me *Gearbox) GetProject(hostname types.Hostname) (p *project.Project, sts status.Status) {

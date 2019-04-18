@@ -157,7 +157,7 @@ func (me *Config) DeleteProject(hostname types.Hostname) (sts status.Status) {
 
 func (me *Config) Initialize() (sts status.Status) {
 	sts = me.Load()
-	if !status.IsError(sts) {
+	if status.IsError(sts) {
 		sts = me.WriteFile()
 	}
 	return sts

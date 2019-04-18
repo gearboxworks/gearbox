@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path/filepath"
 )
 
 type Gear interface {
@@ -98,7 +99,7 @@ func (me *Gears) Initialize() (sts status.Status) {
 		b, sc, sts = util.HttpRequest(JsonUrl)
 		if status.IsError(sts) || sc != http.StatusOK { // @TODO Bundle these as Assets so we will always have some options
 			log.Print("Could not download 'gears.json' and no options have previously been stored.")
-			filepath := fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), JsonFilename)
+			filepath := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), JsonFilename))
 			var err error
 			log.Printf("Loading included '%s'.", filepath)
 			b, err = ioutil.ReadFile(filepath)
