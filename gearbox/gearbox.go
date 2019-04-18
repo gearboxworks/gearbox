@@ -18,6 +18,7 @@ import (
 	"gearbox/status/is"
 	"gearbox/types"
 	"log"
+	"path/filepath"
 )
 
 type JsonFileScope string
@@ -281,12 +282,11 @@ func (me *Gearbox) WriteAssetsToAdminWebRoot() {
 		log.Fatal("Parent has no os_support connector. (End users should never see this; it is a programming error.)")
 	}
 	for _, afn := range AssetNames() {
+		afn = filepath.FromSlash(afn)
 		err := RestoreAsset(string(hc.GetUserConfigDir()), afn)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Could not restore asset '%s/%s'",
-				hc.GetUserConfigDir(),
-				afn,
-			))
+			afn = fmt.Sprintf("'%s/%s'", hc.GetUserConfigDir(), afn)
+			log.Fatal(fmt.Sprintf("Could not restore asset '%s'", afn))
 		}
 	}
 

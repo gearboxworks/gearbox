@@ -392,6 +392,7 @@ func (me *Config) LoadProjects() (sts status.Status) {
 					if is.Error(sts) {
 						break
 					}
+					p.Basedir = bdnn
 					p.Config = me
 					me.ProjectMap[p.Hostname] = p
 				}

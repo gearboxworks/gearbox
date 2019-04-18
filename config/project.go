@@ -24,8 +24,9 @@ type Project struct {
 
 func NewProject(cfg Configer, path types.RelativePath) *Project {
 	return &Project{
-		Path:   path,
-		Config: cfg,
+		Hostname: types.Hostname(path),
+		Path:     path,
+		Config:   cfg,
 	}
 }
 
