@@ -1,3 +1,4 @@
+const CopyPlugin = require('copy-webpack-plugin');
 module.exports = {
   publicPath: '',
   outputDir: undefined,
@@ -6,5 +7,12 @@ module.exports = {
   productionSourceMap: undefined,
   parallel: undefined,
   css: undefined,
-  lintOnSave: undefined
+  lintOnSave: undefined,
+  configureWebpack: {
+    plugins: [
+      new CopyPlugin([
+        { from: '**/gears.json', to: 'gears.json' }
+      ])
+    ]
+  }
 }
