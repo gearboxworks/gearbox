@@ -9,7 +9,7 @@ import (
 
 const (
 	AdminPath        types.RelativePath = "admin\\dist"
-	SuggestedBasedir types.AbsoluteDir  = "Parent Sites"
+	SuggestedBasedir types.AbsoluteDir  = "Gearbox Sites"
 )
 
 var NilOsSupport = (*OsSupport)(nil)
