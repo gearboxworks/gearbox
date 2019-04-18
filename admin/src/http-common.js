@@ -2,7 +2,10 @@ import axios from 'axios'
 import { attach as raxAttach, getConfig as raxConfig } from 'retry-axios'
 
 const HTTP = axios.create({
-  baseURL: `http://127.0.0.1:9999/`
+  baseURL: `http://127.0.0.1:9999/`,
+  headers: {
+    'Content-Type': 'application/vnd.api+json'
+  }
 })
 
 HTTP.defaults.raxConfig = {

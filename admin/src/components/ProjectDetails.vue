@@ -12,7 +12,7 @@
           :id="`hostname-input-${projectIndex}`"
           class="hostname-input"
           type="text"
-          v-model="hostname"
+          v-model="attributes.hostname"
           @change="maybeSubmit"
           size="lg"
           v-b-tooltip.hover.bottomright
@@ -24,21 +24,21 @@
 
       <a target="_blank"
          href="#"
-         :title="storedProject.enabled ? 'Stop all services' : 'Run all services'"
+         :title="storedProject.attributes.enabled ? 'Stop all services' : 'Run all services'"
          v-b-tooltip.hover
          @click.prevent="onRunStop"
          class="titlebar-icon titlebar-icon--state"
       >
         <font-awesome-icon
-          :icon="['fa', storedProject.enabled ? 'stop-circle': 'play-circle']"
+          :icon="['fa', storedProject.attributes.enabled ? 'stop-circle': 'play-circle']"
         />
       </a>
 
       <a target="_blank"
-         :href="`http://${hostname}/`"
+         :href="`http://${attributes.hostname}/`"
          title="Open Frontend"
          v-b-tooltip.hover
-         :class="['titlebar-icon', 'titlebar-icon--frontend', {'is-disabled': enabled}]"
+         :class="['titlebar-icon', 'titlebar-icon--frontend', {'is-disabled': attributes.enabled}]"
       >
         <font-awesome-icon
           :icon="['fa', 'home']"
@@ -46,10 +46,10 @@
       </a>
 
       <a target="_blank"
-         :href="`http://${hostname}/wp-admin/`"
+         :href="`http://${attributes.hostname}/wp-admin/`"
          title="Open Dashboard"
          v-b-tooltip.hover
-         :class="['titlebar-icon', 'titlebar-icon--dashboard', {'is-disabled': enabled}]"
+         :class="['titlebar-icon', 'titlebar-icon--dashboard', {'is-disabled': attributes.enabled}]"
       >
         <font-awesome-icon
           :icon="['fa', 'tachometer-alt']"
@@ -66,7 +66,7 @@
           <b-form-input
             disabled
             :id="`${projectBase}location-input`"
-            :value="resolveDir(baseDir, path)"
+            :value="resolveDir(attributes.baseDir, attributes.path)"
             class="location-input"
           />
           <a target="_blank"
@@ -103,7 +103,7 @@
           >
             <b-form-select
               @change="maybeSubmit"
-              v-model="baseDir"
+              v-model="attributes.baseDir"
               required
               v-if="Object.entries(this.$store.getters.baseDirsAsOptions).length>1"
               :options="this.$store.getters.baseDirsAsOptions"
@@ -113,7 +113,7 @@
               required
               disabled
               v-else
-              :value="this.$store.state.baseDirs[baseDir] ? this.$store.state.baseDirs[baseDir].text : ''"
+              :value="this.$store.state.baseDirs[attributes.baseDir] ? this.$store.state.baseDirs[attributes.baseDir].text : ''"
             />
 
           </b-form-group>
@@ -125,10 +125,10 @@
           >
             <b-form-input
               type="text"
-              v-model="path"
+              v-model="attributes.path"
               required
               placeholder=""
-              @input = "path = sanitizePath(path)"
+              @input = "attributes.path = sanitizePath(attributes.path)"
               @change="maybeSubmit"
             />
           </b-form-group>
@@ -143,7 +143,7 @@
         >
           <b-form-textarea
             id="textarea"
-            v-model="notes"
+            v-model="attributes.notes"
             placeholder="Notes..."
             rows="3"
             max-rows="6"
@@ -198,7 +198,7 @@ export default {
   computed: {
     ...mapGetters(['groupProjectStacks']),
     projectBase () {
-      return this.escAttr(this.hostname) + '-'
+      return this.escAttr(this.attributes.hostname) + '-'
     },
     hasUnusedStacks () {
       return Object.entries(this.stacksNotUnusedInProject).length > 0
@@ -236,7 +236,7 @@ export default {
       this.$store.dispatch(
         'updateProject',
         {
-          'hostname': this.storedProject.hostname,
+          'hostname': this.storedProject.id,
           'project': this.$data
         }
       ).then(() => {
@@ -245,7 +245,7 @@ export default {
     },
     onRunStop () {
       this.$store.dispatch(
-        'changeProjectState', { 'projectHostname': this.storedProject.hostname, 'isEnabled': !this.enabled }
+        'changeProjectState', { 'projectHostname': this.storedProject.id, 'isEnabled': !this.attributes.enabled }
       )
     },
     onClosePopoverFor (triggerElementId) {
@@ -253,7 +253,7 @@ export default {
     },
     addProjectStack (stackName) {
       this.selectedService = ''
-      this.$store.dispatch('addProjectStack', { 'projectHostname': this.hostname, stackName })
+      this.$store.dispatch('addProjectStack', { 'projectHostname': this.id, stackName })
     },
     sanitizePath (path) {
       const sanitized = filenamify(path).trim()

@@ -4,6 +4,7 @@ import axios from 'axios'
 import VueAxios from 'vue-axios'
 import { getConfig as raxConfig } from 'retry-axios'
 import HTTP from './http-common'
+import { mapResourceModules } from '@reststate/vuex'
 
 Vue.use(Vuex)
 Vue.use(VueAxios, axios)
@@ -13,7 +14,18 @@ export default new Vuex.Store({
    * In strict mode, whenever Vuex state is mutated outside of mutation handlers, an error will be thrown.
    */
   strict: true,
+  modules: {
+    ...mapResourceModules({
+      names: [
+        'baseDirs',
+        'stacks',
+        'projects'
+      ],
+      httpClient: HTTP
+    })
+  },
   state: {
+    baseDirs: {},
     projects: [],
     stacks: [],
     stack_members: [],
@@ -24,7 +36,6 @@ export default new Vuex.Store({
       networkError: null,
       remainingRetries: 5
     },
-    baseDirs: []
   },
   getters: {
     projectBy: (state) => (fieldName, fieldValue) => {
@@ -77,6 +88,7 @@ export default new Vuex.Store({
     },
     baseDirsAsOptions: (state) => {
       const options = []
+      return options
       for (const baseDirName in state.baseDirs) {
         if (!state.baseDirs.hasOwnProperty(baseDirName)) {
           continue
@@ -323,9 +335,9 @@ export default new Vuex.Store({
         })
     },
     loadGears ({ commit }) {
-      axios
+      HTTP
         .get(
-          'https://raw.githubusercontent.com/gearboxworks/gearbox/master/assets/gears.json',
+          'stacks',
           { crossDomain: true }
         )
         .catch((error) => {
@@ -496,7 +508,7 @@ export default new Vuex.Store({
         } else {
           const programVer = serviceId.split('/')[1]
           const ver = serviceId.split(':')[1].split('.')
-/*
+          /*
           const newService = project.stack[serviceRole] || {
             'authority': org,
             'org': org.replace('.', ''),
