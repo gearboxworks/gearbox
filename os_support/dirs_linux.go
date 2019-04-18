@@ -1,6 +1,6 @@
-package oss
+// +build linux
 
-// build linux
+package oss
 
 import (
 	"fmt"

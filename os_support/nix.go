@@ -1,6 +1,6 @@
-package oss
+// +build !windows
 
-// build !windows
+package oss
 
 import (
 	"fmt"
