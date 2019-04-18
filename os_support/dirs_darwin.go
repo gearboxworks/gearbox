@@ -1,6 +1,6 @@
-package oss
+// +build darwin
 
-// build darwin
+package oss
 
 import (
 	"fmt"
