@@ -73,8 +73,8 @@ func UnmarshalConfig(b []byte) Configer {
 
 func NewConfig(OsSupport oss.OsSupporter) Configer {
 	c := &Config{
-		About:         "This is a Parent user configuration file.",
-		LearnMore:     "To learn about Parent visit https://gearbox.works",
+		About:         "This is a Gearbox user configuration file.",
+		LearnMore:     "To learn about Gearbox visit https://gearbox.works",
 		OsSupport:     OsSupport,
 		SchemaVersion: SchemaVersion,
 		BasedirMap:    make(BasedirMap, 1),

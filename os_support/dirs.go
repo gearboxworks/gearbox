@@ -20,7 +20,7 @@ func Get() OsSupporter {
 	case "windows":
 	case "linux":
 	default:
-		msg := "Sadly, Parent does not currently run on '%s.'\nIf you would like to offer us support to change that please contact us via https://gearbox.works.\n"
+		msg := "Sadly, Gearbox does not currently run on '%s.'\nIf you would like to offer us support to change that please contact us via https://gearbox.works.\n"
 		fmt.Printf(msg, runtime.GOOS)
 	}
 	return &OsSupport{}

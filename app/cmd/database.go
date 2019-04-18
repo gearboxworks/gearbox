@@ -27,80 +27,80 @@ func init() {
 		Use:        "import",
 		SuggestFor: []string{"restore"},
 		Args:       cobra.RangeArgs(0, 1),
-		Short:      "Import/Restore a database into a Parent project.",
-		Long: "Import/Restore a database into the current Parent project. " +
+		Short:      "Import/Restore a database into a Gearbox project.",
+		Long: "Import/Restore a database into the current Gearbox project. " +
 			"You can import from:\n " + importExportHelp,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Import a import into a Parent project goes here.")
+			fmt.Println("Import a import into a Gearbox project goes here.")
 		},
 	})
 	databaseCmd.AddCommand(&cobra.Command{
 		Use:        "export",
 		SuggestFor: []string{"backup", "dump"},
 		Args:       cobra.RangeArgs(0, 1),
-		Short:      "Export/Backup a database from a Parent project.",
-		Long: "Export/Backup a database from the current Parent project. " +
+		Short:      "Export/Backup a database from a Gearbox project.",
+		Long: "Export/Backup a database from the current Gearbox project. " +
 			"You can export to:\n " + importExportHelp,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Import a export into a Parent project goes here.")
+			fmt.Println("Import a export into a Gearbox project goes here.")
 		},
 	})
 	databaseCmd.AddCommand(&cobra.Command{
 		Use:   "chunk",
 		Args:  cobra.ExactArgs(1),
-		Short: "Unchunk the database for the current Parent project.",
+		Short: "Unchunk the database for the current Gearbox project.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Unchunk the database for the current Parent project goes here.")
+			fmt.Println("Unchunk the database for the current Gearbox project goes here.")
 		},
 	})
 	databaseCmd.AddCommand(&cobra.Command{
 		Use:   "unchunk",
 		Args:  cobra.RangeArgs(0, 1),
-		Short: "Unchunk the database for the current Parent project.",
+		Short: "Unchunk the database for the current Gearbox project.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Unchunk the database for the current Parent project goes here.")
+			fmt.Println("Unchunk the database for the current Gearbox project goes here.")
 		},
 	})
 	databaseCmd.AddCommand(&cobra.Command{
 		Use:   "credentials",
 		Args:  cobra.NoArgs,
-		Short: "Output all database credentials for the current Parent project.",
+		Short: "Output all database credentials for the current Gearbox project.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Output database credentials for the current Parent project goes here.")
+			fmt.Println("Output database credentials for the current Gearbox project goes here.")
 		},
 	})
 	databaseCmd.AddCommand(&cobra.Command{
 		Use:   "name",
 		Args:  cobra.NoArgs,
-		Short: "Output database name for the current Parent project.",
+		Short: "Output database name for the current Gearbox project.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Output database name for the current Parent project goes here.")
+			fmt.Println("Output database name for the current Gearbox project goes here.")
 		},
 	})
 	databaseCmd.AddCommand(&cobra.Command{
 		Use:   "host",
 		Args:  cobra.NoArgs,
-		Short: "Output database host for the current Parent project.",
+		Short: "Output database host for the current Gearbox project.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Output database host for the current Parent project goes here.")
+			fmt.Println("Output database host for the current Gearbox project goes here.")
 		},
 	})
 	databaseCmd.AddCommand(&cobra.Command{
 		Use:        "user",
 		SuggestFor: []string{"username"},
 		Args:       cobra.NoArgs,
-		Short:      "Output username for the current Parent project.",
+		Short:      "Output username for the current Gearbox project.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Output username for the current Parent project goes here.")
+			fmt.Println("Output username for the current Gearbox project goes here.")
 		},
 	})
 	databaseCmd.AddCommand(&cobra.Command{
 		Use:     "password",
 		Aliases: []string{"pw"},
 		Args:    cobra.NoArgs,
-		Short:   "Output database password for the current Parent project.",
+		Short:   "Output database password for the current Gearbox project.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Output database password for the current Parent project goes here.")
+			fmt.Println("Output database password for the current Gearbox project goes here.")
 		},
 	})
 }

@@ -318,7 +318,7 @@ func (me *SSH) exampleHostWorker() {
 		//dateStr := normal("Date:") + " " + yellow(fmt.Sprintf("%.4d/%.2d/%.2d", now.Year(), now.Month(), now.Day()))
 		//timeStr := normal("Time:") + " " + magenta(fmt.Sprintf("%.2d:%.2d:%.2d", now.Hour(), now.Minute(), now.Second()))
 		statusStr := normal("Status:") + " " + green("OK")
-		infoStr := yellow("You are connected to") + " " + magenta("Parent OS")
+		infoStr := yellow("You are connected to") + " " + magenta("Gearbox OS")
 
 		//line := fmt.Sprintf("%s	%s %s", statusStr, dateStr, timeStr)
 		line := fmt.Sprintf("%s - %s", infoStr, statusStr)

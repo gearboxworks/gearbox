@@ -8,7 +8,7 @@ import (
 
 const (
 	Basedir     = "/home/gearbox/projects"
-	OvaFileName = "/box/vm/Parent.ova"
+	OvaFileName = "/box/vm/Gearbox.ova"
 )
 
 const (
@@ -36,7 +36,7 @@ const (
 	DefaultWaitRetries     = 90
 	DefaultConsoleHost     = "127.0.0.1"
 	DefaultConsolePort     = "2023"
-	DefaultConsoleOkString = "Parent Heartbeat"
+	DefaultConsoleOkString = "Gearbox Heartbeat"
 	DefaultShowConsole     = false
 	DefaultConsoleReadWait = time.Second * 5
 )

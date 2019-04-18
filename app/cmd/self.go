@@ -15,7 +15,7 @@ func init() {
 	selfCmd.AddCommand(&cobra.Command{
 		Use:   "update",
 		Short: "Update this command line app to the latest compatible version",
-		Long:  "Update this `gearbox` command line app to the latest version compatible with the current version of Parent OS.",
+		Long:  "Update this `gearbox` command line app to the latest version compatible with the current version of Gearbox OS.",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("Update this `gearbox` CLI app  goes here.")
 		},

@@ -2,7 +2,7 @@ package api
 
 const (
 	Port        = "9999"
-	ServiceName = "Parent API"
+	ServiceName = "Gearbox API"
 	Version     = "0.1"
 	DocsUrl     = "https://docs.gearbox.works/api"
 )

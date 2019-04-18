@@ -8,32 +8,32 @@ import (
 var serviceCmd = &cobra.Command{
 	Use:     "service",
 	Aliases: []string{"services"},
-	Short:   "Manage Parent service containers.",
+	Short:   "Manage Gearbox service containers.",
 }
 
 func init() {
 	RootCmd.AddCommand(serviceCmd)
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List Parent service containers.",
+		Short: "List Gearbox service containers.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("List Parent service containers goes here...")
+			fmt.Println("List Gearbox service containers goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "start",
 		Args:  cobra.ExactArgs(1),
-		Short: "Start Parent service containers.",
+		Short: "Start Gearbox service containers.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Start Parent service containers goes here...")
+			fmt.Println("Start Gearbox service containers goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "stop",
 		Args:  cobra.ExactArgs(1),
-		Short: "Stop Parent service containers.",
+		Short: "Stop Gearbox service containers.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Stop Parent service containers goes here...")
+			fmt.Println("Stop Gearbox service containers goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
@@ -42,9 +42,9 @@ func init() {
 			"activate",
 		},
 		Args:  cobra.ExactArgs(1),
-		Short: "Activate Parent service containers.",
+		Short: "Activate Gearbox service containers.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Activate Parent service containers goes here...")
+			fmt.Println("Activate Gearbox service containers goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
@@ -53,63 +53,63 @@ func init() {
 			"deactivate",
 		},
 		Args:  cobra.ExactArgs(1),
-		Short: "Disable Parent service containers.",
+		Short: "Disable Gearbox service containers.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("disable Parent service containers goes here...")
+			fmt.Println("disable Gearbox service containers goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "install",
 		Args:  cobra.ExactArgs(1),
-		Short: "Install a specific Parent service container.",
+		Short: "Install a specific Gearbox service container.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Install a specific Parent service container goes here...")
+			fmt.Println("Install a specific Gearbox service container goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "uninstall",
 		Args:  cobra.ExactArgs(1),
-		Short: "Uninstall a specific Parent service container.",
+		Short: "Uninstall a specific Gearbox service container.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Uninstall Parent service containers goes here...")
+			fmt.Println("Uninstall Gearbox service containers goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "upgrade",
 		Args:  cobra.ExactArgs(1),
-		Short: "Upgrade a specific Parent service container.",
+		Short: "Upgrade a specific Gearbox service container.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Upgrade Parent service containers goes here...")
+			fmt.Println("Upgrade Gearbox service containers goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "shutdown",
 		Args:  cobra.NoArgs,
-		Short: "Shutdown all Parent service containers.",
+		Short: "Shutdown all Gearbox service containers.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Shutdown Parent service containers goes here...")
+			fmt.Println("Shutdown Gearbox service containers goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "inspect",
 		Args:  cobra.ExactArgs(1),
-		Short: "Inspect details about a specific Parent service container.",
+		Short: "Inspect details about a specific Gearbox service container.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Display log for Parent service containers goes here...")
+			fmt.Println("Display log for Gearbox service containers goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "log",
 		Args:  cobra.ExactArgs(1),
-		Short: "Display logs for a specific Parent service container.",
+		Short: "Display logs for a specific Gearbox service container.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Display log for Parent service containers goes here...")
+			fmt.Println("Display log for Gearbox service containers goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "update",
 		Args:  cobra.NoArgs,
-		Short: "Inspect details about a specific Parent service container.",
+		Short: "Inspect details about a specific Gearbox service container.",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("THIS COMMAND SHOULD NOT BE NEEDED. " +
 				"IT SHOULD UPDATED IN THE BACKGROUND.")
@@ -118,9 +118,9 @@ func init() {
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "pull",
 		Args:  cobra.ExactArgs(1),
-		Short: "Pull a specific Parent service container without installing.",
+		Short: "Pull a specific Gearbox service container without installing.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Display log for Parent service containers goes here...")
+			fmt.Println("Display log for Gearbox service containers goes here...")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
@@ -141,9 +141,9 @@ func init() {
 	})
 	serviceCmd.AddCommand(&cobra.Command{
 		Use:   "status",
-		Short: "Display the current status of the running Parent services.",
+		Short: "Display the current status of the running Gearbox services.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Display the current status of Parent goes here.")
+			fmt.Println("Display the current status of Gearbox goes here.")
 		},
 	})
 	serviceCmd.AddCommand(&cobra.Command{
@@ -154,11 +154,11 @@ func init() {
 			"refresh",
 		},
 		Short: "Stops all project-enabled service containers and then starts them back up again.",
-		Long: "Stops all project-enabled service containers for Parent and then starts them back up again." +
+		Long: "Stops all project-enabled service containers for Gearbox and then starts them back up again." +
 			"\n" +
 			"\nThis is equivalent to running `gearbox services stop` and then `gearbox services start`.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Parent services restart code goes here...")
+			fmt.Println("Gearbox services restart code goes here...")
 		},
 	})
 

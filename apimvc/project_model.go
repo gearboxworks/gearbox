@@ -275,7 +275,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //
 
 //func (me *Api) addProjectRoutes() {
-//	gb,ok := me.Parent.(gearbox.Gearboxer)
+//	gb,ok := me.Gearbox.(gearbox.Gearboxer)
 //	if !ok {
 //
 //	}
@@ -323,7 +323,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //	}
 //	return hn, sts
 //}
-//func (me *Api) addProjectRoutes() (gb *gearbox.Parent) {
+//func (me *Api) addProjectRoutes() (gb *gearbox.Gearbox) {
 //
 //	//me.GET___("/projects", apimvc.ProjectsRoute, me.getProjectsResponse)
 //	//me.POST__("/projects/new", apimvc.ProjectDetailsAdd, me.addProjectDetails)
@@ -385,7 +385,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //func (me *Api) getProjectHostnameValues(...interface{}) (values api.ValuesFuncValues, sts status.Status) {
 //	for range only.Once {
 //		var hns gearbox.Hostnames
-//		hns, sts = gearbox.GetProjectHostnames(me.Parent)
+//		hns, sts = gearbox.GetProjectHostnames(me.Gearbox)
 //		if status.IsError(sts) {
 //			break
 //		}
@@ -405,7 +405,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //		if status.IsError(sts) {
 //			break
 //		}
-//		p, sts := me.Parent.GetProjects(hn)
+//		p, sts := me.Gearbox.GetProjects(hn)
 //		if status.IsError(sts) {
 //			break
 //		}
@@ -430,7 +430,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //		if status.IsError(sts) {
 //			break
 //		}
-//		sts = me.Parent.AddNamedStackToProject(sn, hn)
+//		sts = me.Gearbox.AddNamedStackToProject(sn, hn)
 //		if status.IsError(sts) {
 //			break
 //		}
@@ -456,7 +456,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //		if status.IsError(sts) {
 //			break
 //		}
-//		p, sts := me.Parent.GetProjects(hn)
+//		p, sts := me.Gearbox.GetProjects(hn)
 //		if status.IsError(sts) {
 //			response = sts
 //			break
@@ -493,7 +493,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //			break
 //		}
 //		var p *gearbox.Project
-//		p, sts = me.Parent.GetProjects(hn)
+//		p, sts = me.Gearbox.GetProjects(hn)
 //		if status.IsError(sts) {
 //			break
 //		}
@@ -520,7 +520,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //	var prs api.ListItemResponseMap
 //	for range only.Once {
 //		var pm gearbox.ProjectMap
-//		pm, sts = me.Parent.GetProjectMap()
+//		pm, sts = me.Gearbox.GetProjectMap()
 //		if status.IsError(sts) {
 //			break
 //		}
@@ -551,7 +551,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //
 //func (me *Api) getEnabledProjectsResponse(rc *api.RequestContext) (response interface{}) {
 //	for range only.Once {
-//		pm, sts := me.Parent.GetProjectMap()
+//		pm, sts := me.Gearbox.GetProjectMap()
 //		if status.IsError(sts) {
 //			response = sts
 //			break
@@ -563,7 +563,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //
 //func (me *Api) getDisabledProjectsResponse(rc *api.RequestContext) (response interface{}) {
 //	for range only.Once {
-//		pm, sts := me.Parent.GetProjectMap()
+//		pm, sts := me.Gearbox.GetProjectMap()
 //		if status.IsError(sts) {
 //			response = sts
 //			break
@@ -581,7 +581,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //		if status.IsError(sts) {
 //			break
 //		}
-//		p, sts := me.Parent.GetProjects(hn)
+//		p, sts := me.Gearbox.GetProjects(hn)
 //		if status.IsError(sts) {
 //			break
 //		}
