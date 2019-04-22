@@ -35,11 +35,17 @@ export default new Vuex.Store({
     connectionStatus: {
       networkError: null,
       remainingRetries: 5
-    },
+    }
   },
   getters: {
     projectBy: (state) => (fieldName, fieldValue) => {
-      return state.projects.find(p => p[fieldName] === fieldValue)
+      let project = null
+      if (fieldName === 'id') {
+        project = state.projects.records.find(p => p.id === fieldValue)
+      } else {
+
+      }
+      return project
     },
     groupProjectStacks: (state) => (projectStack) => {
       var result = {}
@@ -440,7 +446,7 @@ export default new Vuex.Store({
       const p = this.getters.projectBy('hostname', hostname)
       p.hostname = project.hostname
       p.notes = project.notes
-      p.baseDir = project.baseDir
+      p.basedir = project.basedir
       p.path = project.path
       p.fullPath = project.fullPath
       p.enabled = project.enabled
@@ -471,8 +477,8 @@ export default new Vuex.Store({
       }
     },
     REMOVE_PROJECT_STACK (state, payload) {
-      const { projectHostname, stackName } = payload
-      const project = this.getters.projectBy('hostname', projectHostname)
+      const { projectId, stackName } = payload
+      const project = this.getters.projectBy('id', projectId)
       if (project) {
         /**
          * Payload is of this form:
@@ -498,8 +504,8 @@ export default new Vuex.Store({
        * Payload is of this form:
        * {projectHostname: "project1.local", serviceName: "gearbox.works/wordpress/webserver", serviceId: "gearboxworks/apache:2.4"}
        */
-      const { projectHostname, serviceName, serviceId } = payload
-      const project = this.getters.projectBy('hostname', projectHostname)
+      const { projectId, serviceName, serviceId } = payload
+      const project = this.getters['projects/byId'](projectId)
       const service = state.gearServices[serviceName]
       if (project && service) {
         const serviceRole = serviceName.substring(serviceName.indexOf('/') + 1)
@@ -535,11 +541,11 @@ export default new Vuex.Store({
       }
     },
     CHANGE_PROJECT_STATE (state, payload) {
-      const { projectHostname, isEnabled } = payload
-      const project = this.getters.projectBy('hostname', projectHostname)
+      const { projectId, isEnabled } = payload
+      const project = this.getters.projectBy('id', projectId)
       if (project) {
         // console.log(project.enabled)
-        Vue.set(project, 'enabled', !!isEnabled)
+        Vue.set(project.attributes, 'enabled', !!isEnabled)
         // console.log(project.enabled)
       }
     }
