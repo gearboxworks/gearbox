@@ -31,8 +31,8 @@
 
     </b-form>
 
-    <div slot="footer" v-if="project.stack">
-      <project-stack :projectHostname="project.id" :projectStack="stack" :projectIndex="projectIndex"></project-stack>
+    <div slot="footer" v-if="project.attributes.stack">
+      <project-stack :project="project" :projectIndex="projectIndex"></project-stack>
     </div>
 
   </b-card>

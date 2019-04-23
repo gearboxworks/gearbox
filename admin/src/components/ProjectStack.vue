@@ -1,67 +1,22 @@
 <template>
   <div role="tablist" class="project-stack-list" :id="`${projectBase}stack`">
     <div
-      v-for="(projectServices, stackName, stackIndex) in groupProjectStacks(projectStack)"
+      v-for="(services, stackName, stackIndex) in groupProjectServicesByStack(stack)"
       :key="stackName"
       class="project-stack"
     >
       <h2 class="stack-title">{{stackName.replace('gearbox.works/', '')}}</h2>
       <b-button :tabindex="projectIndex*100+stackIndex*10" @click.prevent="removeProjectStack(stackName)" class="js-remove-stack" size="sm" variant="outline-secondary" aria-label="Remove this stack from project" title="Remove this stack from project">&times;</b-button>
-      <!--project-stack-header :projectHostname = "projectHostname" :stackName = "stackName" :stackRoles = "projectServices"></project-stack-header-->
       <ul class="service-list">
         <li
-            v-for="(service, serviceRole, serviceIndex) in stackServices(stackName)"
-            :key="projectBase + serviceRole"
-            :id="projectBase + serviceRole"
+            v-for="(service, role, serviceIndex) in services"
+            :key="projectBase + service.id"
+            :id="projectBase + role"
             class="service-item"
             :tabindex="projectIndex*100+stackIndex*10+serviceIndex+1"
 
         >
-          <img v-if="projectServices[serviceRole] && projectServices[serviceRole].program" :src="require('../assets/'+projectServices[serviceRole].program+'.svg')" class="service-program" />
-          <font-awesome-icon
-            v-else
-            :icon="['fa', 'expand']"
-          />
-
-          <h6 class="service-role">{{stackRoles(stackName)[serviceRole].label}}</h6>
-          <b-tooltip
-            triggers="hover"
-            :target="projectBase + serviceRole"
-            :title="programTooltip(projectServices[serviceRole])"
-            :key="projectServices[serviceRole] ? projectServices[serviceRole].service_id: null"
-          />
-          <b-popover
-            :target="projectBase + serviceRole"
-            :container="`${projectHostname}stack`"
-            :ref="projectBase + serviceRole + '-popover'"
-            triggers="focus"
-            placement="bottom"
-          >
-            <template slot="title">
-              <b-button @click="onClosePopoverFor(projectBase + serviceRole)" class="close" aria-label="Close">
-                <span class="d-inline-block" aria-hidden="true">&times;</span>
-              </b-button>
-              Change service
-            </template>
-
-            <div>
-              <label :for="projectBase + serviceRole+'_input'">
-              {{stackRoles(stackName)[serviceRole] ? stackRoles(stackName)[serviceRole].program:''}}:
-              </label>
-              <b-form-select
-                :id="projectBase + serviceRole+'_input'"
-                :value="projectServices[serviceRole] ? projectServices[serviceRole].service_id: null"
-                :tabindex="projectIndex*100+stackIndex*10+serviceIndex+9"
-                @change="changeProjectService(serviceRole,$event)"
-              >
-                <option value="" v-if="!$store.state.gearServices[serviceRole].default">Do not run this service</option>
-                <option disabled value="">Select service...</option>
-                <optgroup v-for="(options, groupLabel) in optionGroups(service.options)" :label="groupLabel" :key="groupLabel">
-                  <option v-for="serviceVer in options" :value="service.org + '/' + serviceVer" :key="serviceVer">{{serviceVer}}</option>
-                </optgroup>
-              </b-form-select>
-            </div>
-          </b-popover>
+          <project-service :projectId="project.id" :service="service" :projectIndex="projectIndex" :stackIndex="stackIndex" :serviceIndex="serviceIndex"></project-service>
         </li>
       </ul>
     </div>
@@ -70,17 +25,13 @@
 
 <script>
 
-// import ProjectStackHeader from './ProjectStackHeader.vue'
+import ProjectService from './ProjectService.vue'
 import { mapGetters } from 'vuex'
 
 export default {
   name: 'ProjectStack',
   props: {
-    'projectHostname': {
-      type: String,
-      required: true
-    },
-    'projectStack': {
+    'project': {
       type: Object,
       required: true
     },
@@ -91,55 +42,38 @@ export default {
   },
   data () {
     return {
-
+      id: this.project.id,
+      ...this.project.attributes
     }
   },
   components: {
-    // ProjectStackHeader
+    ProjectService
   },
   computed: {
-    ...mapGetters(['groupProjectStacks', 'stackRoles', 'stackServices']),
+    ...mapGetters(['serviceBy', 'gearspecBy']),
     projectBase () {
-      return this.escAttr(this.projectHostname) + '-'
-    },
-    project () {
-      return this.$store.getters.projectBy('hostname', this.projectHostname)
+      return this.escAttr(this.id) + '-'
     }
   },
   methods: {
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
-    mapOptions (options) {
-      const result = []
-      for (const value in options) {
-        result.push({
-          value,
-          text: options[value]
-        })
-      }
-      return result
-    },
-    optionGroups (options) {
-      const result = {}
-      for (const index in options) {
-        const base = options[index].split(':')[0]
-        if (typeof result[base] === 'undefined') {
-          result[base] = {}
+    groupProjectServicesByStack (projectStack) {
+      var result = {}
+      projectStack.forEach((stackMember, idx) => {
+        const gear = this.gearspecBy('id', stackMember.gearspec_id)
+        const service = this.serviceBy('id', stackMember.service_id)
+        if (gear && service) {
+          // console.log(gear.id, service.id)
+          if (typeof result[gear.attributes.stack_id] === 'undefined') {
+            result[gear.attributes.stack_id] = {}
+          }
+          result[gear.attributes.stack_id][gear.attributes.role] = service
         }
-        result[base][index] = options[index]
-      }
+      })
+      // console.log('groupProjectStacks', result)
       return result
-    },
-    programTooltip (service) {
-      return service ? (service.program ? service.service_id.replace('gearboxworks/', '') : 'Not selected') : 'Not selected'
-    },
-    changeProjectService (serviceName, serviceId) {
-      this.$store.dispatch('changeProjectService', { 'projectHostname': this.projectHostname, serviceName, serviceId })
-      this.onClosePopoverFor(this.projectBase + this.escAttr(serviceName))
-    },
-    onClosePopoverFor (triggerElementId) {
-      this.$root.$emit('bv::hide::popover', triggerElementId)
     },
     removeProjectStack (stackName) {
       this.$store.dispatch('removeProjectStack', { 'projectHostname': this.projectHostname, stackName })
@@ -185,8 +119,11 @@ export default {
 */
   .service-list{
     margin-bottom: 0;
+    margin-left: auto;
+    margin-right: auto;
+    list-style: none;
   }
-  .service-item{
+  .service-item {
     display: inline-block;
     list-style: none;
     text-align: center;
@@ -202,20 +139,5 @@ export default {
     border: 1px solid #aaa;
     background-color: #eee;
   }
-  .service-role{
-    margin-top:5px;
-    margin-bottom: 0;
-    clear: both;
-  }
-  .service-program {
-    height: 64px;
-    width: 64px;
-  }
-  [data-icon="expand"]{
-    height: 40px;
-    width: 40px;
-    margin-bottom: 10px;
-    margin-top: 10px;
-    color: silver;
-  }
+
 </style>

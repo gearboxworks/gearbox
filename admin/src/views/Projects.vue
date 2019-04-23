@@ -27,17 +27,23 @@ export default {
     })
   },
   mounted () {
-    this.$store.dispatch('projects/loadAll').then(() => {
-      const projects = this.$store.getters['projects/all']
-      console.log(projects[0].id)
-    })
     this.$store.dispatch('stacks/loadAll').then(() => {
-      const stacks = this.$store.getters['stacks/all']
-      console.log(stacks[0].id)
+      // const stacks = this.$store.getters['stacks/all']
     })
-    // this.$store.dispatch('loadProjectHeaders')
-    // this.$store.dispatch('loadBaseDirs')
-    // this.$store.dispatch('loadGears')
+
+    this.$store.dispatch('services/loadAll').then(() => {
+      // const services = this.$store.getters['services/all']
+    })
+
+    this.$store.dispatch('gearspecs/loadAll').then(() => {
+      // const gearspecs = this.$store.getters['gearspecs/all']
+    })
+
+    this.$store.dispatch('projects/loadAll').then(() => {
+      // const projects = this.$store.getters['projects/all']
+    }).then(() => {
+      this.$store.dispatch('loadProjectDetails')
+    })
   }
 }
 </script>

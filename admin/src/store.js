@@ -17,83 +17,63 @@ export default new Vuex.Store({
   modules: {
     ...mapResourceModules({
       names: [
-        'baseDirs',
         'stacks',
+        'services',
+        'gearspecs',
         'projects'
       ],
       httpClient: HTTP
     })
   },
   state: {
-    baseDirs: {},
-    projects: [],
     stacks: [],
-    stack_members: [],
-    gearStacks: {},
-    gearRoles: {},
-    gearServices: {},
+    services: [],
+    gearspecs: [],
+    projects: [],
+    baseDirs: {
+      'primary': {
+        text: '~/Sites'
+      }
+    },
     connectionStatus: {
       networkError: null,
       remainingRetries: 5
     }
   },
   getters: {
-    projectBy: (state) => (fieldName, fieldValue) => {
-      let project = null
+    stackBy: (state) => (fieldName, fieldValue) => {
+      let item = null
       if (fieldName === 'id') {
-        project = state.projects.records.find(p => p.id === fieldValue)
+        item = state.stacks.records.find(p => p.id === fieldValue)
       } else {
-
+        item = state.stacks.records.find(p => p.attributes[fieldName] === fieldValue)
       }
-      return project
+      return item
     },
-    groupProjectStacks: (state) => (projectStack) => {
-      var result = {}
-      for (const stackRole in projectStack) {
-        if (projectStack.hasOwnProperty(stackRole)) {
-          const stackName = projectStack[stackRole].authority + '/' + projectStack[stackRole].stack
-          const serviceName = projectStack[stackRole].authority + '/' + stackRole
-          if (typeof result[stackName] === 'undefined') {
-            result[stackName] = {}
-          }
-          result[stackName][serviceName] = projectStack[stackRole]
-        }
+    serviceBy: (state) => (fieldName, fieldValue) => {
+      let item = null
+      if (fieldName === 'id') {
+        item = state.services.records.find(p => p.id === fieldValue)
+      } else {
+        item = state.services.records.find(p => p.attributes[fieldName] === fieldValue)
       }
-      return result
+      return item
     },
-    projectStackServices: (state) => (stack) => {
-      var result = {}
-      var key
-      for (key in state.gearServices) {
-        if (state.gearServices.hasOwnProperty(key) && (key.indexOf(stack) !== -1)) {
-          result[key] = state.gearServices[key]
-        }
-      }
-      return result
+    gearspecBy: (state) => (fieldName, fieldValue) => {
+      return (fieldName === 'id')
+        ? state.gearspecs.records.find(p => p.id === fieldValue)
+        : state.gearspecs.records.find(p => p.attributes[fieldName] === fieldValue)
     },
-
-    stackRoles: (state) => (stack) => {
-      var result = {}
-      var key
-      for (key in state.gearRoles) {
-        if (state.gearRoles.hasOwnProperty(key) && (key.indexOf(stack) !== -1)) {
-          result[key] = state.gearRoles[key]
-        }
-      }
-      return result
-    },
-    stackServices: (state) => (stackName) => {
-      var result = {}
-      var key
-      for (key in state.gearServices) {
-        if (state.gearServices.hasOwnProperty(key) && (key.indexOf(stackName) !== -1)) {
-          result[key] = state.gearServices[key]
-        }
-      }
-      return result
+    projectBy: (state) => (fieldName, fieldValue) => {
+      return (fieldName === 'id')
+        ? state.projects.records.find(p => p.id === fieldValue)
+        : state.projects.records.find(p => p.attributes[fieldName] === fieldValue)
     },
     baseDirsAsOptions: (state) => {
-      const options = []
+      const options = [{
+        'value': 'primary',
+        'text': '~/Sites'
+      }]
       return options
       for (const baseDirName in state.baseDirs) {
         if (!state.baseDirs.hasOwnProperty(baseDirName)) {
@@ -158,118 +138,12 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    loadBaseDirs ({ commit }) {
-      try {
-        HTTP.get(
-          'basedirs',
-          {
-            crossDomain: true,
-            raxConfig: {
-              // You can detect when a retry is happening, and figure out how many
-              // retry attempts have been made
-              onRetryAttempt: (err) => {
-                const cfg = raxConfig(err)
-                commit('SET_NETWORK_ERROR', err.message)
-                commit('SET_REMAINING_RETRIES', cfg.retry - cfg.currentRetryAttempt)
-              }
-            }
-          }
-        ).catch((error, config) => {
-          // handle error
-          // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
-          console.log('rejected', error)
-          // if (error.message === 'Network Error') {
-          //   commit('SET_NETWORK_ERROR', error.message)
-          // }
-        })
-          .then(r => r ? r.data.data : null)
-          .then((baseDirs) => {
-            if (baseDirs) {
-              const bd = {}
-              for (const dirName in baseDirs) {
-                if (!baseDirs.hasOwnProperty(dirName)) {
-                  continue
-                }
-
-                bd[dirName] = {
-                  'value': dirName,
-                  'text': baseDirs[dirName]
-                }
-              }
-
-              commit('SET_BASEDIRS', bd)
-            // this.dispatch('loadProjectDetails')
-            }
-          })
-      } catch (e) {
-        console.log(e)
-      }
-    },
-    loadProjectHeaders ({ commit }) {
-      try {
-        HTTP.get(
-          'projects/with-details',
-          {
-            crossDomain: true,
-            raxConfig: {
-              // You can detect when a retry is happening, and figure out how many
-              // retry attempts have been made
-              onRetryAttempt: (err) => {
-                const cfg = raxConfig(err)
-                commit('SET_NETWORK_ERROR', err.message)
-                commit('SET_REMAINING_RETRIES', cfg.retry - cfg.currentRetryAttempt)
-              }
-            }
-          }
-        ).catch((error, config) => {
-          // handle error
-          // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
-          console.log('rejected', error)
-          // if (error.message === 'Network Error') {
-          //   commit('SET_NETWORK_ERROR', error.message)
-          // }
-        })
-          .then(r => r ? r.data.data : null)
-          .then((projects) => {
-            if (projects) {
-              // console.log(projects)
-
-              const p = []
-
-              for (const hostname in projects) {
-                if (!projects.hasOwnProperty(hostname)) {
-                  continue
-                }
-                let project = projects[hostname]
-                let data = project.data
-
-                p.push(
-                  {
-                    baseDir: data.basedir,
-                    path: data.path,
-                    hostname: data.hostname,
-                    fullPath: data.project_dir,
-                    enabled: data.enabled,
-                    notes: data.notes,
-                    aliases: data.aliases,
-                    stack: data.stack
-                  }
-                )
-              }
-
-              commit('SET_PROJECTS', p)
-              // this.dispatch('loadProjectDetails')
-            }
-          })
-      } catch (e) {
-        console.log(e)
-      }
-    },
     loadProjectDetails ({ commit }) {
-      this.state.projects.forEach((project, index) => {
+      for (const idx in this.state.projects.records) {
+        const project = this.state.projects.records[idx]
         try {
           HTTP.get(
-            'projects/' + project.hostname,
+            'projects/' + project.id,
             {
               crossDomain: true,
               raxConfig: {
@@ -290,72 +164,26 @@ export default new Vuex.Store({
             //   commit('SET_NETWORK_ERROR', error.message)
             // }
           })
-            .then(r => r ? r.data.data : null)
-            .then((p) => {
-              // console.log(projects)
-
-              const project = {
-                path: p.hostname,
-                enabled: p.enabled
+            .then(r => r ? r.data : null)
+            .then(response => {
+              const project = response.data
+              commit('SET_PROJECT', project)
+              if (response.included.length) {
+                for (const idx in response.included) {
+                  const item = response.included[idx]
+                  if (item.type === 'service') {
+                    commit('SET_SERVICE', item)
+                  }
+                  if (item.type === 'stack') {
+                    commit('SET_STACK', item)
+                  }
+                }
               }
-              commit('SET_PROJECT_DETAILS', project)
             })
         } catch (e) {
           console.log(e)
         }
-      })
-    },
-    loadStacks ({ commit }) {
-      HTTP.get(
-        'stacks',
-        { crossDomain: true }
-      ).catch((error) => {
-        // handle error
-        // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
-        console.log('rejected', error)
-      })
-        .then(r => r ? r.data.data : null)
-        .then((stacks) => {
-          if (stacks) {
-            const s = []
-            for (const stackCode in stacks) {
-              if (!stacks.hasOwnProperty(stackCode)) {
-                continue
-              }
-              let stack = stacks[stackCode]
-              s.push(
-                {
-                  code: stackCode,
-                  name: stack.name,
-                  label: stack.label,
-                  examples: stack.examples,
-                  stack: stack.stack,
-                  optional: stack.optional,
-                  memberType: stack.member_type
-                }
-              )
-            }
-
-            commit('SET_STACKS', stacks)
-          }
-        })
-    },
-    loadGears ({ commit }) {
-      HTTP
-        .get(
-          'stacks',
-          { crossDomain: true }
-        )
-        .catch((error) => {
-          // handle error
-          // alert('Please make sure Gearbox API is running at \nhttp://127.0.0.1:9999/');
-        })
-        .then(r => r.data)
-        .then((data) => {
-          commit('SET_GEAR_STACKS', data.stacks)
-          commit('SET_GEAR_ROLES', data.roles)
-          commit('SET_GEAR_SERVICES', data.services)
-        })
+      }
     },
     updateProject ({ commit }, payload) {
       const { hostname, project } = payload
@@ -421,35 +249,39 @@ export default new Vuex.Store({
     /**
      * Names of mutation functions should be all-caps -- that's "idiomatic Vue"
      */
-    SET_PROJECTS (state, projects) {
-      state.projects = projects
+    SET_PROJECT (state, project) {
+      const p = this.getters.projectBy('id', project.id)
+      if (!p) {
+        state.projects.records.push(project)
+      } else {
+        // console.log('Setting stack for project', project.id, project.attributes.stack.length)
+        Vue.set(p.attributes, 'stack', project.attributes.stack)
+        // p.attributes = project.attributes
+      }
     },
-    SET_PROJECT_DETAILS (state, project) {
-      const p = this.getters.projectBy('path', project.path)
-      p.enabled = project.enabled
+    SET_STACK (state, stack) {
+      const s = this.getters.stackBy('id', stack.id)
+      if (!s) {
+        state.stacks.records.push(stack)
+      } else {
+        s.attributes = stack.attributes
+      }
     },
-    SET_STACKS (state, stacks) {
-      state.stacks = stacks
+    SET_SERVICE (state, service) {
+      const s = this.getters.serviceBy('id', service.id)
+      if (!s) {
+        state.services.records.push(service)
+      } else {
+        s.attributes = service.attributes
+      }
     },
-    SET_GEAR_STACKS (state, stacks) {
-      state.gearStacks = stacks
-    },
-    SET_GEAR_ROLES (state, roles) {
-      state.gearRoles = roles
-    },
-    SET_GEAR_SERVICES (state, services) {
-      state.gearServices = services
-    },
-    UPDATE_PROJECT (state, args) {
-      const { hostname, project } = args
-      console.log(args)
-      const p = this.getters.projectBy('hostname', hostname)
-      p.hostname = project.hostname
-      p.notes = project.notes
-      p.basedir = project.basedir
-      p.path = project.path
-      p.fullPath = project.fullPath
-      p.enabled = project.enabled
+    SET_GEARSTACK (state, gearstack) {
+      const g = this.getters.gearstackBy('id', gearstack.id)
+      if (!g) {
+        state.gearstacks.records.push(gearstack)
+      } else {
+        g.attributes = gearstack.attributes
+      }
     },
     SET_NETWORK_ERROR (state, message) {
       state.connectionStatus.networkError = message
