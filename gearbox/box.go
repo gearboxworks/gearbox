@@ -1,7 +1,6 @@
 package gearbox
 
 import (
-	"fmt"
 	"gearbox/box"
 	"gearbox/global"
 	"gearbox/only"
@@ -67,18 +66,18 @@ func (me *Gearbox) PrintBoxStatus(args box.Args) (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
-		sts := bx.GetState()
+		sts, _ := bx.GetState()
 		if is.Error(sts) {
 			break
 		}
-		var state string
-		state, sts = sts.GetString()
-		meaning := box.GetStateMeaning(box.State(state))
-		if meaning == "" {
-			fmt.Println(box.GetStateMeaning(box.UnknownState))
-			break
-		}
-		fmt.Println(meaning)
+//		var state string
+//		state, sts = sts.GetString()
+//		meaning := box.GetStateMeaning(box.State(state))
+//		if meaning == "" {
+//			fmt.Println(box.GetStateMeaning(box.UnknownState))
+//			break
+//		}
+//		fmt.Println(meaning)
 	}
 	return sts
 }

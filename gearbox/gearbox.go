@@ -9,6 +9,7 @@ import (
 	"gearbox/dockerhub"
 	"gearbox/gears"
 	"gearbox/global"
+	"gearbox/heartbeat"
 	"gearbox/only"
 	"gearbox/os_support"
 	"gearbox/project"
@@ -72,8 +73,15 @@ type Gearboxer interface {
 	SetConfig(config.Configer)
 	SetApi(api api.Apier)
 	SetRouteName(types.RouteName)
+
 	StartBox(box.Args) status.Status
 	StopBox(box.Args) status.Status
+	HeartbeatDaemon(heartbeat.Args) status.Status
+	StartHeartbeat(heartbeat.Args) status.Status
+	StopHeartbeat(heartbeat.Args) status.Status
+	PrintHeartbeatStatus(heartbeat.Args) status.Status
+	RestartHeartbeat(heartbeat.Args) status.Status
+
 	UpdateBasedir(types.Nickname, types.AbsoluteDir) status.Status
 	UpdateNamedStack(*gears.NamedStack) status.Status
 	UpdateProject(*project.Project) status.Status
