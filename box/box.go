@@ -452,6 +452,8 @@ func (me *Box) RestartBox() (sts status.Status) {
 
 func (me *Box) GetCachedState() (sts status.Status, state BoxState) {
 
+	// This is required so that not more than one
+
 	for range only.Once {
 		sts = EnsureNotNil(me)
 		if is.Error(sts) {
@@ -542,7 +544,17 @@ func (me *Box) GetState() (sts status.Status, state BoxState) {
 }
 
 
+// We have to have some way to block access to other concurrent processes/threads
+// So, we're simply establishing a boolean that indicates this fact.
+// var alreadyRunning = false
+// @TODO - OK, so that's not working out.
 func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts status.Status) {
+
+//	if alreadyRunning {
+//		sts = nil
+//		return
+//	}
+//	alreadyRunning = true
 
 	spinner := newSpinner(displayString)
 	displaySpinner := !me.ShowConsole && displayString != ""
@@ -638,6 +650,8 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts st
 	if displaySpinner {
 		spinner.Stop(false)
 	}
+
+//	alreadyRunning = false
 
 	return me.State.API.Status
 }

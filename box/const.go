@@ -49,7 +49,7 @@ var StateMeaning = [...]States {
 
 
 /*
-TODO
+@TODO
 VM states can be one of these possibilities:
 VM		API		Description
 UNKNOWN	X		No VM created.

@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+
 var heartbeatCmd = &cobra.Command{
 	Use: "heartbeat",
 	SuggestFor: []string{
@@ -23,6 +24,7 @@ var heartbeatCmd = &cobra.Command{
 	},
 	Short: "Manage the Gearbox Heartbeat",
 }
+
 
 func init() {
 	var heartbeatArgs heartbeat.Args
