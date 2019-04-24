@@ -11,7 +11,8 @@ module.exports = {
   configureWebpack: {
     plugins: [
       new CopyPlugin([
-        { from: '**/gears.json', to: 'gears.json' }
+        { from: '**/gears.json', to: 'gears.json' },
+        { from: '../assets/*.*', to: '/' }
       ])
     ]
   }
