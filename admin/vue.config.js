@@ -1,4 +1,6 @@
 const CopyPlugin = require('copy-webpack-plugin')
+const path = require('path')
+
 module.exports = {
   publicPath: '',
   outputDir: undefined,
@@ -12,8 +14,9 @@ module.exports = {
     plugins: [
       new CopyPlugin([
         { from: '**/gears.json', to: 'gears.json' },
-        { from: '../assets/*.*', to: '/' }
+        { from: path.resolve(__dirname, '../assets') + '/**/*', to: '', flatten: true }
       ])
     ]
   }
 }
+
