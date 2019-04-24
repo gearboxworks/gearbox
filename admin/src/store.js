@@ -69,22 +69,33 @@ export default new Vuex.Store({
         ? state.projects.records.find(p => p.id === fieldValue)
         : state.projects.records.find(p => p.attributes[fieldName] === fieldValue)
     },
+    projectStackMemberIndexBy: (state) => (project, fieldName, fieldValue) => {
+      let memberIndex = -1
+      project.attributes.stack.find((m, idx) => {
+        if (m[fieldName] === fieldValue) {
+          memberIndex = idx
+          return true
+        }
+        return false
+      })
+      return memberIndex
+    },
     baseDirsAsOptions: (state) => {
       const options = [{
         'value': 'primary',
         'text': '~/Sites'
       }]
       return options
-      for (const baseDirName in state.baseDirs) {
-        if (!state.baseDirs.hasOwnProperty(baseDirName)) {
-          continue
-        }
-        options.push({
-          value: baseDirName,
-          text: state.baseDirs[baseDirName].text
-        })
-      }
-      return options
+      // for (const baseDirName in state.baseDirs) {
+      //   if (!state.baseDirs.hasOwnProperty(baseDirName)) {
+      //     continue
+      //   }
+      //   options.push({
+      //     value: baseDirName,
+      //     text: state.baseDirs[baseDirName].text
+      //   })
+      // }
+      // return options
     },
     projectServiceDefaults: (state) => (serviceName, stackName) => {
       const org = serviceName.substring(0, serviceName.indexOf('/'))
@@ -299,34 +310,29 @@ export default new Vuex.Store({
       state.baseDirs[baseDir.value] = baseDir
     },
     ADD_PROJECT_STACK (state, payload) {
-      const { projectHostname, stackName } = payload
-      const project = this.getters.projectBy('hostname', projectHostname)
-      const genericServiceName = serviceName.substring(serviceName.indexOf('/') + 1)
+      const { projectId, stackId } = payload
+      const project = this.getters.projectBy('id', projectId)
+      const genericServiceName = stackId.substring(stackId.indexOf('/') + 1)
       if (project) {
-        for (const serviceName in this.getters.stackServices(stackName)) {
-          Vue.set(project.stack, genericServiceName, this.projectServiceDefaults(stackName, serviceName))
+        for (const serviceName in this.getters.stackBy('id', stackId)) {
+          Vue.set(project.attributes.stack, genericServiceName, this.projectServiceDefaults(stackId, serviceName))
         }
       }
     },
     REMOVE_PROJECT_STACK (state, payload) {
-      const { projectId, stackName } = payload
+      const { projectId, stackId } = payload
       const project = this.getters.projectBy('id', projectId)
       if (project) {
         /**
-         * Payload is of this form:
-         * {projectHostname: "project1.local", stackName: "gearbox.works/wordpress"}
+         * We need to remove all elements of project.stack that that have service_id starting with shortStackName, e.g. "wordpress/"
          *
-         * We need to remove all properties of project.stack that start with "wordpress/"
+         * For deleting array items in javascript with forEach() and splice())
+         * @see https://gist.github.com/chad3814/2924672
          */
-        const shortStackName = stackName.split('/')[1]
-        for (const stackRole in project.stack) {
-          if (project.stack.hasOwnProperty(stackRole)) {
-            if (stackRole.indexOf(shortStackName) !== -1) {
-              /**
-               * has a property starting with shortStackName
-               */
-              Vue.delete(project.stack, stackRole)
-            }
+        const shortStackName = stackId.split('/')[1]
+        for (let i = project.attributes.stack.length - 1; i >= 0; i--) {
+          if (project.attributes.stack[i].gearspec_id.split('/')[1] === shortStackName) {
+            Vue.delete(project.attributes.stack, i)
           }
         }
       }
@@ -334,41 +340,18 @@ export default new Vuex.Store({
     CHANGE_PROJECT_SERVICE (state, payload) {
       /**
        * Payload is of this form:
-       * {projectHostname: "project1.local", serviceName: "gearbox.works/wordpress/webserver", serviceId: "gearboxworks/apache:2.4"}
+       * {projectId: "project1", gearspecId: "gearbox.works/wordpress/webserver", serviceId: "gearboxworks/apache:2.4"}
        */
-      const { projectId, serviceName, serviceId } = payload
-      const project = this.getters['projects/byId'](projectId)
-      const service = state.gearServices[serviceName]
-      if (project && service) {
-        const serviceRole = serviceName.substring(serviceName.indexOf('/') + 1)
-        if (!serviceId) {
-          Vue.delete(project.stack, serviceRole)
-        } else {
-          const programVer = serviceId.split('/')[1]
-          const ver = serviceId.split(':')[1].split('.')
-          /*
-          const newService = project.stack[serviceRole] || {
-            'authority': org,
-            'org': org.replace('.', ''),
-            'stack': stackName.substring(stackName.indexOf('/') + 1),
-            'service_id': defaultOpt ? service.org + '/' + defaultOpt : '',
-            'program': defaultOpt ? defaultOpt.substring(0, defaultOpt.indexOf(':')) : '',
-            'version': {}
-          }
+      const { projectId, serviceId, gearspecId } = payload
 
-          newService.program = programVer.split(':')[0]
-          newService.version = {}
-          if (ver.length > 0) {
-            newService.version.major = ver[0]
-          }
-          if (ver.length > 1) {
-            newService.version.minor = ver[1]
-          }
-          if (ver.length > 2) {
-            newService.version.patch = ver[2]
-          }
-          Vue.set(project.stack, serviceRole, newService)
-*/
+      const project = this.getters.projectBy('id', projectId)
+
+      if (project) {
+        const memberIndex = this.getters.projectStackMemberIndexBy('gearspecId', gearspecId)
+        if (!serviceId) {
+          Vue.delete(project.attributes.stack, memberIndex)
+        } else {
+          Vue.set(project.attributes.stack[memberIndex], 'service_id', serviceId)
         }
       }
     },

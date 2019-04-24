@@ -1,20 +1,17 @@
 <template>
   <div role="tablist" class="project-stack-list" :id="`${projectBase}stack`">
     <div
-      v-for="(services, stackName, stackIndex) in groupProjectServicesByStack(stack)"
-      :key="stackName"
+      v-for="(services, stackId, stackIndex) in groupProjectServicesByStack(stack)"
+      :key="stackId"
       class="project-stack"
     >
-      <h2 class="stack-title">{{stackName.replace('gearbox.works/', '')}}</h2>
-      <b-button :tabindex="projectIndex*100+stackIndex*10" @click.prevent="removeProjectStack(stackName)" class="js-remove-stack" size="sm" variant="outline-secondary" aria-label="Remove this stack from project" title="Remove this stack from project">&times;</b-button>
+      <h2 class="stack-title">{{stackId.replace('gearbox.works/', '')}}</h2>
+      <b-button :tabindex="projectIndex*100+stackIndex*10" @click.prevent="removeProjectStack(stackId)" class="js-remove-stack" size="sm" variant="outline-secondary" aria-label="Remove this stack from project" title="Remove this stack from project">&times;</b-button>
       <ul class="service-list">
         <li
             v-for="(service, role, serviceIndex) in services"
-            :key="projectBase + service.id"
-            :id="projectBase + role"
+            :key="id + service.id"
             class="service-item"
-            :tabindex="projectIndex*100+stackIndex*10+serviceIndex+1"
-
         >
           <project-service :projectId="project.id" :service="service" :projectIndex="projectIndex" :stackIndex="stackIndex" :serviceIndex="serviceIndex"></project-service>
         </li>
@@ -69,14 +66,14 @@ export default {
           if (typeof result[gear.attributes.stack_id] === 'undefined') {
             result[gear.attributes.stack_id] = {}
           }
-          result[gear.attributes.stack_id][gear.attributes.role] = service
+          result[gear.attributes.stack_id][this.escAttr(gear.attributes.role)] = service
         }
       })
       // console.log('groupProjectStacks', result)
       return result
     },
-    removeProjectStack (stackName) {
-      this.$store.dispatch('removeProjectStack', { 'projectHostname': this.projectHostname, stackName })
+    removeProjectStack (stackId) {
+      this.$store.dispatch('removeProjectStack', { 'projectId': this.id, stackId })
     }
   }
 }

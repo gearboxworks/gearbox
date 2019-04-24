@@ -1,5 +1,10 @@
 <template>
-  <div class="project-service">
+  <div
+    :id="serviceControlId"
+    :tabindex="projectIndex*100+stackIndex*10+serviceIndex+1"
+    class="project-service"
+  >
+
     <img v-if="program" :src="require('../assets/'+program+'.svg')" class="service-program" />
     <font-awesome-icon
       v-else
@@ -7,39 +12,39 @@
     />
 
     <h6 class="service-role">{{role}}</h6>
+
     <b-tooltip
       triggers="hover"
-      :target="projectBase + role"
-      :title="programTooltip(program +' '+version)"
+      :target="serviceControlId"
+      :title="programTooltip(program, version)"
       :key="id"
     />
+
     <b-popover
-      :target="projectBase + role"
-      :container="`${projectId}stack`"
-      :ref="projectBase + role + '-popover'"
+      :target="serviceControlId"
+      :container="`${projectControlId}stack`"
+      :ref="`${serviceControlId}-popover`"
       triggers="focus"
       placement="bottom"
     >
       <template slot="title">
-        <b-button @click="onClosePopoverFor(projectBase + role)" class="close" aria-label="Close">
+        <b-button @click="onClosePopoverFor(serviceControlId)" class="close" aria-label="Close">
           <span class="d-inline-block" aria-hidden="true">&times;</span>
         </b-button>
         Change service
       </template>
 
       <div>
-        <label :for="projectBase + role + '_input'">
-          {{gear.attributes.role}}:
-        </label>
+        <label :for="`${serviceControlId}-input`">{{role}}:</label>
         <b-form-select
-          :id="projectBase + role + '_input'"
+          :id="`${serviceControlId}-input`"
           :value="id"
           :tabindex="projectIndex*100+stackIndex*10+serviceIndex+9"
-          @change="changeProjectService(role,$event)"
+          @change="changeProjectService(gearspec_id,$event,role)"
         >
           <option value="" v-if="!stackRoleDefaultService(role)">Do not run this service</option>
           <option disabled value="">Select service...</option>
-          <optgroup v-for="(services, groupLabel) in serviceGroups(stackRoleServices(role))" :label="groupLabel" :key="groupLabel">
+          <optgroup v-for="(services, groupLabel) in serviceOptionGroups(stackRoleServices(role))" :label="groupLabel" :key="groupLabel">
             <option v-for="serviceId in services" :value="serviceId" :key="serviceId">{{serviceId.replace('gearboxworks/','')}}</option>
           </optgroup>
         </b-form-select>
@@ -84,15 +89,18 @@ export default {
   },
   computed: {
     ...mapGetters(['gearspecBy', 'stackBy']),
-    projectBase () {
+    projectControlId () {
       return this.escAttr(this.projectId) + '-'
+    },
+    serviceControlId () {
+      return this.projectControlId + (this.stack ? this.stack.attributes.stackname + '-' : '') + this.role
     },
     gear () {
       return this.gearspecBy('id', this.gearspec_id)
     },
     role () {
       const gear = this.gear
-      return gear ? gear.attributes.role : ''
+      return gear ? this.escAttr(gear.attributes.role) : ''
     },
     stack () {
       const gear = this.gear
@@ -103,24 +111,15 @@ export default {
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
-    serviceVersion (version) {
-      var result = ''
-      if (version.major) {
-        result += version.major
-        if (version.minor) {
-          result += '.' + version.minor
-          if (version.patch) {
-            result += '.' + version.patch
-          }
-        }
-      }
-      return result
-    },
     stackRoleObject (role) {
       const gear = this.gear
       const stack = gear ? this.stackBy('id', gear.attributes.stack_id) : null
       const members = stack ? stack.attributes.members : []
       return members.find(m => m.role === role)
+    },
+    stackRoleServices (role) {
+      const stackRole = this.stackRoleObject(role)
+      return stackRole ? stackRole.services : []
     },
     stackRoleDefaultService (role) {
       const stackRole = this.stackRoleObject(role)
@@ -129,10 +128,6 @@ export default {
           ? stackRole.default_service
           : '')
         : ''
-    },
-    stackRoleServices (role) {
-      const stackRole = this.stackRoleObject(role)
-      return stackRole ? stackRole.services : []
     },
     stackRoleSmartDefaultService (role) {
       const stackRole = this.stackRoleObject(role)
@@ -164,7 +159,7 @@ export default {
 
       return smartDefault
     },
-    serviceGroups (services) {
+    serviceOptionGroups (services) {
       const result = {}
       for (const index in services) {
         const base = services[index].split(':')[0].replace('gearboxworks/', '')
@@ -178,12 +173,14 @@ export default {
     removeProjectStack () {
       this.$store.dispatch('removeProjectStack', { 'projectId': this.projectId, 'stackName': this.stackName })
     },
-    programTooltip (program) {
-      return program ? program : 'Not selected'
+    programTooltip (program, version) {
+      return (program && version)
+        ? (program + ' ' + version)
+        : 'Service not selected'
     },
-    changeProjectService (serviceName, serviceId) {
-      this.$store.dispatch('changeProjectService', { 'id': this.projectId, serviceName, serviceId })
-      this.onClosePopoverFor(this.projectBase + this.escAttr(serviceName))
+    changeProjectService (gearspecId, serviceId, role) {
+      this.$store.dispatch('changeProjectService', { 'projectId': this.projectId, gearspecId, serviceId })
+      this.onClosePopoverFor(this.serviceControlId)
     },
     onClosePopoverFor (triggerElementId) {
       this.$root.$emit('bv::hide::popover', triggerElementId)
@@ -193,6 +190,9 @@ export default {
 </script>
 
 <style scoped>
+  .project-service{
+    outline: none;
+  }
   .service-role{
     margin-top:5px;
     margin-bottom: 0;
