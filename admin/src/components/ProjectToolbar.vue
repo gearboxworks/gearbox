@@ -98,4 +98,37 @@ export default {
     margin-top: 10px;
     color: silver;
   }
+
+  .toolbar-link {
+    float: right;
+    font-size: 1.25rem;
+    cursor: pointer;
+    margin-left: 10px;
+    color: rgba(42, 85, 130, 0.98);
+  }
+
+  .toolbar-link {
+    padding-top: 3px;
+  }
+
+  .toolbar-link.is-disabled  {
+    color: rgba(17, 56, 85, 0.42);
+  }
+
+  .toolbar-link--details {
+    float: left;
+  }
+
+  .toolbar-link--state {
+    font-size: 1.65rem;
+    padding-top: 0;
+  }
+
+  [data-icon="play-circle"] path {
+    fill: green;
+  }
+
+  [data-icon="stop-circle"] path {
+    fill: red;
+  }
 </style>

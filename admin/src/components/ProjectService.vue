@@ -39,8 +39,8 @@
         >
           <option value="" v-if="!stackRoleDefaultService(role)">Do not run this service</option>
           <option disabled value="">Select service...</option>
-          <optgroup v-for="(options, groupLabel) in serviceGroups(stackRoleServices(role))" :label="groupLabel" :key="groupLabel">
-            <option v-for="serviceVer in options" :value="service.org + '/' + serviceVer" :key="serviceVer">{{serviceVer}}</option>
+          <optgroup v-for="(services, groupLabel) in serviceGroups(stackRoleServices(role))" :label="groupLabel" :key="groupLabel">
+            <option v-for="serviceId in services" :value="serviceId" :key="serviceId">{{serviceId.replace('gearboxworks/','')}}</option>
           </optgroup>
         </b-form-select>
       </div>
@@ -167,7 +167,7 @@ export default {
     serviceGroups (services) {
       const result = {}
       for (const index in services) {
-        const base = services[index].split(':')[0]
+        const base = services[index].split(':')[0].replace('gearboxworks/', '')
         if (typeof result[base] === 'undefined') {
           result[base] = {}
         }
