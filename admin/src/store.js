@@ -347,7 +347,7 @@ export default new Vuex.Store({
       const project = this.getters.projectBy('id', projectId)
 
       if (project) {
-        const memberIndex = this.getters.projectStackMemberIndexBy('gearspecId', gearspecId)
+        const memberIndex = this.getters.projectStackMemberIndexBy(project, 'gearspec_id', gearspecId)
         if (!serviceId) {
           Vue.delete(project.attributes.stack, memberIndex)
         } else {
