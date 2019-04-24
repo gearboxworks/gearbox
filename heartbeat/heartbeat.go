@@ -57,15 +57,13 @@ type Args Heartbeat
 
 
 type menuStruct struct {
-	stateEntry  *systray.MenuItem
+	statusEntry  *systray.MenuItem
 	startEntry  *systray.MenuItem
 	stopEntry   *systray.MenuItem
 	adminEntry  *systray.MenuItem
 	sshEntry    *systray.MenuItem
-	infoEntry   *systray.MenuItem
 	quitEntry   *systray.MenuItem
 	unloadEntry *systray.MenuItem
-	statusEntry *systray.MenuItem
 	helpEntry   *systray.MenuItem
 	createEntry *systray.MenuItem
 }
@@ -75,6 +73,7 @@ type GearboxVM struct {
 	virtualbox.VM
 }
 
+var intentDelay = false		// Used to change delay times when we have just performed an action.
 
 func NewHeartbeat(OsSupport oss.OsSupporter, args ...Args) *Heartbeat {
 	var _args Args
@@ -167,44 +166,45 @@ func (me *Heartbeat) onReady() {
 	fmt.Printf("Gearbox: Heartbeat restarted.\n")
 
 	systray.SetIcon(me.getIcon(DefaultLogo))
-	systray.SetTitle("Gearbox OS")
+	systray.SetTitle("Gearbox:")
 
-	menu.helpEntry = systray.AddMenuItem("Help", "Current state of Gearbox OS")
-
-	systray.AddSeparator()
-	menu.helpEntry = systray.AddMenuItem("Help", "Contact Gearbox help")
-
+	menu.statusEntry = systray.AddMenuItem("Starting", "Current state of Gearbox")
 
 	systray.AddSeparator()
+	menu.helpEntry = systray.AddMenuItem("About Gearbox", "Contact Gearbox help")
 
-	menu.createEntry = systray.AddMenuItem("Create", "Create a Gearbox OS instance")
-	menu.startEntry = systray.AddMenuItem("Start", "Start Gearbox OS instance")
-	menu.startEntry.SetIcon(me.getIcon(DefaultUp))
-	menu.stopEntry = systray.AddMenuItem("Stop", "Stop Gearbox OS instance")
-	menu.stopEntry.SetIcon(me.getIcon(DefaultDown))
-	menu.statusEntry = systray.AddMenuItem("Details", "Details of Gearbox OS instance")
 
 	systray.AddSeparator()
-
 	menu.adminEntry = systray.AddMenuItem("Admin", "Open Gearbox admin interface")
+	menu.createEntry = systray.AddMenuItem("Create Box", "Create a Gearbox OS instance")
+	menu.startEntry = systray.AddMenuItem("Start Box", "Start Gearbox OS instance")
+	menu.stopEntry = systray.AddMenuItem("Stop Box", "Stop Gearbox OS instance")
+
 	menu.sshEntry = systray.AddMenuItem("SSH", "Connect to Gearbox OS via SSH")
 	//menu.consoleEntry = systray.AddMenuItem("Console", "Show the Gearbox OS console")
 
+	systray.AddSeparator()
 	pid := os.Getpid()
-	menu.infoEntry = systray.AddMenuItem(fmt.Sprintf("PID:%d", pid), "Current PID")
-	menu.infoEntry.Disable()
-
-	menu.quitEntry = systray.AddMenuItem("Restart App", "Restart this app")
-	menu.unloadEntry = systray.AddMenuItem("Terminate App", "Terminate this app")
+	menu.quitEntry = systray.AddMenuItem("Restart App", fmt.Sprintf("Restart this app [pid:%v]", pid))
+	menu.unloadEntry = systray.AddMenuItem("Terminate App",fmt.Sprintf("Terminate this app [pid:%v]", pid))
 
 	go func() {
 		for {
-			// systray.SetTitle(getClockTime(timezone))
-			// systray.SetTooltip(timezone + " timezone")
-			_, state := me.BoxInstance.GetState()
-			// fmt.Printf("STATE: %v\n", state)
-			me.SetState(menu, state)
-			time.Sleep(5 * time.Second)
+			if intentDelay {
+				// User has requested a change, check on cached results faster.
+				// results will be updated by concurrent functions.
+				fmt.Printf("CACHE POLL\n")
+				_, state := me.BoxInstance.GetCachedState()
+				me.SetState(menu, state)
+				time.Sleep(time.Second)
+
+			} else {
+				// Normal polling.
+				fmt.Printf("NORMAL POLL\n")
+				_, state := me.BoxInstance.GetState()
+				me.SetState(menu, state)
+				time.Sleep(5 * time.Second)
+			}
 		}
 	}()
 
@@ -213,11 +213,15 @@ func (me *Heartbeat) onReady() {
 			select {
 				case <- menu.startEntry.ClickedCh:
 					fmt.Printf("Menu: Start\n")
+					intentDelay = true
 					me.BoxInstance.StartBox()
+					intentDelay = false
 
 				case <- menu.stopEntry.ClickedCh:
 					fmt.Printf("Menu: Stop\n")
+					intentDelay = true
 					me.BoxInstance.StopBox()
+					intentDelay = false
 
 				case <- menu.adminEntry.ClickedCh:
 					fmt.Printf("Menu: Admin\n")
@@ -232,6 +236,7 @@ func (me *Heartbeat) onReady() {
 
 				case <- menu.helpEntry.ClickedCh:
 					fmt.Printf("Menu: Help\n")
+					me.openAbout()
 
 				case <- menu.createEntry.ClickedCh:
 					fmt.Printf("Menu: Create\n")
@@ -296,6 +301,15 @@ func (me *Heartbeat) openTerminal() error {
 }
 
 
+func (me *Heartbeat) openAbout() error {
+
+	cmd := exec.Command("open", "https://gearbox.works/")
+	err := cmd.Run()
+
+	return err
+}
+
+
 func (me *Heartbeat) onExit() {
 	// Cleaning stuff here.
 }
@@ -332,69 +346,98 @@ func (me *Heartbeat) SetState(menu menuStruct, state box.BoxState) (returnValue 
 			fmt.Printf("STATE: UNKNOWN\n")
 			systray.SetTitle("Gearbox: UNKNOWN")
 			systray.SetTooltip("Gearbox is in an unknown state.")
+			menu.statusEntry.SetIcon(me.getIcon(DefaultLogo))
+			menu.statusEntry.SetTitle("State: unknown")
+
 			returnValue = box.StateUnknown
+			menu.statusEntry.Enable()
 			menu.stopEntry.Disable()
 			menu.startEntry.Disable()
 			menu.sshEntry.Disable()
 			menu.createEntry.Enable()
 
+
 		case (state.VM.CurrentState == box.StateDown):
 			fmt.Printf("STATE: HALTED\n")
 			systray.SetTitle("Gearbox: HALTED")
 			systray.SetTooltip("Gearbox is halted.")
+			menu.statusEntry.SetIcon(me.getIcon(DefaultDown))
+			menu.statusEntry.SetTitle("State: halted")
+
 			returnValue = box.StateDown
+			menu.statusEntry.Disable()
 			menu.stopEntry.Disable()
 			menu.startEntry.Enable()
 			menu.sshEntry.Disable()
 			menu.createEntry.Disable()
 
+
 		case (state.VM.CurrentState == box.StateUp) && (state.API.CurrentState == box.StateUp):
 			fmt.Printf("STATE: RUNNING\n")
 			systray.SetTitle("Gearbox: RUNNING")
 			systray.SetTooltip("Gearbox is running.")
+			menu.statusEntry.SetIcon(me.getIcon(DefaultUp))
+			menu.statusEntry.SetTitle("State: running")
+
 			returnValue = box.StateUp
+			menu.statusEntry.Disable()
 			menu.stopEntry.Enable()
 			menu.startEntry.Disable()
 			menu.sshEntry.Enable()
 			menu.createEntry.Disable()
 
+
 		case (state.VM.WantState == box.StateUp) && (state.VM.CurrentState != box.StateUp):
 			fallthrough
+		case (state.API.WantState == box.StateUp) && (state.API.CurrentState != box.StateUp):
+			fallthrough
 		case (state.VM.CurrentState == box.StateStarting):
-			fallthrough
-		case (state.VM.CurrentState == box.StateUp) && (state.API.CurrentState != box.StateUp):
-			fallthrough
-		case (state.VM.CurrentState == box.StateUp) && (state.API.CurrentState == box.StateDown):
 			fmt.Printf("STATE: STARTING\n")
 			systray.SetTitle("Gearbox: STARTING")
 			systray.SetTooltip("Gearbox starting up.")
+			menu.statusEntry.SetIcon(me.getIcon(DefaultUp))
+			menu.statusEntry.SetTitle("State: starting")
+
 			returnValue = box.StateStarting
+			menu.statusEntry.Disable()
 			menu.stopEntry.Disable()
 			menu.startEntry.Disable()
 			menu.sshEntry.Disable()
 			menu.createEntry.Disable()
 
+
 		case (state.VM.WantState == box.StateDown) && (state.VM.CurrentState != box.StateDown):
+			fallthrough
+		case (state.API.WantState == box.StateDown) && (state.API.CurrentState != box.StateDown):
 			fallthrough
 		case (state.VM.CurrentState == box.StateStopping):
 			fmt.Printf("STATE: STOPPING\n")
 			systray.SetTitle("Gearbox: STOPPING")
 			systray.SetTooltip("Gearbox is stopping.")
+			menu.statusEntry.SetIcon(me.getIcon(DefaultDown))
+			menu.statusEntry.SetTitle("State: stopping")
+
 			returnValue = box.StateStopping
+			menu.statusEntry.Disable()
 			menu.stopEntry.Disable()
 			menu.startEntry.Disable()
 			menu.sshEntry.Disable()
 			menu.createEntry.Disable()
 
+
 		default:
 			fmt.Printf("STATE: UNKNOWN DEFAULT\n")
 			systray.SetTitle("Gearbox: UNKNOWN")
 			systray.SetTooltip("Gearbox is in an unknown state.")
+			menu.statusEntry.SetIcon(me.getIcon(DefaultLogo))
+			menu.statusEntry.SetTitle("State: unknown")
+
 			returnValue = box.StateUnknown
+			menu.statusEntry.Enable()
 			menu.stopEntry.Disable()
 			menu.startEntry.Disable()
 			menu.sshEntry.Disable()
-			menu.createEntry.Disable()
+			menu.createEntry.Enable()
 	}
 
 	return

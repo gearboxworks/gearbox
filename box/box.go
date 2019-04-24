@@ -450,6 +450,21 @@ func (me *Box) RestartBox() (sts status.Status) {
 }
 
 
+func (me *Box) GetCachedState() (sts status.Status, state BoxState) {
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		state = me.State
+	}
+
+	return
+}
+
+
 func (me *Box) GetState() (sts status.Status, state BoxState) {
 
 	for range only.Once {

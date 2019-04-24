@@ -86,5 +86,5 @@ const (
 	DefaultConsolePort     = "2023"
 	DefaultConsoleOkString = "Gearbox Heartbeat"
 	DefaultShowConsole     = false
-	DefaultConsoleReadWait = time.Second * 2
+	DefaultConsoleReadWait = time.Second * 5
 )
