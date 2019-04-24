@@ -27,8 +27,7 @@ import (
 
 type Daemon struct {
 	Boxname      string
-	// BoxInstance  *box.Box
-	ServiceFile    string
+	ServiceFile  string
 	ServiceData	 plistData
 
 	OsSupport    oss.OsSupporter

@@ -193,14 +193,14 @@ func (me *Heartbeat) onReady() {
 			if intentDelay {
 				// User has requested a change, check on cached results faster.
 				// results will be updated by concurrent functions.
-				fmt.Printf("CACHE POLL\n")
+				//fmt.Printf("CACHE POLL\n")
 				_, state := me.BoxInstance.GetCachedState()
 				me.SetState(menu, state)
 				time.Sleep(time.Second)
 
 			} else {
 				// Normal polling.
-				fmt.Printf("NORMAL POLL\n")
+				//fmt.Printf("NORMAL POLL\n")
 				_, state := me.BoxInstance.GetState()
 				me.SetState(menu, state)
 				time.Sleep(5 * time.Second)
@@ -358,7 +358,7 @@ func (me *Heartbeat) SetState(menu menuStruct, state box.BoxState) (returnValue 
 
 
 		case (state.VM.CurrentState == box.StateDown):
-			fmt.Printf("STATE: HALTED\n")
+			// fmt.Printf("STATE: HALTED\n")
 			systray.SetTitle("Gearbox: HALTED")
 			systray.SetTooltip("Gearbox is halted.")
 			menu.statusEntry.SetIcon(me.getIcon(DefaultDown))
@@ -373,7 +373,7 @@ func (me *Heartbeat) SetState(menu menuStruct, state box.BoxState) (returnValue 
 
 
 		case (state.VM.CurrentState == box.StateUp) && (state.API.CurrentState == box.StateUp):
-			fmt.Printf("STATE: RUNNING\n")
+			// fmt.Printf("STATE: RUNNING\n")
 			systray.SetTitle("Gearbox: RUNNING")
 			systray.SetTooltip("Gearbox is running.")
 			menu.statusEntry.SetIcon(me.getIcon(DefaultUp))
