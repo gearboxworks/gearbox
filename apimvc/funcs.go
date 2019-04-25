@@ -17,6 +17,7 @@ func AddControllers(gb gearbox.Gearboxer) (sts Status) {
 			NewServiceController(gb),
 			NewGearspecController(gb),
 			NewAuthorityController(gb),
+			NewBasedirController(gb.GetConfig()),
 			NewRootController(gb),
 		}
 		a := gb.GetApi()

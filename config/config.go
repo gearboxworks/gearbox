@@ -29,6 +29,7 @@ type Configer interface {
 	DeleteProject(hostname types.Hostname) Status
 	ExpandHostBasedirPath(types.Nickname, types.RelativePath) (types.AbsoluteDir, Status)
 	FindProject(hostname types.Hostname) (*Project, Status)
+	FindBasedir(nickname types.Nickname) (*Basedir, Status)
 	GetBasedirMap() BasedirMap
 	GetBasedirNicknames() types.Nicknames
 	GetBoxBasedir() types.AbsoluteDir
@@ -204,6 +205,17 @@ func (me *Config) GetHostBasedir(nickname types.Nickname) (basedir types.Absolut
 
 func (me *Config) GetBasedirMap() BasedirMap {
 	return me.BasedirMap
+}
+
+func (me *Config) FindBasedir(nickname types.Nickname) (bd *Basedir, sts Status) {
+	bd, ok := me.BasedirMap[nickname]
+	if !ok {
+		sts = status.Fail(&status.Args{
+			Message:    fmt.Sprintf("basedir '%s' not found", nickname),
+			HttpStatus: http.StatusNotFound,
+		})
+	}
+	return bd, sts
 }
 
 func (me *Config) GetHostBasedirs() map[types.Nickname]types.AbsoluteDir {
