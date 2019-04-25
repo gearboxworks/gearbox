@@ -2,7 +2,6 @@ package apimvc
 
 import (
 	"fmt"
-	"gearbox/apimodeler"
 	"gearbox/gearbox"
 	"gearbox/gears"
 	"gearbox/only"
@@ -12,10 +11,10 @@ import (
 	"strings"
 )
 
-const NamedStackType apimodeler.ItemType = "stack"
+const NamedStackType ItemType = "stack"
 
 var NilNamedStackModel = (*NamedStackModel)(nil)
-var _ apimodeler.ItemModeler = NilNamedStackModel
+var _ ItemModeler = NilNamedStackModel
 
 type NamedStackModelMap map[types.Stackname]*NamedStackModel
 type NamedStackModels []*NamedStackModel
@@ -26,7 +25,7 @@ type NamedStackModel struct {
 	Members   StackMembers          `json:"members,omitempty"`
 }
 
-func NewNamedStackModelFromGearsNamedStack(ctx *apimodeler.Context, gns *gears.NamedStack) (ns *NamedStackModel, sts status.Status) {
+func NewNamedStackModelFromGearsNamedStack(ctx *Context, gns *gears.NamedStack) (ns *NamedStackModel, sts Status) {
 	for range only.Once {
 
 		gsom, sts := gns.GetServiceOptionMap()
@@ -66,11 +65,11 @@ func NewNamedStackModel(ns *gears.NamedStack) *NamedStackModel {
 	}
 }
 
-func (me *NamedStackModel) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
-	return apimodeler.LinkMap{}, nil
+func (me *NamedStackModel) GetItemLinkMap(*Context) (LinkMap, Status) {
+	return LinkMap{}, nil
 }
 
-func (me *NamedStackModel) GetType() apimodeler.ItemType {
+func (me *NamedStackModel) GetType() ItemType {
 	return NamedStackType
 }
 
@@ -78,11 +77,11 @@ func (me *NamedStackModel) GetFullStackname() types.Stackname {
 	return types.Stackname(me.GetId())
 }
 
-func (me *NamedStackModel) GetId() apimodeler.ItemId {
-	return apimodeler.ItemId(fmt.Sprintf("%s/%s", me.Authority, me.Stackname))
+func (me *NamedStackModel) GetId() ItemId {
+	return ItemId(fmt.Sprintf("%s/%s", me.Authority, me.Stackname))
 }
 
-func (me *NamedStackModel) SetStackId(itemid apimodeler.ItemId) (sts status.Status) {
+func (me *NamedStackModel) SetStackId(itemid ItemId) (sts Status) {
 	for range only.Once {
 		parts := strings.Split(string(itemid), "/")
 		if len(parts) < 2 {
@@ -102,20 +101,20 @@ func (me *NamedStackModel) SetStackId(itemid apimodeler.ItemId) (sts status.Stat
 	return sts
 }
 
-func (me *NamedStackModel) GetItem() (apimodeler.ItemModeler, status.Status) {
+func (me *NamedStackModel) GetItem() (ItemModeler, Status) {
 	return me, nil
 }
 
-func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStackModel) (gbns *gears.NamedStack, sts status.Status) {
+func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStackModel) (gbns *gears.NamedStack, sts Status) {
 	//	gbns = gears.NewNamedStackModel(gb.GetGears(), types.StackId(ns.GetId()))
 	gbns = gears.NewNamedStack(types.StackId(ns.GetId()))
 	sts = gbns.Refresh(gb.GetGears())
 	return gbns, sts
 }
 
-func (me *NamedStackModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
+func (me *NamedStackModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
 	//for range only.Once {
-	//	list = make(apimodeler.List, 0)
+	//	list = make(List, 0)
 	//	for _, si := range me.ProjectStackItems {
 	//		gsgs := gearspec.NewGearspec()
 	//		sts = gsgs.Parse(si.GearspecId)

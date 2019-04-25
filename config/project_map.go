@@ -10,7 +10,7 @@ import (
 
 type ProjectMap map[types.Hostname]*Project
 
-func (me ProjectMap) GetProject(cfg Configer, hostname types.Hostname) (p *Project, sts status.Status) {
+func (me ProjectMap) GetProject(cfg Configer, hostname types.Hostname) (p *Project, sts Status) {
 	var ok bool
 	p, ok = me[hostname]
 	if ok {
@@ -55,7 +55,7 @@ func (me ProjectMap) GetDisabled() Projects {
 	return disabled
 }
 
-func (me ProjectMap) FindProject(hostname types.Hostname) (p *Project, sts status.Status) {
+func (me ProjectMap) FindProject(hostname types.Hostname) (p *Project, sts Status) {
 	var ok bool
 	p, ok = me[hostname]
 	if !ok {
@@ -66,7 +66,7 @@ func (me ProjectMap) FindProject(hostname types.Hostname) (p *Project, sts statu
 	return p, sts
 }
 
-func (me ProjectMap) FindProjectByPath(basedir types.Nickname, path types.RelativePath) (p *Project, sts status.Status) {
+func (me ProjectMap) FindProjectByPath(basedir types.Nickname, path types.RelativePath) (p *Project, sts Status) {
 	var hn types.Hostname
 	var _p *Project
 	for hn, _p = range me {

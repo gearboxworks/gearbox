@@ -38,7 +38,7 @@ func NewBasedir(hostdir types.AbsoluteDir, args ...*BasedirArgs) *Basedir {
 	bd.HostDir = hostdir
 	return &bd
 }
-func (me *Basedir) MaybeExpandHostDir() (sts status.Status) {
+func (me *Basedir) MaybeExpandHostDir() (sts Status) {
 	for range only.Once {
 		origDir := me.HostDir
 		if strings.HasPrefix(string(me.HostDir), "~") {
@@ -63,7 +63,7 @@ func (me *Basedir) MaybeExpandHostDir() (sts status.Status) {
 	return sts
 }
 
-func (me *Basedir) Initialize() (sts status.Status) {
+func (me *Basedir) Initialize() (sts Status) {
 	for range only.Once {
 		if me.HostDir == "" {
 			me.Err = errors.New("Basedir.HostDir has no value")
@@ -112,7 +112,7 @@ func (me BasedirMap) BasedirExists(dir types.AbsoluteDir) (ok bool) {
 	return ok
 }
 
-func (me BasedirMap) GetNamedBasedir(nickname types.Nickname) (bd *Basedir, sts status.Status) {
+func (me BasedirMap) GetNamedBasedir(nickname types.Nickname) (bd *Basedir, sts Status) {
 	bd, ok := me[nickname]
 	if !ok {
 		sts = status.Fail(&status.Args{
@@ -122,7 +122,7 @@ func (me BasedirMap) GetNamedBasedir(nickname types.Nickname) (bd *Basedir, sts 
 	return bd, sts
 }
 
-func (me BasedirMap) DeleteNamedBasedir(nickname types.Nickname) (sts status.Status) {
+func (me BasedirMap) DeleteNamedBasedir(nickname types.Nickname) (sts Status) {
 	for range only.Once {
 		sts = ValidateBasedirNickname(nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
@@ -144,7 +144,7 @@ func (me BasedirMap) DeleteNamedBasedir(nickname types.Nickname) (sts status.Sta
 	return sts
 }
 
-func (me BasedirMap) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDir) (sts status.Status) {
+func (me BasedirMap) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDir) (sts Status) {
 	for range only.Once {
 		sts = ValidateBasedirNickname(nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
@@ -175,7 +175,7 @@ func (me BasedirMap) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDi
 	return sts
 }
 
-func (me BasedirMap) AddBasedir(basedir *Basedir) (sts status.Status) {
+func (me BasedirMap) AddBasedir(basedir *Basedir) (sts Status) {
 	for range only.Once {
 		sts = ValidateBasedirNickname(basedir.Nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
@@ -196,7 +196,7 @@ func (me BasedirMap) AddBasedir(basedir *Basedir) (sts status.Status) {
 	return sts
 }
 
-func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts status.Status) {
+func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts Status) {
 	for range only.Once {
 		var apiHelp string
 		if args.ApiHelpUrl != "" {

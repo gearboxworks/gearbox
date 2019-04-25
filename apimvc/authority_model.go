@@ -2,7 +2,6 @@ package apimvc
 
 import (
 	"fmt"
-	"gearbox/apimodeler"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/types"
@@ -12,7 +11,7 @@ import (
 const AuthorityModelType = "authority"
 
 var NilAuthorityModel = (*AuthorityModel)(nil)
-var _ apimodeler.ItemModeler = NilAuthorityModel
+var _ ItemModeler = NilAuthorityModel
 
 type AuthorityModelMap map[types.Stackname]*AuthorityModel
 type AuthorityModels []*AuthorityModel
@@ -21,7 +20,7 @@ type AuthorityModel struct {
 	AuthorityId types.AuthorityDomain `json:"authority_id"`
 }
 
-func NewFromGearsAuthority(ctx *apimodeler.Context, authority types.AuthorityDomain) (gs *AuthorityModel, sts status.Status) {
+func NewFromGearsAuthority(ctx *Context, authority types.AuthorityDomain) (gs *AuthorityModel, sts Status) {
 	return NewAuthority(authority), sts
 }
 
@@ -31,11 +30,11 @@ func NewAuthority(authority types.AuthorityDomain) *AuthorityModel {
 	}
 }
 
-func (me *AuthorityModel) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
-	return apimodeler.LinkMap{}, nil
+func (me *AuthorityModel) GetItemLinkMap(*Context) (LinkMap, Status) {
+	return LinkMap{}, nil
 }
 
-func (me *AuthorityModel) GetType() apimodeler.ItemType {
+func (me *AuthorityModel) GetType() ItemType {
 	return AuthorityModelType
 }
 
@@ -43,11 +42,11 @@ func (me *AuthorityModel) GetFullStackname() types.Stackname {
 	return types.Stackname(me.GetId())
 }
 
-func (me *AuthorityModel) GetId() apimodeler.ItemId {
-	return apimodeler.ItemId(me.AuthorityId)
+func (me *AuthorityModel) GetId() ItemId {
+	return ItemId(me.AuthorityId)
 }
 
-func (me *AuthorityModel) SetStackId(itemid apimodeler.ItemId) (sts status.Status) {
+func (me *AuthorityModel) SetStackId(itemid ItemId) (sts Status) {
 	for range only.Once {
 		if !strings.Contains(string(itemid), ".") {
 			sts = status.Fail(&status.Args{
@@ -60,10 +59,10 @@ func (me *AuthorityModel) SetStackId(itemid apimodeler.ItemId) (sts status.Statu
 	return sts
 }
 
-func (me *AuthorityModel) GetItem() (apimodeler.ItemModeler, status.Status) {
+func (me *AuthorityModel) GetItem() (ItemModeler, Status) {
 	return me, nil
 }
 
-func (me *AuthorityModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
-	return make(apimodeler.List, 0), sts
+func (me *AuthorityModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
+	return make(List, 0), sts
 }

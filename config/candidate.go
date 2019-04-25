@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gearbox/jsonfile"
 	"gearbox/only"
-	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
 	"gearbox/util"
@@ -31,7 +30,7 @@ func NewCandidate(args *CandidateArgs) *Candidate {
 //
 // "enmarshal" means "prepare for marshalling
 //
-func (me *Candidate) Enmarshal() (sts status.Status) {
+func (me *Candidate) Enmarshal() (sts Status) {
 	me.FullPath, sts = me.GetFullPath()
 	return sts
 }
@@ -44,7 +43,7 @@ func (me *Candidate) GetPotentialHostname() types.Hostname {
 	return types.Hostname(strings.ToLower(string(hostname)))
 }
 
-func (me *Candidate) GetHostBasedir() (types.AbsoluteDir, status.Status) {
+func (me *Candidate) GetHostBasedir() (types.AbsoluteDir, Status) {
 	return me.Config.GetHostBasedir(me.Basedir)
 }
 
@@ -60,7 +59,7 @@ func (me *Candidate) IsProject() (ok bool) {
 	return ok
 }
 
-func (me *Candidate) GetFullPath() (fp types.AbsoluteDir, sts status.Status) {
+func (me *Candidate) GetFullPath() (fp types.AbsoluteDir, sts Status) {
 	for range only.Once {
 		fp, sts = me.Config.ExpandHostBasedirPath(me.Basedir, me.Path)
 		if is.Error(sts) {
