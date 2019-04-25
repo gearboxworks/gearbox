@@ -223,11 +223,6 @@ export default {
         // this.$router.push('/project/' + this.hostname)
       })
     },
-    onRunStop () {
-      this.$store.dispatch(
-        'changeProjectState', { 'projectHostname': this.id, 'isEnabled': !this.enabled }
-      )
-    },
     onClosePopoverFor (triggerElementId) {
       this.$root.$emit('bv::hide::popover', triggerElementId)
     },

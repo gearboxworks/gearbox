@@ -359,9 +359,7 @@ export default new Vuex.Store({
       const { projectId, isEnabled } = payload
       const project = this.getters.projectBy('id', projectId)
       if (project) {
-        // console.log(project.enabled)
-        Vue.set(project.attributes, 'enabled', !!isEnabled)
-        // console.log(project.enabled)
+        project.attributes.enabled = !!isEnabled
       }
     }
   }

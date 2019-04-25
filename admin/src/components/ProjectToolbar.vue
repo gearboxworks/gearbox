@@ -3,13 +3,13 @@
     <li class="toolbar-item">
       <a target="_blank"
          href="#"
-         :title="enabled ? 'Stop all services' : 'Run all services'"
+         :title="isRunning ? 'Stop all services' : 'Run all services'"
          v-b-tooltip.hover
          @click.prevent="onRunStop"
          class="toolbar-link toolbar-link--state"
       >
         <font-awesome-icon
-          :icon="['fa', enabled ? 'stop-circle': 'play-circle']"
+          :icon="['fa', isRunning ? 'stop-circle': 'play-circle']"
         />
       </a>
     </li>
@@ -17,9 +17,9 @@
     <li class="toolbar-item">
       <a target="_blank"
          :href="`//${hostname}/`"
-         title="Open Frontend"
+         :title="'Open Frontend'+ (isRunning ? '' : ' (not running)')"
          v-b-tooltip.hover
-         :class="['toolbar-link', 'toolbar-link--frontend', {'is-disabled': enabled}]"
+         :class="['toolbar-link', 'toolbar-link--frontend', {'is-disabled': !isRunning}]"
       >
         <font-awesome-icon
           :icon="['fa', 'home']"
@@ -30,9 +30,9 @@
     <li class="toolbar-item">
       <a target="_blank"
          :href="`//${hostname}/wp-admin/`"
-         title="Open Dashboard"
+         :title="'Open Dashboard'+ (isRunning ? '' : ' (not running)')"
          v-b-tooltip.hover
-         :class="['toolbar-link', 'toolbar-link--dashboard', {'is-disabled': enabled}]"
+         :class="['toolbar-link', 'toolbar-link--dashboard', {'is-disabled': !isRunning}]"
       >
         <font-awesome-icon
           :icon="['fa', 'tachometer-alt']"
@@ -56,18 +56,18 @@ export default {
       required: true
     }
   },
-
   data () {
     return {
       id: this.project.id,
-      hostname: this.project.attributes.hostname,
-      enabled: this.project.attributes.enabled
+      hostname: this.project.attributes.hostname
     }
   },
-
   computed: {
     projectBase () {
       return this.escAttr(this.id) + '-'
+    },
+    isRunning () {
+      return this.project.attributes.enabled
     }
   },
   methods: {
@@ -75,8 +75,9 @@ export default {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
     onRunStop () {
+      console.log('onRunStop')
       this.$store.dispatch(
-        'changeProjectState', { 'projectId': this.id, 'isEnabled': !this.enabled }
+        'changeProjectState', { 'projectId': this.id, 'isEnabled': !this.isRunning }
       )
     }
   }

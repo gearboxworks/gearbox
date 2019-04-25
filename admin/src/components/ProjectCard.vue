@@ -25,7 +25,7 @@
           placeholder="" />
       </b-form-group>
 
-      <project-toolbar :project="project" :projectIndex="projectIndex"></project-toolbar>
+      <project-toolbar :project="project" :projectIndex="projectIndex" :key="id + (enabled ? '-running':'-stopped')"></project-toolbar>
 
       <project-details :project="project" :projectIndex="projectIndex"></project-details>
 
@@ -41,7 +41,6 @@
 
 <script>
 
-import { mapGetters } from 'vuex'
 import ProjectToolbar from './ProjectToolbar'
 import ProjectDetails from './ProjectDetails'
 import ProjectStack from './ProjectStack'
@@ -71,9 +70,8 @@ export default {
     ProjectStack
   },
   computed: {
-    ...mapGetters(['groupProjectStacks']),
     projectBase () {
-      return this.escAttr(this.hostname) + '-'
+      return this.escAttr(this.id) + '-'
     }
   },
   methods: {
@@ -87,11 +85,8 @@ export default {
       this.$store.dispatch(
         'updateProject',
         {
-          'hostname': this.id,
-          'project': {
-            id: this.id,
-            attributes: this.$data
-          }
+          id: this.id,
+          attributes: this.$data
         }
       ).then(() => {
         // this.$router.push('/project/' + this.hostname)
