@@ -23,12 +23,12 @@ var _ util.FilepathHelpUrlGetter = (*Config)(nil)
 var _ Configer = (*Config)(nil)
 
 type Configer interface {
-	AddBasedir(types.AbsoluteDir, ...types.Nickname) status.Status
-	AddProject(*Project) status.Status
+	AddBasedir(types.AbsoluteDir, ...types.Nickname) Status
+	AddProject(*Project) Status
 	Bytes() []byte
-	DeleteProject(hostname types.Hostname) status.Status
-	ExpandHostBasedirPath(types.Nickname, types.RelativePath) (types.AbsoluteDir, status.Status)
-	FindProject(hostname types.Hostname) (*Project, status.Status)
+	DeleteProject(hostname types.Hostname) Status
+	ExpandHostBasedirPath(types.Nickname, types.RelativePath) (types.AbsoluteDir, Status)
+	FindProject(hostname types.Hostname) (*Project, Status)
 	GetBasedirMap() BasedirMap
 	GetBasedirNicknames() types.Nicknames
 	GetBoxBasedir() types.AbsoluteDir
@@ -36,19 +36,19 @@ type Configer interface {
 	GetDir() types.AbsoluteDir
 	GetFilepath() types.AbsoluteFilepath
 	GetHelpUrl() string
-	GetHostBasedir(types.Nickname) (types.AbsoluteDir, status.Status)
+	GetHostBasedir(types.Nickname) (types.AbsoluteDir, Status)
 	GetHostBasedirs() map[types.Nickname]types.AbsoluteDir
-	GetProjectMap() (ProjectMap, status.Status)
-	Initialize() (sts status.Status)
-	Load() status.Status
-	LoadProjects() status.Status
-	LoadProjectsAndWrite() status.Status
-	MaybeMakeDir(types.AbsoluteDir, os.FileMode) status.Status
+	GetProjectMap() (ProjectMap, Status)
+	Initialize() (sts Status)
+	Load() Status
+	LoadProjects() Status
+	LoadProjectsAndWrite() Status
+	MaybeMakeDir(types.AbsoluteDir, os.FileMode) Status
 	NamedBasedirExists(types.Nickname) bool
-	Unmarshal(j []byte) status.Status
-	UpdateBasedir(types.Nickname, types.AbsoluteDir) status.Status
-	UpdateProject(*Project) status.Status
-	WriteFile() status.Status
+	Unmarshal(j []byte) Status
+	UpdateBasedir(types.Nickname, types.AbsoluteDir) Status
+	UpdateProject(*Project) Status
+	WriteFile() Status
 }
 
 var ProjectRootAddCmd *cobra.Command
@@ -91,7 +91,7 @@ func NewConfig(OsSupport oss.OsSupporter) Configer {
 	return c
 }
 
-func (me *Config) AddProject(p *Project) (sts status.Status) {
+func (me *Config) AddProject(p *Project) (sts Status) {
 	for range only.Once {
 		pm, sts := me.GetProjectMap()
 		if status.IsError(sts) {
@@ -116,7 +116,7 @@ func (me *Config) AddProject(p *Project) (sts status.Status) {
 	return sts
 }
 
-func (me *Config) UpdateProject(p *Project) (sts status.Status) {
+func (me *Config) UpdateProject(p *Project) (sts Status) {
 	for range only.Once {
 		pm, sts := me.GetProjectMap()
 		if status.IsError(sts) {
@@ -133,7 +133,7 @@ func (me *Config) UpdateProject(p *Project) (sts status.Status) {
 	return sts
 }
 
-func (me *Config) DeleteProject(hostname types.Hostname) (sts status.Status) {
+func (me *Config) DeleteProject(hostname types.Hostname) (sts Status) {
 	for range only.Once {
 		pm, sts := me.GetProjectMap()
 		if status.IsError(sts) {
@@ -155,7 +155,7 @@ func (me *Config) DeleteProject(hostname types.Hostname) (sts status.Status) {
 	return sts
 }
 
-func (me *Config) Initialize() (sts status.Status) {
+func (me *Config) Initialize() (sts Status) {
 	sts = me.Load()
 	if status.IsError(sts) {
 		sts = me.WriteFile()
@@ -181,7 +181,7 @@ func (me *Config) GetBasedirNicknames() (nns types.Nicknames) {
 	return nns
 }
 
-func (me *Config) GetHostBasedir(nickname types.Nickname) (basedir types.AbsoluteDir, sts status.Status) {
+func (me *Config) GetHostBasedir(nickname types.Nickname) (basedir types.AbsoluteDir, sts Status) {
 	bd, ok := me.BasedirMap[nickname]
 	if ok {
 		basedir = bd.HostDir
@@ -228,7 +228,7 @@ func (me *Config) GetFilepath() types.AbsoluteFilepath {
 	return types.AbsoluteFilepath(fp)
 }
 
-func (me *Config) WriteFile() (sts status.Status) {
+func (me *Config) WriteFile() (sts Status) {
 	for range only.Once {
 		j, err := json.MarshalIndent(me, "", "    ")
 		if err != nil {
@@ -255,7 +255,7 @@ func (me *Config) WriteFile() (sts status.Status) {
 	return sts
 }
 
-func (me *Config) MaybeMakeDir(dir types.AbsoluteDir, mode os.FileMode) (sts status.Status) {
+func (me *Config) MaybeMakeDir(dir types.AbsoluteDir, mode os.FileMode) (sts Status) {
 	for range only.Once {
 		err := util.MaybeMakeDir(dir, mode)
 		if err == nil {
@@ -271,7 +271,7 @@ func (me *Config) MaybeMakeDir(dir types.AbsoluteDir, mode os.FileMode) (sts sta
 	return sts
 }
 
-func (me *Config) ReadBytes() (b []byte, sts status.Status) {
+func (me *Config) ReadBytes() (b []byte, sts Status) {
 	for range only.Once {
 		fp := me.GetFilepath()
 		b, sts = util.ReadBytes(fp)
@@ -287,7 +287,7 @@ func (me *Config) GetHelpUrl() string {
 	return HelpUrl
 }
 
-func (me *Config) Unmarshal(j []byte) (sts status.Status) {
+func (me *Config) Unmarshal(j []byte) (sts Status) {
 	for range only.Once {
 		sts := util.UnmarshalJson(j, me)
 		if status.IsError(sts) {
@@ -298,7 +298,7 @@ func (me *Config) Unmarshal(j []byte) (sts status.Status) {
 	return sts
 }
 
-func (me *Config) Load() (sts status.Status) {
+func (me *Config) Load() (sts Status) {
 	for range only.Once {
 		var j []byte
 		j, sts = me.ReadBytes()
@@ -316,7 +316,7 @@ func (me *Config) Load() (sts status.Status) {
 	return sts
 }
 
-func (me *Config) LoadProjectsAndWrite() (sts status.Status) {
+func (me *Config) LoadProjectsAndWrite() (sts Status) {
 	sts = me.LoadProjects()
 	if !status.IsError(sts) {
 		sts = me.WriteFile()
@@ -324,7 +324,7 @@ func (me *Config) LoadProjectsAndWrite() (sts status.Status) {
 	return sts
 }
 
-func (me *Config) GetProjectMap() (pm ProjectMap, sts status.Status) {
+func (me *Config) GetProjectMap() (pm ProjectMap, sts Status) {
 	for range only.Once {
 		if me.ProjectMap != nil {
 			break
@@ -334,11 +334,11 @@ func (me *Config) GetProjectMap() (pm ProjectMap, sts status.Status) {
 	return me.ProjectMap, sts
 }
 
-func (me *Config) FindProject(hostname types.Hostname) (*Project, status.Status) {
+func (me *Config) FindProject(hostname types.Hostname) (*Project, Status) {
 	return me.ProjectMap.FindProject(hostname)
 }
 
-func (me *Config) LoadProjects() (sts status.Status) {
+func (me *Config) LoadProjects() (sts Status) {
 	for range only.Once {
 		if len(me.BasedirMap) == 0 {
 			sts = status.Fail(&status.Args{
@@ -420,7 +420,7 @@ func (me *Config) LoadProjects() (sts status.Status) {
 	return sts
 }
 
-func (me *Config) ExpandHostBasedirPath(nickname types.Nickname, path types.RelativePath) (fp types.AbsoluteDir, sts status.Status) {
+func (me *Config) ExpandHostBasedirPath(nickname types.Nickname, path types.RelativePath) (fp types.AbsoluteDir, sts Status) {
 	for range only.Once {
 		sts = ValidateBasedirNickname(nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
@@ -438,7 +438,7 @@ func (me *Config) ExpandHostBasedirPath(nickname types.Nickname, path types.Rela
 	return fp, sts
 }
 
-func (me *Config) AddBasedir(dir types.AbsoluteDir, nickname ...types.Nickname) (sts status.Status) {
+func (me *Config) AddBasedir(dir types.AbsoluteDir, nickname ...types.Nickname) (sts Status) {
 	for range only.Once {
 		var nn types.Nickname
 		if len(nickname) > 0 {
@@ -459,15 +459,15 @@ func (me *Config) AddBasedir(dir types.AbsoluteDir, nickname ...types.Nickname) 
 	return sts
 }
 
-func (me *Config) GetNamedBasedir(nickname types.Nickname) (bd *Basedir, sts status.Status) {
+func (me *Config) GetNamedBasedir(nickname types.Nickname) (bd *Basedir, sts Status) {
 	return me.BasedirMap.GetNamedBasedir(nickname)
 }
 
-func (me *Config) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDir) (sts status.Status) {
+func (me *Config) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDir) (sts Status) {
 	return me.BasedirMap.UpdateBasedir(nickname, dir)
 }
 
-func (me *Config) DeleteNamedBasedir(nickname types.Nickname) (sts status.Status) {
+func (me *Config) DeleteNamedBasedir(nickname types.Nickname) (sts Status) {
 	return me.BasedirMap.DeleteNamedBasedir(nickname)
 }
 

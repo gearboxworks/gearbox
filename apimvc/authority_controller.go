@@ -2,7 +2,6 @@ package apimvc
 
 import (
 	"fmt"
-	"gearbox/apimodeler"
 	"gearbox/gearbox"
 	"gearbox/only"
 	"gearbox/status"
@@ -17,10 +16,10 @@ const AuthorityControllerName types.RouteName = "authorities"
 const AuthoritiesBasepath types.Basepath = "/authorities"
 
 var NilAuthorityController = (*AuthorityController)(nil)
-var _ apimodeler.ListController = NilAuthorityController
+var _ ListController = NilAuthorityController
 
 type AuthorityController struct {
-	apimodeler.Controller
+	Controller
 	Gearbox gearbox.Gearboxer
 }
 
@@ -30,11 +29,11 @@ func NewAuthorityController(gb gearbox.Gearboxer) *AuthorityController {
 	}
 }
 
-func (me *AuthorityController) GetRelatedFields() apimodeler.RelatedFields {
-	return apimodeler.RelatedFields{}
+func (me *AuthorityController) GetRelatedFields() RelatedFields {
+	return RelatedFields{}
 }
 
-func (me *AuthorityController) CanAddItem(*apimodeler.Context) bool {
+func (me *AuthorityController) CanAddItem(*Context) bool {
 	return false
 }
 
@@ -42,9 +41,9 @@ func (me *AuthorityController) GetName() types.RouteName {
 	return AuthorityControllerName
 }
 
-func (me *AuthorityController) GetListLinkMap(*apimodeler.Context, ...apimodeler.FilterPath) (lm apimodeler.LinkMap, sts status.Status) {
-	return apimodeler.LinkMap{
-		//apimodeler.RelatedRelType: apimodeler.Link("http://example.org"),
+func (me *AuthorityController) GetListLinkMap(*Context, ...FilterPath) (lm LinkMap, sts Status) {
+	return LinkMap{
+		//RelatedRelType: Link("http://example.org"),
 	}, sts
 }
 
@@ -56,15 +55,15 @@ func (me *AuthorityController) GetItemType() reflect.Kind {
 	return reflect.Struct
 }
 
-func (me *AuthorityController) GetIdParams() apimodeler.IdParams {
-	return apimodeler.IdParams{
+func (me *AuthorityController) GetIdParams() IdParams {
+	return IdParams{
 		AuthorityIdParam,
 		StacknameIdParam,
 		RoleIdParam,
 	}
 }
 
-func (me *AuthorityController) GetList(ctx *apimodeler.Context, filterPath ...apimodeler.FilterPath) (list apimodeler.List, sts status.Status) {
+func (me *AuthorityController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
 	for range only.Once {
 		gbgas, sts := me.Gearbox.GetGears().GetAuthorities()
 		if is.Error(sts) {
@@ -84,30 +83,30 @@ func (me *AuthorityController) GetList(ctx *apimodeler.Context, filterPath ...ap
 	return list, sts
 }
 
-func (me *AuthorityController) FilterList(ctx *apimodeler.Context, filterPath apimodeler.FilterPath) (list apimodeler.List, sts status.Status) {
+func (me *AuthorityController) FilterList(ctx *Context, filterPath FilterPath) (list List, sts Status) {
 	return me.GetList(ctx, filterPath)
 }
 
-func (me *AuthorityController) GetListIds(ctx *apimodeler.Context, filterPath ...apimodeler.FilterPath) (itemids apimodeler.ItemIds, sts status.Status) {
+func (me *AuthorityController) GetListIds(ctx *Context, filterPath ...FilterPath) (itemids ItemIds, sts Status) {
 	for range only.Once {
 		if len(filterPath) == 0 {
-			filterPath = []apimodeler.FilterPath{apimodeler.NoFilterPath}
+			filterPath = []FilterPath{NoFilterPath}
 		}
 		list, sts := me.GetList(ctx, filterPath[0])
 		if is.Error(sts) {
 			break
 		}
-		itemids = make(apimodeler.ItemIds, len(list))
+		itemids = make(ItemIds, len(list))
 		i := 0
 		for _, item := range list {
-			itemids[i] = apimodeler.ItemId(item.GetId())
+			itemids[i] = ItemId(item.GetId())
 			i++
 		}
 	}
 	return itemids, sts
 }
 
-func (me *AuthorityController) GetItem(ctx *apimodeler.Context, authorityid apimodeler.ItemId) (list apimodeler.ItemModeler, sts status.Status) {
+func (me *AuthorityController) GetItem(ctx *Context, authorityid ItemId) (list ItemModeler, sts Status) {
 	var ns *AuthorityModel
 	for range only.Once {
 		gbgs, sts := me.Gearbox.GetGears().FindAuthority(types.AuthorityDomain(authorityid))
@@ -127,20 +126,20 @@ func (me *AuthorityController) GetItem(ctx *apimodeler.Context, authorityid apim
 	return ns, sts
 }
 
-func (me *AuthorityController) GetItemDetails(ctx *apimodeler.Context, itemid apimodeler.ItemId) (apimodeler.ItemModeler, status.Status) {
+func (me *AuthorityController) GetItemDetails(ctx *Context, itemid ItemId) (ItemModeler, Status) {
 	return me.GetItem(ctx, itemid)
 }
 
-func (me *AuthorityController) FilterItem(in apimodeler.ItemModeler, filterPath apimodeler.FilterPath) (out apimodeler.ItemModeler, sts status.Status) {
+func (me *AuthorityController) FilterItem(in ItemModeler, filterPath FilterPath) (out ItemModeler, sts Status) {
 	out = in
 	return out, sts
 }
 
-func (me *AuthorityController) GetFilterMap() apimodeler.FilterMap {
-	return apimodeler.FilterMap{}
+func (me *AuthorityController) GetFilterMap() FilterMap {
+	return FilterMap{}
 }
 
-func assertAuthority(item apimodeler.ItemModeler) (s *AuthorityModel, sts status.Status) {
+func assertAuthority(item ItemModeler) (s *AuthorityModel, sts Status) {
 	s, ok := item.(*AuthorityModel)
 	if !ok {
 		sts = status.Fail(&status.Args{

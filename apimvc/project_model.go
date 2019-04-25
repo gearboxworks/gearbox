@@ -1,21 +1,19 @@
 package apimvc
 
 import (
-	"gearbox/apimodeler"
 	"gearbox/config"
 	"gearbox/gearspec"
 	"gearbox/only"
 	"gearbox/project"
 	"gearbox/service"
-	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
 )
 
-const ProjectModelType apimodeler.ItemType = "project"
+const ProjectModelType ItemType = "project"
 
 var NilProjectModel = (*ProjectModel)(nil)
-var _ apimodeler.ItemModeler = NilProjectModel
+var _ ItemModeler = NilProjectModel
 
 type ProjectModelMap map[types.Hostname]*ProjectModel
 type ProjectModels []*ProjectModel
@@ -32,7 +30,7 @@ type ProjectModel struct {
 	ConfigProject *config.Project         `json:"-"`
 }
 
-func NewModelFromConfigProject(cp *config.Project) (p *ProjectModel, sts status.Status) {
+func NewModelFromConfigProject(cp *config.Project) (p *ProjectModel, sts Status) {
 	for range only.Once {
 		pd, sts := cp.GetDir()
 		if is.Error(sts) {
@@ -50,36 +48,36 @@ func NewModelFromConfigProject(cp *config.Project) (p *ProjectModel, sts status.
 	return p, sts
 }
 
-func NewProjectModel(hostname apimodeler.ItemId) *ProjectModel {
+func NewProjectModel(hostname ItemId) *ProjectModel {
 	return &ProjectModel{
 		Hostname: types.Hostname(hostname),
 	}
 }
 
-func (me *ProjectModel) GetType() apimodeler.ItemType {
+func (me *ProjectModel) GetType() ItemType {
 	return ProjectModelType
 }
 
-func (me *ProjectModel) GetId() apimodeler.ItemId {
-	return apimodeler.ItemId(me.Hostname)
+func (me *ProjectModel) GetId() ItemId {
+	return ItemId(me.Hostname)
 }
 
-func (me *ProjectModel) SetStackId(hostname apimodeler.ItemId) status.Status {
+func (me *ProjectModel) SetStackId(hostname ItemId) Status {
 	me.Hostname = types.Hostname(hostname)
 	return nil
 }
 
-func (me *ProjectModel) GetItem() (apimodeler.ItemModeler, status.Status) {
+func (me *ProjectModel) GetItem() (ItemModeler, Status) {
 	return me, nil
 }
 
-func (me *ProjectModel) GetItemLinkMap(*apimodeler.Context) (lm apimodeler.LinkMap, sts status.Status) {
-	return apimodeler.LinkMap{
-		//apimodeler.RelatedRelType: apimodeler.Link("https://example.com"),
+func (me *ProjectModel) GetItemLinkMap(*Context) (lm LinkMap, sts Status) {
+	return LinkMap{
+		//RelatedRelType: Link("https://example.com"),
 	}, sts
 }
 
-func (me *ProjectModel) AddDetails(ctx *apimodeler.Context) (sts status.Status) {
+func (me *ProjectModel) AddDetails(ctx *Context) (sts Status) {
 	for range only.Once {
 		pp := project.NewProject(me.ConfigProject)
 		sts = pp.Load()
@@ -101,9 +99,9 @@ func (me *ProjectModel) AddDetails(ctx *apimodeler.Context) (sts status.Status) 
 	return sts
 }
 
-func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
+func (me *ProjectModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
 	for range only.Once {
-		list = make(apimodeler.List, 0)
+		list = make(List, 0)
 		for _, s := range me.Stack {
 			gsgs := gearspec.NewGearspec()
 			sts = gsgs.Parse(s.GearspecId)
@@ -140,7 +138,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //	return GetProjectFilterMap()
 //}
 //
-//func (me Projects) GetCollectionItemIds() (ab.ItemIds, status.Status) {
+//func (me Projects) GetCollectionItemIds() (ab.ItemIds, Status) {
 //	itemIds := make(ab.ItemIds, len(me))
 //	for i, p := range me {
 //		itemIds[i] = p.GetIdentifier()
@@ -148,7 +146,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //	return itemIds, nil
 //}
 //
-//func (me Projects) AddItem(item ab.ItemInstance) (collection ab.ItemCollection, sts status.Status) {
+//func (me Projects) AddItem(item ab.ItemInstance) (collection ab.ItemCollection, sts Status) {
 //	found := false
 //	collection = me
 //	var project *Project
@@ -174,7 +172,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //	return collection, sts
 //}
 //
-//func (me Projects) UpdateItem(item ab.ItemInstance) (collection ab.ItemCollection, sts status.Status) {
+//func (me Projects) UpdateItem(item ab.ItemInstance) (collection ab.ItemCollection, sts Status) {
 //	updated := false
 //	collection = me
 //	for range only.Once {
@@ -201,7 +199,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //	return collection, nil
 //}
 //
-//func (me Projects) DeleteItem(id ab.ItemId) (collection ab.ItemCollection, sts status.Status) {
+//func (me Projects) DeleteItem(id ab.ItemId) (collection ab.ItemCollection, sts Status) {
 //	deleted := false
 //	collection = me
 //	for i, p := range me {
@@ -221,7 +219,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //	return collection, nil
 //}
 //
-//func (me Projects) GetItem(id ab.ItemId) (item ab.ItemInstance, sts status.Status) {
+//func (me Projects) GetItem(id ab.ItemId) (item ab.ItemInstance, sts Status) {
 //	found := false
 //	for _, p := range me {
 //		if id != p.GetIdentifier() {
@@ -240,7 +238,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //	return item, sts
 //}
 //
-//func (me Projects) GetItemCollection(filterPath ab.FilterPath) (collection ab.ItemCollection, sts status.Status) {
+//func (me Projects) GetItemCollection(filterPath ab.FilterPath) (collection ab.ItemCollection, sts Status) {
 //	collection = make(Projects, len(me))
 //	for _, p := range me {
 //		p, sts = FilterProject(p, filterPath)
@@ -258,7 +256,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //	return collection, sts
 //}
 //
-//func (me Projects) GetCollectionSlice(filterPath ab.FilterPath) (slice ab.ItemInstances, sts status.Status) {
+//func (me Projects) GetCollectionSlice(filterPath ab.FilterPath) (slice ab.ItemInstances, sts Status) {
 //	slice = make(ab.ItemInstances, len(me))
 //	for i, p := range me {
 //		p, sts = FilterProject(p, filterPath)
@@ -309,7 +307,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //	"net/http"
 //)
 //
-//func getProjectHostname(rc *api.RequestContext) (hn gearbox.Hostname, sts status.Status) {
+//func getProjectHostname(rc *api.RequestContext) (hn gearbox.Hostname, sts Status) {
 //	for range only.Once {
 //		hn = gearbox.Hostname(rc.Param("hostname"))
 //		if hn == "" {
@@ -382,7 +380,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //
 //}
 //
-//func (me *Api) getProjectHostnameValues(...interface{}) (values api.ValuesFuncValues, sts status.Status) {
+//func (me *Api) getProjectHostnameValues(...interface{}) (values api.ValuesFuncValues, sts Status) {
 //	for range only.Once {
 //		var hns gearbox.Hostnames
 //		hns, sts = gearbox.GetProjectHostnames(me.Gearbox)
@@ -399,7 +397,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //}
 //
 //func (me *Api) getProjectStacksResponse(rc *api.RequestContext) (response interface{}) {
-//	var sts status.Status
+//	var sts Status
 //	for range only.Once {
 //		hn, sts := getProjectHostname(rc)
 //		if status.IsError(sts) {
@@ -418,7 +416,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //}
 //
 //func (me *Api) addProjectStack(rc *api.RequestContext) (response interface{}) {
-//	var sts status.Status
+//	var sts Status
 //	for range only.Once {
 //		var hn gearbox.Hostname
 //		hn, sts = getProjectHostname(rc)
@@ -449,7 +447,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //}
 //
 //func (me *Api) getProjectServicesResponse(rc *api.RequestContext) (response interface{}) {
-//	var sts status.Status
+//	var sts Status
 //	for range only.Once {
 //		var hn gearbox.Hostname
 //		hn, sts := getProjectHostname(rc)
@@ -479,7 +477,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //}
 //
 //func (me *Api) getProjectAliasesResponse(rc *api.RequestContext) (response interface{}) {
-//	var sts status.Status
+//	var sts Status
 //	for range only.Once {
 //		var hn gearbox.Hostname
 //		hn, sts = getProjectHostname(rc)
@@ -516,7 +514,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //}
 //
 //func (me *Api) getProjectsResponse(rc *api.RequestContext) (response interface{}) {
-//	var sts status.Status
+//	var sts Status
 //	var prs api.ListItemResponseMap
 //	for range only.Once {
 //		var pm gearbox.ProjectMap
@@ -574,7 +572,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //}
 //
 //func (me *Api) getProjectDetailsResponse(rc *api.RequestContext) (response interface{}) {
-//	var sts status.Status
+//	var sts Status
 //	for range only.Once {
 //		var hn gearbox.Hostname
 //		hn, sts := getProjectHostname(rc)
@@ -603,7 +601,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 //	return me.Api.NotYetImplemented(rc)
 //}
 //
-//func GetProjectHostnames(gb gearbox.Gearboxer) (hns Hostnames, sts status.Status) {
+//func GetProjectHostnames(gb gearbox.Gearboxer) (hns Hostnames, sts Status) {
 //	for range only.Once {
 //		pm, sts := gb.GetProjectMap()
 //		if status.IsError(sts) {

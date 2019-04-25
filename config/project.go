@@ -30,7 +30,7 @@ func NewProject(cfg Configer, path types.RelativePath) *Project {
 	}
 }
 
-func (me *Project) GetDir() (dir types.AbsoluteDir, sts status.Status) {
+func (me *Project) GetDir() (dir types.AbsoluteDir, sts Status) {
 	for range only.Once {
 		dir, sts = me.Config.GetHostBasedir(me.Basedir)
 		if status.IsError(sts) {
@@ -41,7 +41,7 @@ func (me *Project) GetDir() (dir types.AbsoluteDir, sts status.Status) {
 	return dir, sts
 }
 
-func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts status.Status) {
+func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts Status) {
 	for range only.Once {
 		var bd types.AbsoluteDir
 		bd, sts = me.Config.GetHostBasedir(me.Basedir)
@@ -53,7 +53,7 @@ func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts status.Status) 
 	return fp, sts
 }
 
-func (me *Project) GetFullpath() (dp types.AbsoluteDir, sts status.Status) {
+func (me *Project) GetFullpath() (dp types.AbsoluteDir, sts Status) {
 	for range only.Once {
 		dp, sts = me.Config.ExpandHostBasedirPath(me.Basedir, me.Path)
 		if is.Error(sts) {
@@ -72,7 +72,7 @@ func (me *Project) GetHostname() types.Hostname {
 	return types.Hostname(strings.ToLower(string(hostname)))
 }
 
-//func ValidateProjectHostname(hostname Hostname, args ...*ValidateArgs) (sts status.Status) {
+//func ValidateProjectHostname(hostname Hostname, args ...*ValidateArgs) (sts Status) {
 //	for range only.Once {
 //		var apiHelp string
 //		var _args *ValidateArgs

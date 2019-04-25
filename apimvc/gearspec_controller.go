@@ -16,13 +16,13 @@ import (
 
 const GearspecControllerName types.RouteName = "gearspecs"
 const GearspecsBasepath types.Basepath = "/gearspecs"
-const RoleIdParam apimodeler.IdParam = "role"
+const RoleIdParam IdParam = "role"
 
 var NilGearspecController = (*GearspecController)(nil)
-var _ apimodeler.ListController = NilGearspecController
+var _ ListController = NilGearspecController
 
 type GearspecController struct {
-	apimodeler.Controller
+	Controller
 	Gearbox gearbox.Gearboxer
 }
 
@@ -31,11 +31,11 @@ func NewGearspecController(gb gearbox.Gearboxer) *GearspecController {
 		Gearbox: gb,
 	}
 }
-func (me *GearspecController) GetRelatedFields() apimodeler.RelatedFields {
-	return apimodeler.RelatedFields{}
+func (me *GearspecController) GetRelatedFields() RelatedFields {
+	return RelatedFields{}
 }
 
-func (me *GearspecController) CanAddItem(*apimodeler.Context) bool {
+func (me *GearspecController) CanAddItem(*Context) bool {
 	return false
 }
 
@@ -43,9 +43,9 @@ func (me *GearspecController) GetName() types.RouteName {
 	return GearspecControllerName
 }
 
-func (me *GearspecController) GetListLinkMap(*apimodeler.Context, ...apimodeler.FilterPath) (lm apimodeler.LinkMap, sts status.Status) {
-	return apimodeler.LinkMap{
-		//apimodeler.RelatedRelType: apimodeler.Link("foobarbaz"),
+func (me *GearspecController) GetListLinkMap(*Context, ...FilterPath) (lm LinkMap, sts Status) {
+	return LinkMap{
+		//StatusRelatedRelType: StatusLink("foobarbaz"),
 	}, sts
 }
 
@@ -57,15 +57,15 @@ func (me *GearspecController) GetItemType() reflect.Kind {
 	return reflect.Struct
 }
 
-func (me *GearspecController) GetIdParams() apimodeler.IdParams {
-	return apimodeler.IdParams{
+func (me *GearspecController) GetIdParams() IdParams {
+	return IdParams{
 		AuthorityIdParam,
 		StacknameIdParam,
 		RoleIdParam,
 	}
 }
 
-func (me *GearspecController) GetList(ctx *apimodeler.Context, filterPath ...apimodeler.FilterPath) (list apimodeler.List, sts status.Status) {
+func (me *GearspecController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
 	for range only.Once {
 		gbgsrm, sts := me.Gearbox.GetGears().GetStackRoleMap()
 		if is.Error(sts) {
@@ -85,11 +85,11 @@ func (me *GearspecController) GetList(ctx *apimodeler.Context, filterPath ...api
 	return list, sts
 }
 
-func (me *GearspecController) FilterList(ctx *apimodeler.Context, filterPath apimodeler.FilterPath) (list apimodeler.List, sts status.Status) {
+func (me *GearspecController) FilterList(ctx *Context, filterPath FilterPath) (list List, sts Status) {
 	return me.GetList(ctx, filterPath)
 }
 
-func (me *GearspecController) GetListIds(ctx *apimodeler.Context, filterPath ...apimodeler.FilterPath) (itemids apimodeler.ItemIds, sts status.Status) {
+func (me *GearspecController) GetListIds(ctx *apimodeler.Context, filterPath ...apimodeler.FilterPath) (itemids apimodeler.ItemIds, sts Status) {
 	for range only.Once {
 		if len(filterPath) == 0 {
 			filterPath = []apimodeler.FilterPath{apimodeler.NoFilterPath}
@@ -108,7 +108,7 @@ func (me *GearspecController) GetListIds(ctx *apimodeler.Context, filterPath ...
 	return itemids, sts
 }
 
-func (me *GearspecController) GetItem(ctx *apimodeler.Context, gearspecid apimodeler.ItemId) (list apimodeler.ItemModeler, sts status.Status) {
+func (me *GearspecController) GetItem(ctx *apimodeler.Context, gearspecid apimodeler.ItemId) (list apimodeler.ItemModeler, sts Status) {
 	var ns *GearspecModel
 	for range only.Once {
 		gbgs, sts := me.Gearbox.GetGears().FindGearspec(gearspec.Identifier(gearspecid))
@@ -128,11 +128,11 @@ func (me *GearspecController) GetItem(ctx *apimodeler.Context, gearspecid apimod
 	return ns, sts
 }
 
-func (me *GearspecController) GetItemDetails(ctx *apimodeler.Context, itemid apimodeler.ItemId) (apimodeler.ItemModeler, status.Status) {
+func (me *GearspecController) GetItemDetails(ctx *apimodeler.Context, itemid apimodeler.ItemId) (apimodeler.ItemModeler, Status) {
 	return me.GetItem(ctx, itemid)
 }
 
-func (me *GearspecController) FilterItem(in apimodeler.ItemModeler, filterPath apimodeler.FilterPath) (out apimodeler.ItemModeler, sts status.Status) {
+func (me *GearspecController) FilterItem(in apimodeler.ItemModeler, filterPath apimodeler.FilterPath) (out apimodeler.ItemModeler, sts Status) {
 	out = in
 	return out, sts
 }
@@ -141,7 +141,7 @@ func (me *GearspecController) GetFilterMap() apimodeler.FilterMap {
 	return apimodeler.FilterMap{}
 }
 
-func assertGearspec(item apimodeler.ItemModeler) (s *GearspecModel, sts status.Status) {
+func assertGearspec(item ItemModeler) (s *GearspecModel, sts Status) {
 	s, ok := item.(*GearspecModel)
 	if !ok {
 		sts = status.Fail(&status.Args{
