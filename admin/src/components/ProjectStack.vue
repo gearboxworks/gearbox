@@ -101,19 +101,6 @@ export default {
     display: inline-block;
     color: #989898;
   }
-  .add-stack {
-/*    color: #fff;
-    background-color: #17a2b8;
-    border-color: #17a2b8;
-*/
-  }
-/*
-  .add-stack:hover {
-    color: #fff;
-    background-color: #138496;
-    border-color: #117a8b;
-  }
-*/
   .service-list{
     margin-bottom: 0;
     margin-left: auto;

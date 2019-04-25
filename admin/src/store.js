@@ -84,10 +84,7 @@ export default new Vuex.Store({
       })
       return options
     },
-    projectServiceDefaults: (state) => (serviceName, stackName) => {
-      const org = serviceName.substring(0, serviceName.indexOf('/'))
-      const service = state.gearServices[serviceName]
-
+    preselectService: (state) => (services, defaultService) => {
       /**
        * Resolve default option:
        * - if exact match is found, use it
@@ -95,44 +92,24 @@ export default new Vuex.Store({
        */
       let firstFound = -1
       let exactFound = -1
-      if (service.default) {
-        for (var i = service.options.length; i--;) {
-          if (service.options[i].indexOf(service.default) !== -1) {
+      if (defaultService) {
+        for (var i = services.length; i--;) {
+          if (services[i].indexOf(defaultService) !== -1) {
             if (firstFound === -1) {
               firstFound = i
             }
-            if (service.options[i] === service.default) {
+            if (services[i] === defaultService) {
               exactFound = i
               break
             }
           }
         }
       }
-      const defaultOpt = (firstFound !== -1)
-        ? service.options[ exactFound !== -1 ? exactFound : firstFound ]
+      const selectedService = (firstFound !== -1)
+        ? services[ exactFound !== -1 ? exactFound : firstFound ]
         : ''
 
-      const ver = defaultOpt ? defaultOpt.split(':')[1].split('.') : ''
-
-      const newService = {
-        'authority': org,
-        'org': org.replace('.', ''),
-        'stack': stackName.substring(stackName.indexOf('/') + 1),
-        'service_id': defaultOpt ? service.org + '/' + defaultOpt : '',
-        'program': defaultOpt ? defaultOpt.substring(0, defaultOpt.indexOf(':')) : '',
-        'version': {}
-      }
-
-      if (ver.length > 0) {
-        newService.version.major = ver[0]
-      }
-      if (ver.length > 1) {
-        newService.version.minor = ver[1]
-      }
-      if (ver.length > 2) {
-        newService.version.patch = ver[2]
-      }
-      return newService
+      return selectedService
     }
   },
   actions: {
@@ -290,20 +267,27 @@ export default new Vuex.Store({
     SET_REMAINING_RETRIES (state, remainingRetries) {
       state.connectionStatus.remainingRetries = remainingRetries
     },
-    SET_BASEDIRS (state, baseDirs) {
-      state.baseDirs = baseDirs
-    },
     ADD_BASEDIR (state, baseDir) {
       state.baseDirs[baseDir.value] = baseDir
     },
     ADD_PROJECT_STACK (state, payload) {
       const { projectId, stackId } = payload
       const project = this.getters.projectBy('id', projectId)
-      const genericServiceName = stackId.substring(stackId.indexOf('/') + 1)
-      if (project) {
-        for (const serviceName in this.getters.stackBy('id', stackId)) {
-          Vue.set(project.attributes.stack, genericServiceName, this.projectServiceDefaults(stackId, serviceName))
+      const stack = this.getters.stackBy('id', stackId)
+      if (project && stack && stack.attributes.members.length) {
+        if (typeof project.attributes.stack === 'undefined') {
+          Vue.set(project.attributes, 'stack', [])
         }
+        stack.attributes.members.forEach((el, idx) => {
+          const serviceId = this.getters.preselectService(el.services, el.default_service)
+          if (serviceId && el.gearspec_id) {
+            // reactive!
+            project.attributes.stack.push({
+              service_id: serviceId,
+              gearspec_id: el.gearspec_id
+            })
+          }
+        })
       }
     },
     REMOVE_PROJECT_STACK (state, payload) {

@@ -223,9 +223,9 @@ export default {
     onClosePopoverFor (triggerElementId) {
       this.$root.$emit('bv::hide::popover', triggerElementId)
     },
-    addProjectStack (stackName) {
+    addProjectStack (stackId) {
       this.selectedService = ''
-      this.$store.dispatch('addProjectStack', { 'projectId': this.id, stackName })
+      this.$store.dispatch('addProjectStack', { 'projectId': this.id, stackId })
     },
     sanitizePath (path) {
       const sanitized = filenamify(path).trim()
