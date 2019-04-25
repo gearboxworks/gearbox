@@ -9,7 +9,7 @@
       <b-form-input
         disabled
         :id="`${projectBase}location-input`"
-        :value="resolveDir(basedir, path)"
+        :value="resolveDir(currentBasedir, path)"
         class="location-input"
       />
       <a target="_blank"
@@ -56,7 +56,7 @@
           required
           disabled
           v-else
-          :value="this.$store.state.baseDirs[basedir] ? this.$store.state.baseDirs[basedir].text : ''"
+          :value="currentBasedir"
         />
 
       </b-form-group>
@@ -136,9 +136,13 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ serviceBy: 'serviceBy', gearspecBy: 'gearspecBy', allGearspecs: 'gearspecs/all', allStacks: 'stacks/all' }),
+    ...mapGetters({ basedirBy: 'basedirBy', serviceBy: 'serviceBy', gearspecBy: 'gearspecBy', allGearspecs: 'gearspecs/all', allStacks: 'stacks/all' }),
     projectBase () {
       return this.escAttr(this.id) + '-'
+    },
+    currentBasedir () {
+      const basedir = this.basedirBy('id', this.basedir)
+      return basedir ? basedir.attributes.host_dir : ''
     },
     stacksNotInProject () {
       const result = {}
@@ -199,15 +203,8 @@ export default {
       // console.log('groupProjectStacks', result)
       return result
     },
-    resolveDir (basedir, projectPath) {
-      const dir = this.$store.state.baseDirs[basedir]
-      const slash = (typeof dir !== 'undefined')
-        ? ((dir.text.indexOf('/') !== -1) ? '/' : '\\')
-        : '/'
-      // console.log(this.$store.state.baseDirs[basedir])
-      return (typeof dir !== 'undefined')
-        ? (dir.text + slash + projectPath)
-        : ''
+    resolveDir (dir, path) {
+      return dir + ((dir.indexOf('/') !== -1) ? '/' : '\\') + path
     },
     showDetails () {
       this.showingDetails = true

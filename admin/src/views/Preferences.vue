@@ -17,23 +17,23 @@
         </b-form-row>
 
         <b-form-row
-          v-for="(baseDir, value) in $store.state.baseDirs"
-          :key="value"
+          v-for="basedir in $store.state.basedirs.records"
+          :key="basedir.id"
           class="my-1">
           <b-col sm="4">
             <b-form-input
-              :id="value+'BaseDirName'"
+              :id="basedir.id+'BaseDirName'"
               type="text"
-              v-model="baseDir.value"
+              v-model="basedir.id"
               required
               placeholder="Name" />
           </b-col>
 
           <b-col sm="7">
             <b-form-input
-              :id="value+'BaseDirPath'"
+              :id="basedir.id+'BaseDirPath'"
               type="text"
-              v-model="baseDir.text"
+              v-model="basedir.attributes.host_dir"
               required
               placeholder="Path" />
           </b-col>
@@ -85,7 +85,7 @@ export default {
     // ...mapState(['baseDirs'])
   },
   mounted () {
-    this.$store.dispatch('loadBaseDirs')
+    this.$store.dispatch('basedirs/loadAll')
   },
   methods: {
     addNewBaseDir () {

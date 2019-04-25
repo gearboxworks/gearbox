@@ -20,7 +20,8 @@ export default new Vuex.Store({
         'stacks',
         'services',
         'gearspecs',
-        'projects'
+        'projects',
+        'basedirs'
       ],
       httpClient: HTTP
     })
@@ -30,34 +31,27 @@ export default new Vuex.Store({
     services: [],
     gearspecs: [],
     projects: [],
-    baseDirs: {
-      'primary': {
-        text: '~/Sites'
-      }
-    },
+    basedirs: [],
     connectionStatus: {
       networkError: null,
       remainingRetries: 5
     }
   },
   getters: {
+    basedirBy: (state) => (fieldName, fieldValue) => {
+      return (fieldName === 'id')
+        ? state.basedirs.records.find(p => p.id === fieldValue)
+        : state.basedirs.records.find(p => p.attributes[fieldName] === fieldValue)
+    },
     stackBy: (state) => (fieldName, fieldValue) => {
-      let item = null
-      if (fieldName === 'id') {
-        item = state.stacks.records.find(p => p.id === fieldValue)
-      } else {
-        item = state.stacks.records.find(p => p.attributes[fieldName] === fieldValue)
-      }
-      return item
+      return (fieldName === 'id')
+        ? state.stacks.records.find(p => p.id === fieldValue)
+        : state.stacks.records.find(p => p.attributes[fieldName] === fieldValue)
     },
     serviceBy: (state) => (fieldName, fieldValue) => {
-      let item = null
-      if (fieldName === 'id') {
-        item = state.services.records.find(p => p.id === fieldValue)
-      } else {
-        item = state.services.records.find(p => p.attributes[fieldName] === fieldValue)
-      }
-      return item
+      return (fieldName === 'id')
+        ? state.services.records.find(p => p.id === fieldValue)
+        : state.services.records.find(p => p.attributes[fieldName] === fieldValue)
     },
     gearspecBy: (state) => (fieldName, fieldValue) => {
       return (fieldName === 'id')
@@ -81,21 +75,14 @@ export default new Vuex.Store({
       return memberIndex
     },
     baseDirsAsOptions: (state) => {
-      const options = [{
-        'value': 'primary',
-        'text': '~/Sites'
-      }]
+      const options = []
+      state.basedirs.records.forEach((el, idx) => {
+        options.push({
+          value: el.id,
+          text: el.host_dir
+        })
+      })
       return options
-      // for (const baseDirName in state.baseDirs) {
-      //   if (!state.baseDirs.hasOwnProperty(baseDirName)) {
-      //     continue
-      //   }
-      //   options.push({
-      //     value: baseDirName,
-      //     text: state.baseDirs[baseDirName].text
-      //   })
-      // }
-      // return options
     },
     projectServiceDefaults: (state) => (serviceName, stackName) => {
       const org = serviceName.substring(0, serviceName.indexOf('/'))

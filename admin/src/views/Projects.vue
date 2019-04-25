@@ -27,6 +27,10 @@ export default {
     })
   },
   mounted () {
+    this.$store.dispatch('basedirs/loadAll').then(() => {
+      // const stacks = this.$store.getters['stacks/all']
+    })
+
     this.$store.dispatch('stacks/loadAll').then(() => {
       // const stacks = this.$store.getters['stacks/all']
     })
