@@ -18,7 +18,7 @@ type ProjectStackItemDetail struct {
 type ProjectStackItems []*ProjectStackItem
 type ProjectStackItem struct {
 	GearspecId gearspec.Identifier `json:"gearspec_id,omitempty"`
-	ServiceId  service.Identifier  `json:"service_id,omitempty"`
+	ServiceId  service.Identifier  `json:"service_id"`
 }
 
 func NewProjectStackItemFromServiceModel(sm *ServiceModel) (si *ProjectStackItem) {
