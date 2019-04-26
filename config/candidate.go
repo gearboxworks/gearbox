@@ -43,13 +43,13 @@ func (me *Candidate) GetPotentialHostname() types.Hostname {
 	return types.Hostname(strings.ToLower(string(hostname)))
 }
 
-func (me *Candidate) GetHostBasedir() (types.AbsoluteDir, Status) {
-	return me.Config.GetHostBasedir(me.Basedir)
+func (me *Candidate) GetBasedir() (types.AbsoluteDir, Status) {
+	return me.Config.GetBasedir(me.Basedir)
 }
 
 func (me *Candidate) IsProject() (ok bool) {
 	for range only.Once {
-		bd, sts := me.GetHostBasedir()
+		bd, sts := me.GetBasedir()
 		if is.Error(sts) {
 			break
 		}
@@ -61,7 +61,7 @@ func (me *Candidate) IsProject() (ok bool) {
 
 func (me *Candidate) GetFullPath() (fp types.AbsoluteDir, sts Status) {
 	for range only.Once {
-		fp, sts = me.Config.ExpandHostBasedirPath(me.Basedir, me.Path)
+		fp, sts = me.Config.ExpandBasedirPath(me.Basedir, me.Path)
 		if is.Error(sts) {
 			break
 		}

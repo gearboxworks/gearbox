@@ -131,7 +131,7 @@ func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts status.Status) 
 		if me.Filepath != "" {
 			break
 		}
-		bd, sts = me.Config.GetHostBasedir(me.Basedir)
+		bd, sts = me.Config.GetBasedir(me.Basedir)
 		if is.Error(sts) {
 			break
 		}

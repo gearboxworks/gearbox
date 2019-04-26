@@ -16,15 +16,13 @@ type BasedirModels []*BasedirModel
 
 type BasedirModel struct {
 	Nickname types.Nickname    `json:"nickname"`
-	HostDir  types.AbsoluteDir `json:"host_dir"`
-	BoxDir   types.AbsoluteDir `json:"box_dir"`
+	Basedir  types.AbsoluteDir `json:"basedir"`
 }
 
 func NewModelFromConfigBasedir(ctx *Context, bd *config.Basedir) (s *BasedirModel, sts Status) {
 	s = &BasedirModel{
 		Nickname: bd.Nickname,
-		HostDir:  bd.HostDir,
-		BoxDir:   bd.BoxDir,
+		Basedir:  bd.Basedir,
 	}
 	return s, sts
 }

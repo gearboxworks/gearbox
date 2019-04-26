@@ -147,10 +147,7 @@ func GetBasedirFilterMap() FilterMap {
 }
 
 func MakeConfigBasedir(cfg config.Configer, bdm *BasedirModel) (bd *config.Basedir, sts Status) {
-	bd = config.NewBasedir(bdm.HostDir, &config.BasedirArgs{
-		Nickname: bdm.Nickname,
-		BoxDir:   bdm.BoxDir,
-	})
+	bd = config.NewBasedir(bdm.Nickname, bdm.Basedir)
 	return bd, sts
 }
 

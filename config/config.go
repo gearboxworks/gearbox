@@ -26,19 +26,19 @@ type Configer interface {
 	AddBasedir(types.AbsoluteDir, ...types.Nickname) Status
 	AddProject(*Project) Status
 	Bytes() []byte
-	DeleteProject(hostname types.Hostname) Status
-	ExpandHostBasedirPath(types.Nickname, types.RelativePath) (types.AbsoluteDir, Status)
-	FindProject(hostname types.Hostname) (*Project, Status)
-	FindBasedir(nickname types.Nickname) (*Basedir, Status)
+	DeleteProject(types.Hostname) Status
+	ExpandBasedirPath(types.Nickname, types.RelativePath) (types.AbsoluteDir, Status)
+	FindProject(types.Hostname) (*Project, Status)
+	FindBasedir(types.Nickname) (*Basedir, Status)
 	GetBasedirMap() BasedirMap
 	GetBasedirNicknames() types.Nicknames
-	GetBoxBasedir() types.AbsoluteDir
+	GetBoxBasedir(types.Nickname) types.AbsoluteDir
 	GetCandidates() Candidates
 	GetDir() types.AbsoluteDir
 	GetFilepath() types.AbsoluteFilepath
 	GetHelpUrl() string
-	GetHostBasedir(types.Nickname) (types.AbsoluteDir, Status)
-	GetHostBasedirs() map[types.Nickname]types.AbsoluteDir
+	GetBasedir(types.Nickname) (types.AbsoluteDir, Status)
+	GetBasedirs() map[types.Nickname]types.AbsoluteDir
 	GetProjectMap() (ProjectMap, Status)
 	Initialize() (sts Status)
 	Load() Status
@@ -83,11 +83,9 @@ func NewConfig(OsSupport oss.OsSupporter) Configer {
 		Candidates:    make(Candidates, 0),
 		BoxBasedir:    box.Basedir,
 	}
-	c.BasedirMap[PrimaryBasedirNickname] = NewBasedir(
+	c.BasedirMap[DefaultBasedirNickname] = NewBasedir(
+		DefaultBasedirNickname,
 		c.OsSupport.GetSuggestedBasedir(),
-		&BasedirArgs{
-			Nickname: PrimaryBasedirNickname,
-		},
 	)
 	return c
 }
@@ -168,8 +166,15 @@ func (me *Config) GetCandidates() Candidates {
 	return me.Candidates
 }
 
-func (me *Config) GetBoxBasedir() types.AbsoluteDir {
-	return me.BoxBasedir
+func (me *Config) GetBoxBasedir(nickname types.Nickname) types.AbsoluteDir {
+	return types.AbsoluteDir(
+		strings.Replace(
+			BoxBasedirTemplate,
+			NicknameTemplateVar,
+			string(nickname),
+			-1,
+		),
+	)
 }
 
 func (me *Config) GetBasedirNicknames() (nns types.Nicknames) {
@@ -182,10 +187,10 @@ func (me *Config) GetBasedirNicknames() (nns types.Nicknames) {
 	return nns
 }
 
-func (me *Config) GetHostBasedir(nickname types.Nickname) (basedir types.AbsoluteDir, sts Status) {
+func (me *Config) GetBasedir(nickname types.Nickname) (basedir types.AbsoluteDir, sts Status) {
 	bd, ok := me.BasedirMap[nickname]
 	if ok {
-		basedir = bd.HostDir
+		basedir = bd.Basedir
 		sts = status.Success("hostdir found for nickname '%s'", nickname)
 	} else {
 		sts = status.Fail(&status.Args{
@@ -218,10 +223,10 @@ func (me *Config) FindBasedir(nickname types.Nickname) (bd *Basedir, sts Status)
 	return bd, sts
 }
 
-func (me *Config) GetHostBasedirs() map[types.Nickname]types.AbsoluteDir {
+func (me *Config) GetBasedirs() map[types.Nickname]types.AbsoluteDir {
 	bds := make(map[types.Nickname]types.AbsoluteDir, len(me.BasedirMap))
 	for _, bd := range me.BasedirMap {
-		bds[bd.Nickname] = bd.HostDir
+		bds[bd.Nickname] = bd.Basedir
 	}
 	return bds
 }
@@ -363,22 +368,22 @@ func (me *Config) LoadProjects() (sts Status) {
 		me.Candidates = make(Candidates, 0)
 		baseDirs := make([]string, 0)
 		for bdnn, bd := range me.BasedirMap {
-			baseDirs = append(baseDirs, fmt.Sprintf("'%s'", bd.HostDir)) // For status message
+			baseDirs = append(baseDirs, fmt.Sprintf("'%s'", bd.Basedir)) // For status message
 			bd.Nickname = bdnn                                           // In case it is not set, since it is not written to JSON as a property
 			var files []os.FileInfo
-			if !util.DirExists(bd.HostDir) {
-				err := os.Mkdir(string(bd.HostDir), 0777)
+			if !util.DirExists(bd.Basedir) {
+				err := os.Mkdir(string(bd.Basedir), 0777)
 				if err != nil {
 					sts = status.Wrap(err, &status.Args{
-						Message: fmt.Sprintf("unable to make directory '%s'", bd.HostDir),
+						Message: fmt.Sprintf("unable to make directory '%s'", bd.Basedir),
 					})
 					break
 				}
 			}
-			files, err := ioutil.ReadDir(string(bd.HostDir))
+			files, err := ioutil.ReadDir(string(bd.Basedir))
 			if err != nil {
 				sts = status.Wrap(err, &status.Args{
-					Message: fmt.Sprintf("unable to read directory %s", bd.HostDir),
+					Message: fmt.Sprintf("unable to read directory %s", bd.Basedir),
 				})
 				break
 			}
@@ -432,7 +437,7 @@ func (me *Config) LoadProjects() (sts Status) {
 	return sts
 }
 
-func (me *Config) ExpandHostBasedirPath(nickname types.Nickname, path types.RelativePath) (fp types.AbsoluteDir, sts Status) {
+func (me *Config) ExpandBasedirPath(nickname types.Nickname, path types.RelativePath) (fp types.AbsoluteDir, sts Status) {
 	for range only.Once {
 		sts = ValidateBasedirNickname(nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
@@ -441,7 +446,7 @@ func (me *Config) ExpandHostBasedirPath(nickname types.Nickname, path types.Rela
 		if is.Error(sts) {
 			break
 		}
-		bd, sts := me.GetHostBasedir(nickname)
+		bd, sts := me.GetBasedir(nickname)
 		if is.Error(sts) {
 			break
 		}
@@ -462,10 +467,7 @@ func (me *Config) AddBasedir(dir types.AbsoluteDir, nickname ...types.Nickname) 
 			})
 			break
 		}
-		bd := NewBasedir(dir, &BasedirArgs{
-			BoxDir:   me.GetBoxBasedir(),
-			Nickname: types.Nickname(nn),
-		})
+		bd := NewBasedir(nn, dir)
 		sts = me.BasedirMap.AddBasedir(bd)
 	}
 	return sts

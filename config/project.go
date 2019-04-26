@@ -32,7 +32,7 @@ func NewProject(cfg Configer, path types.RelativePath) *Project {
 
 func (me *Project) GetDir() (dir types.AbsoluteDir, sts Status) {
 	for range only.Once {
-		dir, sts = me.Config.GetHostBasedir(me.Basedir)
+		dir, sts = me.Config.GetBasedir(me.Basedir)
 		if status.IsError(sts) {
 			break
 		}
@@ -44,7 +44,7 @@ func (me *Project) GetDir() (dir types.AbsoluteDir, sts Status) {
 func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts Status) {
 	for range only.Once {
 		var bd types.AbsoluteDir
-		bd, sts = me.Config.GetHostBasedir(me.Basedir)
+		bd, sts = me.Config.GetBasedir(me.Basedir)
 		if status.IsError(sts) {
 			break
 		}
@@ -55,7 +55,7 @@ func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts Status) {
 
 func (me *Project) GetFullpath() (dp types.AbsoluteDir, sts Status) {
 	for range only.Once {
-		dp, sts = me.Config.ExpandHostBasedirPath(me.Basedir, me.Path)
+		dp, sts = me.Config.ExpandBasedirPath(me.Basedir, me.Path)
 		if is.Error(sts) {
 			break
 		}

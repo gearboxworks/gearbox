@@ -396,7 +396,7 @@ func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery
 //func (me *Parent) GetProjectDir(path types.RelativePath, basedir types.Nickname) (bd types.AbsoluteDir, sts status.Status) {
 //	for range only.Once {
 //		var bd types.AbsoluteDir
-//		bd, sts = me.Config.GetHostBasedir(basedir)
+//		bd, sts = me.Config.GetBasedir(basedir)
 //		if status.IsError(sts) {
 //			break
 //		}

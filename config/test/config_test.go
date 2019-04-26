@@ -49,7 +49,7 @@ func TestEmptyConfig(t *testing.T) {
 						return
 					}
 					var basedir types.AbsoluteDir
-					basedir, sts = c.GetHostBasedir(p.Basedir)
+					basedir, sts = c.GetBasedir(p.Basedir)
 					if is.Error(sts) {
 						t.Error(sts.Message())
 						return

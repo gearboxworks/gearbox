@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"gearbox/box"
 	"gearbox/help"
 	"gearbox/only"
 	"gearbox/status"
@@ -21,43 +20,37 @@ type Basedirs []*Basedir
 
 type Basedir struct {
 	Nickname types.Nickname    `json:"nickname"`
-	HostDir  types.AbsoluteDir `json:"host_dir"`
-	BoxDir   types.AbsoluteDir `json:"box_dir"`
+	Basedir  types.AbsoluteDir `json:"basedir"`
 	Err      error             `json:"-"`
 }
 type BasedirArgs Basedir
 
-func NewBasedir(hostdir types.AbsoluteDir, args ...*BasedirArgs) *Basedir {
-	var _args *BasedirArgs
-	if len(args) == 0 {
-		_args = &BasedirArgs{HostDir: hostdir}
-	} else {
-		_args = args[0]
+func NewBasedir(nickname types.Nickname, basedir types.AbsoluteDir) *Basedir {
+	return &Basedir{
+		Nickname: nickname,
+		Basedir:  basedir,
 	}
-	bd := Basedir(*_args)
-	bd.HostDir = hostdir
-	return &bd
 }
 func (me *Basedir) MaybeExpandHostDir() (sts Status) {
 	for range only.Once {
-		origDir := me.HostDir
-		if strings.HasPrefix(string(me.HostDir), "~") {
-			dir, err := homedir.Expand(string(me.HostDir))
+		origDir := me.Basedir
+		if strings.HasPrefix(string(me.Basedir), "~") {
+			dir, err := homedir.Expand(string(me.Basedir))
 			if err != nil {
 				sts = status.Wrap(err, &status.Args{
 					Message: fmt.Sprintf("could not expand '%s' dir '%s'",
 						me.Nickname,
-						me.HostDir,
+						me.Basedir,
 					),
 				})
 				break
 			}
-			me.HostDir = types.AbsoluteDir(dir)
+			me.Basedir = types.AbsoluteDir(dir)
 		}
 		sts = status.Success("directory '%s' expanded from '%s' to '%s'",
 			me.Nickname,
 			origDir,
-			me.HostDir,
+			me.Basedir,
 		)
 	}
 	return sts
@@ -65,8 +58,8 @@ func (me *Basedir) MaybeExpandHostDir() (sts Status) {
 
 func (me *Basedir) Initialize() (sts Status) {
 	for range only.Once {
-		if me.HostDir == "" {
-			me.Err = errors.New("Basedir.HostDir has no value")
+		if me.Basedir == "" {
+			me.Err = errors.New("Basedir.Basedir has no value")
 			sts = status.Wrap(me.Err, &status.Args{
 				Message:    me.Err.Error(),
 				HttpStatus: http.StatusBadRequest,
@@ -80,17 +73,7 @@ func (me *Basedir) Initialize() (sts Status) {
 			break
 		}
 		if me.Nickname == "" {
-			me.Nickname = types.Nickname(filepath.Base(string(me.HostDir)))
-		}
-		if me.Nickname == PrimaryBasedirNickname {
-			me.BoxDir = box.Basedir
-			break
-		}
-		if me.BoxDir == "" || me.BoxDir == box.Basedir {
-			me.BoxDir = types.AbsoluteDir(filepath.FromSlash(fmt.Sprintf("%s/%s",
-				box.Basedir,
-				me.Nickname,
-			)))
+			me.Nickname = types.Nickname(filepath.Base(string(me.Basedir)))
 		}
 	}
 	return sts
@@ -103,7 +86,7 @@ func (me BasedirMap) NamedBasedirExists(nickname types.Nickname) (ok bool) {
 
 func (me BasedirMap) BasedirExists(dir types.AbsoluteDir) (ok bool) {
 	for _, bd := range me {
-		if bd.HostDir != dir {
+		if bd.Basedir != dir {
 			continue
 		}
 		ok = true
@@ -138,7 +121,7 @@ func (me BasedirMap) DeleteNamedBasedir(nickname types.Nickname) (sts Status) {
 		delete(me, nickname)
 		sts = status.Success("named base dir '%s' ('%s') deleted",
 			nickname,
-			bd.HostDir,
+			bd.Basedir,
 		)
 	}
 	return sts
@@ -157,7 +140,7 @@ func (me BasedirMap) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDi
 		if is.Error(sts) {
 			break
 		}
-		bd.HostDir = dir
+		bd.Basedir = dir
 		sts = bd.MaybeExpandHostDir()
 		if status.IsError(sts) {
 			break
@@ -169,7 +152,7 @@ func (me BasedirMap) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDi
 		sts = status.Success(
 			"named base dir '%s' updated to: '%s'",
 			nickname,
-			bd.HostDir,
+			bd.Basedir,
 		)
 	}
 	return sts
@@ -190,7 +173,7 @@ func (me BasedirMap) AddBasedir(basedir *Basedir) (sts Status) {
 			break
 		}
 		me[basedir.Nickname] = basedir
-		sts = status.Success("base dir '%s' added", basedir.HostDir)
+		sts = status.Success("base dir '%s' added", basedir.Basedir)
 		sts.SetHttpStatus(http.StatusCreated)
 	}
 	return sts
