@@ -24,7 +24,7 @@ import (
 //
 
 const (
-	UiWindowTitle = "Parent"
+	UiWindowTitle = "Gearbox"
 	UiHeight      = 800
 	UiWidth       = 1024
 	UiResizable   = true
@@ -131,7 +131,7 @@ func (me *AdminUi) StartLorca() {
 		win.Height,
 	)
 	if err != nil {
-		log.Printf("error loading Lorca to view Parent Admin UI: %s\n", err)
+		log.Printf("error loading Lorca to view Gearbox Admin UI: %s\n", err)
 	}
 	<-ui.Done()
 }

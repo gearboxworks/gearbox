@@ -132,12 +132,12 @@ func (me *Box) Initialize() (sts status.Status) {
 		me.OvaFile = fmt.Sprintf("%s/%s", cfgdir, OvaFileName)
 
 		// The OvaFile is created from an export from within VirtualBox.
-		// VBoxManage export Parent -o Parent.ova --options manifest
+		// VBoxManage export Gearbox -o Gearbox.ova --options manifest
 		// This was the best way to create a base template, avoiding too much code bloat.
 		// And allows multiple VM frameworks to be used with libretto.
 		// It doesn't include the ISO image yet as it is too large.
 		// Once the ISO image size has been reduced, we can do this:
-		// VBoxManage export Parent -o Parent.ova --options iso,manifest
+		// VBoxManage export Gearbox -o Gearbox.ova --options iso,manifest
 
 		_, err := os.Stat(me.OvaFile)
 		if os.IsExist(err) {

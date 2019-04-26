@@ -146,7 +146,7 @@ func (me *Gears) Initialize() (sts status.Status) {
 		me.refreshed = true
 	}
 	if !status.IsError(sts) {
-		sts = status.Success("Parent initialized successfully")
+		sts = status.Success("Gearbox initialized successfully")
 	}
 	return sts
 }
@@ -169,7 +169,7 @@ func (me *Gears) Unmarshal(b []byte) (sts status.Status) {
 		// @TODO Provide a link to upgrade once we have that established
 		sts = status.Wrap(err, &status.Args{
 			Message: fmt.Sprintf("failed to unmarshal json from 'gears.json': %s", err.Error()),
-			Help: fmt.Sprintf("Your Parent may need to be updated; it may not be compatible with the current JSON schema for 'gears.json' at %s.",
+			Help: fmt.Sprintf("Your Gearbox may need to be updated; it may not be compatible with the current JSON schema for 'gears.json' at %s.",
 				JsonUrl,
 			),
 		})

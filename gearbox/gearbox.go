@@ -279,7 +279,7 @@ func (me *Gearbox) Initialize() (sts status.Status) {
 func (me *Gearbox) WriteAssetsToAdminWebRoot() {
 	hc := me.OsSupport
 	if hc == nil {
-		log.Fatal("Parent has no os_support connector. (End users should never see this; it is a programming error.)")
+		log.Fatal("Gearbox has no os_support connector. (End users should never see this; it is a programming error.)")
 	}
 	for _, afn := range AssetNames() {
 		afn = filepath.FromSlash(afn)
