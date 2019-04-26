@@ -23,11 +23,12 @@ type Project struct {
 }
 
 func NewProject(cfg Configer, path types.RelativePath) *Project {
-	return &Project{
-		Hostname: types.Hostname(path),
-		Path:     path,
-		Config:   cfg,
+	p := Project{
+		Path:   path,
+		Config: cfg,
 	}
+	p.Hostname = p.GetHostname()
+	return &p
 }
 
 func (me *Project) GetDir() (dir types.AbsoluteDir, sts Status) {
