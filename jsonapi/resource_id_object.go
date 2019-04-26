@@ -1,4 +1,4 @@
-package ja
+package jsonapi
 
 var _ ResourceIdentifier = (ResourceIdObjects)(nil)
 var _ ResourceIdentifier = (*ResourceIdObject)(nil)

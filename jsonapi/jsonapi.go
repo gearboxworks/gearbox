@@ -1,4 +1,4 @@
-package ja
+package jsonapi
 
 type JsonApi struct {
 	Version Version `json:"version,omitempty"`

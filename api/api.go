@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"gearbox/apimodeler"
 	"gearbox/config"
@@ -14,6 +15,8 @@ import (
 	"github.com/gedex/inflector"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -132,90 +135,174 @@ func (me *Api) WireRoutes() {
 		// Copy to allow different values in closures
 		ctlr := _c
 
-		e := me.Echo
-
 		prefix := string(apimodeler.GetRouteNamePrefix(ctlr))
 
-		var route *echo.Route
+		listpath := string(apimodeler.GetBasepath(ctlr))
+		me.WireListRoute(
+			me.Echo,
+			ctlr,
+			prefix,
+			listpath,
+		)
 
-		path := string(apimodeler.GetBasepath(ctlr))
-
-		// Collection Route
-		route = e.GET(path, func(ctx echo.Context) (err error) {
-			for range only.Once {
-				rd := ja.NewRootDocument(ctx, global.ListResponse)
-				c := apimodeler.NewContext(&apimodeler.ContextArgs{
-					Contexter:      ctx,
-					RootDocumentor: rd,
-					Controller:     ctlr,
-				})
-				data, sts := ctlr.GetList(c)
-				if is.Error(sts) {
-					break
-				}
-				sts = me.setListData(c, data)
-				if is.Error(sts) {
-					break
-				}
-				lm, sts := ctlr.GetListLinkMap(c)
-				if is.Error(sts) {
-					break
-				}
-				for rt, lnk := range lm {
-					rd.AddLink(rt, lnk)
-				}
-				err = me.JsonMarshalHandler(c, sts)
-			}
-			return err
-		})
-		if path == string(apimodeler.NoFilterPath) {
-			route.Name = string(Rootname)
-		} else {
-			route.Name = fmt.Sprintf("%s-list", inflector.Pluralize(prefix))
-		}
-
-		urlTemplate := string(apimodeler.GetResourceUrlTemplate(ctlr))
-		if urlTemplate == string(apimodeler.Basepath) {
+		itempath := string(apimodeler.GetResourceUrlTemplate(ctlr))
+		if itempath == string(apimodeler.Basepath) {
 			continue
 		}
 
-		// Single Item Route
-		route = e.GET(urlTemplate, func(ec echo.Context) error {
-			var sts status.Status
-			rd := ja.NewRootDocument(ec, global.ItemResponse)
-			ctx := apimodeler.NewContext(&apimodeler.ContextArgs{
-				Contexter:      ec,
-				RootDocumentor: rd,
-				Controller:     ctlr,
-			})
-			for range only.Once {
-				id, sts := apimodeler.GetIdFromUrl(ctx, ctlr)
-				if is.Error(sts) {
-					break
-				}
-				var ro *ja.ResourceObject
-				ro, sts = getResourceObject(rd)
-				if is.Error(sts) {
-					break
-				}
-				var item apimodeler.ItemModeler
-				item, sts = ctlr.GetItemDetails(ctx, id)
-				if is.Error(sts) {
-					break
-				}
+		me.WireNewItemRoute(
+			me.Echo,
+			ctlr,
+			prefix,
+			fmt.Sprintf("%s/new", listpath),
+		)
 
-				var list apimodeler.List
-				list, sts = item.GetRelatedItems(ctx)
-				if is.Error(sts) {
-					break
-				}
-				sts = me.setItemData(ctx, ro, item, list)
-				rd.Data = ro
-			}
-			return me.JsonMarshalHandler(ctx, sts)
-		})
-		route.Name = fmt.Sprintf("%s-details", inflector.Singularize(prefix))
+		me.WireItemRoute(
+			me.Echo,
+			ctlr,
+			prefix,
+			itempath,
+		)
+
 	}
+}
+
+func (me *Api) WireListRoute(e *echo.Echo, lc apimodeler.ListController, prefix, path string) {
+
+	route := e.GET(path, func(ctx echo.Context) (err error) {
+		for range only.Once {
+			rd := jsonapi.NewRootDocument(ctx, global.ListResponse)
+			c := apimodeler.NewContext(&apimodeler.ContextArgs{
+				Contexter:      ctx,
+				RootDocumentor: rd,
+				Controller:     lc,
+			})
+			data, sts := lc.GetList(c)
+			if is.Error(sts) {
+				break
+			}
+			sts = me.setListData(c, data)
+			if is.Error(sts) {
+				break
+			}
+			lm, sts := lc.GetListLinkMap(c)
+			if is.Error(sts) {
+				break
+			}
+			for rt, lnk := range lm {
+				rd.AddLink(rt, lnk)
+			}
+			err = me.JsonMarshalHandler(c, sts)
+		}
+		return err
+	})
+	if path == string(apimodeler.NoFilterPath) {
+		route.Name = string(Rootname)
+	} else {
+		route.Name = fmt.Sprintf("%s-list", inflector.Pluralize(prefix))
+	}
+}
+
+func (me *Api) WireItemRoute(e *echo.Echo, lc apimodeler.ListController, prefix, path string) {
+
+	// Single Item Route
+	route := e.GET(path, func(ec echo.Context) error {
+		var sts status.Status
+		rd := jsonapi.NewRootDocument(ec, global.ItemResponse)
+		ctx := apimodeler.NewContext(&apimodeler.ContextArgs{
+			Contexter:      ec,
+			RootDocumentor: rd,
+			Controller:     lc,
+		})
+		for range only.Once {
+			id, sts := apimodeler.GetIdFromUrl(ctx, lc)
+			if is.Error(sts) {
+				break
+			}
+			var ro *jsonapi.ResourceObject
+			ro, sts = getResourceObject(rd)
+			if is.Error(sts) {
+				break
+			}
+			var item apimodeler.ItemModeler
+			item, sts = lc.GetItemDetails(ctx, id)
+			if is.Error(sts) {
+				break
+			}
+
+			var list apimodeler.List
+			list, sts = item.GetRelatedItems(ctx)
+			if is.Error(sts) {
+				break
+			}
+			sts = me.setItemData(ctx, ro, item, list)
+			rd.Data = ro
+		}
+		return me.JsonMarshalHandler(ctx, sts)
+	})
+	route.Name = fmt.Sprintf("%s-details", inflector.Singularize(prefix))
+
+}
+
+func closeRequestBody(ec echo.Context) {
+	err := ec.Request().Body.Close()
+	if err != nil {
+		log.Printf(
+			"Could not close response body from HttpRequest: %s\n",
+			err.Error(),
+		)
+	}
+}
+
+func (me *Api) WireNewItemRoute(e *echo.Echo, lc apimodeler.ListController, prefix, path string) {
+
+	// Single Item Route
+	route := e.POST(path, func(ec echo.Context) error {
+		var sts status.Status
+		rd := jsonapi.NewRootDocument(ec, global.ItemResponse)
+		ctx := apimodeler.NewContext(&apimodeler.ContextArgs{
+			Contexter:      ec,
+			RootDocumentor: rd,
+			Controller:     lc,
+		})
+		for range only.Once {
+			defer closeRequestBody(ec)
+			b, err := ioutil.ReadAll(ec.Request().Body)
+			if err != nil {
+				sts = status.Wrap(err, &status.Args{
+					Message: fmt.Sprintf("unable to read body of '%s' request", path),
+				})
+				break
+			}
+			var ro jsonapi.ResourceObject
+			err = json.Unmarshal(b, &ro)
+			if err != nil {
+				sts = status.Wrap(err, &status.Args{
+					Message: fmt.Sprintf("unable to unmarshal body of '%s' request", path),
+				})
+				break
+			}
+
+			noop()
+
+			//var item apimodeler.ItemModeler
+			//item, sts = lc.GetItemDetails(ctx, id)
+			//if is.Error(sts) {
+			//	break
+			//}
+			//
+			//var list apimodeler.List
+			//list, sts = item.GetRelatedItems(ctx)
+			//if is.Error(sts) {
+			//	break
+			//}
+			//sts = me.setItemData(ctx, ro, item, list)
+			//rd.Data = ro
+		}
+		return me.JsonMarshalHandler(ctx, sts)
+	})
+	route.Name = fmt.Sprintf("add-%s", inflector.Singularize(prefix))
+
 }
 
 func (me *Api) GetItemUrl(ctx *apimodeler.Context, item apimodeler.ItemModeler) (u types.UrlTemplate, sts status.Status) {
@@ -247,7 +334,7 @@ func (me *Api) GetSelfPath(ctx *apimodeler.Context) types.UrlTemplate {
 }
 
 func (me *Api) GetContentType(ctx *apimodeler.Context) apimodeler.HttpHeaderValue {
-	return ja.ContentType + "; " + apimodeler.CharsetUTF8
+	return jsonapi.ContentType + "; " + apimodeler.CharsetUTF8
 }
 
 const (
@@ -264,7 +351,7 @@ func (me *Api) JsonMarshalHandler(ctx *apimodeler.Context, sts status.Status) st
 		if is.Error(sts) {
 			break
 		}
-		_, ok := ctx.GetRootDocument().(*ja.RootDocument)
+		_, ok := ctx.GetRootDocument().(*jsonapi.RootDocument)
 		if !ok {
 			sts = status.Fail(&status.Args{
 				Message: "context.RootDocument() does not implement ja.RootDocument",
@@ -349,8 +436,8 @@ func (me *Api) Stop() {
 	}
 }
 
-func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.Status) {
-	ro, ok := rd.Data.(*ja.ResourceObject)
+func getResourceObject(rd *jsonapi.RootDocument) (ro *jsonapi.ResourceObject, sts status.Status) {
+	ro, ok := rd.Data.(*jsonapi.ResourceObject)
 	if !ok {
 		sts = status.Fail(&status.Args{
 			Message: "root document does not contain a single resource object",
@@ -360,7 +447,7 @@ func getResourceObject(rd *ja.RootDocument) (ro *ja.ResourceObject, sts status.S
 	return ro, sts
 }
 
-func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item apimodeler.ItemModeler, list apimodeler.List) (sts status.Status) {
+func (me *Api) setItemData(ctx *apimodeler.Context, ro *jsonapi.ResourceObject, item apimodeler.ItemModeler, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
 
 		sts = ro.SetStackId(item.GetId())
@@ -417,7 +504,7 @@ func (me *Api) setItemData(ctx *apimodeler.Context, ro *ja.ResourceObject, item 
 	return sts
 }
 
-func (me *Api) SetRelationshipLinkMap(ctx *apimodeler.Context, item apimodeler.ItemModeler, ro *ja.ResourceObject) (sts status.Status) {
+func (me *Api) SetRelationshipLinkMap(ctx *apimodeler.Context, item apimodeler.ItemModeler, ro *jsonapi.ResourceObject) (sts status.Status) {
 	for range only.Once {
 		lm, sts := ctx.RootDocumentor.GetDataRelationshipsLinkMap()
 		if is.Error(sts) {
@@ -450,7 +537,7 @@ func (me *Api) setListData(ctx *apimodeler.Context, data interface{}) (sts statu
 			break
 		}
 		for _, item := range coll {
-			ro := ja.NewResourceObject()
+			ro := jsonapi.NewResourceObject()
 			sts = me.setItemData(ctx, ro, item, nil)
 			if is.Error(sts) {
 				break

@@ -1,4 +1,4 @@
-package ja
+package jsonapi
 
 import (
 	"gearbox/apimodeler"
