@@ -89,6 +89,11 @@ export default {
 <style scoped>
   .toolbar-list {
     list-style: none;
+    display: inline-block;
+    float: right;
+    padding-inline-start: 0;
+    margin-bottom: 0;
+    margin-top: -5px;
   }
   .toolbar-item {
     display: inline;

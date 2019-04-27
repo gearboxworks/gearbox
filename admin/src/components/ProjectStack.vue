@@ -6,7 +6,7 @@
       class="project-stack"
     >
       <h2 class="stack-title">{{stackId.replace('gearbox.works/', '')}}</h2>
-      <b-button :tabindex="projectIndex*100+stackIndex*10" @click.prevent="removeProjectStack(stackId)" class="js-remove-stack" size="sm" variant="outline-secondary" aria-label="Remove this stack from project" title="Remove this stack from project">&times;</b-button>
+      <b-button :tabindex="projectIndex*100+stackIndex*10" @click.prevent="removeProjectStack(stackId)" class="js-remove-stack" size="sm" variant="outline-secondary" aria-label="Remove these services" title="Remove these services">&times;</b-button>
       <ul class="service-list">
         <li
             v-for="(item, itemIndex) in stackItems"
@@ -82,9 +82,11 @@ export default {
   .js-remove-stack {
     float: right;
     opacity: 0;
-    transition: opacity 400ms;
+    transition: all 400ms;
+    padding: 2px 8px;
+    margin-right: 1px;
   }
-  .card--project:hover .js-remove-stack {
+  .project-stack:hover .js-remove-stack {
     opacity: 1;
   }
   .project-stack{

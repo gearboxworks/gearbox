@@ -101,13 +101,23 @@
       :required="true"
       @change="addProjectStack"
     >
-      <option value="" disabled>{{hasStacksNotInProject ? 'Add Stack...' : 'No more stacks to add'}}</option>
+      <option value="" disabled>{{hasStacksNotInProject ? 'Add stack...' : 'All stacks already added'}}</option>
       <option
         v-for="(stack,stackId) in stacksNotInProject"
         :key="stackId"
         :value="stackId"
       >{{stack.attributes.stackname}}</option>
     </b-form-select>
+
+    <a class="hide-details"
+       title="Hide project details"
+       @click="$emit('toggle-details')"
+    >
+      <font-awesome-icon
+        :icon="['fa', 'chevron-up']"
+      />
+      <span>Hide</span>
+    </a>
 
   </div>
 </template>
@@ -206,9 +216,6 @@ export default {
     resolveDir (dir, path) {
       return dir + ((dir.indexOf('/') !== -1) ? '/' : '\\') + path
     },
-    showDetails () {
-      this.showingDetails = true
-    },
     maybeSubmit (ev) {
       this.$store.dispatch(
         'updateProject',
@@ -253,4 +260,30 @@ export default {
     left: -3px;
     display: inline-block;
   }
+  .hide-details {
+    display: block;
+    margin-top: 15px;
+    text-align: center;
+    margin-bottom: -5px;
+    margin-right: auto;
+    padding: 1px 6px;
+    margin-left: auto;
+    color: #1e69b9 !important;
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 400ms;
+  }
+  .hide-details span {
+    margin-right: 5px;
+    margin-left: 5px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  .card--project:hover .hide-details{
+    opacity:0.75;
+  }
+  .card--project:hover .hide-details:hover {
+    opacity: 1;
+  }
+
 </style>

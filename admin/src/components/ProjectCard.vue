@@ -18,20 +18,27 @@
           v-model="hostname"
           @change="maybeSubmit"
           size="lg"
-          v-b-tooltip.hover.bottomright
-          :title="showingDetails ? '' : 'Expand details'"
           required
-          @click="showDetails"
+          @click="showingDetails = true"
           placeholder="" />
       </b-form-group>
 
       <project-toolbar :project="project" :projectIndex="projectIndex"></project-toolbar>
 
-      <project-details :project="project" :projectIndex="projectIndex" v-if="showingDetails"></project-details>
+      <project-details :project="project" :projectIndex="projectIndex" v-if="showingDetails" @toggle-details="toggleDetails"></project-details>
+
+      <a class="show-details"
+         title="Show project details"
+         @click="showingDetails = true"
+      >
+        <font-awesome-icon
+          :icon="['fa', 'ellipsis-h']"
+        />
+      </a>
 
     </b-form>
 
-    <div slot="footer" v-if="project.attributes.stack.length">
+    <div slot="footer" v-if="project.attributes.stack && project.attributes.stack.length">
       <project-stack :project="project" :projectIndex="projectIndex"></project-stack>
     </div>
 
@@ -78,8 +85,8 @@ export default {
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
-    showDetails () {
-      this.showingDetails = true
+    toggleDetails () {
+      this.showingDetails = !this.showingDetails
     },
     maybeSubmit (ev) {
       this.$store.dispatch(
@@ -105,6 +112,7 @@ export default {
   .hostname-group{
     display: inline-block;
     float: left;
+    margin-top: -10px;
     width: calc(100% - 110px);
   }
 
@@ -122,6 +130,7 @@ export default {
   .not-showing-details .hostname-input {
     border: 1px solid transparent;
     cursor: pointer;
+    width: auto;
   }
 
   .not-showing-details .hostname-input:hover {
@@ -130,5 +139,40 @@ export default {
 
   .showing-details .hostname-input{
     cursor: text;
+    width: 100%;
   }
+
+  .show-details {
+    display: block;
+    position:relative;
+    top: -5px;
+    text-align: left;
+    margin-bottom: -8px;
+    line-height: 0;
+    margin-left: 7px;
+    padding: 1px 6px;
+    color: #1e69b9 !important;
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 400ms;
+    clear: both;
+  }
+  .show-details span {
+    margin-left: 5px;
+    margin-right: 5px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  .showing-details .show-details {
+    display: none;
+  }
+
+  .card--project:hover .show-details{
+    opacity:0.75;
+  }
+  .card--project:hover .show-details:hover {
+    opacity: 1;
+  }
+
 </style>
