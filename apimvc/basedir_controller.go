@@ -1,12 +1,15 @@
 package apimvc
 
 import (
+	"encoding/json"
 	"fmt"
 	"gearbox/config"
+	"gearbox/jsonapi"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
+	"net/http"
 	"reflect"
 	"sort"
 )
@@ -126,22 +129,6 @@ func (me *BasedirController) GetFilterMap() FilterMap {
 	return GetBasedirFilterMap()
 }
 
-func (me *BasedirController) extractConfigBasedir(ctx *Context, item ItemModeler) (bd *config.Basedir, list List, sts Status) {
-	var bdm *BasedirModel
-	for range only.Once {
-		list, sts = me.GetList(ctx)
-		if is.Error(sts) {
-			break
-		}
-		bdm, sts = assertBasedirModel(item)
-		if is.Error(sts) {
-			break
-		}
-		bd, sts = MakeConfigBasedir(me.Config, bdm)
-	}
-	return bd, list, sts
-}
-
 func GetBasedirFilterMap() FilterMap {
 	return FilterMap{}
 }
@@ -155,9 +142,9 @@ func assertBasedirModel(item ItemModeler) (bdm *BasedirModel, sts Status) {
 	bdm, ok := item.(*BasedirModel)
 	if !ok {
 		sts = status.Fail(&status.Args{
-			Message: fmt.Sprintf("item not a %T: %v",
+			Message: fmt.Sprintf("item not a %T: %s",
 				(*BasedirModel)(nil),
-				item,
+				item.GetId(),
 			),
 		})
 	}
@@ -165,19 +152,49 @@ func assertBasedirModel(item ItemModeler) (bdm *BasedirModel, sts Status) {
 }
 
 func (me *BasedirController) AddItem(ctx *Context, item ItemModeler) (sts Status) {
-	//for range only.Once {
-	//	var bd *config.Basedir
-	//	bd, _, sts = me.extractConfigBasedir(ctx, item)
-	//	if status.IsError(sts) {
-	//		break
-	//	}
-	//	sts = me.Config.AddBasedir(bd)
-	//	if status.IsError(sts) {
-	//		break
-	//	}
-	//	sts = status.Success("Basedir '%s' added", bd.GetIdentifier())
-	//	sts.SetHttpStatus(http.StatusCreated)
-	//}
+	for range only.Once {
+		ro, ok := item.(*jsonapi.ResourceObject)
+		if !ok {
+			sts = status.OurBad("item '%s' is not a %T",
+				item.GetId(),
+				&jsonapi.ResourceObject{},
+			)
+			break
+		}
+		b, err := json.Marshal(ro.AttributeMap)
+		if err != nil {
+			sts = status.Wrap(err, &status.Args{
+				Message: fmt.Sprintf("unable to marshal AttributeMap for item '%s'",
+					item.GetId(),
+				),
+			})
+			break
+		}
+
+		var bdm *BasedirModel
+		err = json.Unmarshal(b, &bdm)
+		if err != nil {
+			sts = status.Wrap(err, &status.Args{
+				Message: fmt.Sprintf("unable to marshal AttributeMap for item '%s'",
+					item.GetId(),
+				),
+				HttpStatus: http.StatusBadRequest,
+			})
+			break
+		}
+		var bd *config.Basedir
+		bd, sts = MakeConfigBasedir(me.Config, bdm)
+		if is.Error(sts) {
+			break
+		}
+		bda := config.BasedirArgs(*bd)
+		sts = me.Config.AddBasedir(&bda)
+		if status.IsError(sts) {
+			break
+		}
+		sts = status.Success("Basedir '%s' added", bd.Nickname)
+		sts.SetHttpStatus(http.StatusCreated)
+	}
 	return sts
 }
 

@@ -22,6 +22,10 @@ type ResourceObject struct {
 	RelationshipMap    `json:"relationships,omitempty"`
 }
 
+func (me *ResourceObject) GetAttributeMap() AttributeMap {
+	return me.AttributeMap
+}
+
 func (me *ResourceObject) GetRelationshipsLinkMap() (lm apimodeler.LinkMap, sts status.Status) {
 	lm = make(apimodeler.LinkMap, 0)
 	for fn, f := range me.RelationshipMap {

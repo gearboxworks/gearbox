@@ -2,6 +2,7 @@ package apimvc
 
 import (
 	"gearbox/apimodeler"
+	"gearbox/jsonapi"
 	"gearbox/status"
 )
 
@@ -30,4 +31,9 @@ type (
 	RelatedField    = apimodeler.RelatedField
 	RelatedFields   = apimodeler.RelatedFields
 	RelType         = apimodeler.RelType
+)
+
+type (
+	AttributeMap = jsonapi.AttributeMap
+	Attribute    = jsonapi.Attribute
 )

@@ -337,9 +337,16 @@ func (me *Gearbox) BasedirExists(dir types.AbsoluteDir) bool {
 	return me.Config.GetBasedirMap().BasedirExists(dir)
 }
 
-func (me *Gearbox) AddBasedir(dir types.AbsoluteDir, nickname ...types.Nickname) (sts status.Status) {
+func (me *Gearbox) AddBasedir(basedir types.AbsoluteDir, nickname ...types.Nickname) (sts status.Status) {
+	var nn types.Nickname
+	if len(nickname) == 0 {
+		nn = ""
+	}
 	for range only.Once {
-		sts = me.Config.AddBasedir(dir, nickname...)
+		sts = me.Config.AddBasedir(&config.BasedirArgs{
+			Basedir:  basedir,
+			Nickname: nn,
+		})
 		if is.Error(sts) {
 			break
 		}

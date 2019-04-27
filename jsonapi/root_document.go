@@ -8,7 +8,9 @@ import (
 	"gearbox/status"
 	"gearbox/status/is"
 	"gearbox/types"
+	"github.com/apcera/util/uuid"
 	"reflect"
+	"strings"
 )
 
 const SchemaVersion = "1.0"
@@ -25,6 +27,10 @@ var _ apimodeler.ItemModeler = (*IncludedItem)(nil)
 
 type IncludedList []*IncludedItem
 type IncludedItem ResourceObject
+
+func (me *IncludedItem) GetAttributeMap() AttributeMap {
+	return me.AttributeMap
+}
 
 func (me *IncludedItem) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
 	panic("implement me")
@@ -70,7 +76,7 @@ type RootDocument struct {
 	LinkMap      apimodeler.LinkMap `json:"links,omitempty"`
 	Data         ResourceContainer  `json:"data,omitempty"`
 	Included     IncludedList       `json:"included,omitempty"`
-	Errors       Errors             `json:"errors,omitempty"`
+	Errors       ErrorObjects       `json:"errors,omitempty"`
 }
 
 func (me *RootDocument) GetDataRelationshipsLinkMap() (apimodeler.LinkMap, status.Status) {
@@ -227,7 +233,32 @@ func (me *RootDocument) SetLinks(linkmap apimodeler.LinkMap) (sts status.Status)
 	return nil
 }
 func (me *RootDocument) SetErrors(err error) {
-	me.Errors = Errors{err}
+	sts, ok := err.(status.Status)
+	if ok {
+		err = sts.GetFullError()
+	}
+	if err == nil {
+		err = fmt.Errorf("unexpected error")
+	}
+	if sts == nil {
+		sts = status.OurBad("unexpected error")
+	}
+	msg := err.Error()
+	me.Errors = ErrorObjects{NewErrorObject(&ErrorObjectArgs{
+		ErrorId:    ErrorId(uuid.Generate().String()),
+		ErrorCode:  ErrorCode(fmt.Sprintf("%s-error", me.ResponseType)),
+		Title:      msg[:strings.IndexByte(msg, ';')],
+		Detail:     err.Error(),
+		HttpStatus: HttpStatus(sts.HttpStatus()),
+		ErrorSource: NewErrorSource(&ErrorSourceArgs{
+			JsonPointer:  Link("@TODO: json pointer goes here"),
+			UrlParameter: UrlParameter("@TODO: url parameter goes here"),
+		}),
+		LinkMap: LinkMap{
+			AboutRelType: Link("@TODO: about error link goes here"),
+			TypeRelType:  Links{"@TODO: array error type links go here"},
+		},
+	})}
 	me.Data = nil
 	return
 }

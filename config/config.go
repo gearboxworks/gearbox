@@ -23,7 +23,7 @@ var _ util.FilepathHelpUrlGetter = (*Config)(nil)
 var _ Configer = (*Config)(nil)
 
 type Configer interface {
-	AddBasedir(types.AbsoluteDir, ...types.Nickname) Status
+	AddBasedir(*BasedirArgs) Status
 	AddProject(*Project) Status
 	Bytes() []byte
 	DeleteProject(types.Hostname) Status
@@ -455,20 +455,30 @@ func (me *Config) ExpandBasedirPath(nickname types.Nickname, path types.Relative
 	return fp, sts
 }
 
-func (me *Config) AddBasedir(dir types.AbsoluteDir, nickname ...types.Nickname) (sts Status) {
+func (me *Config) AddBasedir(args *BasedirArgs) (sts Status) {
 	for range only.Once {
-		var nn types.Nickname
-		if len(nickname) > 0 {
-			nn = nickname[0]
+		if args.Nickname == "" {
+			args.Nickname = types.Nickname(
+				strings.ToLower(filepath.Base(string(args.Basedir))),
+			)
 		}
-		if dir == "" {
+		if args.Basedir == "" {
 			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("invalid empty directory for '%s'", nn),
+				Message: fmt.Sprintf("invalid empty directory for '%s'", args.Nickname),
 			})
 			break
 		}
-		bd := NewBasedir(nn, dir)
-		sts = me.BasedirMap.AddBasedir(bd)
+		bd := Basedir{}
+		bd = Basedir(*args)
+		sts = me.BasedirMap.AddBasedir(me, &bd)
+		if is.Error(sts) {
+			sts = status.Wrap(sts, &status.Args{
+				Message: fmt.Sprintf("invalid empty directory for '%s'", args.Nickname),
+			})
+			break
+		}
+		sts = me.WriteFile()
+
 	}
 	return sts
 }
