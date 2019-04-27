@@ -278,12 +278,17 @@ func (me *Api) WireNewItemRoute(e *echo.Echo, lc apimodeler.ListController, pref
 			err = json.Unmarshal(b, &ro)
 			if err != nil {
 				sts = status.Wrap(err, &status.Args{
-					Message: fmt.Sprintf("unable to unmarshal body of '%s' request", path),
+					Message:    fmt.Sprintf("unable to unmarshal body of '%s' request", path),
+					HttpStatus: http.StatusBadRequest,
 				})
 				break
 			}
-
-			noop()
+			sts = ctx.Controller.AddItem(ctx, &ro)
+			if is.Error(sts) {
+				break
+			}
+			sts.SetHttpStatus(http.StatusNoContent)
+			rd.Data = nil
 
 			//var item apimodeler.ItemModeler
 			//item, sts = lc.GetItemDetails(ctx, id)
@@ -347,15 +352,20 @@ const (
 
 func (me *Api) JsonMarshalHandler(ctx *apimodeler.Context, sts status.Status) status.Status {
 	for range only.Once {
-		sts = ctx.SetResponseHeader(echo.HeaderContentType, me.GetContentType(ctx))
-		if is.Error(sts) {
-			break
-		}
 		_, ok := ctx.GetRootDocument().(*jsonapi.RootDocument)
 		if !ok {
 			sts = status.Fail(&status.Args{
 				Message: "context.RootDocument() does not implement ja.RootDocument",
 			})
+			break
+		}
+		if is.Error(sts) {
+			// If an error occurred during context generation
+			// and prior to this func being called
+			break
+		}
+		sts = ctx.SetResponseHeader(echo.HeaderContentType, me.GetContentType(ctx))
+		if is.Error(sts) {
 			break
 		}
 		route, sts := me.getRouteName(ctx)
@@ -367,12 +377,16 @@ func (me *Api) JsonMarshalHandler(ctx *apimodeler.Context, sts status.Status) st
 		}
 		ctx.AddMeta(MetaGearboxApiSchema, route)
 	}
-
-	switch ctx.GetResponseType() {
-	case global.ListResponse:
-		ctx.AddLinks(me.GetListLinkMap(ctx))
-	case global.ItemResponse:
-		ctx.AddLinks(me.GetItemLinkMap(ctx))
+	if is.Error(sts) {
+		_ = ctx.SetResponseStatus(sts.HttpStatus())
+		ctx.SetErrors(sts)
+	} else {
+		switch ctx.GetResponseType() {
+		case global.ListResponse:
+			ctx.AddLinks(me.GetListLinkMap(ctx))
+		case global.ItemResponse:
+			ctx.AddLinks(me.GetItemLinkMap(ctx))
+		}
 	}
 
 	ctx.AddLinks(me.GetCommonLinkMap(ctx))
@@ -387,10 +401,6 @@ func (me *Api) JsonMarshalHandler(ctx *apimodeler.Context, sts status.Status) st
 	ctx.AddMeta(apimodeler.MetaDcLanguage, apimodeler.DefaultLanguage)
 	ctx.AddMeta(MetaGearboxBaseurl, me.GetBaseUrl())
 
-	if is.Error(sts) {
-		_ = ctx.SetResponseStatus(sts.HttpStatus())
-		ctx.SetErrors(sts)
-	}
 	sts = ctx.SendResponse()
 	return sts
 }

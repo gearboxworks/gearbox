@@ -23,6 +23,7 @@ type Status interface {
 	SetOtherHelp(HelpTypeMap)
 	GetData() interface{}
 	GetString() (string, Status)
+	GetFullError() error
 }
 
 type Args struct {

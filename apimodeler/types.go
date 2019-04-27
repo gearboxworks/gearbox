@@ -19,11 +19,14 @@ type Filter struct {
 type LinkImplementor interface {
 	IdentifiesLink()
 }
+type Links []Link
 type Link string
 
 var _ LinkImplementor = Link("")
+var _ LinkImplementor = Links{}
 
-func (Link) IdentifiesLink() {}
+func (Links) IdentifiesLink() {}
+func (Link) IdentifiesLink()  {}
 
 type LinkMap map[RelType]LinkImplementor
 

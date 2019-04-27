@@ -158,11 +158,12 @@ func (me BasedirMap) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDi
 	return sts
 }
 
-func (me BasedirMap) AddBasedir(basedir *Basedir) (sts Status) {
+func (me BasedirMap) AddBasedir(config Configer, basedir *Basedir) (sts Status) {
 	for range only.Once {
 		sts = ValidateBasedirNickname(basedir.Nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
 			MustNotExist:   true,
+			Config:         config,
 		})
 		if is.Error(sts) {
 			break
@@ -181,6 +182,9 @@ func (me BasedirMap) AddBasedir(basedir *Basedir) (sts Status) {
 
 func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts Status) {
 	for range only.Once {
+		if args.Config == nil {
+			panic(fmt.Sprintf("Config property not passed in %T", args))
+		}
 		var apiHelp string
 		if args.ApiHelpUrl != "" {
 			apiHelp = fmt.Sprintf("see %s", args.ApiHelpUrl)

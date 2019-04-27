@@ -103,3 +103,22 @@ func (me *S) IsSuccess() bool {
 func (me *S) IsError() bool {
 	return !me.success
 }
+
+func (me *S) GetFullError() (err error) {
+	msg := me.message
+	c := me.cause
+	for {
+		var ok bool
+		c, ok = c.(error)
+		if !ok {
+			break
+		}
+		msg = fmt.Sprintf("%s; %s", c.Error(), msg)
+		sts, ok := c.(Status)
+		if !ok {
+			break
+		}
+		c = sts.Cause()
+	}
+	return fmt.Errorf(msg)
+}
