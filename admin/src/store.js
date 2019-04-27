@@ -53,7 +53,7 @@ export default new Vuex.Store({
         ? state.services.records.find(p => p.id === fieldValue)
         : state.services.records.find(p => p.attributes[fieldName] === fieldValue)
     },
-    gearspecBy: (state) => (fieldName, fieldValue) => {
+    gearBy: (state) => (fieldName, fieldValue) => {
       return (fieldName === 'id')
         ? state.gearspecs.records.find(p => p.id === fieldValue)
         : state.gearspecs.records.find(p => p.attributes[fieldName] === fieldValue)
@@ -63,9 +63,12 @@ export default new Vuex.Store({
         ? state.projects.records.find(p => p.id === fieldValue)
         : state.projects.records.find(p => p.attributes[fieldName] === fieldValue)
     },
-    projectStackMemberIndexBy: (state) => (project, fieldName, fieldValue) => {
+    projectStackItemIndexBy: (state) => (project, fieldName, fieldValue) => {
       let memberIndex = -1
       project.attributes.stack.find((m, idx) => {
+        /**
+         * fieldName can be "service_id" or "gearspec_id"
+         */
         if (m[fieldName] === fieldValue) {
           memberIndex = idx
           return true
@@ -74,12 +77,34 @@ export default new Vuex.Store({
       })
       return memberIndex
     },
+    stackDefaultServiceByGear: (state) => (stack, gearId) => {
+      let defaultService = ''
+      stack.attributes.members.find((m, idx) => {
+        if (m.gearspec_id === gearId) {
+          defaultService = m.default_service
+          return true
+        }
+        return false
+      })
+      return defaultService
+    },
+    stackServicesByGear: (state) => (stack, gearId) => {
+      let services = []
+      stack.attributes.members.find((m, idx) => {
+        if (m.gearspec_id === gearId) {
+          services = m.services
+          return true
+        }
+        return false
+      })
+      return services
+    },
     baseDirsAsOptions: (state) => {
       const options = []
       state.basedirs.records.forEach((el, idx) => {
         options.push({
           value: el.id,
-          text: el.host_dir
+          text: el.attributes.basedir
         })
       })
       return options
@@ -229,9 +254,7 @@ export default new Vuex.Store({
       if (!p) {
         state.projects.records.push(project)
       } else {
-        // console.log('Setting stack for project', project.id, project.attributes.stack.length)
         Vue.set(p.attributes, 'stack', project.attributes.stack)
-        // p.attributes = project.attributes
       }
     },
     SET_STACK (state, stack) {
@@ -250,12 +273,12 @@ export default new Vuex.Store({
         s.attributes = service.attributes
       }
     },
-    SET_GEARSTACK (state, gearstack) {
-      const g = this.getters.gearstackBy('id', gearstack.id)
+    SET_GEARSPEC (state, gearspec) {
+      const g = this.getters.gearBy('id', gearspec.id)
       if (!g) {
-        state.gearstacks.records.push(gearstack)
+        state.gearspecs.records.push(gearspec)
       } else {
-        g.attributes = gearstack.attributes
+        g.attributes = gearspec.attributes
       }
     },
     SET_NETWORK_ERROR (state, message) {
@@ -280,10 +303,10 @@ export default new Vuex.Store({
         }
         stack.attributes.members.forEach((el, idx) => {
           const serviceId = this.getters.preselectService(el.services, el.default_service)
-          if (serviceId && el.gearspec_id) {
+          if (el.gearspec_id) {
             // reactive!
             project.attributes.stack.push({
-              service_id: serviceId,
+              service_id: serviceId, // it's ok if it is empty
               gearspec_id: el.gearspec_id
             })
           }
@@ -311,19 +334,17 @@ export default new Vuex.Store({
     CHANGE_PROJECT_SERVICE (state, payload) {
       /**
        * Payload is of this form:
-       * {projectId: "project1", gearspecId: "gearbox.works/wordpress/webserver", serviceId: "gearboxworks/apache:2.4"}
+       * {projectId: "project1", gearId: "gearbox.works/wordpress/webserver", serviceId: "gearboxworks/apache:2.4"}
        */
-      const { projectId, serviceId, gearspecId } = payload
-
+      const { projectId, gearId, serviceId } = payload
       const project = this.getters.projectBy('id', projectId)
 
       if (project) {
-        const memberIndex = this.getters.projectStackMemberIndexBy(project, 'gearspec_id', gearspecId)
-        if (!serviceId) {
-          Vue.delete(project.attributes.stack, memberIndex)
-        } else {
-          Vue.set(project.attributes.stack[memberIndex], 'service_id', serviceId)
-        }
+        const memberIndex = this.getters.projectStackItemIndexBy(project, 'gearspec_id', gearId)
+        /**
+         * note, serviceId might be an empty string (and that's OK)
+         */
+        Vue.set(project.attributes.stack[memberIndex], 'service_id', serviceId)
       }
     },
     CHANGE_PROJECT_STATE (state, payload) {
