@@ -1,18 +1,5 @@
 <template>
   <ul class="toolbar-list">
-    <li class="toolbar-item">
-      <a target="_blank"
-         href="#"
-         :title="isRunning ? 'Stop all services' : 'Run all services'"
-         v-b-tooltip.hover
-         @click.prevent="onRunStop"
-         class="toolbar-link toolbar-link--state"
-      >
-        <font-awesome-icon
-          :icon="['fa', isRunning ? 'stop-circle': 'play-circle']"
-        />
-      </a>
-    </li>
 
     <li class="toolbar-item">
       <a target="_blank"
@@ -39,6 +26,21 @@
         />
       </a>
     </li>
+
+    <li class="toolbar-item">
+      <a target="_blank"
+         href="#"
+         :title="isRunning ? 'Stop all services' : 'Run all services'"
+         v-b-tooltip.hover
+         @click.prevent="onRunStop"
+         class="toolbar-link toolbar-link--state"
+      >
+        <font-awesome-icon
+          :icon="['fa', isRunning ? 'stop-circle': 'play-circle']"
+        />
+      </a>
+    </li>
+
   </ul>
 </template>
 

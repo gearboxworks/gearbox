@@ -1,5 +1,5 @@
 <template>
-  <b-collapse :id="`${projectBase}advanced`" role="tabpanel" :visible="true">
+  <div :id="`${projectBase}details`" role="tabpanel">
     <b-form-group
       :id="`${projectBase}location-group`"
       :label-for="`${projectBase}location-input`"
@@ -27,7 +27,7 @@
 
     <b-popover
       :target="`${projectBase}change-location`"
-      :container="`${projectBase}advanced`"
+      :container="`${projectBase}details`"
       :ref="`${projectBase}location-popover`"
       triggers="focus"
       placement="bottom"
@@ -109,7 +109,7 @@
       >{{stack.attributes.stackname}}</option>
     </b-form-select>
 
-  </b-collapse>
+  </div>
 </template>
 
 <script>

@@ -25,13 +25,13 @@
           placeholder="" />
       </b-form-group>
 
-      <project-toolbar :project="project" :projectIndex="projectIndex" :key="id + (enabled ? '-running':'-stopped')"></project-toolbar>
+      <project-toolbar :project="project" :projectIndex="projectIndex"></project-toolbar>
 
-      <project-details :project="project" :projectIndex="projectIndex"></project-details>
+      <project-details :project="project" :projectIndex="projectIndex" v-if="showingDetails"></project-details>
 
     </b-form>
 
-    <div slot="footer" v-if="project.attributes.stack">
+    <div slot="footer" v-if="project.attributes.stack.length">
       <project-stack :project="project" :projectIndex="projectIndex"></project-stack>
     </div>
 
