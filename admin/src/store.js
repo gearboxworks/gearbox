@@ -234,8 +234,10 @@ export default new Vuex.Store({
     changeProjectService ({ commit }, payload) {
       /**
        * TODO: call the API and commit when it returns
+       * TODO: remove delay
        */
-      commit('CHANGE_PROJECT_SERVICE', payload)
+      setTimeout(() => commit('CHANGE_PROJECT_SERVICE', payload), 1000)
+      // commit('CHANGE_PROJECT_SERVICE', payload)
     },
     changeProjectState ({ commit }, payload) {
       /**

@@ -5,7 +5,12 @@
     class="project-gear"
   >
 
-    <img v-if="service" :src="require('../assets/'+service.attributes.program+'.svg')" class="service-program" />
+    <img
+      v-if="service"
+      :src="require('../assets/'+service.attributes.program+'.svg')"
+      :class="{'service-program': true, 'is-loaded': isLoaded, 'is-switching': isSwitching, 'is-switching-same': isSwitchingSame, 'is-switching-same-again': isSwitchingSameAgain }"
+      @load="onImageLoaded"
+    />
     <font-awesome-icon
       v-else
       :icon="['fa', 'expand']"
@@ -83,6 +88,10 @@ export default {
   },
   data () {
     return {
+      isLoaded: false,
+      isSwitching: true,
+      isSwitchingSame: false,
+      isSwitchingSameAgain: false
     }
   },
   computed: {
@@ -159,11 +168,34 @@ export default {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
     onChangeService (selectedServiceId) {
+      const previousId = this.service ? this.service.id : ''
+      const program1 = previousId ? previousId.split('/')[1].split(':')[0] : ''
+      const program2 = selectedServiceId ? selectedServiceId.split('/')[1].split(':')[0] : ''
+      if (program1 !== program2) {
+        this.isLoaded = false
+        this.isSwitching = true
+        this.isSwitchingSame = false
+        this.isSwitchingSameAgain = false
+      } else {
+        if (previousId !== selectedServiceId) {
+          if (!this.isSwitchingSame && !this.isSwitchingSameAgain) {
+            this.isSwitchingSame = true
+            this.isSwitchingSameAgain = false
+          } else {
+            this.isSwitchingSame = !this.isSwitchingSame
+            this.isSwitchingSameAgain = !this.isSwitchingSameAgain
+          }
+        }
+      }
       this.$store.dispatch('changeProjectService', { 'projectId': this.projectId, gearId: this.gear.id, serviceId: selectedServiceId })
       this.closePopover()
     },
     closePopover () {
       this.$root.$emit('bv::hide::popover', this.gearControlId)
+    },
+    onImageLoaded (a) {
+      this.isSwitching = false
+      this.isLoaded = true
     }
   }
 }
@@ -182,11 +214,79 @@ export default {
     height: 64px;
     width: 64px;
   }
-  [data-icon="expand"]{
-    height: 40px;
-    width: 40px;
-    margin-bottom: 10px;
-    margin-top: 10px;
-    color: silver;
+  .service-program.is-loaded {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+    animation-delay: 0s;
+    animation-iteration-count: 1;
+    animation-direction: normal;
+    animation-fill-mode: none;
+    animation-play-state: running;
+    animation-name: full-zoom;
   }
+  @keyframes full-zoom {
+    from {
+      transform:scale(0)
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+  .service-program.is-switching {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+    animation-delay: 0s;
+    animation-iteration-count: 1;
+    animation-direction: normal;
+    animation-fill-mode: forwards;
+    animation-play-state: running;
+    animation-name: full-zoom-out;
+  }
+  @keyframes full-zoom-out {
+    from {
+      transform:scale(1)
+    }
+    to {
+      transform: scale(0);
+    }
+  }
+  .service-program.is-switching-same,
+  .service-program.is-switching-same-again {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+    animation-delay: 0s;
+    animation-iteration-count: 1;
+    animation-direction: alternate;
+    animation-fill-mode: none;
+    animation-play-state: running;
+  }
+  .service-program.is-switching-same {
+    animation-name: zoom-in-out;
+  }
+  @keyframes zoom-in-out {
+    0% {
+      transform:scale(1)
+    }
+    50% {
+      transform:scale(1.1)
+    }
+    100% {
+      transform: scale(0.75);
+    }
+  }
+  .service-program.is-switching-same-again {
+    animation-name: zoom-out-in;
+  }
+  @keyframes zoom-out-in {
+    0% {
+      transform:scale(1)
+    }
+    50% {
+      transform:scale(1.1)
+    }
+    100% {
+      transform: scale(0.75);
+    }
+  }
+
 </style>
