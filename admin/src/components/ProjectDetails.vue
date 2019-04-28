@@ -16,13 +16,26 @@
          :id="`${projectBase}change-location`"
          href="#"
          title="Change location"
-         :class="['cog-icon']"
+         class="cog-icon"
          @click.prevent=""
       >
         <font-awesome-icon
           :icon="['fa', 'cog']"
         />
       </a>
+
+      <a target="_blank"
+         :id="`${projectBase}open-location`"
+         href="#"
+         title="Open project directory"
+         v-b-tooltip.hover
+         class="folder-icon"
+      >
+        <font-awesome-icon
+          :icon="['fa', 'folder']"
+        />
+      </a>
+
     </b-form-group>
 
     <b-popover
@@ -246,7 +259,7 @@ export default {
     clear: both;
   }
   .location-input{
-    width: calc(100% - 38px);
+    width: calc(100% - 77px);
     display: inline-block;
   }
   .cog-icon {
@@ -260,6 +273,13 @@ export default {
     left: -3px;
     display: inline-block;
   }
+
+  .folder-icon {
+    display: inline-block;
+    margin-left: 14px;
+    font-size: 1.25rem;
+  }
+
   .hide-details {
     display: block;
     margin-top: 15px;

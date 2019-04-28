@@ -3,7 +3,7 @@
     :class="{'card--project': true,'showing-details': showingDetails, 'not-showing-details': !showingDetails}"
     :to="{path:'/project/'+id}"
   >
-    <b-form>
+    <b-form class="clearfix">
       <b-form-group
         :id="`hostname-group-${projectIndex}`"
         class="hostname-group"
@@ -26,15 +26,6 @@
       <project-toolbar :project="project" :projectIndex="projectIndex"></project-toolbar>
 
       <project-details :project="project" :projectIndex="projectIndex" v-if="showingDetails" @toggle-details="toggleDetails"></project-details>
-
-      <a class="show-details"
-         title="Show project details"
-         @click="showingDetails = true"
-      >
-        <font-awesome-icon
-          :icon="['fa', 'ellipsis-h']"
-        />
-      </a>
 
     </b-form>
 
@@ -104,6 +95,10 @@ export default {
 </script>
 
 <style scoped>
+  .card--project .card-body {
+    padding: 1.25rem 1.25rem 14px 1.25rem;
+  }
+
   .form-group label {
     font-size: 0.75rem;
     margin-bottom: 0;
@@ -112,8 +107,8 @@ export default {
   .hostname-group{
     display: inline-block;
     float: left;
-    margin-top: -10px;
-    width: calc(100% - 110px);
+    margin-top: -6px;
+    width: calc(100% - 42px);
   }
 
   .not-showing-details .hostname-group{
@@ -133,7 +128,7 @@ export default {
     width: auto;
   }
 
-  .not-showing-details .hostname-input:hover {
+  .card--project.not-showing-details:hover .hostname-input {
     text-decoration: underline;
   }
 

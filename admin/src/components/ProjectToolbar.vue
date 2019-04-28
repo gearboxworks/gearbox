@@ -91,7 +91,7 @@ export default {
 
   .toolbar-link--state {
     font-size: 29px;
-    margin-top: -3px;
+    margin-top: 1px;
     padding-top: 0;
   }
 
