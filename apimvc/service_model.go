@@ -100,7 +100,7 @@ func (me *ServiceModel) GetId() ItemId {
 	return ItemId(me.ServiceId)
 }
 
-func (me *ServiceModel) SetStackId(ItemId) Status {
+func (me *ServiceModel) SetId(ItemId) Status {
 	panic("implement me")
 }
 

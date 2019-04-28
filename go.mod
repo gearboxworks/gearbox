@@ -3,6 +3,8 @@ module gearbox
 require (
 	github.com/apcera/libretto v0.11.0
 	github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48
+
+	github.com/clbanning/checkjson v0.0.0-20190418161636-abd3ee163e3e
 	github.com/cznic/golex v0.0.0-20181122101858-9c343928389c // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/fatih/color v1.7.0

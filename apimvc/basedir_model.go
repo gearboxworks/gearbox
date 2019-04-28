@@ -31,8 +31,9 @@ func (me *BasedirModel) GetId() ItemId {
 	return ItemId(me.Nickname)
 }
 
-func (me *BasedirModel) SetStackId(ItemId) Status {
-	panic("implement me")
+func (me *BasedirModel) SetId(id ItemId) (sts Status) {
+	me.Nickname = types.Nickname(id)
+	return sts
 }
 
 func (me *BasedirModel) GetType() ItemType {

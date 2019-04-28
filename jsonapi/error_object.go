@@ -9,7 +9,7 @@ type ErrorObject struct {
 	Title       string       `json:"title"`
 	Detail      string       `json:"detail"`
 	ErrorSource *ErrorSource `json:"source"`
-	MetaMap     MetaMap      `json:"meta"`
+	MetaMap     MetaMap      `json:"meta,omitempty"`
 }
 
 type ErrorObjectArgs ErrorObject

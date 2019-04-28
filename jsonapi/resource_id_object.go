@@ -1,5 +1,8 @@
 package jsonapi
 
+var NilResourceIdObject = (*ResourceIdObject)(nil)
+var _ ResourceContainer = NilResourceIdObject
+
 var _ ResourceIdentifier = (ResourceIdObjects)(nil)
 var _ ResourceIdentifier = (*ResourceIdObject)(nil)
 
@@ -13,6 +16,8 @@ type ResourceIdObject struct {
 	ResourceType `json:"type"`
 	MetaMap      `json:"meta,omitempty"`
 }
+
+func (ResourceIdObject) ContainsResource() {}
 
 func NewResourceIdObject() *ResourceIdObject {
 	rido := ResourceIdObject{

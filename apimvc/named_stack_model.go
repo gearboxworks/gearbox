@@ -81,7 +81,7 @@ func (me *NamedStackModel) GetId() ItemId {
 	return ItemId(fmt.Sprintf("%s/%s", me.Authority, me.Stackname))
 }
 
-func (me *NamedStackModel) SetStackId(itemid ItemId) (sts Status) {
+func (me *NamedStackModel) SetId(itemid ItemId) (sts Status) {
 	for range only.Once {
 		parts := strings.Split(string(itemid), "/")
 		if len(parts) < 2 {

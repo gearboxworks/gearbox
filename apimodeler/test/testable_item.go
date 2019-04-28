@@ -13,7 +13,7 @@ type TestableItem struct {
 	Type apimodeler.ItemType
 }
 
-func (me *TestableItem) SetStackId(itemid apimodeler.ItemId) status.Status {
+func (me *TestableItem) SetId(itemid apimodeler.ItemId) status.Status {
 	me.Id = itemid
 	return nil
 }

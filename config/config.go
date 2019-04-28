@@ -472,8 +472,13 @@ func (me *Config) AddBasedir(args *BasedirArgs) (sts Status) {
 		bd = Basedir(*args)
 		sts = me.BasedirMap.AddBasedir(me, &bd)
 		if is.Error(sts) {
+			if sts.HttpStatus() == http.StatusConflict {
+				// Already exists
+				break
+			}
 			sts = status.Wrap(sts, &status.Args{
-				Message: fmt.Sprintf("invalid empty directory for '%s'", args.Nickname),
+				Message:    fmt.Sprintf("invalid empty directory for '%s'", args.Nickname),
+				HttpStatus: http.StatusBadRequest,
 			})
 			break
 		}

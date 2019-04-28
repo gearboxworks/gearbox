@@ -208,8 +208,9 @@ func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts S
 		}
 		if args.MustNotExist && nnExists {
 			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("nickname '%s' already exists", nickname),
-				ApiHelp: apiHelp,
+				Message:    fmt.Sprintf("nickname '%s' already exists", nickname),
+				HttpStatus: http.StatusConflict,
+				ApiHelp:    apiHelp,
 			})
 			break
 		}

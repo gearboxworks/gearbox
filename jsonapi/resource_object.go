@@ -10,8 +10,10 @@ import (
 	"gearbox/util"
 )
 
-var _ ResourceContainer = (*ResourceObject)(nil)
-var _ apimodeler.ItemModeler = (*ResourceObject)(nil)
+var NilResourceObject = (*ResourceObject)(nil)
+var _ ResourceContainer = NilResourceObject
+var _ RelationshipsLinkMapGetter = NilResourceObject
+var _ apimodeler.ItemModeler = NilResourceObject
 
 func (*ResourceObject) ContainsResource() {}
 
@@ -20,6 +22,34 @@ type ResourceObject struct {
 	apimodeler.LinkMap `json:"links,omitempty"`
 	AttributeMap       `json:"attributes"`
 	RelationshipMap    `json:"relationships,omitempty"`
+}
+
+func AssertResourceObject(item apimodeler.ItemModeler) (ro *ResourceObject, sts status.Status) {
+	for range only.Once {
+		var ok bool
+		ro, ok = item.(*ResourceObject)
+		if !ok {
+			sts = status.OurBad("item '%s' is not a %T", item.GetId(), ro)
+			break
+		}
+	}
+	return ro, sts
+}
+
+func (me *ResourceObject) MarshalAttributeMap() (b []byte, sts status.Status) {
+	for range only.Once {
+		var err error
+		b, err = json.Marshal(me.AttributeMap)
+		if err != nil {
+			sts = status.Wrap(err, &status.Args{
+				Message: fmt.Sprintf("unable to marshal AttributeMap for resource object '%s'",
+					me.GetId(),
+				),
+			})
+			break
+		}
+	}
+	return b, sts
 }
 
 func (me *ResourceObject) GetAttributeMap() AttributeMap {
@@ -42,7 +72,7 @@ func (me *ResourceObject) GetId() apimodeler.ItemId {
 	return apimodeler.ItemId(me.ResourceId)
 }
 
-func (me *ResourceObject) SetStackId(itemid apimodeler.ItemId) (sts status.Status) {
+func (me *ResourceObject) SetId(itemid apimodeler.ItemId) (sts status.Status) {
 	me.ResourceId = ResourceId(itemid)
 	return sts
 }
@@ -165,7 +195,7 @@ func (me *ResourceObject) SetRelatedItems(ctx *apimodeler.Context, item apimodel
 		me.RelationshipMap = me.getRelationshipTypesData(ctx, item, list)
 		for i, item := range list {
 			ro := NewResourceObject()
-			sts = ro.SetStackId(item.GetId())
+			sts = ro.SetId(item.GetId())
 			if is.Error(sts) {
 				break
 			}

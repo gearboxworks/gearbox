@@ -39,7 +39,7 @@ func (me *IncludedItem) GetRelatedItems(ctx *apimodeler.Context) (list apimodele
 func (me *IncludedItem) GetId() apimodeler.ItemId {
 	panic("implement me")
 }
-func (me *IncludedItem) SetStackId(apimodeler.ItemId) status.Status {
+func (me *IncludedItem) SetId(apimodeler.ItemId) status.Status {
 	panic("implement me")
 }
 func (me *IncludedItem) GetType() apimodeler.ItemType {
@@ -79,8 +79,15 @@ type RootDocument struct {
 	Errors       ErrorObjects       `json:"errors,omitempty"`
 }
 
-func (me *RootDocument) GetDataRelationshipsLinkMap() (apimodeler.LinkMap, status.Status) {
-	return me.Data.GetRelationshipsLinkMap()
+func (me *RootDocument) GetDataRelationshipsLinkMap() (rlm apimodeler.LinkMap, sts status.Status) {
+	for range only.Once {
+		getter, ok := me.Data.(RelationshipsLinkMapGetter)
+		if !ok {
+			rlm = apimodeler.LinkMap{}
+		}
+		rlm, sts = getter.GetRelationshipsLinkMap()
+	}
+	return rlm, sts
 }
 
 type RootDocArgs RootDocument
@@ -192,10 +199,10 @@ func (me *RootDocument) AddResponseItem(item apimodeler.ItemModeler) (sts status
 //	return sts
 //}
 
-//func (me *RootDocument) SetStackId(id ResourceId) (sts status.Status) {
+//func (me *RootDocument) SetId(id ResourceId) (sts status.Status) {
 //	setter, ok := me.Data.(ResourceIdSetter)
 //	if ok {
-//		sts = setter.SetStackId(id)
+//		sts = setter.SetId(id)
 //	}
 //	return sts
 //}
@@ -247,7 +254,7 @@ func (me *RootDocument) SetErrors(err error) {
 	me.Errors = ErrorObjects{NewErrorObject(&ErrorObjectArgs{
 		ErrorId:    ErrorId(uuid.Generate().String()),
 		ErrorCode:  ErrorCode(fmt.Sprintf("%s-error", me.ResponseType)),
-		Title:      msg[:strings.IndexByte(msg, ';')],
+		Title:      msg[:strings.IndexByte(msg+";", ';')],
 		Detail:     err.Error(),
 		HttpStatus: HttpStatus(sts.HttpStatus()),
 		ErrorSource: NewErrorSource(&ErrorSourceArgs{

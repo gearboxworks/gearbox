@@ -46,7 +46,7 @@ func (me *AuthorityModel) GetId() ItemId {
 	return ItemId(me.AuthorityId)
 }
 
-func (me *AuthorityModel) SetStackId(itemid ItemId) (sts Status) {
+func (me *AuthorityModel) SetId(itemid ItemId) (sts Status) {
 	for range only.Once {
 		if !strings.Contains(string(itemid), ".") {
 			sts = status.Fail(&status.Args{
