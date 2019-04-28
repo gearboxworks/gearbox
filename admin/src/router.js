@@ -34,7 +34,7 @@ export default new Router({
       children: [
         {
           path: ':hostname/stack',
-          component: () => import(/* webpackChunkName: "projectstack" */ './components/ProjectStack.vue')
+          component: () => import(/* webpackChunkName: "projectstack" */ './components/ProjectStackList.vue')
         }
       ]
     },

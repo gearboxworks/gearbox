@@ -39,7 +39,7 @@
     </b-form>
 
     <div slot="footer" v-if="project.attributes.stack && project.attributes.stack.length">
-      <project-stack :project="project" :projectIndex="projectIndex"></project-stack>
+      <project-stack-list :project="project" :projectIndex="projectIndex"></project-stack-list>
     </div>
 
   </b-card>
@@ -50,7 +50,7 @@
 
 import ProjectToolbar from './ProjectToolbar'
 import ProjectDetails from './ProjectDetails'
-import ProjectStack from './ProjectStack'
+import ProjectStackList from './ProjectStackList'
 
 export default {
   name: 'ProjectCard',
@@ -74,11 +74,11 @@ export default {
   components: {
     ProjectToolbar,
     ProjectDetails,
-    ProjectStack
+    ProjectStackList
   },
   computed: {
     projectBase () {
-      return this.escAttr(this.id) + '-'
+      return 'gb-' + this.escAttr(this.id) + '-'
     }
   },
   methods: {

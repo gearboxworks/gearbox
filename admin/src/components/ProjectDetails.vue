@@ -148,7 +148,7 @@ export default {
   computed: {
     ...mapGetters({ basedirBy: 'basedirBy', serviceBy: 'serviceBy', gearBy: 'gearBy', allGearspecs: 'gearspecs/all', allStacks: 'stacks/all' }),
     projectBase () {
-      return this.escAttr(this.id) + '-'
+      return 'gb-' + this.escAttr(this.id) + '-'
     },
     currentBasedir () {
       const basedir = this.basedirBy('id', this.basedir)

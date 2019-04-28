@@ -3,32 +3,6 @@
 
     <li class="toolbar-item">
       <a target="_blank"
-         :href="`//${hostname}/`"
-         :title="'Open Frontend'+ (isRunning ? '' : ' (not running)')"
-         v-b-tooltip.hover
-         :class="['toolbar-link', 'toolbar-link--frontend', {'is-disabled': !isRunning}]"
-      >
-        <font-awesome-icon
-          :icon="['fa', 'home']"
-        />
-      </a>
-    </li>
-
-    <li class="toolbar-item">
-      <a target="_blank"
-         :href="`//${hostname}/wp-admin/`"
-         :title="'Open Dashboard'+ (isRunning ? '' : ' (not running)')"
-         v-b-tooltip.hover
-         :class="['toolbar-link', 'toolbar-link--dashboard', {'is-disabled': !isRunning}]"
-      >
-        <font-awesome-icon
-          :icon="['fa', 'tachometer-alt']"
-        />
-      </a>
-    </li>
-
-    <li class="toolbar-item">
-      <a target="_blank"
          href="#"
          :title="isRunning ? 'Stop all services' : 'Run all services'"
          v-b-tooltip.hover
@@ -36,7 +10,7 @@
          class="toolbar-link toolbar-link--state"
       >
         <font-awesome-icon
-          :icon="['fa', isRunning ? 'stop-circle': 'play-circle']"
+          :icon="['fa', isRunning ? 'stop': 'play']"
         />
       </a>
     </li>
@@ -66,7 +40,7 @@ export default {
   },
   computed: {
     projectBase () {
-      return this.escAttr(this.id) + '-'
+      return 'gb-' + this.escAttr(this.id) + '-'
     },
     isRunning () {
       return this.project.attributes.enabled
@@ -77,7 +51,6 @@ export default {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
     onRunStop () {
-      console.log('onRunStop')
       this.$store.dispatch(
         'changeProjectState', { 'projectId': this.id, 'isEnabled': !this.isRunning }
       )
@@ -99,19 +72,12 @@ export default {
     display: inline;
     float: left;
   }
-  [data-icon="expand"]{
-    height: 40px;
-    width: 40px;
-    margin-bottom: 10px;
-    margin-top: 10px;
-    color: silver;
-  }
 
   .toolbar-link {
     float: right;
     font-size: 1.25rem;
     cursor: pointer;
-    margin-left: 10px;
+    margin-left: 13px;
     color: rgba(42, 85, 130, 0.98);
   }
 
@@ -123,20 +89,13 @@ export default {
     color: rgba(17, 56, 85, 0.42);
   }
 
-  .toolbar-link--details {
-    float: left;
-  }
-
   .toolbar-link--state {
-    font-size: 1.65rem;
+    font-size: 29px;
+    margin-top: -3px;
     padding-top: 0;
   }
 
-  [data-icon="play-circle"] path {
-    fill: green;
-  }
-
-  [data-icon="stop-circle"] path {
-    fill: red;
+  .toolbar-link--state:hover {
+    color: rgba(28, 76, 166, 0.91);
   }
 </style>

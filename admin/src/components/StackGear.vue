@@ -63,7 +63,7 @@
 import { mapGetters } from 'vuex'
 
 export default {
-  name: 'ProjectGear',
+  name: 'StackGear',
   props: {
     'projectId': {
       type: String,
@@ -97,7 +97,7 @@ export default {
   computed: {
     ...mapGetters(['gearBy', 'stackBy', 'stackDefaultServiceByGear', 'stackServicesByGear']),
     projectBase () {
-      return this.escAttr(this.projectId) + '-'
+      return 'gb-' + this.escAttr(this.projectId) + '-'
     },
     gear () {
       return this.stackItem.gear
