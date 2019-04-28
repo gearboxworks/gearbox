@@ -48,8 +48,8 @@ type ResourceIdentifier interface {
 
 type ResourceContainer interface {
 	ContainsResource()
-	RelationshipsLinkMapGetter
 }
+
 type RelationshipsLinkMapGetter interface {
 	GetRelationshipsLinkMap() (apimodeler.LinkMap, status.Status)
 }

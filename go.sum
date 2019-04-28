@@ -3,6 +3,10 @@ github.com/apcera/libretto v0.11.0 h1:CWaFq2ngZLyjxE5z81ax1R3/TH5d/GquARywuOauZM
 github.com/apcera/libretto v0.11.0/go.mod h1:9bCXjm5M0gafGzozqBA7oOvh7nd8yicZ6cvLf3uT0Q0=
 github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48 h1:l9RDXySez/kS9116AdiHPtK5RDqOoLlUPjNRRBt7bog=
 github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48/go.mod h1:cXeNj+QhW0mxc26R8I87i6ekZz/VEvdx8/KSRwdc5BU=
+github.com/clbanning/checkjson v0.0.0-20180314212925-8992be9fc505 h1:E2+0aADXhQAZCfCisqS/z8PufXeVgVA7BAQfkEr9diY=
+github.com/clbanning/checkjson v0.0.0-20180314212925-8992be9fc505/go.mod h1:cS9UItxTJgCtiU91NEZLO4kZsLBR34CDyY3FAMaEhbk=
+github.com/clbanning/checkjson v0.0.0-20190418161636-abd3ee163e3e h1:P3s0m7ndCNTZolJNZviR1wemPTHs/0VkpXW8c/vREjI=
+github.com/clbanning/checkjson v0.0.0-20190418161636-abd3ee163e3e/go.mod h1:cS9UItxTJgCtiU91NEZLO4kZsLBR34CDyY3FAMaEhbk=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cznic/golex v0.0.0-20181122101858-9c343928389c h1:G8zTsaqyVfIHpgMFcGgdbhHSFhlNc77rAKkhVbQ9kQg=
 github.com/cznic/golex v0.0.0-20181122101858-9c343928389c/go.mod h1:+bmmJDNmKlhWNG+gwWCkaBoTy39Fs+bzRxVBzoTQbIc=

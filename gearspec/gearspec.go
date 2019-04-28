@@ -186,11 +186,11 @@ func (me *Gearspec) GetStackId() types.StackId {
 	return types.StackId(fmt.Sprintf("%s/%s", me.Authority, me.Stackname))
 }
 
-func (me *Gearspec) SetStackId(stackid types.StackId) (sts status.Status) {
+func (me *Gearspec) SetId(stackid types.StackId) (sts status.Status) {
 	for range only.Once {
 		tmp := Gearspec{raw: Identifier(stackid)}
 		if me == nil {
-			panic("gearspec.SetStackId() called when 'spec' is nil.")
+			panic("gearspec.SetId() called when 'spec' is nil.")
 		}
 		parts := strings.Split(string(stackid), "/")
 		if len(parts) < 2 {

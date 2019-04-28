@@ -151,35 +151,54 @@ func assertBasedirModel(item ItemModeler) (bdm *BasedirModel, sts Status) {
 	return bdm, sts
 }
 
+func (me *BasedirController) setBasedirModelId(bdm *BasedirModel, itemid ItemId) (sts Status) {
+	for range only.Once {
+		nickname := bdm.GetId()
+		if nickname == "" {
+			sts = bdm.SetId(itemid)
+			if is.Error(sts) {
+				break
+			}
+		}
+		if itemid == nickname {
+			break
+		}
+		sts = status.Fail(&status.Args{
+			HttpStatus: http.StatusUnprocessableEntity,
+			Message: fmt.Sprintf("id '%s' differs from attributes.nickname '%s'",
+				itemid,
+				nickname,
+			),
+		})
+	}
+	return sts
+}
+
 func (me *BasedirController) AddItem(ctx *Context, item ItemModeler) (sts Status) {
 	for range only.Once {
-		ro, ok := item.(*jsonapi.ResourceObject)
-		if !ok {
-			sts = status.OurBad("item '%s' is not a %T",
-				item.GetId(),
-				&jsonapi.ResourceObject{},
-			)
+		var ro *jsonapi.ResourceObject
+		ro, sts = jsonapi.AssertResourceObject(item)
+		if is.Error(sts) {
 			break
 		}
-		b, err := json.Marshal(ro.AttributeMap)
-		if err != nil {
-			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("unable to marshal AttributeMap for item '%s'",
-					item.GetId(),
-				),
-			})
+		var b []byte
+		b, sts = ro.MarshalAttributeMap()
+		if is.Error(sts) {
 			break
 		}
-
 		var bdm *BasedirModel
-		err = json.Unmarshal(b, &bdm)
+		err := json.Unmarshal(b, &bdm)
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("unable to marshal AttributeMap for item '%s'",
+				HttpStatus: http.StatusBadRequest,
+				Message: fmt.Sprintf("unable to marshal AttributeMap for Basedir '%s'",
 					item.GetId(),
 				),
-				HttpStatus: http.StatusBadRequest,
 			})
+			break
+		}
+		sts = me.setBasedirModelId(bdm, item.GetId())
+		if is.Error(sts) {
 			break
 		}
 		var bd *config.Basedir

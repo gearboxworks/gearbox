@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"gearbox/apimodeler"
 	"gearbox/config"
@@ -275,7 +274,7 @@ func (me *Api) WireNewItemRoute(e *echo.Echo, lc apimodeler.ListController, pref
 				break
 			}
 			var ro jsonapi.ResourceObject
-			err = json.Unmarshal(b, &ro)
+			err = ro.Unmarshal(b)
 			if err != nil {
 				sts = status.Wrap(err, &status.Args{
 					Message:    fmt.Sprintf("unable to unmarshal body of '%s' request", path),
@@ -287,8 +286,7 @@ func (me *Api) WireNewItemRoute(e *echo.Echo, lc apimodeler.ListController, pref
 			if is.Error(sts) {
 				break
 			}
-			sts.SetHttpStatus(http.StatusNoContent)
-			rd.Data = nil
+			rd.Data = ro.ResourceIdObject
 
 			//var item apimodeler.ItemModeler
 			//item, sts = lc.GetItemDetails(ctx, id)
@@ -351,6 +349,7 @@ const (
 )
 
 func (me *Api) JsonMarshalHandler(ctx *apimodeler.Context, sts status.Status) status.Status {
+	var _sts status.Status
 	for range only.Once {
 		_, ok := ctx.GetRootDocument().(*jsonapi.RootDocument)
 		if !ok {
@@ -364,18 +363,21 @@ func (me *Api) JsonMarshalHandler(ctx *apimodeler.Context, sts status.Status) st
 			// and prior to this func being called
 			break
 		}
-		sts = ctx.SetResponseHeader(echo.HeaderContentType, me.GetContentType(ctx))
-		if is.Error(sts) {
+		_sts = ctx.SetResponseHeader(echo.HeaderContentType, me.GetContentType(ctx))
+		if is.Error(_sts) {
 			break
 		}
-		route, sts := me.getRouteName(ctx)
-		if is.Error(sts) {
+		route, _sts := me.getRouteName(ctx)
+		if is.Error(_sts) {
 			break
 		}
 		if route == Rootname {
 			ctx.AddLinks(me.GetRootLinkMap(ctx))
 		}
 		ctx.AddMeta(MetaGearboxApiSchema, route)
+	}
+	if _sts != nil {
+		sts = _sts
 	}
 	if is.Error(sts) {
 		_ = ctx.SetResponseStatus(sts.HttpStatus())
@@ -401,7 +403,10 @@ func (me *Api) JsonMarshalHandler(ctx *apimodeler.Context, sts status.Status) st
 	ctx.AddMeta(apimodeler.MetaDcLanguage, apimodeler.DefaultLanguage)
 	ctx.AddMeta(MetaGearboxBaseurl, me.GetBaseUrl())
 
-	sts = ctx.SendResponse()
+	if sts == nil {
+		sts = status.Success("")
+	}
+	sts = ctx.SendResponse(sts)
 	return sts
 }
 
@@ -460,7 +465,7 @@ func getResourceObject(rd *jsonapi.RootDocument) (ro *jsonapi.ResourceObject, st
 func (me *Api) setItemData(ctx *apimodeler.Context, ro *jsonapi.ResourceObject, item apimodeler.ItemModeler, list apimodeler.List) (sts status.Status) {
 	for range only.Once {
 
-		sts = ro.SetStackId(item.GetId())
+		sts = ro.SetId(item.GetId())
 		if is.Error(sts) {
 			break
 		}

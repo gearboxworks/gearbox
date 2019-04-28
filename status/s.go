@@ -113,7 +113,10 @@ func (me *S) GetFullError() (err error) {
 		if !ok {
 			break
 		}
-		msg = fmt.Sprintf("%s; %s", c.Error(), msg)
+		s := c.Error()
+		if s != msg {
+			msg = fmt.Sprintf("%s; %s", s, msg)
+		}
 		sts, ok := c.(Status)
 		if !ok {
 			break

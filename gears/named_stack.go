@@ -173,7 +173,7 @@ func (me *NamedStack) Refresh(gears *Gears) (sts status.Status) {
 func (me *NamedStack) SetIdentifier(stackid types.StackId) (sts status.Status) {
 	for range only.Once {
 		gsi := gearspec.NewGearspec()
-		sts := gsi.SetStackId(stackid)
+		sts := gsi.SetId(stackid)
 		if status.IsError(sts) {
 			break
 		}

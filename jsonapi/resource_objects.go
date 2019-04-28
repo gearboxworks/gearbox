@@ -1,12 +1,19 @@
 package jsonapi
 
 import (
+	"encoding/json"
+	"fmt"
 	"gearbox/apimodeler"
+	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
+	"github.com/clbanning/checkjson"
+	"net/http"
 )
 
-var _ ResourceContainer = (ResourceObjects)(nil)
+var NilResourceObjects = (ResourceObjects)(nil)
+var _ ResourceContainer = NilResourceObjects
+var _ RelationshipsLinkMapGetter = NilResourceObjects
 
 type ResourceObjects []*ResourceObject
 
@@ -36,7 +43,7 @@ func (me ResourceObjects) AppendResourceObject(ro *ResourceObject) (ResourceObje
 
 func (me ResourceObjects) SetIds(ids ResourceIds) (sts status.Status) {
 	for i, ro := range me {
-		sts = ro.SetStackId(apimodeler.ItemId(ids[i]))
+		sts = ro.SetId(apimodeler.ItemId(ids[i]))
 		if is.Error(sts) {
 			break
 		}
@@ -50,6 +57,79 @@ func (me ResourceObjects) SetTypes(types ResourceTypes) (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
+	}
+	return sts
+}
+
+func (me *ResourceObject) Unmarshal(data []byte) (sts status.Status) {
+	var err error
+	var msg string
+	//var mks []string
+	for range only.Once {
+		err = json.Unmarshal(data, &me)
+		if err != nil {
+			err = checkjson.ResolveJSONError(data, err)
+			if err != nil {
+				msg = fmt.Sprintf("unable to unmarshal JSON to type '%T'", me)
+			}
+			break
+		}
+		//mks, err = checkjson.MissingJSONKeys(data,me)
+		//if err != nil {
+		//	msg = err.Error()
+		//	break
+		//}
+		//var obj map[string]json.RawMessage
+		//err = json.Unmarshal(data, &obj)
+		//if err != nil {
+		//	err = checkjson.ResolveJSONError(data, err)
+		//	if err != nil {
+		//		msg = err.Error()
+		//		break
+		//	}
+		//	msg = "unable to unmarshal JSON to map of json.RawMessage keyed by string"
+		//	break
+		//}
+		//attrs,ok := obj["attributes"]
+		//if !ok {
+		//	break
+		//}
+		//data, err = json.Marshal(attrs)
+		//if err != nil {
+		//	err = checkjson.ResolveJSONError(data, err)
+		//	if err != nil {
+		//		msg = err.Error()
+		//		break
+		//	}
+		//	msg = "unable to marshal properties of 'attributes' property"
+		//	break
+		//}
+		//mks2, err := checkjson.MissingJSONKeys(attrs, me.AttributeMap)
+		//if err != nil {
+		//	msg = err.Error()
+		//	break
+		//}
+		//if len(mks2) == 0 {
+		//	break
+		//}
+		//mks = append(mks, mks2...)
+	}
+
+	for range only.Once {
+		if err != nil {
+			sts = status.Wrap(err, &status.Args{
+				HttpStatus: http.StatusUnprocessableEntity,
+				Message:    msg,
+			})
+			break
+		}
+		//if len(mks) > 0 {
+		//	sts = status.Fail(&status.Args{
+		//		HttpStatus: http.StatusBadRequest,
+		//		Message: fmt.Sprintf("missing keys in JSON: '%s'",strings.Join(mks,", ")),
+		//	})
+		//	break
+		//}
 	}
 	return sts
 }

@@ -57,7 +57,7 @@ func (me *GearspecModel) GetId() ItemId {
 	return ItemId(me.GearspecId)
 }
 
-func (me *GearspecModel) SetStackId(itemid ItemId) (sts Status) {
+func (me *GearspecModel) SetId(itemid ItemId) (sts Status) {
 	for range only.Once {
 		parts := strings.Split(string(itemid), "/")
 		if len(parts) < 2 {

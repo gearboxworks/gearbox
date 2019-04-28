@@ -34,7 +34,7 @@ func NewStackRole() *StackRole {
 func (me StackRoleMap) FilterByNamedStack(stackid types.StackId) (nsrm StackRoleMap, sts status.Status) {
 	for range only.Once {
 		gsi := gearspec.NewGearspec()
-		sts = gsi.SetStackId(stackid)
+		sts = gsi.SetId(stackid)
 		if is.Error(sts) {
 			break
 		}

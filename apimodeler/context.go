@@ -72,24 +72,27 @@ func (me *Context) SetResponseStatus(statuscode int) (sts status.Status) {
 	return sts
 }
 
-func (me *Context) SendResponse() (sts status.Status) {
+func (me *Context) SendResponse(sts status.Status) (_sts status.Status) {
 	for range only.Once {
-		ec, sts := me.assertEchoContext()
-		if is.Error(sts) {
+		var ec echo.Context
+		ec, _sts = me.assertEchoContext() // @TODO Factor echo.Context dependencies out
+		if is.Error(_sts) {
 			break
 		}
 		err := ec.JSONPretty(
-			ec.Response().Status,
+			sts.HttpStatus(),
 			me.GetResponseBody(),
 			"   ",
 		)
 		if err != nil {
-			sts = status.Wrap(err, &status.Args{
+			_sts = status.Wrap(err, &status.Args{
 				Message: fmt.Sprintf("error while sending response for '%s'", ec.Path()),
 			})
+			break
 		}
+		_sts = sts
 	}
-	return sts
+	return _sts
 }
 
 func (me *Context) SetResponseHeader(name HttpHeaderName, value HttpHeaderValue) (sts status.Status) {

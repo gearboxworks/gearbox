@@ -62,7 +62,7 @@ func (me *ProjectModel) GetId() ItemId {
 	return ItemId(me.Hostname)
 }
 
-func (me *ProjectModel) SetStackId(hostname ItemId) Status {
+func (me *ProjectModel) SetId(hostname ItemId) Status {
 	me.Hostname = types.Hostname(hostname)
 	return nil
 }
