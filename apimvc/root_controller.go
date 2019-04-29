@@ -1,7 +1,7 @@
 package apimvc
 
 import (
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 	"gearbox/gearbox"
 	"gearbox/types"
 )
@@ -9,20 +9,24 @@ import (
 const Rootname = "root"
 
 var NilRootController = (*RootController)(nil)
-var _ apimodeler.ListController = NilRootController
+var _ apiworks.ListController = NilRootController
 
 type RootController struct {
-	*apimodeler.Controller
+	*apiworks.Controller
 	Gearbox gearbox.Gearboxer
 }
 
 func NewRootController(gb gearbox.Gearboxer) *RootController {
 	return &RootController{
 		Gearbox:    gb,
-		Controller: apimodeler.NewController(),
+		Controller: apiworks.NewController(),
 	}
 }
 
 func (me *RootController) GetName() types.RouteName {
 	return Rootname
+}
+
+func (me *RootController) GetNilItem(ctx *Context) ItemModeler {
+	panic("not yet implemented")
 }

@@ -1,4 +1,4 @@
-package apimodeler
+package apiworks
 
 type ItemIds []ItemId
 type ItemId string

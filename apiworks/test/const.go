@@ -1,6 +1,6 @@
 package test
 
-import "gearbox/apimodeler"
+import "gearbox/apiworks"
 
 const (
 	FrobinatorType    = "frobinator"
@@ -13,10 +13,10 @@ const (
 	testableModelBasepath = "/foo"
 )
 
-var testableItemData = map[apimodeler.ItemId]apimodeler.ItemType{
+var testableItemData = map[apiworks.ItemId]apiworks.ItemType{
 	"foo": FrobinatorType,
 	"bar": FrobinatorType,
 	"baz": UnicornType,
 }
 
-var testableModelIdParams = apimodeler.IdParams{"foo", "bar"}
+var testableModelIdParams = apiworks.IdParams{"foo", "bar"}

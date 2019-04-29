@@ -34,6 +34,10 @@ func NewServiceController(gb gearbox.Gearboxer) *ServiceController {
 	}
 }
 
+func (me *ServiceController) GetNilItem(ctx *Context) ItemModeler {
+	return NilServiceModel
+}
+
 func (me *ServiceController) GetRelatedFields() RelatedFields {
 	return RelatedFields{}
 }

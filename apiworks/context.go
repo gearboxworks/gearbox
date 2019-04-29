@@ -1,4 +1,4 @@
-package apimodeler
+package apiworks
 
 import (
 	"fmt"

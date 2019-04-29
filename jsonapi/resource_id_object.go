@@ -25,3 +25,9 @@ func NewResourceIdObject() *ResourceIdObject {
 	}
 	return &rido
 }
+func NewResourceIdObjectWithIdType(id ResourceId, typ ResourceType) *ResourceIdObject {
+	rido := NewResourceIdObject()
+	rido.ResourceId = id
+	rido.ResourceType = typ
+	return rido
+}

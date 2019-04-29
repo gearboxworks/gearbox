@@ -2,7 +2,7 @@ package jsonapi
 
 import (
 	"fmt"
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 	"gearbox/global"
 	"gearbox/only"
 	"gearbox/status"
@@ -23,7 +23,7 @@ const (
 	CollectionResponse ResponseType = "collection"
 )
 
-var _ apimodeler.ItemModeler = (*IncludedItem)(nil)
+var _ apiworks.ItemModeler = (*IncludedItem)(nil)
 
 type IncludedList []*IncludedItem
 type IncludedItem ResourceObject
@@ -32,27 +32,27 @@ func (me *IncludedItem) GetAttributeMap() AttributeMap {
 	return me.AttributeMap
 }
 
-func (me *IncludedItem) GetRelatedItems(ctx *apimodeler.Context) (list apimodeler.List, sts status.Status) {
+func (me *IncludedItem) GetRelatedItems(ctx *apiworks.Context) (list apiworks.List, sts status.Status) {
 	panic("implement me")
 }
 
-func (me *IncludedItem) GetId() apimodeler.ItemId {
+func (me *IncludedItem) GetId() apiworks.ItemId {
 	panic("implement me")
 }
-func (me *IncludedItem) SetId(apimodeler.ItemId) status.Status {
+func (me *IncludedItem) SetId(apiworks.ItemId) status.Status {
 	panic("implement me")
 }
-func (me *IncludedItem) GetType() apimodeler.ItemType {
+func (me *IncludedItem) GetType() apiworks.ItemType {
 	panic("implement me")
 }
-func (me *IncludedItem) GetItem() (apimodeler.ItemModeler, status.Status) {
+func (me *IncludedItem) GetItem() (apiworks.ItemModeler, status.Status) {
 	panic("implement me")
 }
-func (me *IncludedItem) GetItemLinkMap(*apimodeler.Context) (apimodeler.LinkMap, status.Status) {
+func (me *IncludedItem) GetItemLinkMap(*apiworks.Context) (apiworks.LinkMap, status.Status) {
 	panic("implement me")
 }
 
-func (me IncludedList) AppendItem(item apimodeler.ItemModeler) (inc IncludedList, sts status.Status) {
+func (me IncludedList) AppendItem(item apiworks.ItemModeler) (inc IncludedList, sts status.Status) {
 	inc = me
 	for range only.Once {
 		ii, ok := item.(*IncludedItem)
@@ -67,23 +67,23 @@ func (me IncludedList) AppendItem(item apimodeler.ItemModeler) (inc IncludedList
 	return inc, sts
 }
 
-var _ apimodeler.RootDocumentor = (*RootDocument)(nil)
+var _ apiworks.RootDocumentor = (*RootDocument)(nil)
 
 type RootDocument struct {
 	ResponseType types.ResponseType `json:"-"`
 	JsonApi      *JsonApi           `json:"jsonapi,omitempty"`
 	MetaMap      MetaMap            `json:"meta,omitempty"`
-	LinkMap      apimodeler.LinkMap `json:"links,omitempty"`
+	LinkMap      apiworks.LinkMap   `json:"links,omitempty"`
 	Data         ResourceContainer  `json:"data,omitempty"`
 	Included     IncludedList       `json:"included,omitempty"`
 	Errors       ErrorObjects       `json:"errors,omitempty"`
 }
 
-func (me *RootDocument) GetDataRelationshipsLinkMap() (rlm apimodeler.LinkMap, sts status.Status) {
+func (me *RootDocument) GetDataRelationshipsLinkMap() (rlm apiworks.LinkMap, sts status.Status) {
 	for range only.Once {
 		getter, ok := me.Data.(RelationshipsLinkMapGetter)
 		if !ok {
-			rlm = apimodeler.LinkMap{}
+			rlm = apiworks.LinkMap{}
 		}
 		rlm, sts = getter.GetRelationshipsLinkMap()
 	}
@@ -121,15 +121,15 @@ func NewRootDocument(ctx Contexter, responseType types.ResponseType, args ...*Ro
 	if rd.MetaMap == nil {
 		rd.MetaMap = make(MetaMap, 0)
 	}
-	rd.MetaMap[apimodeler.MetaDcFormat] = ContentType
-	rd.MetaMap[apimodeler.MetaDcType] = responseType
+	rd.MetaMap[apiworks.MetaDcFormat] = ContentType
+	rd.MetaMap[apiworks.MetaDcType] = responseType
 
 	if rd.Included == nil {
 		rd.Included = make(IncludedList, 0)
 	}
 
 	if rd.LinkMap == nil {
-		rd.LinkMap = make(apimodeler.LinkMap, 0)
+		rd.LinkMap = make(apiworks.LinkMap, 0)
 	}
 
 	if rd.Errors != nil {
@@ -138,21 +138,21 @@ func NewRootDocument(ctx Contexter, responseType types.ResponseType, args ...*Ro
 	return &rd
 }
 
-func (me *RootDocument) AddMeta(name apimodeler.Metaname, value apimodeler.MetaValue) {
+func (me *RootDocument) AddMeta(name apiworks.Metaname, value apiworks.MetaValue) {
 	me.MetaMap[name] = value
 }
 
-func (me *RootDocument) AddLink(rel apimodeler.RelType, link apimodeler.LinkImplementor) {
+func (me *RootDocument) AddLink(rel apiworks.RelType, link apiworks.LinkImplementor) {
 	me.LinkMap[rel] = link
 }
 
-func (me *RootDocument) AddLinks(links apimodeler.LinkMap) {
+func (me *RootDocument) AddLinks(links apiworks.LinkMap) {
 	for rel, link := range links {
 		me.AddLink(rel, link)
 	}
 }
 
-func (me *RootDocument) SetRelated(ctx *apimodeler.Context, list apimodeler.List) (sts status.Status) {
+func (me *RootDocument) SetRelated(ctx *apiworks.Context, list apiworks.List) (sts status.Status) {
 	for range only.Once {
 		inc := make(IncludedList, 0, len(list))
 		for _, item := range list {
@@ -174,7 +174,7 @@ func (me *RootDocument) GetRootDocument() interface{} {
 	return me
 }
 
-func (me *RootDocument) AddResponseItem(item apimodeler.ItemModeler) (sts status.Status) {
+func (me *RootDocument) AddResponseItem(item apiworks.ItemModeler) (sts status.Status) {
 	for range only.Once {
 		appender, ok := me.Data.(ResourceObjectAppender)
 		if !ok {
@@ -235,7 +235,7 @@ func (me *RootDocument) SetMeta(meta MetaMap) (sts status.Status) {
 	return nil
 }
 
-func (me *RootDocument) SetLinks(linkmap apimodeler.LinkMap) (sts status.Status) {
+func (me *RootDocument) SetLinks(linkmap apiworks.LinkMap) (sts status.Status) {
 	me.LinkMap = linkmap
 	return nil
 }

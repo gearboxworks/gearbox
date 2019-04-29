@@ -79,23 +79,23 @@ func (me *Basedir) Initialize() (sts Status) {
 	return sts
 }
 
-func (me BasedirMap) NamedBasedirExists(nickname types.Nickname) (ok bool) {
+func (me BasedirMap) BasedirExists(nickname types.Nickname) (ok bool) {
 	_, ok = me[nickname]
 	return ok
 }
 
-func (me BasedirMap) BasedirExists(dir types.AbsoluteDir) (ok bool) {
-	for _, bd := range me {
-		if bd.Basedir != dir {
-			continue
-		}
-		ok = true
-		break
-	}
-	return ok
-}
+//func (me BasedirMap) BasedirDirExists(dir types.AbsoluteDir) (ok bool) {
+//	for _, bd := range me {
+//		if bd.Basedir != dir {
+//			continue
+//		}
+//		ok = true
+//		break
+//	}
+//	return ok
+//}
 
-func (me BasedirMap) GetNamedBasedir(nickname types.Nickname) (bd *Basedir, sts Status) {
+func (me BasedirMap) GetBasedir(nickname types.Nickname) (bd *Basedir, sts Status) {
 	bd, ok := me[nickname]
 	if !ok {
 		sts = status.Fail(&status.Args{
@@ -105,24 +105,36 @@ func (me BasedirMap) GetNamedBasedir(nickname types.Nickname) (bd *Basedir, sts 
 	return bd, sts
 }
 
-func (me BasedirMap) DeleteNamedBasedir(nickname types.Nickname) (sts Status) {
+func (me BasedirMap) DeleteBasedir(config *Config, nickname types.Nickname) (sts Status) {
 	for range only.Once {
 		sts = ValidateBasedirNickname(nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
 			MustExist:      true,
+			Config:         config,
 		})
 		if status.IsError(sts) {
 			break
 		}
-		bd, sts := me.GetNamedBasedir(nickname)
+		var bd *Basedir
+		bd, sts = me.GetBasedir(nickname)
 		if is.Error(sts) {
 			break
 		}
 		delete(me, nickname)
-		sts = status.Success("named base dir '%s' ('%s') deleted",
+		sts = status.Success("basedir '%s' deleted",
 			nickname,
-			bd.Basedir,
 		)
+		sts.SetHelp(status.AllHelp,
+			fmt.Sprintf("'%s' represented directory '%s'",
+				nickname,
+				bd.Basedir,
+			),
+		)
+		/**
+		 * Setting status code explicitly
+		 * @see https://stackoverflow.com/a/2342589/102699
+		 */
+		sts.SetHttpStatus(http.StatusOK)
 	}
 	return sts
 }
@@ -136,7 +148,7 @@ func (me BasedirMap) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDi
 		if status.IsError(sts) {
 			break
 		}
-		bd, sts := me.GetNamedBasedir(nickname)
+		bd, sts := me.GetBasedir(nickname)
 		if is.Error(sts) {
 			break
 		}
@@ -197,7 +209,7 @@ func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts S
 			})
 			break
 		}
-		nnExists := args.Config.NamedBasedirExists(nickname)
+		nnExists := args.Config.BasedirExists(nickname)
 		if args.MustExist && !nnExists {
 			sts = status.Fail(&status.Args{
 				Message:    fmt.Sprintf("nickname '%s' does not exist", nickname),

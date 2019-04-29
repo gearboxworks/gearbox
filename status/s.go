@@ -19,7 +19,7 @@ type S struct {
 func (me *S) Json() []byte {
 	js, _ := json.Marshal(&jsonS{
 		Message: me.message,
-		Help:    me.help[ApiHelp],
+		Help:    *me.help[ApiHelp],
 		Data:    me.data,
 	})
 	return js
@@ -79,12 +79,16 @@ func (me *S) SetOtherHelp(help HelpTypeMap) {
 	}
 }
 func (me *S) SetHelp(helptype HelpType, help string) {
-	me.help[helptype] = help
+	me.help[helptype] = &help
+	if helptype == AllHelp {
+		me.help[ApiHelp] = &help
+		me.help[CliHelp] = &help
+	}
 }
 
-func (me *S) GetHelp(helptype HelpType) (h string) {
-	h, _ = me.help[helptype]
-	return h
+func (me *S) GetHelp(helptype HelpType) string {
+	h, _ := me.help[helptype]
+	return *h
 }
 
 func (me *S) String() string {

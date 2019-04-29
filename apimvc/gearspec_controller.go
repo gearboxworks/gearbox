@@ -2,7 +2,7 @@ package apimvc
 
 import (
 	"fmt"
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 	"gearbox/gearbox"
 	"gearbox/gearspec"
 	"gearbox/only"
@@ -31,6 +31,11 @@ func NewGearspecController(gb gearbox.Gearboxer) *GearspecController {
 		Gearbox: gb,
 	}
 }
+
+func (me *GearspecController) GetNilItem(ctx *Context) ItemModeler {
+	return NilGearspecModel
+}
+
 func (me *GearspecController) GetRelatedFields() RelatedFields {
 	return RelatedFields{}
 }
@@ -89,26 +94,26 @@ func (me *GearspecController) FilterList(ctx *Context, filterPath FilterPath) (l
 	return me.GetList(ctx, filterPath)
 }
 
-func (me *GearspecController) GetListIds(ctx *apimodeler.Context, filterPath ...apimodeler.FilterPath) (itemids apimodeler.ItemIds, sts Status) {
+func (me *GearspecController) GetListIds(ctx *apiworks.Context, filterPath ...apiworks.FilterPath) (itemids apiworks.ItemIds, sts Status) {
 	for range only.Once {
 		if len(filterPath) == 0 {
-			filterPath = []apimodeler.FilterPath{apimodeler.NoFilterPath}
+			filterPath = []apiworks.FilterPath{apiworks.NoFilterPath}
 		}
 		list, sts := me.GetList(ctx, filterPath[0])
 		if is.Error(sts) {
 			break
 		}
-		itemids = make(apimodeler.ItemIds, len(list))
+		itemids = make(apiworks.ItemIds, len(list))
 		i := 0
 		for _, item := range list {
-			itemids[i] = apimodeler.ItemId(item.GetId())
+			itemids[i] = apiworks.ItemId(item.GetId())
 			i++
 		}
 	}
 	return itemids, sts
 }
 
-func (me *GearspecController) GetItem(ctx *apimodeler.Context, gearspecid apimodeler.ItemId) (list apimodeler.ItemModeler, sts Status) {
+func (me *GearspecController) GetItem(ctx *apiworks.Context, gearspecid apiworks.ItemId) (list apiworks.ItemModeler, sts Status) {
 	var ns *GearspecModel
 	for range only.Once {
 		gbgs, sts := me.Gearbox.GetGears().FindGearspec(gearspec.Identifier(gearspecid))
@@ -128,17 +133,17 @@ func (me *GearspecController) GetItem(ctx *apimodeler.Context, gearspecid apimod
 	return ns, sts
 }
 
-func (me *GearspecController) GetItemDetails(ctx *apimodeler.Context, itemid apimodeler.ItemId) (apimodeler.ItemModeler, Status) {
+func (me *GearspecController) GetItemDetails(ctx *apiworks.Context, itemid apiworks.ItemId) (apiworks.ItemModeler, Status) {
 	return me.GetItem(ctx, itemid)
 }
 
-func (me *GearspecController) FilterItem(in apimodeler.ItemModeler, filterPath apimodeler.FilterPath) (out apimodeler.ItemModeler, sts Status) {
+func (me *GearspecController) FilterItem(in apiworks.ItemModeler, filterPath apiworks.FilterPath) (out apiworks.ItemModeler, sts Status) {
 	out = in
 	return out, sts
 }
 
-func (me *GearspecController) GetFilterMap() apimodeler.FilterMap {
-	return apimodeler.FilterMap{}
+func (me *GearspecController) GetFilterMap() apiworks.FilterMap {
+	return apiworks.FilterMap{}
 }
 
 func assertGearspec(item ItemModeler) (s *GearspecModel, sts Status) {

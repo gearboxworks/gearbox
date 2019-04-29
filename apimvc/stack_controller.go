@@ -34,6 +34,10 @@ func NewStackController(gb gearbox.Gearboxer) *StackController {
 	}
 }
 
+func (me *StackController) GetNilItem(ctx *Context) ItemModeler {
+	return NilNamedStackModel
+}
+
 func (me *StackController) GetRelatedFields() RelatedFields {
 	return RelatedFields{
 		&RelatedField{

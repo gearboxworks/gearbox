@@ -1,11 +1,11 @@
 package test
 
 import (
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 )
 
 var NilTestableContext = (*TestableContext)(nil)
-var _ apimodeler.Contexter = NilTestableContext
+var _ apiworks.Contexter = NilTestableContext
 
 type TestableContext struct{}
 

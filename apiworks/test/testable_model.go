@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -10,15 +10,15 @@ import (
 )
 
 var NilTestableModel = (*TestableModel)(nil)
-var _ apimodeler.ListController = NilTestableModel
+var _ apiworks.ListController = NilTestableModel
 
 type TestableModel struct {
-	List apimodeler.List
+	List apiworks.List
 }
 
 func NewTestableController() *TestableModel {
 	tm := TestableModel{
-		List: make(apimodeler.List, 0),
+		List: make(apiworks.List, 0),
 	}
 	coll := tm.List
 	for id, typ := range testableItemData {
@@ -35,17 +35,17 @@ func (me *TestableModel) GetBasepath() types.Basepath {
 	return testableModelBasepath
 }
 
-func (me *TestableModel) GetIdParams() apimodeler.IdParams {
+func (me *TestableModel) GetIdParams() apiworks.IdParams {
 	return testableModelIdParams
 }
 
-func (me *TestableModel) GetFilterMap() apimodeler.FilterMap {
-	return apimodeler.FilterMap{
-		FrobinatorsFilter: apimodeler.Filter{
+func (me *TestableModel) GetFilterMap() apiworks.FilterMap {
+	return apiworks.FilterMap{
+		FrobinatorsFilter: apiworks.Filter{
 			Label: "Items of Frobinator type",
 			Path:  FrobinatorsFilter,
-			ListFilter: func(coll apimodeler.List) apimodeler.List {
-				newcoll := make(apimodeler.List, 0)
+			ListFilter: func(coll apiworks.List) apiworks.List {
+				newcoll := make(apiworks.List, 0)
 				for _, item := range coll {
 					if item.GetType() != FrobinatorType {
 						continue
@@ -55,10 +55,10 @@ func (me *TestableModel) GetFilterMap() apimodeler.FilterMap {
 				return newcoll
 			},
 		},
-		UnicornFilter: apimodeler.Filter{
+		UnicornFilter: apiworks.Filter{
 			Label: "Items of Unicorn type",
 			Path:  UnicornFilter,
-			ItemFilter: func(item apimodeler.ItemModeler) apimodeler.ItemModeler {
+			ItemFilter: func(item apiworks.ItemModeler) apiworks.ItemModeler {
 				if item.GetType() != UnicornType {
 					return nil
 				}
@@ -68,16 +68,16 @@ func (me *TestableModel) GetFilterMap() apimodeler.FilterMap {
 	}
 }
 
-func (me *TestableModel) GetList(filter ...apimodeler.FilterPath) (coll apimodeler.List, sts status.Status) {
+func (me *TestableModel) GetList(filter ...apiworks.FilterPath) (coll apiworks.List, sts status.Status) {
 	return me.List, sts
 }
 
-func (me *TestableModel) AddItem(item apimodeler.ItemModeler) status.Status {
+func (me *TestableModel) AddItem(item apiworks.ItemModeler) status.Status {
 	me.List = append(me.List, item)
 	return nil
 }
 
-func (me *TestableModel) DeleteItem(itemid apimodeler.ItemId) (sts status.Status) {
+func (me *TestableModel) DeleteItem(itemid apiworks.ItemId) (sts status.Status) {
 	for range only.Once {
 		index, sts := me.getItemIndex(itemid)
 		if is.Error(sts) {
@@ -88,7 +88,7 @@ func (me *TestableModel) DeleteItem(itemid apimodeler.ItemId) (sts status.Status
 	return sts
 }
 
-func (me *TestableModel) GetItem(itemid apimodeler.ItemId) (item apimodeler.ItemModeler, sts status.Status) {
+func (me *TestableModel) GetItem(itemid apiworks.ItemId) (item apiworks.ItemModeler, sts status.Status) {
 	for range only.Once {
 		index, sts := me.getItemIndex(itemid)
 		if is.Error(sts) {
@@ -99,9 +99,9 @@ func (me *TestableModel) GetItem(itemid apimodeler.ItemId) (item apimodeler.Item
 	return item, sts
 }
 
-func (me *TestableModel) getItemIndex(itemid apimodeler.ItemId) (index int, sts status.Status) {
+func (me *TestableModel) getItemIndex(itemid apiworks.ItemId) (index int, sts status.Status) {
 	found := false
-	var item apimodeler.ItemModeler
+	var item apiworks.ItemModeler
 	for index, item = range me.List {
 		if item.GetId() != itemid {
 			continue
@@ -118,15 +118,15 @@ func (me *TestableModel) getItemIndex(itemid apimodeler.ItemId) (index int, sts 
 	return index, sts
 }
 
-func (me *TestableModel) GetListIds() (apimodeler.ItemIds, status.Status) {
-	cids := make(apimodeler.ItemIds, len(me.List))
+func (me *TestableModel) GetListIds() (apiworks.ItemIds, status.Status) {
+	cids := make(apiworks.ItemIds, len(me.List))
 	for i, c := range me.List {
 		cids[i] = c.GetId()
 	}
 	return cids, nil
 }
 
-func (me *TestableModel) UpdateItem(item apimodeler.ItemModeler) (sts status.Status) {
+func (me *TestableModel) UpdateItem(item apiworks.ItemModeler) (sts status.Status) {
 	for range only.Once {
 		var index int
 		index, sts = me.getItemIndex(item.GetId())
@@ -138,7 +138,7 @@ func (me *TestableModel) UpdateItem(item apimodeler.ItemModeler) (sts status.Sta
 	return sts
 }
 
-func (me *TestableModel) FilterItem(item apimodeler.ItemModeler, filter apimodeler.FilterPath) (_item apimodeler.ItemModeler, sts status.Status) {
+func (me *TestableModel) FilterItem(item apiworks.ItemModeler, filter apiworks.FilterPath) (_item apiworks.ItemModeler, sts status.Status) {
 	for range only.Once {
 		_item = item
 		f, sts := me.getFilter(filter)
@@ -153,7 +153,7 @@ func (me *TestableModel) FilterItem(item apimodeler.ItemModeler, filter apimodel
 	return _item, sts
 }
 
-func (me *TestableModel) FilterList(filter apimodeler.FilterPath) (coll apimodeler.List, sts status.Status) {
+func (me *TestableModel) FilterList(filter apiworks.FilterPath) (coll apiworks.List, sts status.Status) {
 	for range only.Once {
 		coll = me.List
 		fm := me.GetFilterMap()
@@ -172,7 +172,7 @@ func (me *TestableModel) FilterList(filter apimodeler.FilterPath) (coll apimodel
 	return coll, sts
 }
 
-func (me *TestableModel) getFilter(filter apimodeler.FilterPath) (f apimodeler.Filter, sts status.Status) {
+func (me *TestableModel) getFilter(filter apiworks.FilterPath) (f apiworks.Filter, sts status.Status) {
 	fm := me.GetFilterMap()
 	f, ok := fm[filter]
 	if !ok {

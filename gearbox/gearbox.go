@@ -44,7 +44,7 @@ type Gearboxer interface {
 	Admin(ViewerType)
 	ConnectSSH(ssh.Args) status.Status
 	CreateBox(box.Args) status.Status
-	DeleteNamedBasedir(types.Nickname) status.Status
+	DeleteBasedir(types.Nickname) status.Status
 	DeleteNamedStack(stackid types.StackId) status.Status
 	DeleteProject(hostname types.Hostname) status.Status
 	FindNamedStack(stackid types.StackId) (*gears.NamedStack, status.Status)
@@ -63,7 +63,7 @@ type Gearboxer interface {
 	GetStackRoleMap() (gears.StackRoleMap, status.Status)
 	Initialize() status.Status
 	IsDebug() bool
-	NamedBasedirExists(types.Nickname) bool
+	BasedirExists(types.Nickname) bool
 	NoCache() bool
 	PrintBoxStatus(box.Args) status.Status
 	ProjectExists(types.Hostname) (bool, status.Status)
@@ -329,12 +329,8 @@ func (me *Gearbox) ProjectExists(hostname types.Hostname) (ok bool, sts status.S
 	return ok, sts
 }
 
-func (me *Gearbox) NamedBasedirExists(nickname types.Nickname) bool {
-	return me.Config.GetBasedirMap().NamedBasedirExists(nickname)
-}
-
-func (me *Gearbox) BasedirExists(dir types.AbsoluteDir) bool {
-	return me.Config.GetBasedirMap().BasedirExists(dir)
+func (me *Gearbox) BasedirExists(nickname types.Nickname) bool {
+	return me.Config.GetBasedirMap().BasedirExists(nickname)
 }
 
 func (me *Gearbox) AddBasedir(basedir types.AbsoluteDir, nickname ...types.Nickname) (sts status.Status) {
@@ -372,9 +368,9 @@ func (me *Gearbox) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDir)
 	return sts
 }
 
-func (me *Gearbox) DeleteNamedBasedir(nickname types.Nickname) (sts status.Status) {
+func (me *Gearbox) DeleteBasedir(nickname types.Nickname) (sts status.Status) {
 	for range only.Once {
-		sts = me.Config.GetBasedirMap().DeleteNamedBasedir(nickname)
+		sts = me.Config.DeleteBasedir(nickname)
 		if status.IsError(sts) {
 			break
 		}

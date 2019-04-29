@@ -1,4 +1,4 @@
-package apimodeler
+package apiworks
 
 import (
 	"gearbox/status"
@@ -17,6 +17,7 @@ type ListController interface {
 	ListItemDeleter
 	ListItemGetter
 	ListItemDetailsGetter
+	ListNilItemGetter
 	ListFilterer
 	ListLinkMapGetter
 	ItemFilterer
@@ -56,6 +57,9 @@ type ListItemDeleter interface {
 }
 type ListItemGetter interface {
 	GetItem(*Context, ItemId) (ItemModeler, status.Status)
+}
+type ListNilItemGetter interface {
+	GetNilItem(ctx *Context) ItemModeler
 }
 type ListItemDetailsGetter interface {
 	GetItemDetails(*Context, ItemId) (ItemModeler, status.Status)

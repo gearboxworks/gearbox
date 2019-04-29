@@ -24,6 +24,7 @@ var _ Configer = (*Config)(nil)
 
 type Configer interface {
 	AddBasedir(*BasedirArgs) Status
+	DeleteBasedir(types.Nickname) Status
 	AddProject(*Project) Status
 	Bytes() []byte
 	DeleteProject(types.Hostname) Status
@@ -45,7 +46,7 @@ type Configer interface {
 	LoadProjects() Status
 	LoadProjectsAndWrite() Status
 	MaybeMakeDir(types.AbsoluteDir, os.FileMode) Status
-	NamedBasedirExists(types.Nickname) bool
+	BasedirExists(types.Nickname) bool
 	Unmarshal(j []byte) Status
 	UpdateBasedir(types.Nickname, types.AbsoluteDir) Status
 	UpdateProject(*Project) Status
@@ -208,10 +209,6 @@ func (me *Config) GetBasedir(nickname types.Nickname) (basedir types.AbsoluteDir
 	return basedir, sts
 }
 
-func (me *Config) GetBasedirMap() BasedirMap {
-	return me.BasedirMap
-}
-
 func (me *Config) FindBasedir(nickname types.Nickname) (bd *Basedir, sts Status) {
 	bd, ok := me.BasedirMap[nickname]
 	if !ok {
@@ -221,6 +218,10 @@ func (me *Config) FindBasedir(nickname types.Nickname) (bd *Basedir, sts Status)
 		})
 	}
 	return bd, sts
+}
+
+func (me *Config) GetBasedirMap() BasedirMap {
+	return me.BasedirMap
 }
 
 func (me *Config) GetBasedirs() map[types.Nickname]types.AbsoluteDir {
@@ -489,17 +490,29 @@ func (me *Config) AddBasedir(args *BasedirArgs) (sts Status) {
 }
 
 func (me *Config) GetNamedBasedir(nickname types.Nickname) (bd *Basedir, sts Status) {
-	return me.BasedirMap.GetNamedBasedir(nickname)
+	return me.BasedirMap.GetBasedir(nickname)
 }
 
 func (me *Config) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDir) (sts Status) {
 	return me.BasedirMap.UpdateBasedir(nickname, dir)
 }
 
-func (me *Config) DeleteNamedBasedir(nickname types.Nickname) (sts Status) {
-	return me.BasedirMap.DeleteNamedBasedir(nickname)
+func (me *Config) DeleteBasedir(nickname types.Nickname) (sts Status) {
+	for range only.Once {
+		sts = me.BasedirMap.DeleteBasedir(me, nickname)
+		if is.Error(sts) {
+			break
+		}
+		_sts := me.WriteFile()
+		if is.Error(_sts) {
+			sts = _sts
+			sts.SetHttpStatus(http.StatusInternalServerError)
+			break
+		}
+	}
+	return sts
 }
 
-func (me *Config) NamedBasedirExists(nickname types.Nickname) bool {
-	return me.BasedirMap.NamedBasedirExists(nickname)
+func (me *Config) BasedirExists(nickname types.Nickname) bool {
+	return me.BasedirMap.BasedirExists(nickname)
 }

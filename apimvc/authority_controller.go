@@ -29,6 +29,10 @@ func NewAuthorityController(gb gearbox.Gearboxer) *AuthorityController {
 	}
 }
 
+func (me *AuthorityController) GetNilItem(ctx *Context) ItemModeler {
+	return NilAuthorityModel
+}
+
 func (me *AuthorityController) GetRelatedFields() RelatedFields {
 	return RelatedFields{}
 }

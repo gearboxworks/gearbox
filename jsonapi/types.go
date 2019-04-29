@@ -1,16 +1,16 @@
 package jsonapi
 
 import (
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 )
 
 type (
-	Fieldname       = apimodeler.Fieldname
-	Metaname        = apimodeler.Metaname
-	LinkImplementor = apimodeler.LinkImplementor
-	LinkMap         = apimodeler.LinkMap
-	Links           = apimodeler.Links
-	Link            = apimodeler.Link
+	Fieldname       = apiworks.Fieldname
+	Metaname        = apiworks.Metaname
+	LinkImplementor = apiworks.LinkImplementor
+	LinkMap         = apiworks.LinkMap
+	Links           = apiworks.Links
+	Link            = apiworks.Link
 )
 
 type Contexter interface {
@@ -33,7 +33,7 @@ type LinkObject struct {
 	MetaMap MetaMap `json:"meta"`
 }
 
-var _ apimodeler.LinkImplementor = (*LinkObject)(nil)
+var _ apiworks.LinkImplementor = (*LinkObject)(nil)
 
 func (*LinkObject) IdentifiesLink() {}
 
@@ -43,9 +43,9 @@ type ResponseError string
 type Version string
 
 type ResourceIds []ResourceId
-type ResourceId string
+type ResourceId = string
 type ResourceTypes []ResourceType
-type ResourceType string
+type ResourceType = string
 
 type AttributeMap map[Fieldname]interface{}
 type Attribute interface{}

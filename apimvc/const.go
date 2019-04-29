@@ -1,5 +1,5 @@
 package apimvc
 
-import "gearbox/apimodeler"
+import "gearbox/apiworks"
 
-const NoFilterPath = apimodeler.NoFilterPath
+const NoFilterPath = apiworks.NoFilterPath

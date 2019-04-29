@@ -39,6 +39,10 @@ func NewProjectController(gb gearbox.Gearboxer) *ProjectController {
 	}
 }
 
+func (me *ProjectController) GetNilItem(ctx *Context) ItemModeler {
+	return NilProjectModel
+}
+
 func (me *ProjectController) GetRelatedFields() RelatedFields {
 	return RelatedFields{
 		&RelatedField{

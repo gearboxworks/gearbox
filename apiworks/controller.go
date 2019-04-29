@@ -1,4 +1,4 @@
-package apimodeler
+package apiworks
 
 import (
 	"fmt"
@@ -12,7 +12,8 @@ import (
 const Basename = "controller"
 const Basepath types.Basepath = "/"
 
-var _ ListController = (*Controller)(nil)
+var NilListController = (*Controller)(nil)
+var _ ListController = NilListController
 
 type ControllerMap map[types.Basepath]ListController
 
@@ -20,6 +21,10 @@ type Controller struct {
 	LinkMap  LinkMap
 	Parent   *Controller
 	Children ControllerMap
+}
+
+func (me *Controller) GetNilItem(ctx *Context) ItemModeler {
+	panic("not implmented")
 }
 
 func (me *Controller) GetRelatedFields() RelatedFields {

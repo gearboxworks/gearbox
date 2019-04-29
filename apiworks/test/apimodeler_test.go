@@ -1,7 +1,7 @@
 package test
 
 import (
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 	"gearbox/only"
 	"gearbox/status/is"
 	"gearbox/types"
@@ -11,7 +11,7 @@ import (
 const IdParamsSlugifyWanted = ":foo/:bar/:baz"
 
 func TestIdParams(t *testing.T) {
-	idp := apimodeler.IdParams{"foo", "bar", "baz"}
+	idp := apiworks.IdParams{"foo", "bar", "baz"}
 	if idp.Slugify() != IdParamsSlugifyWanted {
 		t.Errorf("idparams.Slugify(); got '%s', wanted: '%s'", idp.Slugify(), IdParamsSlugifyWanted)
 	}
@@ -20,7 +20,7 @@ func TestIdParams(t *testing.T) {
 func TestModels(t *testing.T) {
 
 	t.Run("GetBasepath()", func(t *testing.T) {
-		ms := apimodeler.NewController(NewTestableController())
+		ms := apiworks.NewController(NewTestableController())
 		if ms.GetBasepath() != testableModelBasepath {
 			t.Errorf("List basepath is not '%s'", testableModelBasepath)
 		}
@@ -30,22 +30,22 @@ func TestModels(t *testing.T) {
 	})
 
 	t.Run("GetIdFromUrl()", func(t *testing.T) {
-		ms := apimodeler.NewController(NewTestableController())
+		ms := apiworks.NewController(NewTestableController())
 		ctx := &TestableContext{}
-		itemid, sts := apimodeler.GetIdFromUrl(ctx, ms)
+		itemid, sts := apiworks.GetIdFromUrl(ctx, ms)
 		if is.Error(sts) {
 			t.Errorf("unable to get item Id from context: %s", sts.Message())
 			return
 		}
-		wanted := apimodeler.ItemId("alpha/beta")
+		wanted := apiworks.ItemId("alpha/beta")
 		if itemid != wanted {
 			t.Errorf("item ID; got '%s', wanted: '%s'", itemid, wanted)
 		}
 	})
 
 	t.Run("GetIdTemplate()", func(t *testing.T) {
-		ms := apimodeler.NewController(NewTestableController())
-		template := apimodeler.GetIdTemplate(ms)
+		ms := apiworks.NewController(NewTestableController())
+		template := apiworks.GetIdTemplate(ms)
 		wanted := types.UrlTemplate(":foo/:bar")
 		if template != wanted {
 			t.Errorf("template; got '%s', wanted: '%s'", template, wanted)
@@ -54,8 +54,8 @@ func TestModels(t *testing.T) {
 	})
 
 	t.Run("GetIdParams()", func(t *testing.T) {
-		ms := apimodeler.NewController(NewTestableController())
-		params := apimodeler.GetIdParams(ms)
+		ms := apiworks.NewController(NewTestableController())
+		params := apiworks.GetIdParams(ms)
 		if len(params) != len(testableModelIdParams) {
 			t.Errorf("len(GetIdParams()); got '%d', wanted: '%d'", len(params), len(testableModelIdParams))
 			return
@@ -67,7 +67,7 @@ func TestModels(t *testing.T) {
 		}
 	})
 	t.Run("GetResourceUrlTemplate()", func(t *testing.T) {
-		ms := apimodeler.NewController(NewTestableController())
+		ms := apiworks.NewController(NewTestableController())
 		template := ms.GetResourceUrlTemplate()
 		wanted := types.UrlTemplate("/foo/:foo/:bar")
 		if template != wanted {
@@ -75,8 +75,8 @@ func TestModels(t *testing.T) {
 		}
 	})
 	t.Run("GetRouteNamePrefix()", func(t *testing.T) {
-		ms := apimodeler.NewController(NewTestableController())
-		prefix := apimodeler.GetRouteNamePrefix(ms)
+		ms := apiworks.NewController(NewTestableController())
+		prefix := apiworks.GetRouteNamePrefix(ms)
 		wanted := "foo"
 		if prefix != wanted {
 			t.Errorf("template; got '%s', wanted: '%s'", prefix, wanted)
@@ -116,14 +116,14 @@ func TestItem(t *testing.T) {
 func TestModeler(t *testing.T) {
 
 	t.Run("GetBasepath()", func(t *testing.T) {
-		m := apimodeler.NewController(NewTestableController())
+		m := apiworks.NewController(NewTestableController())
 		if m.GetBasepath() != testableModelBasepath {
 			t.Errorf("connections.GetBasepath(); got '%s', wanted: '%s'", m.GetBasepath(), testableModelBasepath)
 		}
 	})
 
 	t.Run("GetIdParams()", func(t *testing.T) {
-		m := apimodeler.NewController(NewTestableController())
+		m := apiworks.NewController(NewTestableController())
 		for range only.Once {
 			idp := m.GetIdParams()
 
@@ -142,7 +142,7 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("GetList()", func(t *testing.T) {
-		m := apimodeler.NewController(NewTestableController())
+		m := apiworks.NewController(NewTestableController())
 		coll, sts := m.GetList()
 		if is.Error(sts) {
 			t.Errorf(sts.Message())
@@ -171,7 +171,7 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("AddItem()", func(t *testing.T) {
-		m := apimodeler.NewController(NewTestableController())
+		m := apiworks.NewController(NewTestableController())
 		ti := &TestableItem{
 			Id:   "42",
 			Type: "hitchhiker",
@@ -209,7 +209,7 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("DeleteItem()", func(t *testing.T) {
-		m := apimodeler.NewController(NewTestableController())
+		m := apiworks.NewController(NewTestableController())
 		coll, sts := m.GetList()
 		if is.Error(sts) {
 			t.Error(sts.Message())
@@ -235,7 +235,7 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("UpdateItem()", func(t *testing.T) {
-		m := apimodeler.NewController(NewTestableController())
+		m := apiworks.NewController(NewTestableController())
 		coll, sts := m.GetList()
 		if is.Error(sts) {
 			t.Error(sts.Message())
@@ -252,7 +252,7 @@ func TestModeler(t *testing.T) {
 		}
 		newitem := &TestableItem{
 			Id:   item.GetId(),
-			Type: apimodeler.ItemType(newtype),
+			Type: apiworks.ItemType(newtype),
 		}
 		sts = m.UpdateItem(newitem)
 		if is.Error(sts) {
@@ -273,14 +273,14 @@ func TestModeler(t *testing.T) {
 			t.Errorf("item '%s' not found after update", item.GetId())
 			return
 		}
-		if item2.GetType() != apimodeler.ItemType(newtype) {
+		if item2.GetType() != apiworks.ItemType(newtype) {
 			t.Errorf("item '%s' not type '%s' after update", item.GetId(), newtype)
 			return
 		}
 	})
 
 	t.Run("GetFilterMap()", func(t *testing.T) {
-		m := apimodeler.NewController(NewTestableController())
+		m := apiworks.NewController(NewTestableController())
 		fm := m.GetFilterMap()
 		if len(fm) != 2 {
 			t.Errorf("filter map len; got: %d, wanted: %d", len(fm), 2)
@@ -316,7 +316,7 @@ func TestModeler(t *testing.T) {
 
 	t.Run("GetListIds()", func(t *testing.T) {
 		for range only.Once {
-			m := apimodeler.NewController(NewTestableController())
+			m := apiworks.NewController(NewTestableController())
 			cids, sts := m.GetListIds()
 			if is.Error(sts) {
 				t.Error(sts.Message())
@@ -335,7 +335,7 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("GetItem()", func(t *testing.T) {
-		m := apimodeler.NewController(NewTestableController())
+		m := apiworks.NewController(NewTestableController())
 		coll, sts := m.GetList()
 		if is.Error(sts) {
 			t.Error(sts.Message())
@@ -361,7 +361,7 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("FilterList()", func(t *testing.T) {
-		m := apimodeler.NewController(NewTestableController())
+		m := apiworks.NewController(NewTestableController())
 		fc, sts := m.FilterList(FrobinatorsFilter)
 		if is.Error(sts) {
 			t.Errorf("unable to filter List on '%s': %s", FrobinatorsFilter, sts.Message())
@@ -381,14 +381,14 @@ func TestModeler(t *testing.T) {
 	})
 
 	t.Run("FilterItem()", func(t *testing.T) {
-		m := apimodeler.NewController(NewTestableController())
+		m := apiworks.NewController(NewTestableController())
 		coll, sts := m.GetList()
 		if is.Error(sts) {
 			t.Error("unable to get List")
 			return
 		}
 		wantLen := countValues(UnicornType)
-		filtered := make(apimodeler.List, 0)
+		filtered := make(apiworks.List, 0)
 		for i, item := range coll {
 			fi, sts := m.FilterItem(item, UnicornFilter)
 			if is.Error(sts) {
@@ -417,7 +417,7 @@ func TestModeler(t *testing.T) {
 
 }
 
-func getItem(coll apimodeler.List, itemid apimodeler.ItemId) (item apimodeler.ItemModeler) {
+func getItem(coll apiworks.List, itemid apiworks.ItemId) (item apiworks.ItemModeler) {
 	for _, i := range coll {
 		if i.GetId() != itemid {
 			continue
@@ -428,7 +428,7 @@ func getItem(coll apimodeler.List, itemid apimodeler.ItemId) (item apimodeler.It
 	return item
 }
 
-func countIds(coll apimodeler.List, id apimodeler.ItemId) int {
+func countIds(coll apiworks.List, id apiworks.ItemId) int {
 	cnt := 0
 	for _, c := range coll {
 		if c.GetId() != id {
@@ -439,7 +439,7 @@ func countIds(coll apimodeler.List, id apimodeler.ItemId) int {
 	return cnt
 }
 
-func countTypes(coll apimodeler.List, typ apimodeler.ItemType) int {
+func countTypes(coll apiworks.List, typ apiworks.ItemType) int {
 	cnt := 0
 	for _, c := range coll {
 		if c.GetType() != typ {
@@ -450,7 +450,7 @@ func countTypes(coll apimodeler.List, typ apimodeler.ItemType) int {
 	return cnt
 }
 
-func countKeys(key apimodeler.ItemId) int {
+func countKeys(key apiworks.ItemId) int {
 	cnt := 0
 	for k := range testableItemData {
 		if k != key {
@@ -461,7 +461,7 @@ func countKeys(key apimodeler.ItemId) int {
 	return cnt
 }
 
-func countValues(value apimodeler.ItemType) int {
+func countValues(value apiworks.ItemType) int {
 	cnt := 0
 	for _, v := range testableItemData {
 		if v != value {

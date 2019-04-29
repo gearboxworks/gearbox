@@ -1,7 +1,7 @@
 package jsonapi
 
 import (
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 	"gearbox/status"
 )
 
@@ -51,5 +51,5 @@ type ResourceContainer interface {
 }
 
 type RelationshipsLinkMapGetter interface {
-	GetRelationshipsLinkMap() (apimodeler.LinkMap, status.Status)
+	GetRelationshipsLinkMap() (apiworks.LinkMap, status.Status)
 }

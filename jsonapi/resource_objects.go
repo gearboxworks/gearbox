@@ -3,7 +3,7 @@ package jsonapi
 import (
 	"encoding/json"
 	"fmt"
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 	"gearbox/only"
 	"gearbox/status"
 	"gearbox/status/is"
@@ -17,14 +17,14 @@ var _ RelationshipsLinkMapGetter = NilResourceObjects
 
 type ResourceObjects []*ResourceObject
 
-func (me ResourceObjects) GetRelationshipsLinkMap() (lm apimodeler.LinkMap, sts status.Status) {
-	lm = make(apimodeler.LinkMap, 0)
+func (me ResourceObjects) GetRelationshipsLinkMap() (lm apiworks.LinkMap, sts status.Status) {
+	lm = make(apiworks.LinkMap, 0)
 	for fn, _lm := range me {
 		for rel, link := range _lm.LinkMap {
-			if rel != apimodeler.SelfRelType {
+			if rel != apiworks.SelfRelType {
 				continue
 			}
-			lm[apimodeler.RelType(fn)] = link
+			lm[apiworks.RelType(fn)] = link
 		}
 	}
 	return lm, sts
@@ -43,7 +43,7 @@ func (me ResourceObjects) AppendResourceObject(ro *ResourceObject) (ResourceObje
 
 func (me ResourceObjects) SetIds(ids ResourceIds) (sts status.Status) {
 	for i, ro := range me {
-		sts = ro.SetId(apimodeler.ItemId(ids[i]))
+		sts = ro.SetId(apiworks.ItemId(ids[i]))
 		if is.Error(sts) {
 			break
 		}
@@ -53,7 +53,7 @@ func (me ResourceObjects) SetIds(ids ResourceIds) (sts status.Status) {
 
 func (me ResourceObjects) SetTypes(types ResourceTypes) (sts status.Status) {
 	for i, ro := range me {
-		sts = ro.SetType(apimodeler.ItemType(types[i]))
+		sts = ro.SetType(apiworks.ItemType(types[i]))
 		if is.Error(sts) {
 			break
 		}

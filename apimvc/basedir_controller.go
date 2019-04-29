@@ -32,6 +32,10 @@ func NewBasedirController(cfg config.Configer) *BasedirController {
 	}
 }
 
+func (me *BasedirController) GetNilItem(ctx *Context) ItemModeler {
+	return NilBasedirModel
+}
+
 func (me *BasedirController) GetRelatedFields() RelatedFields {
 	return RelatedFields{}
 }
@@ -235,14 +239,6 @@ func (me *BasedirController) UpdateItem(ctx *Context, item ItemModeler) (sts Sta
 
 }
 
-func (me *BasedirController) DeleteItem(ctx *Context, stackid ItemId) (sts Status) {
-	//for range only.Once {
-	//	sts := me.Config.DeleteBasedir(types.BasedirId(stackid))
-	//	if status.IsError(sts) {
-	//		break
-	//	}
-	//	sts = status.Success("Basedir '%s' found", stackid)
-	//	sts.SetHttpStatus(http.StatusNoContent)
-	//}
-	return sts
+func (me *BasedirController) DeleteItem(ctx *Context, itemid ItemId) (sts Status) {
+	return me.Config.DeleteBasedir(types.Nickname(itemid))
 }

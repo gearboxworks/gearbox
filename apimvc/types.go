@@ -1,7 +1,7 @@
 package apimvc
 
 import (
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 	"gearbox/jsonapi"
 	"gearbox/status"
 )
@@ -11,26 +11,26 @@ type (
 )
 
 type (
-	Context         = apimodeler.Context
-	Controller      = apimodeler.Controller
-	ControllerMap   = apimodeler.ControllerMap
-	Fieldname       = apimodeler.Fieldname
-	Filter          = apimodeler.Filter
-	FilterMap       = apimodeler.FilterMap
-	FilterPath      = apimodeler.FilterPath
-	IdParam         = apimodeler.IdParam
-	IdParams        = apimodeler.IdParams
-	ItemId          = apimodeler.ItemId
-	ItemIds         = apimodeler.ItemIds
-	ItemModeler     = apimodeler.ItemModeler
-	ItemType        = apimodeler.ItemType
-	LinkImplementor = apimodeler.LinkImplementor
-	LinkMap         = apimodeler.LinkMap
-	List            = apimodeler.List
-	ListController  = apimodeler.ListController
-	RelatedField    = apimodeler.RelatedField
-	RelatedFields   = apimodeler.RelatedFields
-	RelType         = apimodeler.RelType
+	Context         = apiworks.Context
+	Controller      = apiworks.Controller
+	ControllerMap   = apiworks.ControllerMap
+	Fieldname       = apiworks.Fieldname
+	Filter          = apiworks.Filter
+	FilterMap       = apiworks.FilterMap
+	FilterPath      = apiworks.FilterPath
+	IdParam         = apiworks.IdParam
+	IdParams        = apiworks.IdParams
+	ItemId          = apiworks.ItemId
+	ItemIds         = apiworks.ItemIds
+	ItemModeler     = apiworks.ItemModeler
+	ItemType        = apiworks.ItemType
+	LinkImplementor = apiworks.LinkImplementor
+	LinkMap         = apiworks.LinkMap
+	List            = apiworks.List
+	ListController  = apiworks.ListController
+	RelatedField    = apiworks.RelatedField
+	RelatedFields   = apiworks.RelatedFields
+	RelType         = apiworks.RelType
 )
 
 type (

@@ -1,21 +1,21 @@
 package api
 
 import (
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 	"gearbox/status"
 	"gearbox/types"
 )
 
 type Apier interface {
-	AddController(apimodeler.ListController) status.Status
+	AddController(apiworks.ListController) status.Status
 	SetParent(interface{})
 	GetBaseUrl() types.UrlTemplate
-	GetItemUrl(ctx *apimodeler.Context, id apimodeler.ItemModeler) (types.UrlTemplate, status.Status)
+	GetItemUrl(ctx *apiworks.Context, id apiworks.ItemModeler) (types.UrlTemplate, status.Status)
 	Start()
 	Stop()
-	GetRootLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap
-	GetListLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap
-	GetItemLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap
-	GetCommonLinkMap(ctx *apimodeler.Context) apimodeler.LinkMap
+	GetRootLinkMap(ctx *apiworks.Context) apiworks.LinkMap
+	GetListLinkMap(ctx *apiworks.Context) apiworks.LinkMap
+	GetItemLinkMap(ctx *apiworks.Context) apiworks.LinkMap
+	GetCommonLinkMap(ctx *apiworks.Context) apiworks.LinkMap
 	WireRoutes()
 }

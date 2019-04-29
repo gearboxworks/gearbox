@@ -112,9 +112,9 @@ func NewStatus(args *Args) (sts *S) {
 			cause:      args.Cause,
 			data:       args.Data,
 			help: HelpTypeMap{
-				AllHelp: args.Help,
-				ApiHelp: args.ApiHelp,
-				CliHelp: args.CliHelp,
+				AllHelp: &args.Help,
+				ApiHelp: &args.ApiHelp,
+				CliHelp: &args.CliHelp,
 			},
 		}
 
@@ -130,15 +130,16 @@ func NewStatus(args *Args) (sts *S) {
 			sts.httpStatus = http.StatusInternalServerError
 		}
 
-		if sts.help[AllHelp] == "" {
-			sts.help[AllHelp] = ContactSupportHelp()
+		if *sts.help[AllHelp] == "" {
+			help := ContactSupportHelp()
+			sts.help[AllHelp] = &help
 		}
 
-		if sts.help[ApiHelp] == "" {
+		if *sts.help[ApiHelp] == "" {
 			sts.help[ApiHelp] = sts.help[AllHelp]
 		}
 
-		if sts.help[CliHelp] == "" {
+		if *sts.help[CliHelp] == "" {
 			sts.help[CliHelp] = sts.help[AllHelp]
 		}
 

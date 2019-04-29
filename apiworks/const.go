@@ -1,4 +1,4 @@
-package apimodeler
+package apiworks
 
 const (
 	CharsetUTF8          = "charset=UTF-8"

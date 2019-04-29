@@ -1,7 +1,7 @@
 package apimvc
 
 import (
-	"gearbox/apimodeler"
+	"gearbox/apiworks"
 	"gearbox/gears"
 	"gearbox/gearspec"
 	"gearbox/global"
@@ -9,7 +9,7 @@ import (
 	"gearbox/types"
 )
 
-func NewStackMemberFromGearsStackRoleServices(ctx *apimodeler.Context, grss *gears.RoleServices, gsr *gears.StackRole) (rss *StackMember) {
+func NewStackMemberFromGearsStackRoleServices(ctx *apiworks.Context, grss *gears.RoleServices, gsr *gears.StackRole) (rss *StackMember) {
 	var dsi service.Identifier
 	if grss.DefaultService != nil {
 		dsi = grss.DefaultService.GetIdentifier()
