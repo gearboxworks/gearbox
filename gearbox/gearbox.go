@@ -356,7 +356,10 @@ func (me *Gearbox) AddBasedir(basedir types.AbsoluteDir, nickname ...types.Nickn
 
 func (me *Gearbox) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDir) (sts status.Status) {
 	for range only.Once {
-		sts = me.Config.GetBasedirMap().UpdateBasedir(nickname, dir)
+		sts = me.Config.GetBasedirMap().UpdateBasedir(
+			me.Config,
+			config.NewBasedir(nickname, dir),
+		)
 		if status.IsError(sts) {
 			break
 		}

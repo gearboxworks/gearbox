@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"gearbox/help"
 	"gearbox/only"
@@ -21,8 +20,8 @@ type Basedirs []*Basedir
 type Basedir struct {
 	Nickname types.Nickname    `json:"nickname"`
 	Basedir  types.AbsoluteDir `json:"basedir"`
-	Err      error             `json:"-"`
 }
+
 type BasedirArgs Basedir
 
 func NewBasedir(nickname types.Nickname, basedir types.AbsoluteDir) *Basedir {
@@ -59,9 +58,8 @@ func (me *Basedir) MaybeExpandHostDir() (sts Status) {
 func (me *Basedir) Initialize() (sts Status) {
 	for range only.Once {
 		if me.Basedir == "" {
-			me.Err = errors.New("Basedir.Basedir has no value")
-			sts = status.Wrap(me.Err, &status.Args{
-				Message:    me.Err.Error(),
+			sts = status.Fail(&status.Args{
+				Message:    "Basedir.Basedir has no value",
 				HttpStatus: http.StatusBadRequest,
 				ApiHelp:    fmt.Sprintf("see %s", help.GetApiDocsUrl("basedirs")),
 			})
@@ -69,7 +67,6 @@ func (me *Basedir) Initialize() (sts Status) {
 		}
 		sts := me.MaybeExpandHostDir()
 		if status.IsError(sts) {
-			me.Err = sts.Cause()
 			break
 		}
 		if me.Nickname == "" {
@@ -105,7 +102,7 @@ func (me BasedirMap) GetBasedir(nickname types.Nickname) (bd *Basedir, sts Statu
 	return bd, sts
 }
 
-func (me BasedirMap) DeleteBasedir(config *Config, nickname types.Nickname) (sts Status) {
+func (me BasedirMap) DeleteBasedir(config Configer, nickname types.Nickname) (sts Status) {
 	for range only.Once {
 		sts = ValidateBasedirNickname(nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
@@ -123,37 +120,22 @@ func (me BasedirMap) DeleteBasedir(config *Config, nickname types.Nickname) (sts
 		delete(me, nickname)
 		sts = status.Success("basedir '%s' deleted",
 			nickname,
-		)
-		sts.SetHelp(status.AllHelp,
-			fmt.Sprintf("'%s' represented directory '%s'",
-				nickname,
-				bd.Basedir,
-			),
-		)
-		/**
-		 * Setting status code explicitly
-		 * @see https://stackoverflow.com/a/2342589/102699
-		 */
-		sts.SetHttpStatus(http.StatusOK)
+		).SetDetail("'%s' was nickname for '%s'",
+			nickname,
+			bd.Basedir,
+		/** Setting status code explicitly @see https://stackoverflow.com/a/2342589/102699 */
+		).SetHttpStatus(http.StatusOK)
 	}
 	return sts
 }
 
-func (me BasedirMap) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDir) (sts Status) {
+func (me BasedirMap) UpdateBasedir(config Configer, bd *Basedir) (sts Status) {
 	for range only.Once {
-		sts = ValidateBasedirNickname(nickname, &ValidateArgs{
+		sts = ValidateBasedirNickname(bd.Nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
 			MustExist:      true,
+			Config:         config,
 		})
-		if status.IsError(sts) {
-			break
-		}
-		bd, sts := me.GetBasedir(nickname)
-		if is.Error(sts) {
-			break
-		}
-		bd.Basedir = dir
-		sts = bd.MaybeExpandHostDir()
 		if status.IsError(sts) {
 			break
 		}
@@ -162,8 +144,10 @@ func (me BasedirMap) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDi
 			break
 		}
 		sts = status.Success(
-			"named base dir '%s' updated to: '%s'",
-			nickname,
+			"basedir '%s' updated",
+			bd.Nickname,
+		).SetDetail("'%s' is nickname for '%s'",
+			bd.Nickname,
 			bd.Basedir,
 		)
 	}
@@ -182,12 +166,12 @@ func (me BasedirMap) AddBasedir(config Configer, basedir *Basedir) (sts Status) 
 		}
 		sts := basedir.Initialize()
 		if is.Error(sts) {
-			sts.SetHttpStatus(http.StatusBadRequest)
+			sts = sts.SetHttpStatus(http.StatusBadRequest)
 			break
 		}
 		me[basedir.Nickname] = basedir
 		sts = status.Success("base dir '%s' added", basedir.Basedir)
-		sts.SetHttpStatus(http.StatusCreated)
+		sts = sts.SetHttpStatus(http.StatusCreated)
 	}
 	return sts
 }

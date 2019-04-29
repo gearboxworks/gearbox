@@ -108,7 +108,7 @@ func NewStatus(args *Args) (sts *S) {
 		sts = &S{
 			success:    args.Success,
 			message:    args.Message,
-			httpStatus: args.HttpStatus,
+			httpstatus: args.HttpStatus,
 			cause:      args.Cause,
 			data:       args.Data,
 			help: HelpTypeMap{
@@ -126,8 +126,8 @@ func NewStatus(args *Args) (sts *S) {
 			sts.cause = errors.New(sts.message)
 		}
 
-		if sts.httpStatus == 0 {
-			sts.httpStatus = http.StatusInternalServerError
+		if sts.httpstatus == 0 {
+			sts.httpstatus = http.StatusInternalServerError
 		}
 
 		if *sts.help[AllHelp] == "" {

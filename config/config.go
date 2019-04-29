@@ -48,7 +48,7 @@ type Configer interface {
 	MaybeMakeDir(types.AbsoluteDir, os.FileMode) Status
 	BasedirExists(types.Nickname) bool
 	Unmarshal(j []byte) Status
-	UpdateBasedir(types.Nickname, types.AbsoluteDir) Status
+	UpdateBasedir(*Basedir) Status
 	UpdateProject(*Project) Status
 	WriteFile() Status
 }
@@ -493,8 +493,8 @@ func (me *Config) GetNamedBasedir(nickname types.Nickname) (bd *Basedir, sts Sta
 	return me.BasedirMap.GetBasedir(nickname)
 }
 
-func (me *Config) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDir) (sts Status) {
-	return me.BasedirMap.UpdateBasedir(nickname, dir)
+func (me *Config) UpdateBasedir(bd *Basedir) (sts Status) {
+	return me.BasedirMap.UpdateBasedir(me, bd)
 }
 
 func (me *Config) DeleteBasedir(nickname types.Nickname) (sts Status) {
@@ -505,8 +505,7 @@ func (me *Config) DeleteBasedir(nickname types.Nickname) (sts Status) {
 		}
 		_sts := me.WriteFile()
 		if is.Error(_sts) {
-			sts = _sts
-			sts.SetHttpStatus(http.StatusInternalServerError)
+			sts = _sts.SetHttpStatus(http.StatusInternalServerError)
 			break
 		}
 	}

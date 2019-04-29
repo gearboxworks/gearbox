@@ -17,9 +17,9 @@ type ListController interface {
 	ListItemDeleter
 	ListItemGetter
 	ListItemDetailsGetter
-	ListNilItemGetter
 	ListFilterer
 	ListLinkMapGetter
+	NilItemGetter
 	ItemFilterer
 	ItemCanAdder
 	ParentGetter
@@ -58,7 +58,7 @@ type ListItemDeleter interface {
 type ListItemGetter interface {
 	GetItem(*Context, ItemId) (ItemModeler, status.Status)
 }
-type ListNilItemGetter interface {
+type NilItemGetter interface {
 	GetNilItem(ctx *Context) ItemModeler
 }
 type ListItemDetailsGetter interface {

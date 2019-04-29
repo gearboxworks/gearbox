@@ -133,26 +133,82 @@ func (me *BasedirController) GetFilterMap() FilterMap {
 	return GetBasedirFilterMap()
 }
 
-func GetBasedirFilterMap() FilterMap {
-	return FilterMap{}
-}
-
-func MakeConfigBasedir(cfg config.Configer, bdm *BasedirModel) (bd *config.Basedir, sts Status) {
-	bd = config.NewBasedir(bdm.Nickname, bdm.Basedir)
-	return bd, sts
-}
-
-func assertBasedirModel(item ItemModeler) (bdm *BasedirModel, sts Status) {
-	bdm, ok := item.(*BasedirModel)
-	if !ok {
-		sts = status.Fail(&status.Args{
-			Message: fmt.Sprintf("item not a %T: %s",
-				(*BasedirModel)(nil),
-				item.GetId(),
-			),
-		})
+func (me *BasedirController) getBasedirModelFromItem(item ItemModeler) (bdm *BasedirModel, sts Status) {
+	for range only.Once {
+		var ro *jsonapi.ResourceObject
+		ro, sts = jsonapi.AssertResourceObject(item)
+		if is.Error(sts) {
+			break
+		}
+		var b []byte
+		b, sts = ro.MarshalAttributeMap()
+		if is.Error(sts) {
+			break
+		}
+		err := json.Unmarshal(b, &bdm)
+		if err != nil {
+			sts = status.Wrap(err, &status.Args{
+				HttpStatus: http.StatusBadRequest,
+				Message: fmt.Sprintf("unable to marshal AttributeMap for Basedir '%s'",
+					item.GetId(),
+				),
+			})
+			break
+		}
+		sts = me.setBasedirModelId(bdm, item.GetId())
+		if is.Error(sts) {
+			break
+		}
 	}
 	return bdm, sts
+}
+
+func (me *BasedirController) AddItem(ctx *Context, item ItemModeler) (sts Status) {
+	for range only.Once {
+		var bdm *BasedirModel
+		bdm, sts = me.getBasedirModelFromItem(item)
+		if is.Error(sts) {
+			break
+		}
+		var bd *config.Basedir
+		bd, sts = MakeConfigBasedir(bdm)
+		if is.Error(sts) {
+			break
+		}
+		bda := config.BasedirArgs(*bd)
+		sts = me.Config.AddBasedir(&bda)
+		if status.IsError(sts) {
+			break
+		}
+		sts = status.Success("Basedir '%s' added", bd.Nickname).
+			SetHttpStatus(http.StatusCreated)
+	}
+	return sts
+}
+
+func (me *BasedirController) DeleteItem(ctx *Context, itemid ItemId) (sts Status) {
+	return me.Config.DeleteBasedir(types.Nickname(itemid))
+}
+
+func (me *BasedirController) UpdateItem(ctx *Context, item ItemModeler) (sts Status) {
+	for range only.Once {
+		var bdm *BasedirModel
+		bdm, sts = me.getBasedirModelFromItem(item)
+		if is.Error(sts) {
+			break
+		}
+		var bd *config.Basedir
+		bd, sts = MakeConfigBasedir(bdm)
+		if is.Error(sts) {
+			break
+		}
+		sts = me.Config.UpdateBasedir(bd)
+		if status.IsError(sts) {
+			break
+		}
+	}
+	return sts
+
 }
 
 func (me *BasedirController) setBasedirModelId(bdm *BasedirModel, itemid ItemId) (sts Status) {
@@ -169,7 +225,7 @@ func (me *BasedirController) setBasedirModelId(bdm *BasedirModel, itemid ItemId)
 		}
 		sts = status.Fail(&status.Args{
 			HttpStatus: http.StatusUnprocessableEntity,
-			Message: fmt.Sprintf("id '%s' differs from attributes.nickname '%s'",
+			Message: fmt.Sprintf("id '%s' does not match attributes.nickname '%s'",
 				itemid,
 				nickname,
 			),
@@ -178,67 +234,24 @@ func (me *BasedirController) setBasedirModelId(bdm *BasedirModel, itemid ItemId)
 	return sts
 }
 
-func (me *BasedirController) AddItem(ctx *Context, item ItemModeler) (sts Status) {
-	for range only.Once {
-		var ro *jsonapi.ResourceObject
-		ro, sts = jsonapi.AssertResourceObject(item)
-		if is.Error(sts) {
-			break
-		}
-		var b []byte
-		b, sts = ro.MarshalAttributeMap()
-		if is.Error(sts) {
-			break
-		}
-		var bdm *BasedirModel
-		err := json.Unmarshal(b, &bdm)
-		if err != nil {
-			sts = status.Wrap(err, &status.Args{
-				HttpStatus: http.StatusBadRequest,
-				Message: fmt.Sprintf("unable to marshal AttributeMap for Basedir '%s'",
-					item.GetId(),
-				),
-			})
-			break
-		}
-		sts = me.setBasedirModelId(bdm, item.GetId())
-		if is.Error(sts) {
-			break
-		}
-		var bd *config.Basedir
-		bd, sts = MakeConfigBasedir(me.Config, bdm)
-		if is.Error(sts) {
-			break
-		}
-		bda := config.BasedirArgs(*bd)
-		sts = me.Config.AddBasedir(&bda)
-		if status.IsError(sts) {
-			break
-		}
-		sts = status.Success("Basedir '%s' added", bd.Nickname)
-		sts.SetHttpStatus(http.StatusCreated)
+func AssertBasedirModel(item ItemModeler) (bdm *BasedirModel, sts Status) {
+	bdm, ok := item.(*BasedirModel)
+	if !ok {
+		sts = status.Fail(&status.Args{
+			Message: fmt.Sprintf("item not a %T: %s",
+				(*BasedirModel)(nil),
+				item.GetId(),
+			),
+		})
 	}
-	return sts
+	return bdm, sts
 }
 
-func (me *BasedirController) UpdateItem(ctx *Context, item ItemModeler) (sts Status) {
-	//for range only.Once {
-	//	var gbs *config.Basedir
-	//	gbs, _, sts = me.extractConfigBasedir(ctx, item)
-	//	if status.IsError(sts) {
-	//		break
-	//	}
-	//	sts = me.Config.UpdateBasedir(gbs)
-	//	if status.IsError(sts) {
-	//		break
-	//	}
-	//	sts = status.Success("Basedir '%s' updated", item.GetId())
-	//	sts.SetHttpStatus(http.StatusNoContent)
-	//}
-	return sts
-
+func GetBasedirFilterMap() FilterMap {
+	return FilterMap{}
 }
 
-func (me *BasedirController) DeleteItem(ctx *Context, itemid ItemId) (sts Status) {
-	return me.Config.DeleteBasedir(types.Nickname(itemid))
+func MakeConfigBasedir(bdm *BasedirModel) (bd *config.Basedir, sts Status) {
+	bd = config.NewBasedir(bdm.Nickname, bdm.Basedir)
+	return bd, sts
 }

@@ -11,7 +11,6 @@ import (
 	"gearbox/status/is"
 	"gearbox/types"
 	"gearbox/util"
-	"github.com/gedex/inflector"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"io/ioutil"
@@ -28,64 +27,64 @@ type Api struct {
 	Port          string
 	Echo          *echo.Echo
 	Parent        interface{}
-	ControllerMap apiworks.ControllerMap
+	ControllerMap ControllerMap
 }
 
-func (me *Api) GetRootLinkMap(ctx *apiworks.Context) apiworks.LinkMap {
-	lm := make(apiworks.LinkMap, 0)
+func (me *Api) GetRootLinkMap(ctx *Context) LinkMap {
+	lm := make(LinkMap, 0)
 	for k, ms := range me.ControllerMap {
-		if k == apiworks.Basepath {
+		if k == Basepath {
 			continue
 		}
 		s := ms
 		lm.AddLink(
-			GetQualifiedRelType(apiworks.RelType(s.GetName())),
-			apiworks.Link(s.GetBasepath()),
+			getQualifiedRelType(RelType(s.GetName())),
+			Link(s.GetBasepath()),
 		)
 	}
 	return lm
 }
 
-func (me *Api) GetListLinkMap(ctx *apiworks.Context) apiworks.LinkMap {
-	lm := make(apiworks.LinkMap, 0)
+func (me *Api) GetListLinkMap(ctx *Context) LinkMap {
+	lm := make(LinkMap, 0)
 	for range only.Once {
 		path := me.GetSelfPath(ctx)
-		if types.Basepath(path) == apiworks.Basepath {
+		if types.Basepath(path) == Basepath {
 			break
 		}
 		if !ctx.Controller.CanAddItem(ctx) {
 			break
 		}
 		lm.AddLink(
-			GetQualifiedRelType(apiworks.AddItemRelType),
-			apiworks.Link(fmt.Sprintf("%s/new", path)),
+			getQualifiedRelType(AddItemRelType),
+			Link(fmt.Sprintf("%s/new", path)),
 		)
 		lm.AddLink(
-			GetQualifiedRelType(apiworks.ListRelType),
-			apiworks.Link(fmt.Sprintf("%s", path)),
+			getQualifiedRelType(ListRelType),
+			Link(fmt.Sprintf("%s", path)),
 		)
 	}
 	return lm
 }
 
-func (me *Api) GetItemLinkMap(ctx *apiworks.Context) apiworks.LinkMap {
-	lm := make(apiworks.LinkMap, 0)
+func (me *Api) GetItemLinkMap(ctx *Context) LinkMap {
+	lm := make(LinkMap, 0)
 	lm.AddLink(
-		GetQualifiedRelType(apiworks.ItemRelType),
-		apiworks.Link(fmt.Sprintf("%s", me.GetSelfPath(ctx))),
+		getQualifiedRelType(ItemRelType),
+		Link(fmt.Sprintf("%s", me.GetSelfPath(ctx))),
 	)
 	return lm
 }
 
-func (me *Api) GetCommonLinkMap(ctx *apiworks.Context) apiworks.LinkMap {
-	lm := make(apiworks.LinkMap, 0)
+func (me *Api) GetCommonLinkMap(ctx *Context) LinkMap {
+	lm := make(LinkMap, 0)
 	lm.AddLink(
-		GetQualifiedRelType(apiworks.RootRelType),
-		apiworks.Link(apiworks.Basepath),
+		getQualifiedRelType(RootRelType),
+		Link(Basepath),
 	)
 	lm.AddLink(
-		GetQualifiedRelType(apiworks.CurrentRelType),
-		apiworks.Link(me.GetSelfPath(ctx)),
+		getQualifiedRelType(CurrentRelType),
+		Link(me.GetSelfPath(ctx)),
 	)
 	return lm
 }
@@ -104,7 +103,7 @@ func NewApi(parent interface{}) *Api {
 		Config:        c.GetConfig(),
 		Echo:          newConfiguredEcho(),
 		Parent:        parent,
-		ControllerMap: make(apiworks.ControllerMap, 0),
+		ControllerMap: make(ControllerMap, 0),
 	}
 	a.Port = Port
 	return &a
@@ -135,113 +134,116 @@ func (me *Api) WireRoutes() {
 		ctlr := _c
 
 		prefix := string(apiworks.GetRouteNamePrefix(ctlr))
-
 		listpath := string(apiworks.GetBasepath(ctlr))
-		me.WireListRoute(
+
+		route := me.WireListRoute(
 			me.Echo,
 			ctlr,
-			prefix,
 			listpath,
 		)
+		if listpath == string(NoFilterPath) {
+			route.SetName(Rootname)
+		} else {
+			route.SetSingularName("get-%s-list", prefix)
+		}
 
 		itempath := string(apiworks.GetResourceUrlTemplate(ctlr))
-		if itempath == string(apiworks.Basepath) {
+		if itempath == string(Basepath) {
 			continue
 		}
+
+		me.WireGetItemRoute(
+			me.Echo,
+			ctlr,
+			itempath,
+		).SetSingularName("get-%s", prefix)
 
 		me.WireNewItemRoute(
 			me.Echo,
 			ctlr,
 			prefix,
 			fmt.Sprintf("%s/new", listpath),
-		)
+		).SetSingularName("add-%s", prefix)
 
-		me.WireItemRoute(
+		me.WireUpdateItemRoute(
 			me.Echo,
 			ctlr,
-			prefix,
 			itempath,
-		)
+		).SetSingularName("update-%s", prefix)
 
-		me.WireItemDeleteRoute(
+		me.WireDeleteItemRoute(
 			me.Echo,
 			ctlr,
-			prefix,
 			itempath,
-		)
+		).SetSingularName("delete-%s", prefix)
 
 	}
 }
 
-func (me *Api) WireListRoute(e *echo.Echo, lc apiworks.ListController, prefix, path string) {
-
-	route := e.GET(path, func(ec echo.Context) (err error) {
-		for range only.Once {
-			rd, ctx := getRootDocumentAndContext(ec, lc, global.ListResponse)
-			data, sts := lc.GetList(ctx)
-			if is.Error(sts) {
-				break
+func (me *Api) WireListRoute(e *echo.Echo, lc ListController, path string) *Route {
+	return &Route{
+		Route: e.GET(path, func(ec echo.Context) (err error) {
+			for range only.Once {
+				rd, ctx := getRootDocumentAndContext(ec, lc, global.ListResponse)
+				data, sts := lc.GetList(ctx)
+				if is.Error(sts) {
+					break
+				}
+				sts = me.setListData(ctx, data)
+				if is.Error(sts) {
+					break
+				}
+				lm, sts := lc.GetListLinkMap(ctx)
+				if is.Error(sts) {
+					break
+				}
+				for rt, lnk := range lm {
+					rd.AddLink(rt, lnk)
+				}
+				err = me.JsonMarshalHandler(ctx, sts)
 			}
-			sts = me.setListData(ctx, data)
-			if is.Error(sts) {
-				break
-			}
-			lm, sts := lc.GetListLinkMap(ctx)
-			if is.Error(sts) {
-				break
-			}
-			for rt, lnk := range lm {
-				rd.AddLink(rt, lnk)
-			}
-			err = me.JsonMarshalHandler(ctx, sts)
-		}
-		return err
-	})
-	if path == string(apiworks.NoFilterPath) {
-		route.Name = string(Rootname)
-	} else {
-		route.Name = fmt.Sprintf("%s-list", inflector.Pluralize(prefix))
+			return err
+		}),
 	}
 }
 
-func (me *Api) WireItemRoute(e *echo.Echo, lc apiworks.ListController, prefix, path string) {
+func (me *Api) WireGetItemRoute(e *echo.Echo, lc ListController, path string) *Route {
 
-	// Single Item Route
-	route := e.GET(path, func(ec echo.Context) error {
-		var sts status.Status
-		rd, ctx := getRootDocumentAndContext(ec, lc, global.ItemResponse)
-		for range only.Once {
-			id, sts := apiworks.GetIdFromUrl(ctx, lc)
-			if is.Error(sts) {
-				break
-			}
-			var ro *jsonapi.ResourceObject
-			ro, sts = getResourceObject(rd)
-			if is.Error(sts) {
-				break
-			}
-			var item apiworks.ItemModeler
-			item, sts = lc.GetItemDetails(ctx, id)
-			if is.Error(sts) {
-				break
-			}
+	return &Route{
+		Route: e.GET(path, func(ec echo.Context) error {
+			var sts status.Status
+			rd, ctx := getRootDocumentAndContext(ec, lc, global.ItemResponse)
+			for range only.Once {
+				id, sts := apiworks.GetIdFromUrl(ctx, lc)
+				if is.Error(sts) {
+					break
+				}
+				var ro *jsonapi.ResourceObject
+				ro, sts = getResourceObject(rd)
+				if is.Error(sts) {
+					break
+				}
+				var item ItemModeler
+				item, sts = lc.GetItemDetails(ctx, id)
+				if is.Error(sts) {
+					break
+				}
 
-			var list apiworks.List
-			list, sts = item.GetRelatedItems(ctx)
-			if is.Error(sts) {
-				break
+				var list List
+				list, sts = item.GetRelatedItems(ctx)
+				if is.Error(sts) {
+					break
+				}
+				sts = me.setItemData(ctx, ro, item, list)
+				rd.Data = ro
 			}
-			sts = me.setItemData(ctx, ro, item, list)
-			rd.Data = ro
-		}
-		return me.JsonMarshalHandler(ctx, sts)
-	})
-	route.Name = fmt.Sprintf("%s-details", inflector.Singularize(prefix))
-
+			return me.JsonMarshalHandler(ctx, sts)
+		}),
+	}
 }
 
-func closeRequestBody(ec echo.Context) {
-	err := ec.Request().Body.Close()
+func closeRequestBody(ctx Contexter) {
+	err := ctx.Request().Body.Close()
 	if err != nil {
 		log.Printf(
 			"Could not close response body from HttpRequest: %s\n",
@@ -249,83 +251,98 @@ func closeRequestBody(ec echo.Context) {
 		)
 	}
 }
-
-func (me *Api) WireNewItemRoute(e *echo.Echo, lc apiworks.ListController, prefix, path string) {
-
-	// Single Item Route
-	route := e.POST(path, func(ec echo.Context) error {
-		var sts status.Status
-		rd, ctx := getRootDocumentAndContext(ec, lc, global.ItemResponse)
-		for range only.Once {
-			defer closeRequestBody(ec)
-			b, err := ioutil.ReadAll(ec.Request().Body)
-			if err != nil {
-				sts = status.Wrap(err, &status.Args{
-					Message: fmt.Sprintf("unable to read body of '%s' request", path),
-				})
-				break
+func (me *Api) WireNewItemRoute(e *echo.Echo, lc ListController, prefix, path string) *Route {
+	return &Route{
+		Route: e.POST(path, func(ec echo.Context) error {
+			var sts Status
+			rd, ctx := getRootDocumentAndContext(ec, lc, global.ItemResponse)
+			for range only.Once {
+				var ro *jsonapi.ResourceObject
+				ro, sts = readRequestObject(ctx)
+				if is.Error(sts) {
+					break
+				}
+				sts = ctx.Controller.AddItem(ctx, ro)
+				if is.Error(sts) {
+					break
+				}
+				rd.Data = ro.ResourceIdObject
 			}
-			var ro jsonapi.ResourceObject
-			err = ro.Unmarshal(b)
-			if err != nil {
-				sts = status.Wrap(err, &status.Args{
-					Message:    fmt.Sprintf("unable to unmarshal body of '%s' request", path),
-					HttpStatus: http.StatusBadRequest,
-				})
-				break
-			}
-			sts = ctx.Controller.AddItem(ctx, &ro)
-			if is.Error(sts) {
-				break
-			}
-			rd.Data = ro.ResourceIdObject
-
-		}
-		return me.JsonMarshalHandler(ctx, sts)
-	})
-	route.Name = fmt.Sprintf("add-%s", inflector.Singularize(prefix))
-
+			return me.JsonMarshalHandler(ctx, sts)
+		}),
+	}
 }
 
-func (me *Api) WireItemDeleteRoute(e *echo.Echo, lc apiworks.ListController, prefix, path string) {
-
-	route := e.DELETE(path, func(ec echo.Context) error {
-		var sts status.Status
-		rd, ctx := getRootDocumentAndContext(ec, lc, global.ItemResponse)
-		for range only.Once {
-			var id apiworks.ItemId
-			id, sts = apiworks.GetIdFromUrl(ctx, lc)
-			if is.Error(sts) {
-				break
+func (me *Api) WireUpdateItemRoute(e *echo.Echo, lc ListController, path string) *Route {
+	return &Route{
+		Route: e.PUT(path, func(ec echo.Context) error {
+			var sts Status
+			rd, ctx := getRootDocumentAndContext(ec, lc, global.ItemResponse)
+			for range only.Once {
+				var id ItemId
+				id, sts = apiworks.GetIdFromUrl(ctx, lc)
+				if is.Error(sts) {
+					break
+				}
+				var ro *jsonapi.ResourceObject
+				ro, sts = readRequestObject(ctx)
+				if is.Error(sts) {
+					break
+				}
+				if ro.ResourceId != jsonapi.ResourceId(id) {
+					sts = status.Fail(&status.Args{
+						HttpStatus: http.StatusBadRequest,
+						Message: fmt.Sprintf("id '%s' does not match ID segment in url '%s'",
+							ro.ResourceId,
+							ctx.Request().URL,
+						),
+					})
+				}
+				sts = ctx.Controller.UpdateItem(ctx, ro)
+				if is.Error(sts) {
+					break
+				}
+				rd.Data = jsonapi.NewResourceIdObjectWithIdType(
+					jsonapi.ResourceId(id),
+					jsonapi.ResourceType(
+						lc.GetNilItem(ctx).GetType(),
+					),
+				)
 			}
-			sts = ctx.Controller.DeleteItem(ctx, id)
-			if is.Error(sts) {
-				break
-			}
-			rd.Data = jsonapi.NewResourceIdObjectWithIdType(
-				jsonapi.ResourceId(id),
-				jsonapi.ResourceType(
-					lc.GetNilItem(ctx).GetType(),
-				),
-			)
-		}
-		return me.JsonMarshalHandler(ctx, sts)
-	})
-	route.Name = fmt.Sprintf("delete-%s", inflector.Singularize(prefix))
-
+			return me.JsonMarshalHandler(ctx, sts)
+		}),
+	}
 }
 
-func getRootDocumentAndContext(ec echo.Context, lc apiworks.ListController, rt types.ResponseType) (rd *jsonapi.RootDocument, ctx *apiworks.Context) {
-	rd = jsonapi.NewRootDocument(ec, rt)
-	ctx = apiworks.NewContext(&apiworks.ContextArgs{
-		Contexter:      ec,
-		RootDocumentor: rd,
-		Controller:     lc,
-	})
-	return rd, ctx
+func (me *Api) WireDeleteItemRoute(e *echo.Echo, lc ListController, path string) *Route {
+
+	return &Route{
+		Route: e.DELETE(path, func(ec echo.Context) error {
+			var sts Status
+			rd, ctx := getRootDocumentAndContext(ec, lc, global.ItemResponse)
+			for range only.Once {
+				var id ItemId
+				id, sts = apiworks.GetIdFromUrl(ctx, lc)
+				if is.Error(sts) {
+					break
+				}
+				sts = ctx.Controller.DeleteItem(ctx, id)
+				if is.Error(sts) {
+					break
+				}
+				rd.Data = jsonapi.NewResourceIdObjectWithIdType(
+					jsonapi.ResourceId(id),
+					jsonapi.ResourceType(
+						lc.GetNilItem(ctx).GetType(),
+					),
+				)
+			}
+			return me.JsonMarshalHandler(ctx, sts)
+		}),
+	}
 }
 
-func (me *Api) GetItemUrl(ctx *apiworks.Context, item apiworks.ItemModeler) (u types.UrlTemplate, sts status.Status) {
+func (me *Api) GetItemUrl(ctx *Context, item ItemModeler) (u types.UrlTemplate, sts Status) {
 	for range only.Once {
 		//
 		// @TODO This may need to be make more robust later
@@ -339,7 +356,7 @@ func (me *Api) GetItemUrl(ctx *apiworks.Context, item apiworks.ItemModeler) (u t
 	return u, sts
 }
 
-func (me *Api) GetSelfUrl(ctx *apiworks.Context) types.UrlTemplate {
+func (me *Api) GetSelfUrl(ctx *Context) types.UrlTemplate {
 	r := ctx.Request()
 	scheme := "https"
 	if r.TLS == nil {
@@ -349,24 +366,16 @@ func (me *Api) GetSelfUrl(ctx *apiworks.Context) types.UrlTemplate {
 	return types.UrlTemplate(url)
 }
 
-func (me *Api) GetSelfPath(ctx *apiworks.Context) types.UrlTemplate {
+func (me *Api) GetSelfPath(ctx *Context) types.UrlTemplate {
 	return types.UrlTemplate(ctx.Request().RequestURI)
 }
 
-func (me *Api) GetContentType(ctx *apiworks.Context) apiworks.HttpHeaderValue {
-	return jsonapi.ContentType + "; " + apiworks.CharsetUTF8
+func (me *Api) GetContentType(ctx *Context) HttpHeaderValue {
+	return jsonapi.ContentType + "; " + CharsetUTF8
 }
 
-const (
-	GearboxApiIdentifier         apiworks.Metaname = "GearboxAPI"
-	GearboxApiSchema             apiworks.Link     = "https://docs.gearbox.works/api/schema/1.0/"
-	MetaGearboxBaseurl           apiworks.Metaname = GearboxApiIdentifier + ".baseurl"
-	MetaGearboxApiSchema         apiworks.Metaname = GearboxApiIdentifier + ".schema"
-	SchemaGearboxApiRelationType                   = apiworks.RelType("schema." + GearboxApiIdentifier)
-)
-
-func (me *Api) JsonMarshalHandler(ctx *apiworks.Context, sts status.Status) status.Status {
-	var _sts status.Status
+func (me *Api) JsonMarshalHandler(ctx *Context, sts Status) Status {
+	var _sts Status
 	for range only.Once {
 		_, ok := ctx.GetRootDocument().(*jsonapi.RootDocument)
 		if !ok {
@@ -410,14 +419,14 @@ func (me *Api) JsonMarshalHandler(ctx *apiworks.Context, sts status.Status) stat
 
 	ctx.AddLinks(me.GetCommonLinkMap(ctx))
 
-	ctx.AddLink(apiworks.SelfRelType, apiworks.Link(me.GetSelfPath(ctx)))
-	ctx.AddLink(apiworks.SchemaDcRelType, apiworks.DcSchema)
-	ctx.AddLink(apiworks.SchemaDcTermsRelType, apiworks.DcTermsSchema)
+	ctx.AddLink(SelfRelType, Link(me.GetSelfPath(ctx)))
+	ctx.AddLink(SchemaDcRelType, DcSchema)
+	ctx.AddLink(SchemaDcTermsRelType, DcTermsSchema)
 	ctx.AddLink(SchemaGearboxApiRelationType, GearboxApiSchema)
 
-	ctx.AddMeta(apiworks.MetaDcCreator, GearboxApiIdentifier)
-	ctx.AddMeta(apiworks.MetaDcTermsIdentifier, me.GetSelfUrl(ctx))
-	ctx.AddMeta(apiworks.MetaDcLanguage, apiworks.DefaultLanguage)
+	ctx.AddMeta(MetaDcCreator, GearboxApiIdentifier)
+	ctx.AddMeta(MetaDcTermsIdentifier, me.GetSelfUrl(ctx))
+	ctx.AddMeta(MetaDcLanguage, DefaultLanguage)
 	ctx.AddMeta(MetaGearboxBaseurl, me.GetBaseUrl())
 
 	if sts == nil {
@@ -427,12 +436,12 @@ func (me *Api) JsonMarshalHandler(ctx *apiworks.Context, sts status.Status) stat
 	return sts
 }
 
-func (me *Api) AddController(controller apiworks.ListController) (sts status.Status) {
+func (me *Api) AddController(controller ListController) (sts Status) {
 	for range only.Once {
-		getter, ok := controller.(apiworks.BasepathGetter)
+		getter, ok := controller.(BasepathGetter)
 		if !ok {
 			sts = status.Fail(&status.Args{
-				Message: "model does not implement apiworks.BasepathGetter",
+				Message: "model does not implement BasepathGetter",
 			})
 			break
 		}
@@ -451,7 +460,10 @@ func (me *Api) SetParent(parent interface{}) {
 }
 
 func (me *Api) GetBaseUrl() (url types.UrlTemplate) {
-	return types.UrlTemplate(fmt.Sprintf(BaseUrlPattern, me.Port))
+	return types.UrlTemplate(fmt.Sprintf(
+		string(BaseUrlPattern),
+		me.Port,
+	))
 }
 
 func (me *Api) Start() {
@@ -468,7 +480,7 @@ func (me *Api) Stop() {
 	}
 }
 
-func getResourceObject(rd *jsonapi.RootDocument) (ro *jsonapi.ResourceObject, sts status.Status) {
+func getResourceObject(rd *jsonapi.RootDocument) (ro *jsonapi.ResourceObject, sts Status) {
 	ro, ok := rd.Data.(*jsonapi.ResourceObject)
 	if !ok {
 		sts = status.Fail(&status.Args{
@@ -479,7 +491,7 @@ func getResourceObject(rd *jsonapi.RootDocument) (ro *jsonapi.ResourceObject, st
 	return ro, sts
 }
 
-func (me *Api) setItemData(ctx *apiworks.Context, ro *jsonapi.ResourceObject, item apiworks.ItemModeler, list apiworks.List) (sts status.Status) {
+func (me *Api) setItemData(ctx *Context, ro *jsonapi.ResourceObject, item ItemModeler, list List) (sts Status) {
 	for range only.Once {
 
 		sts = ro.SetId(item.GetId())
@@ -519,10 +531,10 @@ func (me *Api) setItemData(ctx *apiworks.Context, ro *jsonapi.ResourceObject, it
 		if is.Error(sts) {
 			break
 		}
-		getter, ok := item.(apiworks.ItemLinkMapGetter)
+		getter, ok := item.(ItemLinkMapGetter)
 		if !ok {
 			sts = status.Fail(&status.Args{
-				Message: "item does not implement apiworks.ItemLinkMapGetter",
+				Message: "item does not implement ItemLinkMapGetter",
 			})
 			break
 		}
@@ -530,13 +542,13 @@ func (me *Api) setItemData(ctx *apiworks.Context, ro *jsonapi.ResourceObject, it
 		if is.Error(sts) {
 			break
 		}
-		lm.AddLink(apiworks.SelfRelType, apiworks.Link(su))
+		lm.AddLink(SelfRelType, Link(su))
 		ro.SetLinks(lm)
 	}
 	return sts
 }
 
-func (me *Api) SetRelationshipLinkMap(ctx *apiworks.Context, item apiworks.ItemModeler, ro *jsonapi.ResourceObject) (sts status.Status) {
+func (me *Api) SetRelationshipLinkMap(ctx *Context, item ItemModeler, ro *jsonapi.ResourceObject) (sts Status) {
 	for range only.Once {
 		lm, sts := ctx.RootDocumentor.GetDataRelationshipsLinkMap()
 		if is.Error(sts) {
@@ -546,24 +558,24 @@ func (me *Api) SetRelationshipLinkMap(ctx *apiworks.Context, item apiworks.ItemM
 
 		for rel, link := range lm {
 
-			rel = apiworks.RelType(fmt.Sprintf("%s.%s", name, rel))
+			rel = RelType(fmt.Sprintf("%s.%s", name, rel))
 
-			ctx.RootDocumentor.AddLink(GetQualifiedRelType(rel), link)
+			ctx.RootDocumentor.AddLink(getQualifiedRelType(rel), link)
 		}
 	}
 	return sts
 }
 
-func (me *Api) setListData(ctx *apiworks.Context, data interface{}) (sts status.Status) {
+func (me *Api) setListData(ctx *Context, data interface{}) (sts Status) {
 	for range only.Once {
-		getter, ok := data.(apiworks.ListGetter)
+		getter, ok := data.(ListGetter)
 		if !ok {
 			sts = status.Fail(&status.Args{
-				Message: "data does not implement apiworks.ListGetter",
+				Message: "data does not implement ListGetter",
 			})
 			break
 		}
-		var coll apiworks.List
+		var coll List
 		coll, sts = getter.GetList(ctx)
 		if is.Error(sts) {
 			break
@@ -583,7 +595,7 @@ func (me *Api) setListData(ctx *apiworks.Context, data interface{}) (sts status.
 	return sts
 }
 
-func (me *Api) getRouteName(ctx *apiworks.Context) (name types.RouteName, sts status.Status) {
+func (me *Api) getRouteName(ctx *Context) (name types.RouteName, sts Status) {
 	for range only.Once {
 		rts := me.Echo.Routes()
 		path, sts := ctx.GetRequestTemplatePath()
@@ -600,7 +612,51 @@ func (me *Api) getRouteName(ctx *apiworks.Context) (name types.RouteName, sts st
 	return name, sts
 }
 
-func GetQualifiedRelType(reltype apiworks.RelType) apiworks.RelType {
-	rt := fmt.Sprintf(apiworks.RelTypePattern, GearboxApiIdentifier, reltype)
-	return apiworks.RelType(rt)
+func getRootDocumentAndContext(ec echo.Context, lc ListController, rt types.ResponseType) (rd *jsonapi.RootDocument, ctx *Context) {
+	rd = jsonapi.NewRootDocument(ec, rt)
+	ctx = apiworks.NewContext(&ContextArgs{
+		Contexter:      ec,
+		RootDocumentor: rd,
+		Controller:     lc,
+	})
+	return rd, ctx
+}
+
+func readRequestObject(ctx *Context) (ro *jsonapi.ResourceObject, sts Status) {
+	defer closeRequestBody(ctx)
+	for range only.Once {
+		if ctx == nil {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("context not passed to '%s'", util.CurrentFunc()),
+			})
+			break
+		}
+		body, err := ioutil.ReadAll(ctx.Request().Body)
+		if err != nil {
+			sts = status.Wrap(err, &status.Args{
+				HttpStatus: http.StatusUnprocessableEntity,
+				Message: fmt.Sprintf("unable to read body of '%s' request",
+					ctx.Request().URL,
+				),
+			})
+			break
+		}
+		ro = &jsonapi.ResourceObject{}
+		err = ro.Unmarshal(body)
+		if err != nil {
+			sts = status.Wrap(err, &status.Args{
+				Message: fmt.Sprintf("unable to unmarshal body of '%s' request",
+					ctx.Request().URL,
+				),
+				HttpStatus: http.StatusBadRequest,
+			})
+			break
+		}
+	}
+	return ro, sts
+}
+
+func getQualifiedRelType(reltype RelType) RelType {
+	rt := fmt.Sprintf(RelTypePattern, GearboxApiIdentifier, reltype)
+	return RelType(rt)
 }

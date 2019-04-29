@@ -10,20 +10,25 @@ type Status interface {
 	IsSuccess() bool
 	IsError() bool
 	Error() string
+	Data() interface{}
+	Help() string
+	Detail() string
 	GetHelp(HelpType) string
 	HttpStatus() int
 	Message() string
 	Cause() error
-	SetData(interface{})
-	SetCause(error)
-	SetSuccess(bool)
-	SetMessage(string)
-	SetHttpStatus(int)
-	SetHelp(HelpType, string)
-	SetOtherHelp(HelpTypeMap)
-	GetData() interface{}
+	FullError() error
+	ErrorCode() int
+	SetData(interface{}) Status
+	SetDetail(string, ...interface{}) Status
+	SetCause(error) Status
+	SetSuccess(bool) Status
+	SetMessage(string, ...interface{}) Status
+	SetHttpStatus(int) Status
+	SetHelp(HelpType, string, ...interface{}) Status
+	SetOtherHelp(HelpTypeMap) Status
+	SetErrorCode(int) Status
 	GetString() (string, Status)
-	GetFullError() error
 }
 
 type Args struct {

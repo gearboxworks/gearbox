@@ -172,7 +172,7 @@ func (me *Box) WaitForState(waitForState State, displayString string) (sts statu
 				spinner.Stop(false)
 				break
 			}
-			if sts.GetData().(State) == waitForState {
+			if sts.Data().(State) == waitForState {
 				spinner.Stop(true)
 				break
 			}
@@ -222,8 +222,7 @@ func (me *Box) heartbeatOk(b []byte, n int) (sts status.Status) {
 			})
 			break
 		}
-		sts = status.Success("received 'OK' from console")
-		sts.SetData(OkState)
+		sts = status.Success("received 'OK' from console").SetData(OkState)
 	}
 	return sts
 }
