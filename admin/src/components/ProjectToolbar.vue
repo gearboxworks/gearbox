@@ -6,7 +6,7 @@
          href="#"
          :title="isRunning ? 'Stop all services' : 'Run all services'"
          v-b-tooltip.hover
-         @click.prevent="onRunStop"
+         @click.prevent="$emit('run-stop')"
          class="toolbar-link toolbar-link--state"
       >
         <font-awesome-icon
@@ -49,11 +49,6 @@ export default {
   methods: {
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
-    onRunStop () {
-      this.$store.dispatch(
-        'changeProjectState', { 'projectId': this.id, 'isEnabled': !this.isRunning }
-      )
     }
   }
 }

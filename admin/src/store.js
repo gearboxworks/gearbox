@@ -53,7 +53,7 @@ export default new Vuex.Store({
         ? state.services.records.find(p => p.id === fieldValue)
         : state.services.records.find(p => p.attributes[fieldName] === fieldValue)
     },
-    gearBy: (state) => (fieldName, fieldValue) => {
+    gearspecBy: (state) => (fieldName, fieldValue) => {
       return (fieldName === 'id')
         ? state.gearspecs.records.find(p => p.id === fieldValue)
         : state.gearspecs.records.find(p => p.attributes[fieldName] === fieldValue)
@@ -77,10 +77,10 @@ export default new Vuex.Store({
       })
       return memberIndex
     },
-    stackDefaultServiceByGear: (state) => (stack, gearId) => {
+    stackDefaultServiceByRole: (state) => (stack, gearspecId) => {
       let defaultService = ''
       stack.attributes.members.find((m, idx) => {
-        if (m.gearspec_id === gearId) {
+        if (m.gearspec_id === gearspecId) {
           defaultService = m.default_service
           return true
         }
@@ -88,10 +88,10 @@ export default new Vuex.Store({
       })
       return defaultService
     },
-    stackServicesByGear: (state) => (stack, gearId) => {
+    stackServicesByRole: (state) => (stack, gearspecId) => {
       let services = []
       stack.attributes.members.find((m, idx) => {
-        if (m.gearspec_id === gearId) {
+        if (m.gearspec_id === gearspecId) {
           services = m.services
           return true
         }
@@ -276,7 +276,7 @@ export default new Vuex.Store({
       }
     },
     SET_GEARSPEC (state, gearspec) {
-      const g = this.getters.gearBy('id', gearspec.id)
+      const g = this.getters.gearspecBy('id', gearspec.id)
       if (!g) {
         state.gearspecs.records.push(gearspec)
       } else {
@@ -336,13 +336,13 @@ export default new Vuex.Store({
     CHANGE_PROJECT_SERVICE (state, payload) {
       /**
        * Payload is of this form:
-       * {projectId: "project1", gearId: "gearbox.works/wordpress/webserver", serviceId: "gearboxworks/apache:2.4"}
+       * {projectId: "project1", gearspecId: "gearbox.works/wordpress/webserver", serviceId: "gearboxworks/apache:2.4"}
        */
-      const { projectId, gearId, serviceId } = payload
+      const { projectId, gearspecId, serviceId } = payload
       const project = this.getters.projectBy('id', projectId)
 
       if (project) {
-        const memberIndex = this.getters.projectStackItemIndexBy(project, 'gearspec_id', gearId)
+        const memberIndex = this.getters.projectStackItemIndexBy(project, 'gearspec_id', gearspecId)
         /**
          * note, serviceId might be an empty string (and that's OK)
          */

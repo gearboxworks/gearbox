@@ -23,11 +23,19 @@
           placeholder="" />
       </b-form-group>
 
-      <project-toolbar :project="project" :projectIndex="projectIndex"></project-toolbar>
+      <project-toolbar :project="project" :projectIndex="projectIndex" @run-stop="onRunStop"></project-toolbar>
 
       <project-details :project="project" :projectIndex="projectIndex" v-if="showingDetails" @toggle-details="toggleDetails"></project-details>
 
     </b-form>
+
+    <b-alert
+      :show="alertShow"
+      :dismissible="alertDismissible"
+      :variant="alertVariant"
+      @dismissed="alertShow=false"
+      fade
+    >{{alertContent}}</b-alert>
 
     <div slot="footer" v-if="project.attributes.stack && project.attributes.stack.length">
       <project-stack-list :project="project" :projectIndex="projectIndex"></project-stack-list>
@@ -59,7 +67,11 @@ export default {
     return {
       id: this.project.id,
       ...this.project.attributes,
-      showingDetails: false
+      showingDetails: false,
+      alertShow: false,
+      alertContent: 'content',
+      alertDismissible: true,
+      alertVariant: 'warning'
     }
   },
   components: {
@@ -70,6 +82,9 @@ export default {
   computed: {
     projectBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
+    },
+    isRunning () {
+      return this.project.attributes.enabled
     }
   },
   methods: {
@@ -78,6 +93,16 @@ export default {
     },
     toggleDetails () {
       this.showingDetails = !this.showingDetails
+    },
+    showAlert (alert) {
+      if (typeof alert === 'string') {
+        this.alertContent = alert
+      } else {
+        this.alertVariant = alert.variant || this.alertVariant
+        this.alertDismissible = alert.dismissible || this.alertDismissible
+        this.alertContent = alert.content || this.alertContent
+      }
+      this.alertShow = true
     },
     maybeSubmit (ev) {
       this.$store.dispatch(
@@ -89,14 +114,62 @@ export default {
       ).then(() => {
         // this.$router.push('/project/' + this.hostname)
       })
+    },
+    onRunStop () {
+      if (this.project.attributes.stack && this.project.attributes.stack.length > 0) {
+        this.$store.dispatch(
+          'changeProjectState', { 'projectId': this.id, 'isEnabled': !this.isRunning }
+        )
+      } else {
+        this.showAlert('Please add some stacks first!')
+      }
     }
   }
 }
 </script>
 
 <style scoped>
-  .card--project .card-body {
-    padding: 1.25rem 1.25rem 14px 1.25rem;
+  .card--project.not-showing-details .card-body {
+    padding-bottom: 14px;
+  }
+
+  .card-body {
+    /*position: relative;*/
+  }
+
+/*
+  margin-left: 0;
+  width: calc(100%);
+  margin-top: 10px;
+  margin-bottom: 0;
+  border-radius: 0;
+  font-size: 12px;
+  padding-top: 10px;
+  padding-left: 12px;
+  padding-bottom: 10px;
+  box-shadow: 0px 1px 3px rgba(0,0,0,0.1);
+  */
+
+  .card-body .alert {
+    margin-left: -1.25rem;
+    width: calc(100% + 2.5rem);
+    margin-top: 0.5rem;
+    margin-bottom: -1.25rem;
+    border-radius: 0;
+    font-size: 12px;
+    padding-top: 1rem;
+    padding-left: 25px;
+    padding-bottom: 1rem;
+  }
+
+  .card--project.showing-details .card-body .alert {
+    margin-top: 1.25rem;
+  }
+
+  .card-body .alert-dismissible .close {
+    padding: 0.5rem 0.75rem;
+    right: 0px;
+    top: 3px;
   }
 
   .form-group label {

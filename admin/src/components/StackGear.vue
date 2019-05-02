@@ -16,7 +16,7 @@
       :icon="['fa', 'expand']"
     />
 
-    <h6 class="gear-role">{{gear.attributes.role}}</h6>
+    <h6 class="gear-role">{{gearspec.attributes.role}}</h6>
 
     <b-tooltip
       triggers="hover"
@@ -40,7 +40,7 @@
       </template>
 
       <div>
-        <label :for="`${gearControlId}-input`">{{gear.attributes.role}}:</label>
+        <label :for="`${gearControlId}-input`">{{gearspec.attributes.role}}:</label>
         <b-form-select
           :id="`${gearControlId}-input`"
           :value="service ? service.id : ''"
@@ -49,7 +49,7 @@
         >
           <option value="" v-if="!defaultService">Do not run this service</option>
           <option disabled value="">Select service...</option>
-          <optgroup v-for="(services, groupLabel) in groupedGearServices" :label="groupLabel" :key="groupLabel">
+          <optgroup v-for="(services, groupLabel) in servicesGroupedByRole" :label="groupLabel" :key="groupLabel">
             <option v-for="serviceId in services" :value="serviceId" :key="serviceId">{{serviceId.replace('gearboxworks/','')}}</option>
           </optgroup>
         </b-form-select>
@@ -95,24 +95,24 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['gearBy', 'stackBy', 'stackDefaultServiceByGear', 'stackServicesByGear']),
+    ...mapGetters(['gearspecBy', 'stackBy', 'stackDefaultServiceByRole', 'stackServicesByRole']),
     projectBase () {
       return 'gb-' + this.escAttr(this.projectId) + '-'
     },
-    gear () {
-      return this.stackItem.gear
+    gearspec () {
+      return this.stackItem.gearspec
     },
     service () {
       return this.stackItem.service
     },
     stack () {
-      return this.stackBy('id', this.gear.attributes.stack_id)
+      return this.stackBy('id', this.gearspec.attributes.stack_id)
     },
     gearControlId () {
-      return this.projectBase + (this.stack ? this.stack.attributes.stackname + '-' : '') + this.gear.attributes.role
+      return this.projectBase + (this.stack ? this.stack.attributes.stackname + '-' : '') + this.gearspec.attributes.role
     },
     defaultService () {
-      return this.stackDefaultServiceByGear(this.stack, this.gear.id)
+      return this.stackDefaultServiceByRole(this.stack, this.gearspec.id)
     },
     // preselectGearService () {
     //   const defaultService = this.defaultService()
@@ -143,8 +143,8 @@ export default {
     //
     //   return serviceId
     // },
-    groupedGearServices () {
-      const services = this.stackServicesByGear(this.stack, this.gear.id)
+    servicesGroupedByRole () {
+      const services = this.stackServicesByRole(this.stack, this.gearspec.id)
       // console.log(services)
       const result = {}
       for (const index in services) {
@@ -187,7 +187,7 @@ export default {
           }
         }
       }
-      this.$store.dispatch('changeProjectService', { 'projectId': this.projectId, gearId: this.gear.id, serviceId: selectedServiceId })
+      this.$store.dispatch('changeProjectService', { 'projectId': this.projectId, gearspecId: this.gearspec.id, serviceId: selectedServiceId })
       this.closePopover()
     },
     closePopover () {

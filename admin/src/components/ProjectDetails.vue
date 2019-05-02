@@ -159,7 +159,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ basedirBy: 'basedirBy', serviceBy: 'serviceBy', gearBy: 'gearBy', allGearspecs: 'gearspecs/all', allStacks: 'stacks/all' }),
+    ...mapGetters({ basedirBy: 'basedirBy', serviceBy: 'serviceBy', gearspecBy: 'gearspecBy', allGearspecs: 'gearspecs/all', allStacks: 'stacks/all' }),
     projectBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
     },
@@ -198,7 +198,7 @@ export default {
     gearsInProject () {
       const result = {}
       for (let idx = 0; idx > this.stack.length; idx++) {
-        const g = this.gearBy('id', this.stack[idx].gearspec_id)
+        const g = this.gearspecBy('id', this.stack[idx].gearspec_id)
         if (g) {
           result[this.stack[idx].gearspec_id] = g
         }
@@ -213,14 +213,14 @@ export default {
     groupProjectServicesByStack (projectStack) {
       var result = {}
       projectStack.forEach((stackMember, idx) => {
-        const gear = this.gearBy('id', stackMember.gearspec_id)
+        const gearspec = this.gearspecBy('id', stackMember.gearspec_id)
         const service = this.serviceBy('id', stackMember.service_id)
-        if (gear && service) {
-          // console.log(result, gear.attributes.stack_id, gear.attributes.role)
-          if (typeof result[gear.attributes.stack_id] === 'undefined') {
-            result[gear.attributes.stack_id] = {}
+        if (gearspec && service) {
+          // console.log(result, gearspec.attributes.stack_id, gearspec.attributes.role)
+          if (typeof result[gearspec.attributes.stack_id] === 'undefined') {
+            result[gearspec.attributes.stack_id] = {}
           }
-          result[gear.attributes.stack_id][gear.attributes.role] = service
+          result[gearspec.attributes.stack_id][gearspec.attributes.role] = service
         }
       })
       // console.log('groupProjectStacks', result)
