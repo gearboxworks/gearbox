@@ -162,7 +162,7 @@ func (me *Api) WireRoutes() {
 			me.Echo,
 			ctlr,
 			prefix,
-			fmt.Sprintf("%s/new", listpath),
+			listpath,
 		).SetSingularName("add-%s", prefix)
 
 		me.WireUpdateItemRoute(
@@ -275,7 +275,7 @@ func (me *Api) WireNewItemRoute(e *echo.Echo, lc ListController, prefix, path st
 
 func (me *Api) WireUpdateItemRoute(e *echo.Echo, lc ListController, path string) *Route {
 	return &Route{
-		Route: e.PUT(path, func(ec echo.Context) error {
+		Route: e.PATCH(path, func(ec echo.Context) error {
 			var sts Status
 			rd, ctx := getRootDocumentAndContext(ec, lc, global.ItemResponse)
 			for range only.Once {
