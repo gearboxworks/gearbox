@@ -39,7 +39,7 @@
         Change service
       </template>
 
-      <div>
+      <b-form-group>
         <label :for="`${gearControlId}-input`">{{gearspec.attributes.role}}:</label>
         <b-form-select
           :id="`${gearControlId}-input`"
@@ -53,7 +53,7 @@
             <option v-for="serviceId in services" :value="serviceId" :key="serviceId">{{serviceId.replace('gearboxworks/','')}}</option>
           </optgroup>
         </b-form-select>
-      </div>
+      </b-form-group>
     </b-popover>
   </div>
 </template>

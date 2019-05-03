@@ -99,7 +99,7 @@ export default new Vuex.Store({
       })
       return services
     },
-    baseDirsAsOptions: (state) => {
+    basedirsAsOptions: (state) => {
       const options = []
       state.basedirs.records.forEach((el, idx) => {
         options.push({

@@ -61,8 +61,8 @@
           @change="maybeSubmit"
           v-model="basedir"
           required
-          v-if="Object.entries(this.$store.getters.baseDirsAsOptions).length>1"
-          :options="this.$store.getters.baseDirsAsOptions"
+          v-if="Object.entries(this.$store.getters.basedirsAsOptions).length>1"
+          :options="this.$store.getters.basedirsAsOptions"
         />
         <b-form-input
           @change="maybeSubmit"
