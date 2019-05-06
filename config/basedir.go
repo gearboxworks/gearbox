@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"gearbox/help"
 	"gearbox/only"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
+	"gearbox/util"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"github.com/mitchellh/go-homedir"
 	"net/http"
 	"path/filepath"
@@ -14,6 +15,27 @@ import (
 )
 
 type BasedirMap map[types.Nickname]*Basedir
+
+func (me BasedirMap) GetNickname(basedir types.AbsoluteDir, nickname ...types.Nickname) (nn types.Nickname) {
+	var _nn types.Nickname
+	if len(nickname) > 0 {
+		_nn = nickname[0]
+	}
+	for range only.Once {
+		var bd *Basedir
+		for _nn, bd = range me {
+			if bd.Basedir != basedir {
+				continue
+			}
+			if _nn != "" && bd.Nickname == _nn {
+				continue
+			}
+			nn = _nn
+			break
+		}
+	}
+	return nn
+}
 
 type Basedirs []*Basedir
 
@@ -76,8 +98,19 @@ func (me *Basedir) Initialize() (sts Status) {
 	return sts
 }
 
-func (me BasedirMap) BasedirExists(nickname types.Nickname) (ok bool) {
+func (me BasedirMap) NicknameExists(nickname types.Nickname) (ok bool) {
 	_, ok = me[nickname]
+	return ok
+}
+
+func (me BasedirMap) BasedirExists(basedir types.AbsoluteDir) (ok bool) {
+	for _, bd := range me {
+		if bd.Basedir != basedir {
+			continue
+		}
+		ok = true
+		break
+	}
 	return ok
 }
 
@@ -106,10 +139,18 @@ func (me BasedirMap) DeleteBasedir(config Configer, nickname types.Nickname) (st
 	for range only.Once {
 		sts = ValidateBasedirNickname(nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
+			MustNotEqual:   DefaultBasedirNickname,
 			MustExist:      true,
 			Config:         config,
 		})
 		if status.IsError(sts) {
+			if strings.HasPrefix(sts.Message(), "nickname cannot equal") {
+				sts = status.Wrap(sts, &status.Args{
+					Message: fmt.Sprintf("cannot delete the base directory nicknamed '%s'",
+						nickname,
+					),
+				})
+			}
 			break
 		}
 		var bd *Basedir
@@ -123,33 +164,41 @@ func (me BasedirMap) DeleteBasedir(config Configer, nickname types.Nickname) (st
 		).SetDetail("'%s' was nickname for '%s'",
 			nickname,
 			bd.Basedir,
-		/** Setting status code explicitly @see https://stackoverflow.com/a/2342589/102699 */
+			/** Setting status code explicitly @see https://stackoverflow.com/a/2342589/102699 */
 		).SetHttpStatus(http.StatusOK)
 	}
 	return sts
 }
 
-func (me BasedirMap) UpdateBasedir(config Configer, bd *Basedir) (sts Status) {
+func (me BasedirMap) UpdateBasedir(config Configer, basedir *Basedir) (sts Status) {
 	for range only.Once {
-		sts = ValidateBasedirNickname(bd.Nickname, &ValidateArgs{
+		sts = ValidateBasedirNickname(basedir.Nickname, &ValidateArgs{
+			Config:         config,
 			MustNotBeEmpty: true,
 			MustExist:      true,
-			Config:         config,
 		})
 		if status.IsError(sts) {
 			break
 		}
-		sts = bd.Initialize()
-		if status.IsError(sts) {
+		sts = ValidateBasedir(basedir.Basedir, basedir.Nickname, &ValidateArgs{
+			Config:         config,
+			MustNotBeEmpty: true,
+			MustExist:      true,
+			MustBeOnDisk:   true,
+			MustBeIn:       config.GetBasedirMap(),
+			MustSucceed: func() (sts Status) {
+				return me.ensureNonDuplicatedBasedir(basedir)
+			},
+		})
+		if is.Error(sts) {
 			break
 		}
-		sts = status.Success(
-			"basedir '%s' updated",
-			bd.Nickname,
-		).SetDetail("'%s' is nickname for '%s'",
-			bd.Nickname,
-			bd.Basedir,
-		)
+		sts = basedir.Initialize()
+		if is.Error(sts) {
+			break
+		}
+		sts = status.Success("basedir '%s' updated", basedir.Nickname).
+			SetDetail("'%s' is nickname for '%s'", basedir.Nickname, basedir.Basedir)
 	}
 	return sts
 }
@@ -157,9 +206,22 @@ func (me BasedirMap) UpdateBasedir(config Configer, bd *Basedir) (sts Status) {
 func (me BasedirMap) AddBasedir(config Configer, basedir *Basedir) (sts Status) {
 	for range only.Once {
 		sts = ValidateBasedirNickname(basedir.Nickname, &ValidateArgs{
+			Config:         config,
 			MustNotBeEmpty: true,
 			MustNotExist:   true,
+		})
+		if is.Error(sts) {
+			break
+		}
+		sts = ValidateBasedir(basedir.Basedir, basedir.Nickname, &ValidateArgs{
 			Config:         config,
+			MustNotBeEmpty: true,
+			MustNotExist:   true,
+			MustBeOnDisk:   true,
+			MustNotBeIn:    config.GetBasedirMap(),
+			MustSucceed: func() (sts Status) {
+				return me.ensureNonDuplicatedBasedir(basedir)
+			},
 		})
 		if is.Error(sts) {
 			break
@@ -170,8 +232,12 @@ func (me BasedirMap) AddBasedir(config Configer, basedir *Basedir) (sts Status) 
 			break
 		}
 		me[basedir.Nickname] = basedir
-		sts = status.Success("base dir '%s' added", basedir.Basedir)
-		sts = sts.SetHttpStatus(http.StatusCreated)
+		sts = status.Success("base directory with nickname '%s' was added", basedir.Basedir).
+			SetHttpStatus(http.StatusCreated).
+			SetDetail("base directory with nickname '%s' is '%s'",
+				basedir.Nickname,
+				basedir.Basedir,
+			)
 	}
 	return sts
 }
@@ -185,6 +251,13 @@ func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts S
 		if args.ApiHelpUrl != "" {
 			apiHelp = fmt.Sprintf("see %s", args.ApiHelpUrl)
 		}
+		nn, ok := args.MustNotEqual.(string)
+		if ok && nickname == types.Nickname(nn) {
+			sts = status.YourBad("nickname cannot equal '%s'",
+				nickname,
+			)
+			break
+		}
 		if args.MustNotBeEmpty && nickname == "" {
 			sts = status.Fail(&status.Args{
 				Message:    "basedir nickname is empty",
@@ -193,7 +266,7 @@ func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts S
 			})
 			break
 		}
-		nnExists := args.Config.BasedirExists(nickname)
+		nnExists := args.Config.NicknameExists(nickname)
 		if args.MustExist && !nnExists {
 			sts = status.Fail(&status.Args{
 				Message:    fmt.Sprintf("nickname '%s' does not exist", nickname),
@@ -211,6 +284,103 @@ func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts S
 			break
 		}
 		sts = status.Success("nickname '%s' validated", nickname)
+	}
+	return sts
+}
+
+func ValidateBasedir(basedir types.AbsoluteDir, nickname types.Nickname, args *ValidateArgs) (sts Status) {
+	for range only.Once {
+		if args.Config == nil {
+			panic(fmt.Sprintf("Config property not passed in %T", args))
+		}
+		var apiHelp string
+		if args.ApiHelpUrl != "" {
+			apiHelp = fmt.Sprintf("see %s", args.ApiHelpUrl)
+		}
+		if args.MustNotBeEmpty && basedir == "" {
+			sts = status.Fail(&status.Args{
+				Message:    "base directory is empty",
+				HttpStatus: http.StatusBadRequest,
+				ApiHelp:    apiHelp,
+			})
+			break
+		}
+		admap, ok := args.MustBeIn.(BasedirMap)
+		nn := admap.GetNickname(basedir)
+		if ok && nn == "" {
+			sts = status.Fail(&status.Args{
+				ApiHelp:    apiHelp,
+				HttpStatus: http.StatusBadRequest,
+				Message:    fmt.Sprintf("base directory '%s' not found", basedir),
+			})
+			break
+		}
+		admap, ok = args.MustNotBeIn.(BasedirMap)
+		if args.IgnoreCurrent {
+			nn = admap.GetNickname(basedir, nickname)
+		}
+		if ok && nn != "" {
+			sts = status.Fail(&status.Args{
+				ApiHelp:    apiHelp,
+				HttpStatus: http.StatusBadRequest,
+				Message: fmt.Sprintf("base directory '%s' already exists as nickname '%s'",
+					basedir,
+					nn,
+				),
+			})
+			break
+		}
+		bdExists := nn != ""
+		if args.MustExist && !bdExists {
+			sts = status.Fail(&status.Args{
+				Message:    fmt.Sprintf("base directory '%s' not found", basedir),
+				HttpStatus: http.StatusNotFound,
+				ApiHelp:    apiHelp,
+			})
+			break
+		}
+		if args.MustNotExist && bdExists {
+			sts = status.Fail(&status.Args{
+				Message:    fmt.Sprintf("base directory '%s' already exists as nickname '%s'", basedir, nn),
+				HttpStatus: http.StatusConflict,
+				ApiHelp:    apiHelp,
+			})
+			break
+		}
+		sts = args.MustSucceed()
+		if is.Error(sts) {
+			break
+		}
+
+		bdOnDisk := util.DirExists(basedir)
+		if args.MustBeOnDisk && !bdOnDisk {
+			sts = status.Fail(&status.Args{
+				Message:    fmt.Sprintf("base directory '%s' does not exist", basedir),
+				HttpStatus: http.StatusBadRequest,
+				ApiHelp:    apiHelp,
+			})
+			break
+		}
+		if args.MustNotBeOnDisk && bdOnDisk {
+			sts = status.Fail(&status.Args{
+				Message:    fmt.Sprintf("base directory '%s' already exists", basedir),
+				HttpStatus: http.StatusConflict,
+				ApiHelp:    apiHelp,
+			})
+			break
+		}
+		sts = status.Success("base directory '%s' validated", basedir)
+	}
+	return sts
+}
+
+func (me BasedirMap) ensureNonDuplicatedBasedir(bd *Basedir) (sts Status) {
+	nn := me.GetNickname(bd.Basedir)
+	if nn != "" && nn != bd.Nickname {
+		sts = status.Fail().SetMessage("base directory '%s' already has nickname '%s'",
+			bd.Basedir,
+			me.GetNickname(bd.Basedir),
+		)
 	}
 	return sts
 }

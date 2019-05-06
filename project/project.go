@@ -6,10 +6,10 @@ import (
 	"gearbox/jsonfile"
 	"gearbox/only"
 	"gearbox/service"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
 	"gearbox/util"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"net/http"
 	"path/filepath"
 )

@@ -2,8 +2,8 @@ package test
 
 import (
 	"gearbox/gearspec"
-	"gearbox/status/is"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status/is"
 	"testing"
 )
 
@@ -15,13 +15,13 @@ type wants struct {
 }
 
 var results = map[gearspec.Identifier]wants{
-	"gears.gearbox.works/wordpress/dbserver": wants{
+	"gears.gearbox.works/wordpress/dbserver": {
 		StackId:     "gears.gearbox.works/wordpress",
 		Identifier:  "gears.gearbox.works/wordpress/dbserver",
 		Persistable: "wordpress/dbserver",
 		Expanded:    "gears.gearbox.works/wordpress/dbserver",
 	},
-	"wordpress/dbserver": wants{
+	"wordpress/dbserver": {
 		StackId:     "gears.gearbox.works/wordpress",
 		Identifier:  "gears.gearbox.works/wordpress/dbserver",
 		Persistable: "wordpress/dbserver",

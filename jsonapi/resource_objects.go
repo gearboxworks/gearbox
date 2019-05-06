@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"gearbox/apiworks"
 	"gearbox/only"
-	"gearbox/status"
-	"gearbox/status/is"
 	"github.com/clbanning/checkjson"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"net/http"
 )
 

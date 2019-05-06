@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"gearbox/apiworks"
 	"gearbox/only"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 )
 
 var NilTestableModel = (*TestableModel)(nil)

@@ -7,10 +7,10 @@ import (
 	"gearbox/help"
 	"gearbox/only"
 	"gearbox/os_support"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
 	"gearbox/util"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/http"
@@ -39,14 +39,15 @@ type Configer interface {
 	GetFilepath() types.AbsoluteFilepath
 	GetHelpUrl() string
 	GetBasedir(types.Nickname) (types.AbsoluteDir, Status)
-	GetBasedirs() map[types.Nickname]types.AbsoluteDir
+	GetBasedirs() types.AbsoluteDirs
 	GetProjectMap() (ProjectMap, Status)
 	Initialize() (sts Status)
 	Load() Status
 	LoadProjects() Status
 	LoadProjectsAndWrite() Status
 	MaybeMakeDir(types.AbsoluteDir, os.FileMode) Status
-	BasedirExists(types.Nickname) bool
+	NicknameExists(types.Nickname) bool
+	BasedirExists(dir types.AbsoluteDir) bool
 	Unmarshal(j []byte) Status
 	UpdateBasedir(*Basedir) Status
 	UpdateProject(*Project) Status
@@ -181,7 +182,7 @@ func (me *Config) GetBoxBasedir(nickname types.Nickname) types.AbsoluteDir {
 func (me *Config) GetBasedirNicknames() (nns types.Nicknames) {
 	nns = make(types.Nicknames, len(me.BasedirMap))
 	i := 0
-	for nn, _ := range me.BasedirMap {
+	for nn := range me.BasedirMap {
 		nns[i] = nn
 		i++
 	}
@@ -224,10 +225,10 @@ func (me *Config) GetBasedirMap() BasedirMap {
 	return me.BasedirMap
 }
 
-func (me *Config) GetBasedirs() map[types.Nickname]types.AbsoluteDir {
-	bds := make(map[types.Nickname]types.AbsoluteDir, len(me.BasedirMap))
+func (me *Config) GetBasedirs() types.AbsoluteDirs {
+	bds := make(types.AbsoluteDirs, len(me.BasedirMap))
 	for _, bd := range me.BasedirMap {
-		bds[bd.Nickname] = bd.Basedir
+		bds = append(bds, bd.Basedir)
 	}
 	return bds
 }
@@ -512,6 +513,9 @@ func (me *Config) DeleteBasedir(nickname types.Nickname) (sts Status) {
 	return sts
 }
 
-func (me *Config) BasedirExists(nickname types.Nickname) bool {
-	return me.BasedirMap.BasedirExists(nickname)
+func (me *Config) NicknameExists(nickname types.Nickname) bool {
+	return me.BasedirMap.NicknameExists(nickname)
+}
+func (me *Config) BasedirExists(basedir types.AbsoluteDir) bool {
+	return me.BasedirMap.BasedirExists(basedir)
 }

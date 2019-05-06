@@ -5,7 +5,7 @@ import (
 	"gearbox/help"
 	"gearbox/only"
 
-	"gearbox/status"
+	"github.com/gearboxworks/go-status"
 	"io"
 	"io/ioutil"
 	"log"
@@ -72,7 +72,11 @@ func HttpRequest(url string, args ...*HttpArgs) (body []byte, statusCode int, st
 			Timeout: *_args.Timeout,
 		}
 		response, err := cli.Do(request)
-		statusCode = response.StatusCode
+		if response != nil {
+			statusCode = response.StatusCode
+		} else {
+			statusCode = http.StatusInternalServerError
+		}
 		data := map[string]interface{}{
 			"status_code": statusCode,
 		}
@@ -101,16 +105,14 @@ func HttpRequest(url string, args ...*HttpArgs) (body []byte, statusCode int, st
 		data["response_body"] = body
 		switch statusCode {
 		case 200:
-			if err != nil {
-				sts = status.Wrap(err, &status.Args{
-					Message: fmt.Sprintf("http status code 200 but no content returned for '%s'",
-						url,
-					),
-					Help: help.ContactSupportHelp(),
-					Data: data,
-				})
-				break
-			}
+			sts = status.Wrap(err, &status.Args{
+				Message: fmt.Sprintf("http status code 200 but no content returned for '%s'",
+					url,
+				),
+				Help: help.ContactSupportHelp(),
+				Data: data,
+			})
+			break
 
 		case 401:
 			sts = status.Wrap(err, &status.Args{

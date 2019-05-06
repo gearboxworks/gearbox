@@ -10,12 +10,12 @@ import (
 	"gearbox/only"
 	"gearbox/os_support"
 	"gearbox/ssh"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/util"
 	lbssh "github.com/apcera/libretto/ssh"
 	"github.com/apcera/libretto/virtualmachine"
 	"github.com/apcera/libretto/virtualmachine/virtualbox"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"net"
 	"os"
 	"os/exec"
@@ -523,8 +523,7 @@ func (me *Box) GetState() (sts status.Status) {
 		}
 		state, err := me.Instance.GetState()
 		if err != nil {
-			sts := status.Success("%s VM in a valid state: %s", global.Brandname, state)
-			sts.SetData(state)
+			sts = status.Success("%s VM in a valid state: %s", global.Brandname, state).SetData(state)
 		} else {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("%s VM in an invalid state", global.Brandname),

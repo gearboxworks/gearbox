@@ -3,8 +3,8 @@ package apimvc
 import (
 	"fmt"
 	"gearbox/only"
-	"gearbox/status"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
 	"strings"
 )
 

@@ -4,9 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"gearbox/only"
-	"gearbox/status"
 	"gearbox/types"
 	"gearbox/util"
+	"github.com/gearboxworks/go-status"
 	"io/ioutil"
 	"os"
 )

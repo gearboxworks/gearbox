@@ -3,8 +3,8 @@ package apiworks
 import (
 	"fmt"
 	"gearbox/only"
-	"gearbox/status"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
 	"net/http"
 	"reflect"
 )

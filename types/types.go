@@ -5,6 +5,8 @@ type Hostname string
 
 type Stackname string
 
+type AbsoluteDirs []AbsoluteDir
+
 type RelativePath string
 type AbsoluteDir AbsoluteEntry
 type AbsoluteFilepath AbsoluteEntry

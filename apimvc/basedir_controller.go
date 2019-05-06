@@ -6,9 +6,9 @@ import (
 	"gearbox/config"
 	"gearbox/jsonapi"
 	"gearbox/only"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"net/http"
 	"reflect"
 	"sort"
@@ -180,8 +180,12 @@ func (me *BasedirController) AddItem(ctx *Context, item ItemModeler) (sts Status
 		if status.IsError(sts) {
 			break
 		}
-		sts = status.Success("Basedir '%s' added", bd.Nickname).
-			SetHttpStatus(http.StatusCreated)
+		sts = status.Success("base directory '%s' added", bd.Nickname).
+			SetHttpStatus(http.StatusCreated).
+			SetDetail("added the nicknamed '%s' directory '%s'",
+				bda.Nickname,
+				bda.Basedir,
+			)
 	}
 	return sts
 }

@@ -3,7 +3,7 @@ package test
 import (
 	"fmt"
 	"gearbox/only"
-	"gearbox/status"
+	"github.com/gearboxworks/go-status"
 	"io/ioutil"
 	"log"
 	"net/http"

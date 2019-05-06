@@ -3,7 +3,7 @@ package apimvc
 import (
 	"gearbox/apiworks"
 	"gearbox/jsonapi"
-	"gearbox/status"
+	"github.com/gearboxworks/go-status"
 )
 
 type (

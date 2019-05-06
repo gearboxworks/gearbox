@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"gearbox/config"
 	"gearbox/gearbox"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/test/mock"
 	"gearbox/types"
 	"gearbox/util"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"testing"
 )
 

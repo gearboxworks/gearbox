@@ -14,9 +14,9 @@ import (
 	"gearbox/project"
 	"gearbox/service"
 	"gearbox/ssh"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"log"
 	"path/filepath"
 )
@@ -330,7 +330,7 @@ func (me *Gearbox) ProjectExists(hostname types.Hostname) (ok bool, sts status.S
 }
 
 func (me *Gearbox) BasedirExists(nickname types.Nickname) bool {
-	return me.Config.GetBasedirMap().BasedirExists(nickname)
+	return me.Config.GetBasedirMap().NicknameExists(nickname)
 }
 
 func (me *Gearbox) AddBasedir(basedir types.AbsoluteDir, nickname ...types.Nickname) (sts status.Status) {

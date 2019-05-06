@@ -2,8 +2,8 @@ package api
 
 import (
 	"gearbox/apiworks"
-	"gearbox/status"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
 )
 
 type (

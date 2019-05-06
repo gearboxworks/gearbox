@@ -7,10 +7,10 @@ import (
 	"gearbox/global"
 	"gearbox/jsonapi" // @TODO Refactor this out to interface{}s
 	"gearbox/only"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
 	"gearbox/util"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"io/ioutil"

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/only"
-	"gearbox/status"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
 )
 
 type FilepathHelpUrlGetter interface {

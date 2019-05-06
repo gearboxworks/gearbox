@@ -2,7 +2,7 @@ package test
 
 import (
 	"gearbox/apiworks"
-	"gearbox/status"
+	"github.com/gearboxworks/go-status"
 )
 
 var NilTestableItem = (*TestableItem)(nil)
@@ -11,6 +11,14 @@ var _ apiworks.ItemModeler = NilTestableItem
 type TestableItem struct {
 	Id   apiworks.ItemId
 	Type apiworks.ItemType
+}
+
+func (me *TestableItem) GetItemLinkMap(*apiworks.Context) (apiworks.LinkMap, status.Status) {
+	panic("implement me")
+}
+
+func (me *TestableItem) GetRelatedItems(ctx *apiworks.Context) (list apiworks.List, sts status.Status) {
+	panic("implement me")
 }
 
 func (me *TestableItem) SetId(itemid apiworks.ItemId) status.Status {

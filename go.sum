@@ -17,6 +17,8 @@ github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZm
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
+github.com/gearboxworks/go-status v0.0.0-20190504203300-65e2ecd9d5ca h1:bOvbF566U2VqIHpW9LqKiqfhQZDYS+7eDhQWz2mKmh0=
+github.com/gearboxworks/go-status v0.0.0-20190504203300-65e2ecd9d5ca/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813 h1:Uc+IZ7gYqAf/rSGFplbWBSHaGolEQlNLgMgSE3ccnIQ=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813/go.mod h1:P+oSoE9yhSRvsmYyZsshflcR6ePWYLql6UU1amW13IM=
 github.com/gernest/wow v0.1.0 h1:g9xdwCwP0+xgVYlA2sopI0gZHqXe7HjI/7/LykG4fks=

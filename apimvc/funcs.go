@@ -3,10 +3,10 @@ package apimvc
 import (
 	"gearbox/gearbox"
 	"gearbox/only"
-	"gearbox/status/is"
+	"github.com/gearboxworks/go-status/is"
 )
 
-func noop(i ...interface{}) {}
+//func noop(i ...interface{}) {}
 
 func AddControllers(gb gearbox.Gearboxer) (sts Status) {
 	for range only.Once {

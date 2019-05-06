@@ -5,7 +5,7 @@ import (
 	"gearbox/box"
 	"gearbox/gearbox"
 	"gearbox/ssh"
-	"gearbox/status/is"
+	"github.com/gearboxworks/go-status/is"
 	"github.com/spf13/cobra"
 )
 

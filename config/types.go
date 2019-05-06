@@ -1,6 +1,6 @@
 package config
 
-import "gearbox/status"
+import "github.com/gearboxworks/go-status"
 
 type (
 	Status = status.Status

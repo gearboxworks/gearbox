@@ -6,9 +6,9 @@ import (
 	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 )
 
 type Servicer interface {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"gearbox/gearspec"
 	"gearbox/only"
-	"gearbox/status"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
 	"strings"
 )
 

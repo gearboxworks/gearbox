@@ -6,10 +6,10 @@ import (
 	"gearbox/global"
 	"gearbox/only"
 	"gearbox/service"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
 	"gearbox/version"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 )
 
 type ServiceBag map[gearspec.Identifier]interface{}

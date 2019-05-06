@@ -3,9 +3,9 @@ package test
 import (
 	"gearbox/gearbox"
 	gopt "gearbox/global"
-	"gearbox/status/is"
 	"gearbox/test/includes"
 	"gearbox/test/mock"
+	"github.com/gearboxworks/go-status/is"
 	"testing"
 )
 

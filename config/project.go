@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"gearbox/jsonfile"
 	"gearbox/only"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"path/filepath"
 	"strings"
 )

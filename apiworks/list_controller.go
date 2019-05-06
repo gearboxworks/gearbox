@@ -1,8 +1,8 @@
 package apiworks
 
 import (
-	"gearbox/status"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
 )
 
 type ListController interface {

@@ -3,8 +3,8 @@ package version
 import (
 	"fmt"
 	"gearbox/only"
-	"gearbox/status"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
 	"regexp"
 	"strconv"
 	"strings"

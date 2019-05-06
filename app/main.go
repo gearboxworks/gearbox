@@ -7,8 +7,8 @@ import (
 	"gearbox/app/cmd"
 	"gearbox/gearbox"
 	"gearbox/os_support"
-	"gearbox/status"
-	"gearbox/status/is"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"os"
 )
 

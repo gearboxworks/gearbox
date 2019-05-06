@@ -1,7 +1,7 @@
 package test
 
 import (
-	"gearbox/status"
+	"github.com/gearboxworks/go-status"
 	"testing"
 )
 

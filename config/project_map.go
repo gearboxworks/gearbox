@@ -3,8 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
-	"gearbox/status"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
 	"net/http"
 )
 

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"gearbox/global"
 	"gearbox/only"
-	"gearbox/status"
 	"gearbox/types"
 	"gearbox/util"
 	"gearbox/version"
+	"github.com/gearboxworks/go-status"
 	"strings"
 )
 

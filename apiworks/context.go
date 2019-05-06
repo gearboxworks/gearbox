@@ -3,9 +3,9 @@ package apiworks
 import (
 	"fmt"
 	"gearbox/only"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"github.com/labstack/echo"
 )
 

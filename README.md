@@ -1,35 +1,13 @@
 # Gearbox
 
 
-## Tech Stack
-- BEM      - http://getbem.com/naming/
-- CSS-Grid - 2d 
-- Flexbox  - 1d 
-
-## First Admin Milestone
-- Create a mockup for approval
-- Create HostConnector for Windows
-- Ask to change project dir if not projects found
-- Display enabled and disable projects
-- Allow changing project dir
-- Allow adding additional project dir
-- Allow displaying candidate projects
-- Allow enabling a project
-
-
-## Next Gearbox Milestone
-- `gearbox box start`
-- `gearbox box stop`
-- `gearbox ssh`
-
-
 ## Target User Types
-- Sitebuilder
-	- Install sites
-- Engineers
-	- Engineer sites
+- Sitebuilders
+	- Install and configure sites
+- Software Engineers
+	- Implement sites with custom programming
 - GearBuilders 
-	- Create containers
+	- Create _"Gears"_ for Gearbox
 
 
 ## APIs
@@ -68,7 +46,7 @@
 	
 ## On Every Execution
 - Start Admin console from local host
-- Reverify VirtualBox &  Box
+- Re-verify VirtualBox &  Box
 - Loads User Config file 
 - Scans	Project(s) directories
 	- Looks for:
@@ -95,7 +73,7 @@
 
 ## Collection of projects
 - For each Project 
-	- Project Config: `project.json`
+	- Project Config: `gearbox.json`
 	
 ## Go Tools
 - Regenerate assets.go 

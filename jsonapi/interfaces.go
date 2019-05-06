@@ -2,7 +2,7 @@ package jsonapi
 
 import (
 	"gearbox/apiworks"
-	"gearbox/status"
+	"github.com/gearboxworks/go-status"
 )
 
 type ResourceObjectAppender interface {

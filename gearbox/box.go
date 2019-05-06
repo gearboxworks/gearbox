@@ -5,8 +5,8 @@ import (
 	"gearbox/box"
 	"gearbox/global"
 	"gearbox/only"
-	"gearbox/status"
-	"gearbox/status/is"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 )
 
 func newBox(me Gearboxer, args box.Args) (bx *box.Box, sts status.Status) {

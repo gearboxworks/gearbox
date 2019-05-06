@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"gearbox/apiworks"
 	"gearbox/only"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/util"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 )
 
 var NilResourceObject = (*ResourceObject)(nil)

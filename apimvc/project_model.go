@@ -6,8 +6,8 @@ import (
 	"gearbox/only"
 	"gearbox/project"
 	"gearbox/service"
-	"gearbox/status/is"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status/is"
 )
 
 const ProjectModelType ItemType = "project"
@@ -303,7 +303,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
 //	"gearbox/api"
 //	"gearbox/only"
 //	"gearbox/apimvc"
-//	"gearbox/status"
+//	"github.com/gearboxworks/go-status"
 //	"net/http"
 //)
 //

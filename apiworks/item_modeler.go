@@ -1,6 +1,6 @@
 package apiworks
 
-import "gearbox/status"
+import "github.com/gearboxworks/go-status"
 
 type ItemModeler interface {
 	ItemIdGetter

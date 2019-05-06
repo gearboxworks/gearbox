@@ -4,8 +4,8 @@ import (
 	"gearbox/api"
 	"gearbox/gearbox"
 	"gearbox/global"
-	"gearbox/status"
 	"gearbox/test/mock"
+	"github.com/gearboxworks/go-status"
 	"testing"
 )
 

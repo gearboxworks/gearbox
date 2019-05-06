@@ -6,9 +6,9 @@ import (
 	"gearbox/gearspec"
 	"gearbox/only"
 	"gearbox/service"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 )
 
 const ServiceModelType ItemType = "service"

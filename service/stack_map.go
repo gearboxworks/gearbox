@@ -3,10 +3,10 @@ package service
 import (
 	"gearbox/gearspec"
 	"gearbox/only"
-	"gearbox/status"
-	"gearbox/status/is"
 	"gearbox/types"
 	"gearbox/util"
+	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 )
 
 type ServicerMap map[gearspec.Identifier]*ServicerProxy

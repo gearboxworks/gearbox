@@ -3,8 +3,8 @@ package util
 import (
 	"fmt"
 	"gearbox/only"
-	"gearbox/status"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status"
 	"io/ioutil"
 	"log"
 	"os"

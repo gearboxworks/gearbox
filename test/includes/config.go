@@ -3,7 +3,7 @@ package includes
 import (
 	"gearbox/config"
 	"gearbox/gearbox"
-	"gearbox/status"
+	"github.com/gearboxworks/go-status"
 )
 
 var _ config.Configer = (*TestConfig)(nil)

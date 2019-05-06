@@ -2,8 +2,8 @@ package test
 
 import (
 	"gearbox/gear"
-	"gearbox/status"
 	"gearbox/test"
+	"github.com/gearboxworks/go-status"
 	"testing"
 )
 

@@ -3,8 +3,8 @@ package test
 import (
 	"gearbox/apiworks"
 	"gearbox/only"
-	"gearbox/status/is"
 	"gearbox/types"
+	"github.com/gearboxworks/go-status/is"
 	"testing"
 )
 
