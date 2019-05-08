@@ -129,12 +129,17 @@ export default {
 </script>
 
 <style scoped>
-  .card--project.not-showing-details .card-body {
-    padding-bottom: 14px;
+  .card--project {
+    margin-bottom: 1.5rem;
+    transition: box-shadow 400ms;
   }
 
-  .card-body {
-    /*position: relative;*/
+  .card--project:hover {
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .card--project.not-showing-details .card-body {
+    padding-bottom: 14px;
   }
 
 /*
@@ -154,8 +159,9 @@ export default {
     margin-left: -1.25rem;
     width: calc(100% + 2.5rem);
     margin-top: 0.5rem;
-    margin-bottom: -1.25rem;
-    border-radius: 0;
+    margin-bottom: -14px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
     font-size: 12px;
     padding-top: 1rem;
     padding-left: 25px;
@@ -164,6 +170,7 @@ export default {
 
   .card--project.showing-details .card-body .alert {
     margin-top: 1.25rem;
+    margin-bottom: -19px;
   }
 
   .card-body .alert-dismissible .close {
