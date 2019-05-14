@@ -38,16 +38,5 @@ export default new Router({
         }
       ]
     },
-    {
-      path: '/stack/:stackName',
-      name: 'stack',
-      component: () => import(/* webpackChunkName: "stack" */ './components/StackDetails.vue')
-    },
-    {
-      path: '/gear/:gearName',
-      name: 'gear',
-      component: () => import(/* webpackChunkName: "gear" */ './components/GearDetails.vue')
-    }
-
   ]
 })

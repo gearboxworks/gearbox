@@ -1,22 +1,27 @@
 <template>
-  <b-card-group columns class="pl-3 pr-3">
-    <project-card
-      v-for="(project, projectIndex) in projects"
-      :key="project.id"
-      :project="project"
-      :projectIndex="projectIndex"
-    >
-    </project-card>
-  </b-card-group>
+  <div class="projects-container">
+    <projects-filter visible="false"></projects-filter>
+    <b-card-group columns class="pl-3 pr-3">
+      <project-card
+        v-for="(project, projectIndex) in projects"
+        :key="project.id"
+        :project="project"
+        :projectIndex="projectIndex"
+      >
+      </project-card>
+    </b-card-group>
+  </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import ProjectsFilter from '../components/ProjectsFilter'
 import ProjectCard from '../components/ProjectCard'
 
 export default {
   name: 'ProjectList',
   components: {
+    ProjectsFilter,
     ProjectCard
   },
   computed: {

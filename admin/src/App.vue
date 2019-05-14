@@ -10,7 +10,6 @@
       <p>Failed to connect to Gearbox Server.</p>
     </b-alert>
     <top-bar />
-    <br />
     <router-view></router-view>
   </div>
 </template>
