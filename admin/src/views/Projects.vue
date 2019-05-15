@@ -1,7 +1,7 @@
 <template>
   <div class="projects-container">
-    <projects-drawer visible="false"></projects-drawer>
-    <b-card-group columns class="pl-3 pr-3">
+    <projects-drawer visible="false" @switch-view-mode="switchViewMode"></projects-drawer>
+    <b-card-group columns class="pl-3 pr-3" v-if="viewMode==='cards'">
       <project-card
         v-for="(project, projectIndex) in projects"
         :key="project.id"
@@ -10,6 +10,24 @@
       >
       </project-card>
     </b-card-group>
+    <table v-else>
+      <thead>
+        <tr>
+          <th>Project ID</th><th>Status<th/>
+        </tr>
+      </thead>
+      <tbody>
+      <tr
+        v-for="(project, projectIndex) in projects"
+        :key="project.id"
+        :project="project"
+        :projectIndex="projectIndex"
+      >
+        <td>{{project.id}}</td>
+        <td>{{project.attributes.enabled ? 'Running': 'Stopped'}}</td>
+      </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 
@@ -20,6 +38,11 @@ import ProjectCard from '../components/ProjectCard'
 
 export default {
   name: 'ProjectList',
+  data () {
+    return {
+      viewMode: 'cards'
+    }
+  },
   components: {
     ProjectsDrawer,
     ProjectCard
@@ -28,6 +51,12 @@ export default {
     ...mapGetters({
       'projects': 'projects/all'
     })
+  },
+  methods: {
+    switchViewMode ($ev, viewMode) {
+      console.log(viewMode)
+      this.viewMode = viewMode
+    }
   },
   mounted () {
     this.$store.dispatch('basedirs/loadAll').then(() => {

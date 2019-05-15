@@ -13,11 +13,11 @@
             label-for="filter-state"
             description="State"
             switches
-            inline
+            stack
           >
-            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggle_state('running')">Running projects</b-form-checkbox>
-            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggle_state('stopped')">Stopped projects</b-form-checkbox>
-            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggle_state('candidates')">Project candidates</b-form-checkbox>
+            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggle_state('running')"><span class="regular">Running projects</span><span class="short">Running</span></b-form-checkbox>
+            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggle_state('stopped')"><span class="regular">Stopped projects</span><span class="short">Stopped</span></b-form-checkbox>
+            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggle_state('candidates')"><span class="regular">Project candidates</span><span class="short">Candidates</span></b-form-checkbox>
             <small tabindex="-1" class="form-text text-muted">Project State</small>
           </b-form-checkbox-group>
 
@@ -99,7 +99,7 @@
                href="#"
                title="Cards View"
                :class="{'view-mode': true, 'view-mode--cards': true, 'is-inactive': (view_mode != 'cards')}"
-               @click.prevent="view_mode = 'cards'"
+               @click.prevent="view_mode = 'cards'; $emit('switch-view-mode', $event, 'cards')"
             >
               <font-awesome-icon
                 :icon="['fa', 'columns']"
@@ -109,7 +109,7 @@
                href="#"
                title="Table View"
                :class="{'view-mode': true, 'view-mode--table': true, 'is-inactive': (view_mode != 'table')}"
-               @click.prevent="view_mode = 'table'"
+               @click.prevent="view_mode = 'table'; $emit('switch-view-mode', $event, 'table')"
             >
               <font-awesome-icon
                 :icon="['fa', 'th-list']"
@@ -120,12 +120,6 @@
       </div>
     </div>
     <div class="drawer-handle" @click="expanded=!expanded">
-      <div class="current-filter">
-        <b-badge title="Project State" :variant="states_variant">{{states_label}}</b-badge>
-        <b-badge title="Project Locations" :variant="(show_locations == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{locations_label}}</b-badge>
-        <b-badge title="Stacks" :variant="(show_stacks == 'all') ? 'secondary' : 'warning'">{{stacks_label}}</b-badge>
-        <b-badge title="Sorting">{{sorting_label}}</b-badge>
-      </div>
       <div class="label small"><span>Viewing Options&nbsp;
         <font-awesome-icon
           v-if="expanded"
@@ -136,6 +130,13 @@
           :icon="['fa', 'chevron-down']"
         />
         </span>
+      </div>
+
+      <div class="current-filter">
+        <b-badge title="Project State" :variant="states_variant">{{states_label}}</b-badge>
+        <b-badge title="Project Locations" :variant="(show_locations == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{locations_label}}</b-badge>
+        <b-badge title="Stacks" :variant="(show_stacks == 'all') ? 'secondary' : 'warning'">{{stacks_label}}</b-badge>
+        <b-badge title="Sorting">{{sorting_label}}</b-badge>
       </div>
     </div>
   </div>
@@ -149,7 +150,7 @@ export default {
   name: 'ProjectsDrawer',
   props: {},
   computed: {
-    ...mapGetters(['basedirBy', 'stackBy', 'basedirsAsOptions', 'stacksAsOptions', 'hasExtraBasedirs' ]),
+    ...mapGetters([ 'basedirBy', 'stackBy', 'basedirsAsOptions', 'stacksAsOptions', 'hasExtraBasedirs' ]),
     states_label () {
       const states = this.show_states
       const running = (states.indexOf('running') !== -1) ? 'Running projects' : ''
@@ -252,15 +253,14 @@ export default {
 }
 
 .drawer-handle {
-  padding: 0;
   clear: both;
-  height: 30px;
+  padding: 0 0 0 1rem;
 }
 
 .drawer-handle .current-filter {
-  display: inline-block;
-  margin-top: 0.5rem;
-  margin-left: 1rem;
+  display: inline;
+  position: relative;
+  top: 6px;
 }
 
 .drawer-handle .badge {
@@ -333,6 +333,8 @@ export default {
 
 .view-mode {
   font-size: 200%;
+  position: relative;
+  top: 6px;
 }
 
 .view-mode--cards{
@@ -349,6 +351,25 @@ export default {
 
 .form-group--location {
   max-width: 25rem;
+}
+
+.short {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .regular {
+    display: none;
+  }
+  .short {
+    display: inline;
+  }
+}
+
+@media (max-width: 990px) {
+  .right-panel{
+    float: left;
+  }
 }
 </style>
 <style>
