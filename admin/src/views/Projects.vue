@@ -1,6 +1,6 @@
 <template>
   <div class="projects-container">
-    <projects-filter visible="false"></projects-filter>
+    <projects-drawer visible="false"></projects-drawer>
     <b-card-group columns class="pl-3 pr-3">
       <project-card
         v-for="(project, projectIndex) in projects"
@@ -15,13 +15,13 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import ProjectsFilter from '../components/ProjectsFilter'
+import ProjectsDrawer from '../components/ProjectsDrawer'
 import ProjectCard from '../components/ProjectCard'
 
 export default {
   name: 'ProjectList',
   components: {
-    ProjectsFilter,
+    ProjectsDrawer,
     ProjectCard
   },
   computed: {

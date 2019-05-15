@@ -8,6 +8,7 @@ import {
   faCog,
   faExpand,
   faChevronUp,
+  faChevronDown,
   faEllipsisV,
   faEnvelope,
   faDatabase,
@@ -18,7 +19,8 @@ import {
   faColumns,
   faThList,
   faSortAlphaUp,
-  faSortAlphaDown
+  faSortAlphaDown,
+
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
@@ -29,6 +31,7 @@ library.add(faHome)
 library.add(faCog)
 library.add(faExpand)
 library.add(faChevronUp)
+library.add(faChevronDown)
 library.add(faEllipsisV)
 library.add(faEnvelope)
 library.add(faDatabase)

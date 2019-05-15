@@ -99,6 +99,16 @@ export default new Vuex.Store({
       })
       return services
     },
+    stacksAsOptions: (state) => {
+      const options = []
+      state.stacks.records.forEach((el, idx) => {
+        options.push({
+          value: el.id,
+          text: el.attributes.stackname
+        })
+      })
+      return options
+    },
     basedirsAsOptions: (state) => {
       const options = []
       state.basedirs.records.forEach((el, idx) => {

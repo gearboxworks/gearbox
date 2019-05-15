@@ -124,14 +124,14 @@ export default {
         }
         // const record = this.basedirBy(basedirId)
         // record.attributes.basedir = basedir
-        console.log(basedirId, recordData)
+        // console.log(basedirId, recordData)
         this.$store.dispatch('basedirs/update', recordData).then((res) => {
           console.log(res)
         })
       }
     },
     deleteBasedir (basedirId) {
-      console.log('deleteBasedir', basedirId)
+      // console.log('deleteBasedir', basedirId)
       if (basedirId !== 'default') {
         if (basedirId) {
           this.$store.dispatch('basedirs/delete', { id: basedirId }).then((res) => {
@@ -139,7 +139,7 @@ export default {
           })
         }
       } else {
-        console.log('The default base directory will not be deleted.')
+        // console.log('The default base directory will not be deleted.')
       }
     }
   }
