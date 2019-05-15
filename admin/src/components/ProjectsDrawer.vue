@@ -15,9 +15,9 @@
             switches
             inline
           >
-            <b-form-checkbox value="running" title="Include projects that are currently RUNNING">Running projects</b-form-checkbox>
-            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED">Stopped projects</b-form-checkbox>
-            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported">Project candidates</b-form-checkbox>
+            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggle_state('')">Running projects</b-form-checkbox>
+            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggle_state('')">Stopped projects</b-form-checkbox>
+            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggle_state('candidates')">Project candidates</b-form-checkbox>
             <small tabindex="-1" class="form-text text-muted">Project State</small>
           </b-form-checkbox-group>
 
@@ -120,9 +120,9 @@
     </div>
     <div class="drawer-handle" @click="expanded=!expanded">
       <div class="current-filter">
-        <b-badge title="Project State">{{states_label}}</b-badge>
-        <b-badge title="Project Locations">{{locations_label}}</b-badge>
-        <b-badge title="Stacks">{{stacks_label}}</b-badge>
+        <b-badge title="Project State" :variant="states_variant">{{states_label}}</b-badge>
+        <b-badge title="Project Locations" :variant="(show_locations == 'all') ? 'secondary' : 'warning'">{{locations_label}}</b-badge>
+        <b-badge title="Stacks" :variant="(show_stacks == 'all') ? 'secondary' : 'warning'">{{stacks_label}}</b-badge>
         <b-badge title="Sorting">{{sorting_label}}</b-badge>
       </div>
       <div class="label small"><span>Viewing Options&nbsp;
@@ -162,8 +162,17 @@ export default {
           : ''
 
       return projects
-        ? projects + (candidates ? ' and project candidates' : '')
+        ? projects + ((candidates && (running || stopped)) ? '' : ' (no candidates)')
         : (candidates ? 'Project candidates' : '')
+    },
+    states_variant () {
+      const states = this.show_states
+      const running = (states.indexOf('running') !== -1) ? 'Running projects' : ''
+      const stopped = states.indexOf('stopped') !== -1 ? 'Stopped projects' : ''
+      const candidates = states.indexOf('candidates') !== -1
+      return (running && stopped && candidates)
+        ? 'secondary'
+        : 'warning'
     },
     locations_label () {
       const basedir = (this.show_locations !== 'all') ? this.basedirBy('id', this.show_locations) : null
@@ -198,6 +207,22 @@ export default {
     // escAttr (value) {
     //   return value.replace(/\//g, '-').replace(/\./g, '-')
     // }
+    toggle_state (attribute) {
+      const states = this.show_states
+      const running = states.indexOf('running') !== -1
+      const stopped = states.indexOf('stopped') !== -1
+      const candidates = states.indexOf('candidates') !== -1
+
+      /**
+       * All unselected would be and invalid state, therefore
+       * make sure either candidates or running/stopped is selected
+       */
+      if ((attribute === 'candidates') && !running && !stopped && candidates) {
+        this.show_states = ['running', 'stopped']
+      } else if ((attribute !== 'candidates') && (!running || !stopped) && !candidates) {
+        this.show_states = ['candidates']
+      }
+    }
   }
 }
 </script>
