@@ -119,6 +119,9 @@ export default new Vuex.Store({
       })
       return options
     },
+    hasExtraBasedirs: (state) => {
+      return state.basedirs.records.length > 1
+    },
     preselectService: (state) => (services, defaultService) => {
       /**
        * Resolve default option:

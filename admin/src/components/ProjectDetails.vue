@@ -61,7 +61,7 @@
           @change="maybeSubmit"
           v-model="basedir"
           required
-          v-if="Object.entries(this.$store.getters.basedirsAsOptions).length>1"
+          v-if="hasExtraBasedirs"
           :options="this.$store.getters.basedirsAsOptions"
         />
         <b-form-input
@@ -159,7 +159,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ basedirBy: 'basedirBy', serviceBy: 'serviceBy', gearspecBy: 'gearspecBy', allGearspecs: 'gearspecs/all', allStacks: 'stacks/all' }),
+    ...mapGetters({ basedirBy: 'basedirBy', serviceBy: 'serviceBy', gearspecBy: 'gearspecBy', allGearspecs: 'gearspecs/all', allStacks: 'stacks/all', hasExtraBasedirs: 'hasExtraBasedirs' }),
     projectBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
     },

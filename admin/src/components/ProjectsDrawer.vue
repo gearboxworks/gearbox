@@ -15,8 +15,8 @@
             switches
             inline
           >
-            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggle_state('')">Running projects</b-form-checkbox>
-            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggle_state('')">Stopped projects</b-form-checkbox>
+            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggle_state('running')">Running projects</b-form-checkbox>
+            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggle_state('stopped')">Stopped projects</b-form-checkbox>
             <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggle_state('candidates')">Project candidates</b-form-checkbox>
             <small tabindex="-1" class="form-text text-muted">Project State</small>
           </b-form-checkbox-group>
@@ -26,6 +26,7 @@
             label=""
             label-for="filter-location"
             description="Location"
+            v-if="hasExtraBasedirs"
           >
             <b-select id="filter-location" variant="secondary" v-model="show_locations" :options="basedirsAsOptions">
               <template slot="first">
@@ -121,7 +122,7 @@
     <div class="drawer-handle" @click="expanded=!expanded">
       <div class="current-filter">
         <b-badge title="Project State" :variant="states_variant">{{states_label}}</b-badge>
-        <b-badge title="Project Locations" :variant="(show_locations == 'all') ? 'secondary' : 'warning'">{{locations_label}}</b-badge>
+        <b-badge title="Project Locations" :variant="(show_locations == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{locations_label}}</b-badge>
         <b-badge title="Stacks" :variant="(show_stacks == 'all') ? 'secondary' : 'warning'">{{stacks_label}}</b-badge>
         <b-badge title="Sorting">{{sorting_label}}</b-badge>
       </div>
@@ -148,7 +149,7 @@ export default {
   name: 'ProjectsDrawer',
   props: {},
   computed: {
-    ...mapGetters(['basedirBy', 'stackBy', 'basedirsAsOptions', 'stacksAsOptions']),
+    ...mapGetters(['basedirBy', 'stackBy', 'basedirsAsOptions', 'stacksAsOptions', 'hasExtraBasedirs' ]),
     states_label () {
       const states = this.show_states
       const running = (states.indexOf('running') !== -1) ? 'Running projects' : ''
@@ -219,7 +220,9 @@ export default {
        */
       if ((attribute === 'candidates') && !running && !stopped && candidates) {
         this.show_states = ['running', 'stopped']
-      } else if ((attribute !== 'candidates') && (!running || !stopped) && !candidates) {
+      } else if ((attribute === 'running') && running && !stopped && !candidates) {
+        this.show_states = ['candidates']
+      } else if ((attribute === 'stopped') && !running && stopped && !candidates) {
         this.show_states = ['candidates']
       }
     }
