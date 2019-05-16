@@ -10,16 +10,6 @@
             v-for="basedir in basedirs.records"
             :key="basedir.id"
           >
-            <b-button
-              type="submit.prevent"
-              :variant="basedir.id === defaultBasedir.id ? 'secondary':'warning'"
-              @click.prevent="deleteBasedir(basedir.id)"
-              :disabled="basedir.id === defaultBasedir.id"
-              :title="basedir.id === defaultBasedir.id ? 'Cannot delete reference to the default directory' : 'Delete reference to this directory'"
-              class="btn--delete"
-            >
-              <font-awesome-icon :icon="['fa', 'trash-alt']" />
-            </b-button>
 
             <b-form-input
               :id="`${basedir.id}-basedir`"
@@ -37,10 +27,21 @@
               class="btn--update"
               title="Update directory reference"
             ><font-awesome-icon :icon="['fa', 'check-circle']" /></b-button>
+
+            <b-button
+              type="submit.prevent"
+              :variant="basedir.id === defaultBasedir.id ? 'secondary':'warning'"
+              @click.prevent="deleteBasedir(basedir.id)"
+              :disabled="basedir.id === defaultBasedir.id"
+              :title="basedir.id === defaultBasedir.id ? 'Cannot delete reference to the default directory' : 'Delete reference to this directory'"
+              class="btn--delete"
+            >
+              <font-awesome-icon :icon="['fa', 'trash-alt']" />
+            </b-button>
+
         </b-form-row>
 
         <b-form-row>
-            <button class="btn btn--delete is-invisible"></button>
             <b-form-input
               ref="new-basedir"
               type="text"
@@ -54,6 +55,7 @@
               class="btn--add"
               title="Add new directory reference"
             ><font-awesome-icon :icon="['fa', 'plus-circle']" /></b-button>
+          <button class="btn btn--delete is-invisible"></button>
         </b-form-row>
 
         <hr>

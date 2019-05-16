@@ -2,8 +2,8 @@
 // sources:
 // admin/dist/css/app.78060d66.css
 // admin/dist/css/chunk-vendors.19588e8d.css
-// admin/dist/css/preferences.0fceb6b9.css
-// admin/dist/css/projects.f3dfa328.css
+// admin/dist/css/preferences.b14bbbbc.css
+// admin/dist/css/projects.e9e3b369.css
 // admin/dist/css/projectstack.32e9bd3e.css
 // admin/dist/favicon.ico
 // admin/dist/gears.json
@@ -46,14 +46,14 @@
 // admin/dist/index.html
 // admin/dist/js/about.a232e5c8.js
 // admin/dist/js/about.a232e5c8.js.map
-// admin/dist/js/app.c2414d05.js
-// admin/dist/js/app.c2414d05.js.map
+// admin/dist/js/app.303105b3.js
+// admin/dist/js/app.303105b3.js.map
 // admin/dist/js/chunk-vendors.b73ea6ae.js
 // admin/dist/js/chunk-vendors.b73ea6ae.js.map
-// admin/dist/js/preferences.3f1bac76.js
-// admin/dist/js/preferences.3f1bac76.js.map
-// admin/dist/js/projects.96ff18ac.js
-// admin/dist/js/projects.96ff18ac.js.map
+// admin/dist/js/preferences.431d561d.js
+// admin/dist/js/preferences.431d561d.js.map
+// admin/dist/js/projects.b00fa608.js
+// admin/dist/js/projects.b00fa608.js.map
 // admin/dist/js/projectstack.3ef56350.js
 // admin/dist/js/projectstack.3ef56350.js.map
 // admin/dist/manifest.json
@@ -120,10 +120,10 @@ func adminDistCssChunkVendors19588e8dCss() (*asset, error) {
 	return a, err
 }
 
-// adminDistCssPreferences0fceb6b9Css reads file data from disk. It returns an error on failure.
-func adminDistCssPreferences0fceb6b9Css() (*asset, error) {
-	path := filepath.Join(rootDir, "admin/dist/css/preferences.0fceb6b9.css")
-	name := "admin/dist/css/preferences.0fceb6b9.css"
+// adminDistCssPreferencesB14bbbbcCss reads file data from disk. It returns an error on failure.
+func adminDistCssPreferencesB14bbbbcCss() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/css/preferences.b14bbbbc.css")
+	name := "admin/dist/css/preferences.b14bbbbc.css"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -138,10 +138,10 @@ func adminDistCssPreferences0fceb6b9Css() (*asset, error) {
 	return a, err
 }
 
-// adminDistCssProjectsF3dfa328Css reads file data from disk. It returns an error on failure.
-func adminDistCssProjectsF3dfa328Css() (*asset, error) {
-	path := filepath.Join(rootDir, "admin/dist/css/projects.f3dfa328.css")
-	name := "admin/dist/css/projects.f3dfa328.css"
+// adminDistCssProjectsE9e3b369Css reads file data from disk. It returns an error on failure.
+func adminDistCssProjectsE9e3b369Css() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/css/projects.e9e3b369.css")
+	name := "admin/dist/css/projects.e9e3b369.css"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -912,10 +912,10 @@ func adminDistJsAboutA232e5c8JsMap() (*asset, error) {
 	return a, err
 }
 
-// adminDistJsAppC2414d05Js reads file data from disk. It returns an error on failure.
-func adminDistJsAppC2414d05Js() (*asset, error) {
-	path := filepath.Join(rootDir, "admin/dist/js/app.c2414d05.js")
-	name := "admin/dist/js/app.c2414d05.js"
+// adminDistJsApp303105b3Js reads file data from disk. It returns an error on failure.
+func adminDistJsApp303105b3Js() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/js/app.303105b3.js")
+	name := "admin/dist/js/app.303105b3.js"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -930,10 +930,10 @@ func adminDistJsAppC2414d05Js() (*asset, error) {
 	return a, err
 }
 
-// adminDistJsAppC2414d05JsMap reads file data from disk. It returns an error on failure.
-func adminDistJsAppC2414d05JsMap() (*asset, error) {
-	path := filepath.Join(rootDir, "admin/dist/js/app.c2414d05.js.map")
-	name := "admin/dist/js/app.c2414d05.js.map"
+// adminDistJsApp303105b3JsMap reads file data from disk. It returns an error on failure.
+func adminDistJsApp303105b3JsMap() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/js/app.303105b3.js.map")
+	name := "admin/dist/js/app.303105b3.js.map"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -984,10 +984,10 @@ func adminDistJsChunkVendorsB73ea6aeJsMap() (*asset, error) {
 	return a, err
 }
 
-// adminDistJsPreferences3f1bac76Js reads file data from disk. It returns an error on failure.
-func adminDistJsPreferences3f1bac76Js() (*asset, error) {
-	path := filepath.Join(rootDir, "admin/dist/js/preferences.3f1bac76.js")
-	name := "admin/dist/js/preferences.3f1bac76.js"
+// adminDistJsPreferences431d561dJs reads file data from disk. It returns an error on failure.
+func adminDistJsPreferences431d561dJs() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/js/preferences.431d561d.js")
+	name := "admin/dist/js/preferences.431d561d.js"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -1002,10 +1002,10 @@ func adminDistJsPreferences3f1bac76Js() (*asset, error) {
 	return a, err
 }
 
-// adminDistJsPreferences3f1bac76JsMap reads file data from disk. It returns an error on failure.
-func adminDistJsPreferences3f1bac76JsMap() (*asset, error) {
-	path := filepath.Join(rootDir, "admin/dist/js/preferences.3f1bac76.js.map")
-	name := "admin/dist/js/preferences.3f1bac76.js.map"
+// adminDistJsPreferences431d561dJsMap reads file data from disk. It returns an error on failure.
+func adminDistJsPreferences431d561dJsMap() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/js/preferences.431d561d.js.map")
+	name := "admin/dist/js/preferences.431d561d.js.map"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -1020,10 +1020,10 @@ func adminDistJsPreferences3f1bac76JsMap() (*asset, error) {
 	return a, err
 }
 
-// adminDistJsProjects96ff18acJs reads file data from disk. It returns an error on failure.
-func adminDistJsProjects96ff18acJs() (*asset, error) {
-	path := filepath.Join(rootDir, "admin/dist/js/projects.96ff18ac.js")
-	name := "admin/dist/js/projects.96ff18ac.js"
+// adminDistJsProjectsB00fa608Js reads file data from disk. It returns an error on failure.
+func adminDistJsProjectsB00fa608Js() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/js/projects.b00fa608.js")
+	name := "admin/dist/js/projects.b00fa608.js"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -1038,10 +1038,10 @@ func adminDistJsProjects96ff18acJs() (*asset, error) {
 	return a, err
 }
 
-// adminDistJsProjects96ff18acJsMap reads file data from disk. It returns an error on failure.
-func adminDistJsProjects96ff18acJsMap() (*asset, error) {
-	path := filepath.Join(rootDir, "admin/dist/js/projects.96ff18ac.js.map")
-	name := "admin/dist/js/projects.96ff18ac.js.map"
+// adminDistJsProjectsB00fa608JsMap reads file data from disk. It returns an error on failure.
+func adminDistJsProjectsB00fa608JsMap() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/js/projects.b00fa608.js.map")
+	name := "admin/dist/js/projects.b00fa608.js.map"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -1182,8 +1182,8 @@ func AssetNames() []string {
 var _bindata = map[string]func() (*asset, error){
 	"admin/dist/css/app.78060d66.css": adminDistCssApp78060d66Css,
 	"admin/dist/css/chunk-vendors.19588e8d.css": adminDistCssChunkVendors19588e8dCss,
-	"admin/dist/css/preferences.0fceb6b9.css": adminDistCssPreferences0fceb6b9Css,
-	"admin/dist/css/projects.f3dfa328.css": adminDistCssProjectsF3dfa328Css,
+	"admin/dist/css/preferences.b14bbbbc.css": adminDistCssPreferencesB14bbbbcCss,
+	"admin/dist/css/projects.e9e3b369.css": adminDistCssProjectsE9e3b369Css,
 	"admin/dist/css/projectstack.32e9bd3e.css": adminDistCssProjectstack32e9bd3eCss,
 	"admin/dist/favicon.ico": adminDistFaviconIco,
 	"admin/dist/gears.json": adminDistGearsJson,
@@ -1226,14 +1226,14 @@ var _bindata = map[string]func() (*asset, error){
 	"admin/dist/index.html": adminDistIndexHtml,
 	"admin/dist/js/about.a232e5c8.js": adminDistJsAboutA232e5c8Js,
 	"admin/dist/js/about.a232e5c8.js.map": adminDistJsAboutA232e5c8JsMap,
-	"admin/dist/js/app.c2414d05.js": adminDistJsAppC2414d05Js,
-	"admin/dist/js/app.c2414d05.js.map": adminDistJsAppC2414d05JsMap,
+	"admin/dist/js/app.303105b3.js": adminDistJsApp303105b3Js,
+	"admin/dist/js/app.303105b3.js.map": adminDistJsApp303105b3JsMap,
 	"admin/dist/js/chunk-vendors.b73ea6ae.js": adminDistJsChunkVendorsB73ea6aeJs,
 	"admin/dist/js/chunk-vendors.b73ea6ae.js.map": adminDistJsChunkVendorsB73ea6aeJsMap,
-	"admin/dist/js/preferences.3f1bac76.js": adminDistJsPreferences3f1bac76Js,
-	"admin/dist/js/preferences.3f1bac76.js.map": adminDistJsPreferences3f1bac76JsMap,
-	"admin/dist/js/projects.96ff18ac.js": adminDistJsProjects96ff18acJs,
-	"admin/dist/js/projects.96ff18ac.js.map": adminDistJsProjects96ff18acJsMap,
+	"admin/dist/js/preferences.431d561d.js": adminDistJsPreferences431d561dJs,
+	"admin/dist/js/preferences.431d561d.js.map": adminDistJsPreferences431d561dJsMap,
+	"admin/dist/js/projects.b00fa608.js": adminDistJsProjectsB00fa608Js,
+	"admin/dist/js/projects.b00fa608.js.map": adminDistJsProjectsB00fa608JsMap,
 	"admin/dist/js/projectstack.3ef56350.js": adminDistJsProjectstack3ef56350Js,
 	"admin/dist/js/projectstack.3ef56350.js.map": adminDistJsProjectstack3ef56350JsMap,
 	"admin/dist/manifest.json": adminDistManifestJson,
@@ -1285,8 +1285,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"css": &bintree{nil, map[string]*bintree{
 				"app.78060d66.css": &bintree{adminDistCssApp78060d66Css, map[string]*bintree{}},
 				"chunk-vendors.19588e8d.css": &bintree{adminDistCssChunkVendors19588e8dCss, map[string]*bintree{}},
-				"preferences.0fceb6b9.css": &bintree{adminDistCssPreferences0fceb6b9Css, map[string]*bintree{}},
-				"projects.f3dfa328.css": &bintree{adminDistCssProjectsF3dfa328Css, map[string]*bintree{}},
+				"preferences.b14bbbbc.css": &bintree{adminDistCssPreferencesB14bbbbcCss, map[string]*bintree{}},
+				"projects.e9e3b369.css": &bintree{adminDistCssProjectsE9e3b369Css, map[string]*bintree{}},
 				"projectstack.32e9bd3e.css": &bintree{adminDistCssProjectstack32e9bd3eCss, map[string]*bintree{}},
 			}},
 			"favicon.ico": &bintree{adminDistFaviconIco, map[string]*bintree{}},
@@ -1335,14 +1335,14 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"js": &bintree{nil, map[string]*bintree{
 				"about.a232e5c8.js": &bintree{adminDistJsAboutA232e5c8Js, map[string]*bintree{}},
 				"about.a232e5c8.js.map": &bintree{adminDistJsAboutA232e5c8JsMap, map[string]*bintree{}},
-				"app.c2414d05.js": &bintree{adminDistJsAppC2414d05Js, map[string]*bintree{}},
-				"app.c2414d05.js.map": &bintree{adminDistJsAppC2414d05JsMap, map[string]*bintree{}},
+				"app.303105b3.js": &bintree{adminDistJsApp303105b3Js, map[string]*bintree{}},
+				"app.303105b3.js.map": &bintree{adminDistJsApp303105b3JsMap, map[string]*bintree{}},
 				"chunk-vendors.b73ea6ae.js": &bintree{adminDistJsChunkVendorsB73ea6aeJs, map[string]*bintree{}},
 				"chunk-vendors.b73ea6ae.js.map": &bintree{adminDistJsChunkVendorsB73ea6aeJsMap, map[string]*bintree{}},
-				"preferences.3f1bac76.js": &bintree{adminDistJsPreferences3f1bac76Js, map[string]*bintree{}},
-				"preferences.3f1bac76.js.map": &bintree{adminDistJsPreferences3f1bac76JsMap, map[string]*bintree{}},
-				"projects.96ff18ac.js": &bintree{adminDistJsProjects96ff18acJs, map[string]*bintree{}},
-				"projects.96ff18ac.js.map": &bintree{adminDistJsProjects96ff18acJsMap, map[string]*bintree{}},
+				"preferences.431d561d.js": &bintree{adminDistJsPreferences431d561dJs, map[string]*bintree{}},
+				"preferences.431d561d.js.map": &bintree{adminDistJsPreferences431d561dJsMap, map[string]*bintree{}},
+				"projects.b00fa608.js": &bintree{adminDistJsProjectsB00fa608Js, map[string]*bintree{}},
+				"projects.b00fa608.js.map": &bintree{adminDistJsProjectsB00fa608JsMap, map[string]*bintree{}},
 				"projectstack.3ef56350.js": &bintree{adminDistJsProjectstack3ef56350Js, map[string]*bintree{}},
 				"projectstack.3ef56350.js.map": &bintree{adminDistJsProjectstack3ef56350JsMap, map[string]*bintree{}},
 			}},

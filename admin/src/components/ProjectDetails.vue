@@ -6,90 +6,32 @@
       label=""
       description="Location"
     >
-      <b-form-input
-        disabled
-        :id="`${projectBase}location-input`"
-        :value="resolveDir(currentBasedir, path)"
-        class="location-input"
-      />
-      <a target="_blank"
-         :id="`${projectBase}change-location`"
-         href="#"
-         title="Change location"
-         class="cog-icon"
-         @click.prevent=""
-      >
-        <font-awesome-icon
-          :icon="['fa', 'cog']"
-        />
-      </a>
 
-      <a target="_blank"
-         :id="`${projectBase}open-location`"
-         href="#"
-         title="Open project directory"
-         v-b-tooltip.hover
-         class="folder-icon"
-      >
-        <font-awesome-icon
-          :icon="['fa', 'folder']"
-        />
-      </a>
+      <b-input-group>
 
-    </b-form-group>
-
-    <b-popover
-      :target="`${projectBase}change-location`"
-      :container="`${projectBase}details`"
-      :ref="`${projectBase}location-popover`"
-      triggers="focus"
-      placement="bottom"
-    >
-      <template slot="title">
-        <b-button @click="onClosePopoverFor(`${projectBase}change-location`)" class="close" aria-label="Close">
-          <span class="d-inline-block" aria-hidden="true">&times;</span>
-        </b-button>
-        Change location
-      </template>
-
-      <b-form-group
-        label="Base directory:"
-        label-for="basedirInput"
-        description="Go to Preferences page to add more directories."
-      >
-        <b-form-select
-          @change="maybeSubmit"
-          v-model="basedir"
-          required
-          v-if="hasExtraBasedirs"
-          :options="this.$store.getters.basedirsAsOptions"
-        />
         <b-form-input
-          @change="maybeSubmit"
-          required
           disabled
-          v-else
-          :value="currentBasedir"
+          :id="`${projectBase}location-input`"
+          :value="resolveDir(currentBasedir, path)"
+          class="location-input"
         />
 
-      </b-form-group>
-
-      <b-form-group
-        label="Path:"
-        label-for="dirNameInput"
-        description=""
-      >
-        <b-form-input
-          type="text"
-          v-model="path"
-          required
-          placeholder=""
-          @input = "path = sanitizePath(path)"
-          @change="maybeSubmit"
-        />
-      </b-form-group>
-
-    </b-popover>
+        <b-input-group-append>
+          <b-button
+            variant="outline-info"
+            title="Open project directory"
+            v-b-tooltip.hover
+            :id="`${projectBase}open-location`"
+            href="#"
+            class="folder-icon"
+          >
+            <font-awesome-icon
+              :icon="['fa', 'folder']"
+            />
+          </b-button>
+        </b-input-group-append>
+      </b-input-group>
+    </b-form-group>
 
     <b-form-group
       id="notesGroup"
@@ -257,27 +199,6 @@ export default {
 <style scoped>
   .collapse {
     clear: both;
-  }
-  .location-input{
-    width: calc(100% - 77px);
-    display: inline-block;
-  }
-  .cog-icon {
-    padding: 6px 10px;
-    border-top-right-radius: 3px;
-    border-bottom-right-radius: 3px;
-    background-color: #e9ecef;
-    border: 1px solid #ced4da;
-    position: relative;
-    /* top: 7px; */
-    left: -3px;
-    display: inline-block;
-  }
-
-  .folder-icon {
-    display: inline-block;
-    margin-left: 14px;
-    font-size: 1.25rem;
   }
 
   .hide-details {

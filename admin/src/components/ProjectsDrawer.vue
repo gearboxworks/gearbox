@@ -15,9 +15,9 @@
             switches
             stack
           >
-            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggle_state('running')"><span class="regular">Running projects</span><span class="short">Running</span></b-form-checkbox>
-            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggle_state('stopped')"><span class="regular">Stopped projects</span><span class="short">Stopped</span></b-form-checkbox>
-            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggle_state('candidates')"><span class="regular">Project candidates</span><span class="short">Candidates</span></b-form-checkbox>
+            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggle_state('running')">Running</b-form-checkbox>
+            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggle_state('stopped')">Stopped</b-form-checkbox>
+            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggle_state('candidates')">Candidates</b-form-checkbox>
             <small tabindex="-1" class="form-text text-muted">Project State</small>
           </b-form-checkbox-group>
 
@@ -358,12 +358,6 @@ export default {
 }
 
 @media (max-width: 1200px) {
-  .regular {
-    display: none;
-  }
-  .short {
-    display: inline;
-  }
 }
 
 @media (max-width: 990px) {
