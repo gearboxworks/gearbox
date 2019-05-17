@@ -58,6 +58,9 @@ export default {
             result[gearspec.attributes.stack_id] = []
           }
           const service = stackItem.service_id ? this.serviceBy('id', stackItem.service_id) : null
+          /**
+           * grouping project's services by stack
+           */
           result[gearspec.attributes.stack_id].push({ gearspec, service })
         }
       })

@@ -43,12 +43,12 @@
         <label :for="`${gearControlId}-input`">{{gearspec.attributes.role}}:</label>
         <b-form-select
           :id="`${gearControlId}-input`"
-          :value="service ? service.id : ''"
+          :value="preselectClosestGearService"
           :tabindex="projectIndex*100+stackIndex*10+itemIndex+9"
           @change="onChangeService($event)"
         >
           <option value="" v-if="!defaultService">Do not run this service</option>
-          <option disabled value="">Select service...</option>
+          <option disabled :value="null">Select service...</option>
           <optgroup v-for="(services, groupLabel) in servicesGroupedByRole" :label="groupLabel" :key="groupLabel">
             <option v-for="serviceId in services" :value="serviceId" :key="serviceId">{{serviceId.replace('gearboxworks/','')}}</option>
           </optgroup>
@@ -95,7 +95,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['gearspecBy', 'stackBy', 'stackDefaultServiceByRole', 'stackServicesByRole']),
+    ...mapGetters(['gearspecBy', 'stackBy', 'stackDefaultServiceByRole', 'stackServicesByRole', 'preselectService']),
     projectBase () {
       return 'gb-' + this.escAttr(this.projectId) + '-'
     },
@@ -114,35 +114,16 @@ export default {
     defaultService () {
       return this.stackDefaultServiceByRole(this.stack, this.gearspec.id)
     },
-    // preselectGearService () {
-    //   const defaultService = this.defaultService()
-    //
-    //   /**
-    //    * Resolve default option:
-    //    * - if exact match is found, use it
-    //    * - otherwise, use the last in the list that have the specified name mentioned (hopefully that will be the latest version)
-    //    */
-    //   let firstFound = -1
-    //   let exactFound = -1
-    //   if (defaultService) {
-    //     for (var i = gearServices.length; i--;) {
-    //       if (gearServices[i].indexOf(defaultService) !== -1) {
-    //         if (firstFound === -1) {
-    //           firstFound = i
-    //         }
-    //         if (gearServices[i] === defaultService) {
-    //           exactFound = i
-    //           break
-    //         }
-    //       }
-    //     }
-    //   }
-    //   const serviceId = (firstFound !== -1)
-    //     ? gearServices[ exactFound !== -1 ? exactFound : firstFound ]
-    //     : ''
-    //
-    //   return serviceId
-    // },
+    preselectClosestGearService () {
+      /**
+       * As am example, for php:7.1.18 it will select php:7.1 or php:7 if exact match is not possible
+       */
+      return this.preselectService(
+        this.stackServicesByRole(this.stack, this.gearspec.id),
+        this.defaultService,
+        this.service ? this.service.id : null
+      )
+    },
     servicesGroupedByRole () {
       const services = this.stackServicesByRole(this.stack, this.gearspec.id)
       // console.log(services)

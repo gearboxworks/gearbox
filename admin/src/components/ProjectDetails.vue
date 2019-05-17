@@ -226,5 +226,7 @@ export default {
   .card--project:hover .hide-details:hover {
     opacity: 1;
   }
-
+  .btn-outline-info {
+    border-color: #ced4da;
+  }
 </style>

@@ -122,7 +122,7 @@ export default new Vuex.Store({
     hasExtraBasedirs: (state) => {
       return state.basedirs.records.length > 1
     },
-    preselectService: (state) => (services, defaultService) => {
+    preselectService: (state) => (serviceIds, defaultServiceId, providedServiceId) => {
       /**
        * Resolve default option:
        * - if exact match is found, use it
@@ -130,21 +130,37 @@ export default new Vuex.Store({
        */
       let firstFound = -1
       let exactFound = -1
-      if (defaultService) {
-        for (var i = services.length; i--;) {
-          if (services[i].indexOf(defaultService) !== -1) {
-            if (firstFound === -1) {
-              firstFound = i
+      let serviceId = providedServiceId || defaultServiceId
+      if (serviceId) {
+        do {
+          for (var i = serviceIds.length; i--;) {
+            if (serviceIds[i].indexOf(serviceId) !== -1) {
+              if (firstFound === -1) {
+                firstFound = i
+              }
+              if (serviceIds[i] === serviceId) {
+                exactFound = i
+                break
+              }
             }
-            if (services[i] === defaultService) {
-              exactFound = i
+          }
+          if (firstFound === -1) {
+            /**
+             * drop the part after the last dot
+             */
+            const parts = serviceId.split('.')
+            if (parts.length > 1) {
+              delete parts[parts.length - 1]
+              serviceId = parts.join('.')
+              serviceId = serviceId.substring(0, serviceId.length - 1) // remove the trailing dot
+            } else {
               break
             }
           }
-        }
+        } while (firstFound === -1)
       }
       const selectedService = (firstFound !== -1)
-        ? services[ exactFound !== -1 ? exactFound : firstFound ]
+        ? serviceIds[ exactFound !== -1 ? exactFound : firstFound ]
         : ''
 
       return selectedService
