@@ -10,6 +10,7 @@ import (
 	"github.com/gearboxworks/go-status/is"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -177,6 +178,7 @@ func (me BasedirMap) UpdateBasedir(config Configer, basedir *Basedir) (sts Statu
 		sts = ValidateBasedir(basedir.Basedir, basedir.Nickname, &ValidateArgs{
 			Config:         config,
 			MustNotBeEmpty: true,
+			MustExist:      true,
 			MustBeOnDisk:   true,
 			MustBeIn:       config.GetBasedirMap(),
 			MustNotBeIn:    config.GetNicknameMap(),
@@ -201,9 +203,9 @@ func (me BasedirMap) UpdateBasedir(config Configer, basedir *Basedir) (sts Statu
 func (me BasedirMap) AddBasedir(config Configer, basedir *Basedir) (sts Status) {
 	for range only.Once {
 		sts = ValidateBasedirNickname(basedir.Nickname, &ValidateArgs{
-			Config:         config,
-			MustNotBeEmpty: true,
-			MustNotExist:   true,
+			Config:       config,
+			MustBeEmpty:  true,
+			MustNotExist: true,
 		})
 		if is.Error(sts) {
 			break
@@ -213,7 +215,7 @@ func (me BasedirMap) AddBasedir(config Configer, basedir *Basedir) (sts Status) 
 			MustNotBeEmpty: true,
 			MustNotExist:   true,
 			MustBeOnDisk:   true,
-			MustNotBeIn:    config.GetBasedirMap(),
+			MustNotBeIn:    config.GetNicknameMap(),
 			MustSucceed: func() (sts Status) {
 				return me.ensureNonDuplicatedBasedir(basedir)
 			},
@@ -237,6 +239,12 @@ func (me BasedirMap) AddBasedir(config Configer, basedir *Basedir) (sts Status) 
 	return sts
 }
 
+var validNicknameChars *regexp.Regexp
+
+func init() {
+	validNicknameChars = regexp.MustCompile("[^a-z0-9-]+")
+}
+
 func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts Status) {
 	for range only.Once {
 		if args.Config == nil {
@@ -246,6 +254,13 @@ func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts S
 		if args.ApiHelpUrl != "" {
 			apiHelp = fmt.Sprintf("see %s", args.ApiHelpUrl)
 		}
+
+		if string(nickname) != validNicknameChars.ReplaceAllString(string(nickname), "") {
+			sts = status.YourBad("nickname has invalid characters '%s'", nickname).
+				SetDetail("nickname can only contain digits (0-9), lowercase letters (a-z) and/or dashes (-)")
+			break
+		}
+
 		nn, ok := args.MustNotEqual.(string)
 		if ok && nickname == types.Nickname(nn) {
 			sts = status.YourBad("nickname cannot equal '%s'",
@@ -301,55 +316,72 @@ func ValidateBasedir(basedir types.AbsoluteDir, nickname types.Nickname, args *V
 			})
 			break
 		}
-		bdmap, ok := args.MustBeIn.(BasedirMap)
-		if !ok {
-			sts = status.Fail().
-				SetMessage("unable to type assert `args.MustBeIn` to `BasedirMap` for basedir nickname '%s'.",
-					nickname,
-				)
-			break
-		}
-		_, ok = bdmap[nickname]
-		if !ok {
-			sts = status.Fail(&status.Args{
-				ApiHelp:    apiHelp,
-				HttpStatus: http.StatusBadRequest,
-				Message:    fmt.Sprintf("nickname for base directory '%s' not found", basedir),
-			})
-			break
-		}
-		var nnm NicknameMap
-		nnm, ok = args.MustNotBeIn.(NicknameMap)
-		if !ok {
-			sts = status.Fail().
-				SetMessage("unable to type assert `args.MustNotBeIn` to `NicknameMap` for basedir nickname '%s'.",
-					nickname,
-				)
-			break
-		}
-		var nn types.Nickname
-		nn, ok = nnm[basedir]
-		if ok && args.IgnoreCurrent && nn != nickname {
-			sts = status.Fail().
-				SetMessage("base directory '%s' already exists as nickname '%s'", basedir, nn)
-		}
-		if ok && !args.IgnoreCurrent {
-			sts = status.Fail().
-				SetMessage("base directory '%s' already exists", basedir, nn)
-		}
-		if is.Error(sts) {
-			sts = sts.
-				SetHelp(status.ApiHelp, apiHelp).
-				SetHttpStatus(http.StatusBadRequest)
-			break
-		}
-		if !ok && args.MustExist {
+		nnm := args.Config.GetNicknameMap()
+		nn, ok := nnm[basedir]
+		if args.MustExist && !ok {
 			sts = status.Fail(&status.Args{
 				Message:    fmt.Sprintf("base directory '%s' not found", basedir),
 				HttpStatus: http.StatusNotFound,
 				ApiHelp:    apiHelp,
 			})
 			break
+		}
+		if args.MustNotExist && ok {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("base directory '%s' already exists as nickname '%s'",
+					basedir,
+					nn,
+				),
+				HttpStatus: http.StatusConflict,
+				ApiHelp:    apiHelp,
+			})
+			break
+		}
+		if args.MustBeIn != nil {
+			bdmap, ok := args.MustBeIn.(BasedirMap)
+			if !ok {
+				sts = status.Fail().
+					SetMessage("unable to type assert `args.MustBeIn` to `BasedirMap` for basedir nickname '%s'.",
+						nickname,
+					)
+				break
+			}
+			_, ok = bdmap[nickname]
+			if !ok {
+				sts = status.Fail(&status.Args{
+					ApiHelp:    apiHelp,
+					HttpStatus: http.StatusBadRequest,
+					Message:    fmt.Sprintf("nickname for base directory '%s' not found", basedir),
+				})
+				break
+			}
+		}
+		if args.MustNotBeIn != nil {
+			var nnm NicknameMap
+			nnm, ok := args.MustNotBeIn.(NicknameMap)
+			if !ok {
+				sts = status.Fail().
+					SetMessage("unable to type assert `args.MustNotBeIn` to `NicknameMap` for basedir nickname '%s'.",
+						nickname,
+					)
+				break
+			}
+			var nn types.Nickname
+			nn, ok = nnm[basedir]
+			if ok && args.IgnoreCurrent && nn != nickname {
+				sts = status.Fail().
+					SetMessage("base directory '%s' already exists as nickname '%s'", basedir, nn)
+			}
+			if ok && !args.IgnoreCurrent {
+				sts = status.Fail().
+					SetMessage("base directory '%s' already exists", basedir, nn)
+			}
+			if is.Error(sts) {
+				sts = sts.
+					SetHelp(status.ApiHelp, apiHelp).
+					SetHttpStatus(http.StatusBadRequest)
+				break
+			}
 		}
 		sts = args.MustSucceed()
 		if is.Error(sts) {

@@ -140,6 +140,15 @@ func (me *BasedirController) getBasedirModelFromItem(item ItemModeler) (bdm *Bas
 		if is.Error(sts) {
 			break
 		}
+		if ro.GetType() != BasedirModelType {
+			sts = status.Fail().
+				SetHttpStatus(http.StatusBadRequest).
+				SetMessage("invalid request type '%s'; should be '%s'",
+					ro.GetType(),
+					BasedirModelType,
+				)
+			break
+		}
 		var b []byte
 		b, sts = ro.MarshalAttributeMap()
 		if is.Error(sts) {

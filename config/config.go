@@ -9,6 +9,7 @@ import (
 	"gearbox/os_support"
 	"gearbox/types"
 	"gearbox/util"
+	"github.com/apcera/util/uuid"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/spf13/cobra"
@@ -152,7 +153,7 @@ func (me *Config) DeleteProject(hostname types.Hostname) (sts Status) {
 		} else {
 			sts = status.Success("project '%s' not found", hostname)
 		}
-		sts.SetHttpStatus(http.StatusNoContent)
+		_ = sts.SetHttpStatus(http.StatusNoContent)
 	}
 	return sts
 }
@@ -460,11 +461,12 @@ func (me *Config) ExpandBasedirPath(nickname types.Nickname, path types.Relative
 
 func (me *Config) AddBasedir(args *BasedirArgs) (sts Status) {
 	for range only.Once {
-		if args.Nickname == "" {
-			args.Nickname = types.Nickname(
-				strings.ToLower(filepath.Base(string(args.Basedir))),
-			)
+		if args.Nickname != "" {
+			sts = status.YourBad("nickname must be empty").
+				SetDetail("invalid nickname set as '%s'", args.Nickname)
+			break
 		}
+		args.Nickname = types.Nickname(uuid.Generate().String())
 		if args.Basedir == "" {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("invalid empty directory for '%s'", args.Nickname),
