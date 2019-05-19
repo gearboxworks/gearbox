@@ -11,7 +11,7 @@ import (
 	"github.com/gearboxworks/go-status/is"
 )
 
-const ServiceModelType ItemType = "service"
+const ServiceModelType ItemType = "services"
 
 var NilServiceModel = (*ServiceModel)(nil)
 var _ ItemModeler = NilServiceModel

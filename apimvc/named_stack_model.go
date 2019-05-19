@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const NamedStackType ItemType = "stack"
+const NamedStackType ItemType = "stacks"
 
 var NilNamedStackModel = (*NamedStackModel)(nil)
 var _ ItemModeler = NilNamedStackModel

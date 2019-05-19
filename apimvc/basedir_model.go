@@ -6,7 +6,7 @@ import (
 	"gearbox/types"
 )
 
-const BasedirModelType ItemType = "basedir"
+const BasedirModelType ItemType = "basedirs"
 
 var NilBasedirModel = (*BasedirModel)(nil)
 var _ ItemModeler = NilBasedirModel

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const GearspecModelType = "gearspec"
+const GearspecModelType = "gearspecs"
 
 var NilGearspecModel = (*GearspecModel)(nil)
 var _ ItemModeler = NilGearspecModel

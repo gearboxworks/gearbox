@@ -10,7 +10,7 @@ import (
 	"github.com/gearboxworks/go-status/is"
 )
 
-const ProjectModelType ItemType = "project"
+const ProjectModelType ItemType = "projects"
 
 var NilProjectModel = (*ProjectModel)(nil)
 var _ ItemModeler = NilProjectModel
