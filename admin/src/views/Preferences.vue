@@ -106,13 +106,14 @@ export default {
   methods: {
     addBasedir () {
       const basedir = this.$refs['new-basedir']['$el'].value
-      const id = filenamify(basedir).replace(/!/g, '_').replace(/\s/g, '-').toLowerCase()
+      // const id = filenamify(basedir).replace(/!/g, '_').replace(/\s/g, '-').toLowerCase()
 
       const recordData = {
-        id,
+        // id,
+        'type': 'basedir',
         'attributes': {
-          basedir,
-          nickname: id
+          basedir
+          // nickname: id
         }
       }
       this.$store.dispatch('basedirs/create', recordData).then(() => {
@@ -126,6 +127,7 @@ export default {
       if (basedirId && basedir) {
         const recordData = {
           id: basedirId,
+          'type': 'basedir',
           attributes: {
             basedir,
             nickname: basedirId
