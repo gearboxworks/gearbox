@@ -83,6 +83,7 @@
 
 <script>
 import { mapState, mapGetters } from 'vuex'
+import filenamify from 'filenamify'
 
 export default {
   name: 'Preferences',
@@ -104,9 +105,14 @@ export default {
   },
   methods: {
     addBasedir () {
+      const basedir = this.$refs['new-basedir']['$el'].value
+      const id = filenamify(basedir).replace(/!/g, '_').replace(/\s/g, '-').toLowerCase()
+
       const recordData = {
+        id,
         'attributes': {
-          basedir: this.$refs['new-basedir']['$el'].value
+          basedir,
+          nickname: id
         }
       }
       this.$store.dispatch('basedirs/create', recordData).then(() => {
@@ -121,7 +127,8 @@ export default {
         const recordData = {
           id: basedirId,
           attributes: {
-            basedir
+            basedir,
+            nickname: basedirId
           }
         }
         // const record = this.basedirBy(basedirId)
