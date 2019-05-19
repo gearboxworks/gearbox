@@ -2,8 +2,13 @@ package api
 
 import (
 	"gearbox/apiworks"
+	"gearbox/config"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
+)
+
+type (
+	Status = status.Status
 )
 
 type (
@@ -23,7 +28,6 @@ type (
 	ListGetter        = apiworks.ListGetter
 	Metaname          = apiworks.Metaname
 	RelType           = apiworks.RelType
-	Status            = status.Status
 )
 
 type Apier interface {
@@ -38,4 +42,8 @@ type Apier interface {
 	GetItemLinkMap(ctx *Context) LinkMap
 	GetCommonLinkMap(ctx *Context) LinkMap
 	WireRoutes()
+}
+
+type ConfigGetter interface {
+	GetConfig() config.Configer
 }

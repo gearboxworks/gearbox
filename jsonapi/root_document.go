@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-const SchemaVersion = "1.0"
+const SpecVersion = "1.1"
 const ResponseTypeKey = "response_type"
 
 type ResponseType string
@@ -116,7 +116,7 @@ func NewRootDocument(ctx Contexter, responseType types.ResponseType, args ...*Ro
 	if rd.JsonApi == nil {
 		rd.JsonApi = &JsonApi{}
 	}
-	rd.JsonApi.Version = SchemaVersion
+	rd.JsonApi.Version = SpecVersion
 
 	if rd.MetaMap == nil {
 		rd.MetaMap = make(MetaMap, 0)

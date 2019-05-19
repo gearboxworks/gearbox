@@ -147,6 +147,7 @@ func (me *Cache) Get(key types.CacheKey) (data []byte, ok bool, sts status.Statu
 }
 
 func (me *Cache) Set(key types.CacheKey, b []byte, duration string) (sts status.Status) {
+
 	for range only.Once {
 		dur, err := time.ParseDuration(duration)
 		if err != nil {
@@ -158,10 +159,9 @@ func (me *Cache) Set(key types.CacheKey, b []byte, duration string) (sts status.
 		}
 		b, err := json.Marshal(w)
 		if err != nil {
-			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("could not marshal JSON to cache key '%s'", key),
-				Help:    "this should never happen, so try rebooting. Or contacting support",
-			})
+			sts = status.Wrap(err).
+				SetHelp(status.AllHelp, "this should never happen, so try rebooting. Or contacting support").
+				SetMessage("could not marshal JSON to cache key '%s'", key)
 			break
 		}
 		fp := me.GetCacheFilepath(key)
@@ -169,10 +169,9 @@ func (me *Cache) Set(key types.CacheKey, b []byte, duration string) (sts status.
 		if !dirExists(d) {
 			err = os.MkdirAll(filepath.Dir(string(fp)), 0777)
 			if err != nil {
-				sts = status.Wrap(err, &status.Args{
-					Message: fmt.Sprintf("unable to create cache directory '%s'", d),
-					Help:    fmt.Sprintf("ensure you have permissions to '%s'", filepath.Dir(d)),
-				})
+				sts = status.Wrap(err).
+					SetMessage("unable to create cache directory '%s'", d).
+					SetHelp(status.AllHelp, "ensure you have permissions to '%s'", filepath.Dir(d))
 				break
 			}
 		}
@@ -185,9 +184,11 @@ func (me *Cache) Set(key types.CacheKey, b []byte, duration string) (sts status.
 			break
 		}
 		sts = status.Success("cache set for key '%s'", key)
+
 	}
 	return sts
 }
+
 func (me *Cache) close(f *os.File) {
 	_ = f.Close()
 }

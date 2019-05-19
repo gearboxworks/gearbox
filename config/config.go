@@ -32,6 +32,7 @@ type Configer interface {
 	FindProject(types.Hostname) (*Project, Status)
 	FindBasedir(types.Nickname) (*Basedir, Status)
 	GetBasedirMap() BasedirMap
+	GetNicknameMap() NicknameMap
 	GetBasedirNicknames() types.Nicknames
 	GetBoxBasedir(types.Nickname) types.AbsoluteDir
 	GetCandidates() Candidates
@@ -112,7 +113,7 @@ func (me *Config) AddProject(p *Project) (sts Status) {
 			break
 		}
 		sts = status.Success("project '%s' created", p.Hostname)
-		sts.SetHttpStatus(http.StatusCreated)
+		_ = sts.SetHttpStatus(http.StatusCreated)
 	}
 	return sts
 }
@@ -129,7 +130,7 @@ func (me *Config) UpdateProject(p *Project) (sts Status) {
 			break
 		}
 		sts = status.Success("project '%s' created", p.Hostname)
-		sts.SetHttpStatus(http.StatusCreated)
+		_ = sts.SetHttpStatus(http.StatusCreated)
 	}
 	return sts
 }
@@ -485,7 +486,6 @@ func (me *Config) AddBasedir(args *BasedirArgs) (sts Status) {
 			break
 		}
 		sts = me.WriteFile()
-
 	}
 	return sts
 }
@@ -495,7 +495,14 @@ func (me *Config) GetNamedBasedir(nickname types.Nickname) (bd *Basedir, sts Sta
 }
 
 func (me *Config) UpdateBasedir(bd *Basedir) (sts Status) {
-	return me.BasedirMap.UpdateBasedir(me, bd)
+	for range only.Once {
+		sts = me.BasedirMap.UpdateBasedir(me, bd)
+		if is.Error(sts) {
+			break
+		}
+		sts = me.WriteFile()
+	}
+	return sts
 }
 
 func (me *Config) DeleteBasedir(nickname types.Nickname) (sts Status) {
