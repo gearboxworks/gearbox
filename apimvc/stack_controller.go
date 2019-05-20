@@ -2,6 +2,7 @@ package apimvc
 
 import (
 	"fmt"
+	"gearbox/apiworks"
 	"gearbox/gearbox"
 	"gearbox/gears"
 	"gearbox/only"
@@ -137,7 +138,7 @@ func (me *StackController) AddItem(ctx *Context, item ItemModeler) (im ItemModel
 	return im, sts
 }
 
-func (me *StackController) UpdateItem(ctx *Context, item ItemModeler) (sts Status) {
+func (me *StackController) UpdateItem(ctx *apiworks.Context, item apiworks.ItemModeler) (modeler apiworks.ItemModeler, sts status.Status) {
 	for range only.Once {
 		var gbs *gears.NamedStack
 		gbs, _, sts = me.extractGearboxStack(ctx, item)
@@ -151,7 +152,7 @@ func (me *StackController) UpdateItem(ctx *Context, item ItemModeler) (sts Statu
 		sts = status.Success("Stack '%s' updated", item.GetId())
 		_ = sts.SetHttpStatus(http.StatusNoContent)
 	}
-	return sts
+	return nil, sts
 
 }
 

@@ -195,7 +195,7 @@ func (me *BasedirController) AddItem(ctx *Context, item ItemModeler) (im ItemMod
 		}
 		sts = status.Success("base directory '%s' added", bd.Nickname).
 			SetHttpStatus(http.StatusCreated).
-			SetDetail("added the nicknamed '%s' directory '%s'",
+			SetDetail("added the directory '%s' nicknamed as '%s'",
 				bda.Nickname,
 				bda.Basedir,
 			)
@@ -207,7 +207,7 @@ func (me *BasedirController) DeleteItem(ctx *Context, itemid ItemId) (sts Status
 	return me.Config.DeleteBasedir(types.Nickname(itemid))
 }
 
-func (me *BasedirController) UpdateItem(ctx *Context, item ItemModeler) (sts Status) {
+func (me *BasedirController) UpdateItem(ctx *Context, item ItemModeler) (im ItemModeler, sts Status) {
 	for range only.Once {
 		var bdm *BasedirModel
 		bdm, sts = me.getBasedirModelFromItem(item)
@@ -223,8 +223,18 @@ func (me *BasedirController) UpdateItem(ctx *Context, item ItemModeler) (sts Sta
 		if status.IsError(sts) {
 			break
 		}
+		im, sts = NewModelFromConfigBasedir(ctx, bd)
+		if status.IsError(sts) {
+			break
+		}
+		sts = status.Success("base directory '%s' updated", bd.Nickname).
+			SetHttpStatus(http.StatusCreated).
+			SetDetail("updated the directory '%s' nicknamed as '%s'",
+				bd.Nickname,
+				bd.Basedir,
+			)
 	}
-	return sts
+	return im, sts
 
 }
 

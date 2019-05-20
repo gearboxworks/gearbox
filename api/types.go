@@ -3,12 +3,16 @@ package api
 import (
 	"gearbox/apiworks"
 	"gearbox/config"
+	"gearbox/jsonapi"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 )
 
 type (
 	Status = status.Status
+)
+type (
+	ResourceObject = jsonapi.ResourceObject
 )
 
 type (

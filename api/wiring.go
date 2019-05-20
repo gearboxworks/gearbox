@@ -108,7 +108,7 @@ func (me *Api) WireGetItemRoute(e *echo.Echo, lc ListController, path string) *R
 				if is.Error(sts) {
 					break
 				}
-				var ro *jsonapi.ResourceObject
+				var ro *ResourceObject
 				ro, sts = getResourceObject(rd)
 				if is.Error(sts) {
 					break
@@ -138,7 +138,7 @@ func (me *Api) WireAddItemRoute(e *echo.Echo, lc ListController, prefix, path st
 			var sts Status
 			rd, ctx := getRootDocumentAndContext(ec, lc, global.ItemResponse)
 			for range only.Once {
-				var ro *jsonapi.ResourceObject
+				var ro *ResourceObject
 				ro, sts = readRequestObject(ctx)
 				if is.Error(sts) {
 					break
@@ -148,10 +148,7 @@ func (me *Api) WireAddItemRoute(e *echo.Echo, lc ListController, prefix, path st
 				if is.Error(sts) {
 					break
 				}
-				ro.ResourceId = jsonapi.ResourceId(item.GetId())
-				ro.ResourceType = jsonapi.ResourceType(item.GetType())
-				ro.AttributeMap = item.GetAttributeMap()
-				rd.Data = ro
+				rd.Data = NewResourceObjectFromItem(item)
 			}
 			return me.Handler(ctx, sts)
 		}),
@@ -169,7 +166,7 @@ func (me *Api) WireUpdateItemRoute(e *echo.Echo, lc ListController, path string)
 				if is.Error(sts) {
 					break
 				}
-				var ro *jsonapi.ResourceObject
+				var ro *ResourceObject
 				ro, sts = readRequestObject(ctx)
 				if is.Error(sts) {
 					break
@@ -184,16 +181,12 @@ func (me *Api) WireUpdateItemRoute(e *echo.Echo, lc ListController, path string)
 					})
 					break
 				}
-				sts = ctx.Controller.UpdateItem(ctx, ro)
+				var item ItemModeler
+				item, sts = ctx.Controller.UpdateItem(ctx, ro)
 				if is.Error(sts) {
 					break
 				}
-				rd.Data = jsonapi.NewResourceIdObjectWithIdType(
-					jsonapi.ResourceId(id),
-					jsonapi.ResourceType(
-						lc.GetNilItem(ctx).GetType(),
-					),
-				)
+				rd.Data = NewResourceObjectFromItem(item)
 			}
 			return me.Handler(ctx, sts)
 		}),
@@ -228,7 +221,7 @@ func (me *Api) WireDeleteItemRoute(e *echo.Echo, lc ListController, path string)
 	}
 }
 
-func (me *Api) setItemData(ctx *Context, ro *jsonapi.ResourceObject, item ItemModeler, list List) (sts Status) {
+func (me *Api) setItemData(ctx *Context, ro *ResourceObject, item ItemModeler, list List) (sts Status) {
 	for range only.Once {
 
 		sts = ro.SetId(item.GetId())
@@ -314,8 +307,16 @@ func (me *Api) setListData(ctx *Context, data interface{}) (sts Status) {
 	return sts
 }
 
-func getResourceObject(rd *jsonapi.RootDocument) (ro *jsonapi.ResourceObject, sts Status) {
-	ro, ok := rd.Data.(*jsonapi.ResourceObject)
+func NewResourceObjectFromItem(item ItemModeler) *ResourceObject {
+	ro := ResourceObject{}
+	ro.ResourceId = jsonapi.ResourceId(item.GetId())
+	ro.ResourceType = jsonapi.ResourceType(item.GetType())
+	ro.AttributeMap = item.GetAttributeMap()
+	return &ro
+}
+
+func getResourceObject(rd *jsonapi.RootDocument) (ro *ResourceObject, sts Status) {
+	ro, ok := rd.Data.(*ResourceObject)
 	if !ok {
 		sts = status.Fail(&status.Args{
 			Message: "root document does not contain a single resource object",
@@ -335,7 +336,7 @@ func getRootDocumentAndContext(ec echo.Context, lc ListController, rt types.Resp
 	return rd, ctx
 }
 
-func readRequestObject(ctx *Context) (ro *jsonapi.ResourceObject, sts Status) {
+func readRequestObject(ctx *Context) (ro *ResourceObject, sts Status) {
 	defer closeRequestBody(ctx)
 	for range only.Once {
 		if ctx == nil {

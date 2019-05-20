@@ -50,7 +50,7 @@ type ListItemAdder interface {
 	AddItem(*Context, ItemModeler) (ItemModeler, status.Status)
 }
 type ListItemUpdater interface {
-	UpdateItem(*Context, ItemModeler) status.Status
+	UpdateItem(*Context, ItemModeler) (ItemModeler, status.Status)
 }
 type ListItemDeleter interface {
 	DeleteItem(*Context, ItemId) status.Status

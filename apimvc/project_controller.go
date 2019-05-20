@@ -2,6 +2,7 @@ package apimvc
 
 import (
 	"fmt"
+	"gearbox/apiworks"
 	"gearbox/config"
 	"gearbox/gearbox"
 	"gearbox/only"
@@ -159,7 +160,7 @@ func (me *ProjectController) AddItem(ctx *Context, item ItemModeler) (im ItemMod
 	return im, sts
 }
 
-func (me *ProjectController) UpdateItem(ctx *Context, item ItemModeler) (sts Status) {
+func (me *ProjectController) UpdateItem(ctx *apiworks.Context, item apiworks.ItemModeler) (modeler apiworks.ItemModeler, sts status.Status) {
 	for range only.Once {
 		var pp *project.Project
 		pp, _, sts = me.extractGearboxProject(ctx, item)
@@ -173,7 +174,7 @@ func (me *ProjectController) UpdateItem(ctx *Context, item ItemModeler) (sts Sta
 		sts = status.Success("project '%s' updated", item.GetId())
 		_ = sts.SetHttpStatus(http.StatusNoContent)
 	}
-	return sts
+	return nil, sts
 
 }
 

@@ -171,7 +171,7 @@ func (me *Api) GetBaseUrl() (url types.UrlTemplate) {
 	))
 }
 
-func (me *Api) SetRelationshipLinkMap(ctx *Context, item ItemModeler, ro *jsonapi.ResourceObject) (sts Status) {
+func (me *Api) SetRelationshipLinkMap(ctx *Context, item ItemModeler, ro *ResourceObject) (sts Status) {
 	for range only.Once {
 		lm, sts := ctx.RootDocumentor.GetDataRelationshipsLinkMap()
 		if is.Error(sts) {
