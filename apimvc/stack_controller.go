@@ -116,7 +116,7 @@ func (me *StackController) GetListIds(ctx *Context, filterPath ...FilterPath) (i
 	return itemids, sts
 }
 
-func (me *StackController) AddItem(ctx *Context, item ItemModeler) (sts Status) {
+func (me *StackController) AddItem(ctx *Context, item ItemModeler) (im ItemModeler, sts Status) {
 	for range only.Once {
 		var gbs *gears.NamedStack
 		gbs, _, sts = me.extractGearboxStack(ctx, item)
@@ -127,10 +127,14 @@ func (me *StackController) AddItem(ctx *Context, item ItemModeler) (sts Status) 
 		if status.IsError(sts) {
 			break
 		}
+		im, sts = NewNamedStackModelFromGearsNamedStack(ctx, gbs)
+		if status.IsError(sts) {
+			break
+		}
 		sts = status.Success("Stack '%s' added", gbs.GetIdentifier())
-		sts.SetHttpStatus(http.StatusCreated)
+		_ = sts.SetHttpStatus(http.StatusCreated)
 	}
-	return sts
+	return im, sts
 }
 
 func (me *StackController) UpdateItem(ctx *Context, item ItemModeler) (sts Status) {
@@ -145,7 +149,7 @@ func (me *StackController) UpdateItem(ctx *Context, item ItemModeler) (sts Statu
 			break
 		}
 		sts = status.Success("Stack '%s' updated", item.GetId())
-		sts.SetHttpStatus(http.StatusNoContent)
+		_ = sts.SetHttpStatus(http.StatusNoContent)
 	}
 	return sts
 
@@ -158,7 +162,7 @@ func (me *StackController) DeleteItem(ctx *Context, stackid ItemId) (sts Status)
 			break
 		}
 		sts = status.Success("Stack '%s' found", stackid)
-		sts.SetHttpStatus(http.StatusNoContent)
+		_ = sts.SetHttpStatus(http.StatusNoContent)
 	}
 	return sts
 }

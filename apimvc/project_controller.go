@@ -141,7 +141,7 @@ func (me *ProjectController) GetListIds(ctx *Context, filterPath ...FilterPath) 
 	return itemids, sts
 }
 
-func (me *ProjectController) AddItem(ctx *Context, item ItemModeler) (sts Status) {
+func (me *ProjectController) AddItem(ctx *Context, item ItemModeler) (im ItemModeler, sts Status) {
 	for range only.Once {
 		var pp *project.Project
 		pp, _, sts = me.extractGearboxProject(ctx, item)
@@ -152,10 +152,11 @@ func (me *ProjectController) AddItem(ctx *Context, item ItemModeler) (sts Status
 		if status.IsError(sts) {
 			break
 		}
+		// im = NewProjectFromProjectProject(pp)
 		sts = status.Success("project '%s' added", pp.Hostname)
-		sts.SetHttpStatus(http.StatusCreated)
+		_ = sts.SetHttpStatus(http.StatusCreated)
 	}
-	return sts
+	return im, sts
 }
 
 func (me *ProjectController) UpdateItem(ctx *Context, item ItemModeler) (sts Status) {
@@ -170,7 +171,7 @@ func (me *ProjectController) UpdateItem(ctx *Context, item ItemModeler) (sts Sta
 			break
 		}
 		sts = status.Success("project '%s' updated", item.GetId())
-		sts.SetHttpStatus(http.StatusNoContent)
+		_ = sts.SetHttpStatus(http.StatusNoContent)
 	}
 	return sts
 
@@ -183,7 +184,7 @@ func (me *ProjectController) DeleteItem(ctx *Context, hostname ItemId) (sts Stat
 			break
 		}
 		sts = status.Success("project '%s' found", hostname)
-		sts.SetHttpStatus(http.StatusNoContent)
+		_ = sts.SetHttpStatus(http.StatusNoContent)
 	}
 	return sts
 }

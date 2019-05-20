@@ -1,6 +1,7 @@
 package apimvc
 
 import (
+	"gearbox/apiworks"
 	"gearbox/config"
 	"gearbox/gearspec"
 	"gearbox/only"
@@ -28,6 +29,10 @@ type ProjectModel struct {
 	Aliases       project.HostnameAliases `json:"aliases,omitempty"`
 	Stack         ProjectStackItems       `json:"stack,omitempty"`
 	ConfigProject *config.Project         `json:"-"`
+}
+
+func (me *ProjectModel) GetAttributeMap() apiworks.AttributeMap {
+	panic("implement me")
 }
 
 func NewModelFromConfigProject(cp *config.Project) (p *ProjectModel, sts Status) {

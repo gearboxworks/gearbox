@@ -2,6 +2,7 @@ package apimvc
 
 import (
 	"fmt"
+	"gearbox/apiworks"
 	"gearbox/gears"
 	"gearbox/gearspec"
 	"gearbox/only"
@@ -28,6 +29,10 @@ type ServiceModel struct {
 	Version     types.Version       `json:"version,omitempty"`
 	//GearspecIds gearspec.Identifiers `json:"gearspec_ids,omitempty"`
 	Gears *gears.Gears `json:"-"`
+}
+
+func (me *ServiceModel) GetAttributeMap() apiworks.AttributeMap {
+	panic("implement me")
 }
 
 func NewModelFromGearsService(ctx *Context, gsvc *gears.Service) (s *ServiceModel, sts Status) {

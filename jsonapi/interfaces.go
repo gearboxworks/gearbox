@@ -36,18 +36,16 @@ type DataSourcer interface {
 	SourcesData()
 }
 
-type Resourcer interface {
-	IdentifiesResource()
-	ResourceIdGetter()
-	ResourceTypeGetter()
-}
-
-type ResourceIdentifier interface {
-	IdentifiesResource()
+type ResourceGetter interface {
+	GetResource()
 }
 
 type ResourceContainer interface {
 	ContainsResource()
+}
+
+type ResourceIdentifier interface {
+	IdentifiesResource()
 }
 
 type RelationshipsLinkMapGetter interface {

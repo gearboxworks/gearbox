@@ -13,6 +13,11 @@ type (
 	Link            = apiworks.Link
 )
 
+type (
+	AttributeMap = apiworks.AttributeMap
+	Attribute    = apiworks.Attribute
+)
+
 type Contexter interface {
 	ParamGetter
 	KeyValueGetter
@@ -46,9 +51,6 @@ type ResourceIds []ResourceId
 type ResourceId = string
 type ResourceTypes []ResourceType
 type ResourceType = string
-
-type AttributeMap map[Fieldname]interface{}
-type Attribute interface{}
 
 type ErrorId string
 type ErrorCode string

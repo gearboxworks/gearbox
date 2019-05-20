@@ -143,11 +143,15 @@ func (me *Api) WireAddItemRoute(e *echo.Echo, lc ListController, prefix, path st
 				if is.Error(sts) {
 					break
 				}
-				sts = ctx.Controller.AddItem(ctx, ro)
+				var item ItemModeler
+				item, sts = ctx.Controller.AddItem(ctx, ro)
 				if is.Error(sts) {
 					break
 				}
-				rd.Data = ro.ResourceIdObject
+				ro.ResourceId = jsonapi.ResourceId(item.GetId())
+				ro.ResourceType = jsonapi.ResourceType(item.GetType())
+				ro.AttributeMap = item.GetAttributeMap()
+				rd.Data = ro
 			}
 			return me.Handler(ctx, sts)
 		}),

@@ -24,7 +24,7 @@ var _ util.FilepathHelpUrlGetter = (*Config)(nil)
 var _ Configer = (*Config)(nil)
 
 type Configer interface {
-	AddBasedir(*BasedirArgs) Status
+	AddBasedir(*BasedirArgs) (*Basedir, Status)
 	DeleteBasedir(types.Nickname) Status
 	AddProject(*Project) Status
 	Bytes() []byte
@@ -459,7 +459,7 @@ func (me *Config) ExpandBasedirPath(nickname types.Nickname, path types.Relative
 	return fp, sts
 }
 
-func (me *Config) AddBasedir(args *BasedirArgs) (sts Status) {
+func (me *Config) AddBasedir(args *BasedirArgs) (bd *Basedir, sts Status) {
 	for range only.Once {
 		if args.Nickname != "" {
 			sts = status.YourBad("nickname must be empty").
@@ -473,9 +473,9 @@ func (me *Config) AddBasedir(args *BasedirArgs) (sts Status) {
 			})
 			break
 		}
-		bd := Basedir{}
-		bd = Basedir(*args)
-		sts = me.BasedirMap.AddBasedir(me, &bd)
+		_bd := Basedir{}
+		_bd = Basedir(*args)
+		sts = me.BasedirMap.AddBasedir(me, &_bd)
 		if is.Error(sts) {
 			if sts.HttpStatus() == http.StatusConflict {
 				// Already exists
@@ -487,9 +487,10 @@ func (me *Config) AddBasedir(args *BasedirArgs) (sts Status) {
 			})
 			break
 		}
+		bd = &_bd
 		sts = me.WriteFile()
 	}
-	return sts
+	return bd, sts
 }
 
 func (me *Config) GetNamedBasedir(nickname types.Nickname) (bd *Basedir, sts Status) {

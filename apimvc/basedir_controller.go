@@ -172,7 +172,7 @@ func (me *BasedirController) getBasedirModelFromItem(item ItemModeler) (bdm *Bas
 	return bdm, sts
 }
 
-func (me *BasedirController) AddItem(ctx *Context, item ItemModeler) (sts Status) {
+func (me *BasedirController) AddItem(ctx *Context, item ItemModeler) (im ItemModeler, sts Status) {
 	for range only.Once {
 		var bdm *BasedirModel
 		bdm, sts = me.getBasedirModelFromItem(item)
@@ -185,7 +185,11 @@ func (me *BasedirController) AddItem(ctx *Context, item ItemModeler) (sts Status
 			break
 		}
 		bda := config.BasedirArgs(*bd)
-		sts = me.Config.AddBasedir(&bda)
+		bd, sts = me.Config.AddBasedir(&bda)
+		if status.IsError(sts) {
+			break
+		}
+		im, sts = NewModelFromConfigBasedir(ctx, bd)
 		if status.IsError(sts) {
 			break
 		}
@@ -196,7 +200,7 @@ func (me *BasedirController) AddItem(ctx *Context, item ItemModeler) (sts Status
 				bda.Basedir,
 			)
 	}
-	return sts
+	return im, sts
 }
 
 func (me *BasedirController) DeleteItem(ctx *Context, itemid ItemId) (sts Status) {

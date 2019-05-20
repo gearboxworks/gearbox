@@ -2,6 +2,7 @@ package apimvc
 
 import (
 	"fmt"
+	"gearbox/apiworks"
 	"gearbox/gearbox"
 	"gearbox/gears"
 	"gearbox/only"
@@ -23,6 +24,10 @@ type NamedStackModel struct {
 	Authority types.AuthorityDomain `json:"authority"`
 	Stackname types.Stackname       `json:"stackname"`
 	Members   StackMembers          `json:"members,omitempty"`
+}
+
+func (me *NamedStackModel) GetAttributeMap() apiworks.AttributeMap {
+	panic("implement me")
 }
 
 func NewNamedStackModelFromGearsNamedStack(ctx *Context, gns *gears.NamedStack) (ns *NamedStackModel, sts Status) {

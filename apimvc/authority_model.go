@@ -2,6 +2,7 @@ package apimvc
 
 import (
 	"fmt"
+	"gearbox/apiworks"
 	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
@@ -18,6 +19,10 @@ type AuthorityModels []*AuthorityModel
 
 type AuthorityModel struct {
 	AuthorityId types.AuthorityDomain `json:"authority_id"`
+}
+
+func (me *AuthorityModel) GetAttributeMap() apiworks.AttributeMap {
+	panic("implement me")
 }
 
 func NewFromGearsAuthority(ctx *Context, authority types.AuthorityDomain) (gs *AuthorityModel, sts Status) {

@@ -1,6 +1,8 @@
 package apiworks
 
-import "github.com/gearboxworks/go-status"
+import (
+	"github.com/gearboxworks/go-status"
+)
 
 type ItemModeler interface {
 	ItemIdGetter
@@ -9,12 +11,12 @@ type ItemModeler interface {
 	ItemGetter
 	ItemLinkMapGetter
 	RelatedItemsGetter
+	ItemAttributeMapGetter
 }
 
 type RelatedItemsGetter interface {
 	GetRelatedItems(ctx *Context) (list List, sts status.Status)
 }
-
 type ItemIdGetter interface {
 	GetId() ItemId
 }
@@ -29,4 +31,7 @@ type ItemIdSetter interface {
 }
 type ItemLinkMapGetter interface {
 	GetItemLinkMap(*Context) (LinkMap, status.Status)
+}
+type ItemAttributeMapGetter interface {
+	GetAttributeMap() AttributeMap
 }

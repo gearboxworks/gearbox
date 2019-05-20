@@ -1,14 +1,25 @@
 package apiworks
 
-type ItemIds []ItemId
-type ItemId string
-type ItemType string
+import "github.com/gearboxworks/go-status"
 
-type FilterName string
-type FilterLabel string
-type FilterPath string
-type FilterMap map[FilterPath]Filter
-type Filters []Filter
+type (
+	Status = status.Status
+)
+
+type (
+	ItemIds  []ItemId
+	ItemId   string
+	ItemType string
+)
+
+type (
+	FilterName  string
+	FilterLabel string
+	FilterPath  string
+	FilterMap   map[FilterPath]Filter
+	Filters     []Filter
+)
+
 type Filter struct {
 	Label      FilterLabel
 	Path       FilterPath
@@ -50,3 +61,6 @@ type RelatedField struct {
 type HttpHeaderName string
 type HttpHeaderValue string
 type HttpResponseBody interface{}
+
+type AttributeMap map[Fieldname]Attribute
+type Attribute interface{}

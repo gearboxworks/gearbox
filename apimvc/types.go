@@ -2,7 +2,6 @@ package apimvc
 
 import (
 	"gearbox/apiworks"
-	"gearbox/jsonapi"
 	"github.com/gearboxworks/go-status"
 )
 
@@ -11,6 +10,8 @@ type (
 )
 
 type (
+	Attribute       = apiworks.Attribute
+	AttributeMap    = apiworks.AttributeMap
 	Context         = apiworks.Context
 	Controller      = apiworks.Controller
 	ControllerMap   = apiworks.ControllerMap
@@ -31,9 +32,4 @@ type (
 	RelatedField    = apiworks.RelatedField
 	RelatedFields   = apiworks.RelatedFields
 	RelType         = apiworks.RelType
-)
-
-type (
-	AttributeMap = jsonapi.AttributeMap
-	Attribute    = jsonapi.Attribute
 )

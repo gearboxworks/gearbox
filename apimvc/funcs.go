@@ -6,7 +6,9 @@ import (
 	"github.com/gearboxworks/go-status/is"
 )
 
-//func noop(i ...interface{}) {}
+func noop(i ...interface{}) interface{} {
+	return nil
+}
 
 func AddControllers(gb gearbox.Gearboxer) (sts Status) {
 	for range only.Once {

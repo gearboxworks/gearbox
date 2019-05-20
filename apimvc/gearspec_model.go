@@ -2,6 +2,7 @@ package apimvc
 
 import (
 	"fmt"
+	"gearbox/apiworks"
 	"gearbox/gearspec"
 	"gearbox/only"
 	"gearbox/types"
@@ -24,6 +25,10 @@ type GearspecModel struct {
 	Stackname  types.Stackname       `json:"stackname,omitempty"`
 	Role       types.StackRole       `json:"role,omitempty"`
 	Revision   types.Revision        `json:"revision"`
+}
+
+func (me *GearspecModel) GetAttributeMap() apiworks.AttributeMap {
+	panic("implement me")
 }
 
 func NewGearspecModelFromGearspecGearspec(ctx *Context, gsgs *gearspec.Gearspec) (gs *GearspecModel, sts Status) {

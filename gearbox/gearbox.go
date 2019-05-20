@@ -339,7 +339,7 @@ func (me *Gearbox) AddBasedir(basedir types.AbsoluteDir, nickname ...types.Nickn
 		nn = ""
 	}
 	for range only.Once {
-		sts = me.Config.AddBasedir(&config.BasedirArgs{
+		_, sts = me.Config.AddBasedir(&config.BasedirArgs{
 			Basedir:  basedir,
 			Nickname: nn,
 		})

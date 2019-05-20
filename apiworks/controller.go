@@ -101,8 +101,8 @@ func (me *Controller) GetListIds(ctx *Context, filterPath ...FilterPath) (itemid
 	return itemids, sts
 }
 
-func (me *Controller) AddItem(ctx *Context, item ItemModeler) (sts status.Status) {
-	return status.Fail(&status.Args{
+func (me *Controller) AddItem(ctx *Context, item ItemModeler) (im ItemModeler, sts status.Status) {
+	return nil, status.Fail(&status.Args{
 		Message:    "not supported",
 		HttpStatus: http.StatusMethodNotAllowed,
 	})

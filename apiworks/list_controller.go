@@ -47,7 +47,7 @@ type ListIdsGetter interface {
 	GetListIds(*Context, ...FilterPath) (ItemIds, status.Status)
 }
 type ListItemAdder interface {
-	AddItem(*Context, ItemModeler) status.Status
+	AddItem(*Context, ItemModeler) (ItemModeler, status.Status)
 }
 type ListItemUpdater interface {
 	UpdateItem(*Context, ItemModeler) status.Status
