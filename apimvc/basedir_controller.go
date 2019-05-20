@@ -238,25 +238,30 @@ func (me *BasedirController) UpdateItem(ctx *Context, item ItemModeler) (im Item
 
 }
 
-func (me *BasedirController) setBasedirModelId(bdm *BasedirModel, itemid ItemId) (sts Status) {
+func (me *BasedirController) maybeGetBasedirNickname(bdm *BasedirModel, itemid ItemId) types.Nickname {
+	nickname := types.Nickname(bdm.GetId())
 	for range only.Once {
-		nickname := bdm.GetId()
-		if nickname == "" {
-			sts = bdm.SetId(itemid)
-			if is.Error(sts) {
-				break
-			}
-		}
-		if itemid == nickname {
+		if nickname != "" {
 			break
 		}
-		sts = status.Fail(&status.Args{
-			HttpStatus: http.StatusUnprocessableEntity,
-			Message: fmt.Sprintf("id '%s' does not match attributes.nickname '%s'",
-				itemid,
-				nickname,
-			),
-		})
+		if itemid != "" {
+			nickname = types.Nickname(itemid)
+			break
+		}
+	}
+	return nickname
+}
+
+func (me *BasedirController) setBasedirModelId(bdm *BasedirModel, itemid ItemId) (sts Status) {
+	for range only.Once {
+		nickname := me.maybeGetBasedirNickname(bdm, itemid)
+		if nickname == "" {
+			break
+		}
+		sts = bdm.SetId(ItemId(nickname))
+		if is.Error(sts) {
+			break
+		}
 	}
 	return sts
 }

@@ -9,7 +9,6 @@ import (
 	"gearbox/os_support"
 	"gearbox/types"
 	"gearbox/util"
-	"github.com/apcera/util/uuid"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/spf13/cobra"
@@ -17,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -47,9 +47,10 @@ type Configer interface {
 	Load() Status
 	LoadProjects() Status
 	LoadProjectsAndWrite() Status
+	MakeUniqueBasedirNickname(types.AbsoluteDir) types.Nickname
 	MaybeMakeDir(types.AbsoluteDir, os.FileMode) Status
 	NicknameExists(types.Nickname) bool
-	BasedirExists(dir types.AbsoluteDir) bool
+	BasedirExists(types.AbsoluteDir) bool
 	Unmarshal(j []byte) Status
 	UpdateBasedir(*Basedir) Status
 	UpdateProject(*Project) Status
@@ -92,6 +93,29 @@ func NewConfig(OsSupport oss.OsSupporter) Configer {
 		c.OsSupport.GetSuggestedBasedir(),
 	)
 	return c
+}
+
+var sanitizer *regexp.Regexp
+
+func init() {
+	sanitizer = regexp.MustCompile("[^a-z0-9 ]+")
+}
+
+func (me *Config) MakeUniqueBasedirNickname(basedir types.AbsoluteDir) (nn types.Nickname) {
+	try := strings.ToLower(filepath.Base(string(basedir)))
+	try = sanitizer.ReplaceAllString(try, "")
+	try = strings.Replace(try, " ", "-", -1)
+	base := try
+	i := 2
+	for nn = range me.GetBasedirMap() {
+		if nn != types.Nickname(try) {
+			nn = types.Nickname(try)
+			break
+		}
+		try = fmt.Sprintf("%s%d", base, i)
+		i++
+	}
+	return types.Nickname(nn)
 }
 
 func (me *Config) AddProject(p *Project) (sts Status) {
@@ -466,7 +490,6 @@ func (me *Config) AddBasedir(args *BasedirArgs) (bd *Basedir, sts Status) {
 				SetDetail("invalid nickname set as '%s'", args.Nickname)
 			break
 		}
-		args.Nickname = types.Nickname(uuid.Generate().String())
 		if args.Basedir == "" {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("invalid empty directory for '%s'", args.Nickname),
@@ -475,6 +498,7 @@ func (me *Config) AddBasedir(args *BasedirArgs) (bd *Basedir, sts Status) {
 		}
 		_bd := Basedir{}
 		_bd = Basedir(*args)
+		_bd.Nickname = me.MakeUniqueBasedirNickname(_bd.Basedir)
 		sts = me.BasedirMap.AddBasedir(me, &_bd)
 		if is.Error(sts) {
 			if sts.HttpStatus() == http.StatusConflict {
