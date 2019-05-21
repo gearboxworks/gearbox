@@ -27,7 +27,7 @@ import (
 
 type BoxEntity struct {
 	Name         string
-	Status       status.Status
+	LastSts      status.Status
 	CurrentState int
 	WantState    int
 }
@@ -170,6 +170,7 @@ func (me *Box) Initialize() (sts status.Status) {
 	return sts
 }
 
+
 func (me *Box) WaitForVmState(displayString string) bool {
 
 	found := false
@@ -204,9 +205,11 @@ func (me *Box) WaitForVmState(displayString string) bool {
 	return found
 }
 
+
 func closeDialConnection(conn net.Conn) {
 	_ = conn.Close()
 }
+
 
 func newSpinner(displayString string) *util.Spinner {
 	return util.NewSpinner(util.SpinnerArgs{
@@ -215,6 +218,7 @@ func newSpinner(displayString string) *util.Spinner {
 		ExitNOK: displayString + " - FAILED",
 	})
 }
+
 
 func (me *Box) heartbeatOk(b []byte, n int) (sts status.Status) {
 
@@ -246,7 +250,8 @@ func (me *Box) heartbeatOk(b []byte, n int) (sts status.Status) {
 	return sts
 }
 
-func (me *Box) StartBox() (sts status.Status) {
+
+func (me *Box) Start() (sts status.Status) {
 
 	for range only.Once {
 		sts = EnsureNotNil(me)
@@ -261,19 +266,19 @@ func (me *Box) StartBox() (sts status.Status) {
 
 		switch {
 			case me.State.VM.CurrentState == StateUnknown:
-				sts = me.State.VM.Status
+				sts = me.State.VM.LastSts
 				break
 
 			case me.State.VM.CurrentState == StateStarting:
-				sts = me.State.VM.Status
+				sts = me.State.VM.LastSts
 				break
 
 			case me.State.VM.CurrentState == StateUp:
-				sts = me.State.VM.Status
+				sts = me.State.VM.LastSts
 				break
 
 			case me.State.VM.CurrentState == StateStopping:
-				sts = me.State.VM.Status
+				sts = me.State.VM.LastSts
 				break
 
 			case me.State.VM.CurrentState == StateDown:
@@ -305,7 +310,7 @@ func (me *Box) StartBox() (sts status.Status) {
 }
 
 
-func (me *Box) StopBox() (sts status.Status) {
+func (me *Box) Stop() (sts status.Status) {
 
 	var err error
 
@@ -322,22 +327,22 @@ func (me *Box) StopBox() (sts status.Status) {
 
 		switch {
 			case me.State.VM.CurrentState == StateUnknown:
-				sts = me.State.VM.Status
+				sts = me.State.VM.LastSts
 				break
 
 			case me.State.VM.CurrentState == StateStarting:
-				sts = me.State.VM.Status
+				sts = me.State.VM.LastSts
 				break
 
 			case me.State.VM.CurrentState == StateUp:
 				// fall-through
 
 			case me.State.VM.CurrentState == StateStopping:
-				sts = me.State.VM.Status
+				sts = me.State.VM.LastSts
 				break
 
 			case me.State.VM.CurrentState == StateDown:
-				sts = me.State.VM.Status
+				sts = me.State.VM.LastSts
 				break
 		}
 
@@ -369,7 +374,6 @@ func (me *Box) StopBox() (sts status.Status) {
 	return sts
 }
 
-//var runner virtualbox.Runner
 
 // This is here because it's not implemented in libretto.
 func (me *Box) ReplacementBoxHalt() error {
@@ -380,6 +384,7 @@ func (me *Box) ReplacementBoxHalt() error {
 	}
 	return nil
 }
+
 
 // Run runs a VBoxManage command.
 func (me *Box) Run(args ...string) (string, string, error) {
@@ -402,6 +407,7 @@ func (me *Box) Run(args ...string) (string, string, error) {
 	return stdout.String(), stderr.String(), err
 }
 
+
 // RunCombinedError runs a VBoxManage command.  The output is stdout and the the
 // combined err/stderr from the command.
 func (me *Box) RunCombinedError(args ...string) (string, error) {
@@ -416,7 +422,8 @@ func (me *Box) RunCombinedError(args ...string) (string, error) {
 	return wout, nil
 }
 
-func (me *Box) RestartBox() (sts status.Status) {
+
+func (me *Box) Restart() (sts status.Status) {
 
 	for range only.Once {
 
@@ -425,7 +432,7 @@ func (me *Box) RestartBox() (sts status.Status) {
 			break
 		}
 
-		me.StopBox()
+		me.Stop()
 		if me.State.VM.CurrentState != me.State.VM.WantState {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("%s VM in an unknown state: %s", global.Brandname, me.State),
@@ -434,7 +441,7 @@ func (me *Box) RestartBox() (sts status.Status) {
 			break
 		}
 
-		me.StartBox()
+		me.Start()
 		if me.State.VM.CurrentState != me.State.VM.WantState {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("%s VM in an unknown state: %s", global.Brandname, me.State),
@@ -499,7 +506,7 @@ func (me *Box) GetState() (state BoxState, sts status.Status) {
 			case err != nil:
 				// No Gearbox VM available - need to create one.
 				me.State.VM.CurrentState = StateUnknown
-				me.State.VM.Status = status.Fail(&status.Args{
+				me.State.VM.LastSts = status.Fail(&status.Args{
 					Message: fmt.Sprintf("%s VM - needs to be created", global.Brandname),
 					Help:    help.ContactSupportHelp(), // @TODO need better support here
 					Data:    me.State.VM.CurrentState,
@@ -509,25 +516,25 @@ func (me *Box) GetState() (state BoxState, sts status.Status) {
 			case (me.State.VM.CurrentState == me.State.VM.WantState) && (state == VmStateHalted):
 				// If we are not changing states and the VM is halted.
 				me.State.VM.CurrentState = StateDown
-				me.State.VM.Status = status.Success("%s VM - halted", global.Brandname)
+				me.State.VM.LastSts = status.Success("%s VM - halted", global.Brandname)
 				break
 
 			case (me.State.VM.CurrentState == me.State.VM.WantState) && (state == VmStateRunning):
 				// If we are not changing states and the VM is running.
 				me.State.VM.CurrentState = StateUp
-				me.State.VM.Status = status.Success("%s VM - running", global.Brandname)
+				me.State.VM.LastSts = status.Success("%s VM - running", global.Brandname)
 				// Don't break here - need to check on the API.
 
 			case (me.State.VM.CurrentState != me.State.VM.WantState) && (state == VmStateHalted):
 				// If we are changing states then the VM is halting.
 				me.State.VM.CurrentState = StateStopping
-				me.State.VM.Status = status.Success("%s VM - stopping", global.Brandname)
+				me.State.VM.LastSts = status.Success("%s VM - stopping", global.Brandname)
 				// Don't break here - need to check on the API.
 
 			case (me.State.VM.CurrentState != me.State.VM.WantState) && (state == VmStateRunning):
 				// If we are changing states then the VM is starting.
 				me.State.VM.CurrentState = StateStarting
-				me.State.VM.Status = status.Success("%s VM - starting", global.Brandname)
+				me.State.VM.LastSts = status.Success("%s VM - starting", global.Brandname)
 				// Don't break here - need to check on the API.
 		}
 
@@ -539,7 +546,7 @@ func (me *Box) GetState() (state BoxState, sts status.Status) {
 //
 //		}
 
-		sts = status.Success("%s\n%s\n", me.State.VM.Status.Message(), me.State.API.Status.Message())
+		sts = status.Success("%s\n%s\n", me.State.VM.LastSts.Message(), me.State.API.LastSts.Message())
 	}
 
 	return me.State, sts
@@ -575,7 +582,7 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts st
 	conn, err := net.Dial("tcp", me.ConsoleHost+":"+me.ConsolePort)
 	if err != nil {
 		me.State.API.CurrentState = StateUnknown
-		me.State.API.Status = status.Fail(&status.Args{
+		me.State.API.LastSts = status.Fail(&status.Args{
 			Message: fmt.Sprintf("%s API - timeout", global.Brandname),
 			Help:    help.ContactSupportHelp(), // @TODO need better support here
 			Data:    me.State.API.CurrentState,
@@ -587,7 +594,7 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts st
 
 	// Set default state before we begin.
 	me.State.API.CurrentState = StateUnknown
-	me.State.API.Status = status.Fail(&status.Args{
+	me.State.API.LastSts = status.Fail(&status.Args{
 		Message: fmt.Sprintf("%s API - no data", global.Brandname),
 		Help:    help.ContactSupportHelp(), // @TODO need better support here
 		Data:    me.State.API.CurrentState,
@@ -599,7 +606,7 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts st
 		err = conn.SetDeadline(time.Now().Add(me.ConsoleReadWait))
 		if err != nil {
 			me.State.API.CurrentState = StateUnknown
-			me.State.API.Status = status.Fail(&status.Args{
+			me.State.API.LastSts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("%s API - deadline", global.Brandname),
 				Help:    help.ContactSupportHelp(), // @TODO need better support here
 				Data:    me.State.API.CurrentState,
@@ -613,7 +620,7 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts st
 		// bytesRead := len(readBuffer)
 		if err != nil {
 			me.State.API.CurrentState = StateUnknown
-			me.State.API.Status = status.Fail(&status.Args{
+			me.State.API.LastSts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("%s API - no data", global.Brandname),
 				Help:    help.ContactSupportHelp(), // @TODO need better support here
 				Data:    me.State.API.CurrentState,
@@ -629,12 +636,12 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts st
 			sts = me.heartbeatOk(readBuffer, bytesRead)
 			if sts != nil {
 				me.State.API.CurrentState = StateUp
-				me.State.API.Status = status.Success("%s API - running", global.Brandname)
+				me.State.API.LastSts = status.Success("%s API - running", global.Brandname)
 				break
 
 			} else {
 				me.State.API.CurrentState = StateStarting
-				me.State.API.Status = status.Success("%s API - starting", global.Brandname)
+				me.State.API.LastSts = status.Success("%s API - starting", global.Brandname)
 				// Do not break.
 			}
 		}
@@ -655,7 +662,7 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts st
 
 //	alreadyRunning = false
 
-	return me.State.API.Status
+	return me.State.API.LastSts
 }
 
 

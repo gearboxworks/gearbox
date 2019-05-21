@@ -10,6 +10,8 @@ import (
 	"gearbox/os_support"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"regexp"
+
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -38,6 +40,7 @@ type PlistData struct {
 	Path        string
 	KeepAlive   bool
 	RunAtLoad   bool
+	PidFile		string
 }
 
 var PlistTemplate = `
@@ -55,6 +58,7 @@ var PlistTemplate = `
 		</array>
 		<key>StandardOutPath</key><string>{{.Path}}/out.log</string>
 		<key>StandardErrorPath</key><string>{{.Path}}/err.log</string>
+		<key>PIDFile</key><string>{{.PidFile}}</string>
 		<key>KeepAlive</key><{{.KeepAlive}}/>
 		<key>RunAtLoad</key><{{.RunAtLoad}}/>
 	</dict>
@@ -102,6 +106,34 @@ func NewDaemon(OsSupport oss.OsSupporter, args ...Args) *Daemon {
 	daemon := &Daemon{}
 	*daemon = Daemon(_args)
 
+/*
+	svcConfig := &SysSvc.Config{
+		Name:        daemon.Boxname,
+		DisplayName: "Gearbox",
+		Description: "This is an example Go service.",
+		Executable:	 daemon.ServiceData.Program,
+		Arguments: daemon.ServiceData.ProgramArgs,
+		Option: SysSvc.KeyValue{
+			"KeepAlive": true,
+			"RunAtLoad": true,
+			"PIDFile": daemon.ServiceData.PidFile,
+		},
+	}
+
+	prg := &program{}
+	s, err := SysSvc.New(prg, svcConfig)
+	if err != nil {
+		//		log.Fatal(err)
+	}
+	//	logger, err = s.Logger(nil)
+	if err != nil {
+		//		log.Fatal(err)
+	}
+	err = s.Run()
+	if err != nil {
+		//		logger.Error(err)
+	}
+*/
 	return daemon
 }
 
@@ -155,6 +187,11 @@ func (me *Daemon) Load() (sts status.Status) {
 
 		if me.IsLoaded() {
 			sts = status.Success("%s Heartbeat - Service already loaded %s", global.Brandname, me.ServiceData.Label)
+			break
+		}
+
+		if me.IsRunning() {
+			sts = status.Success("%s Heartbeat - Service already started %s", global.Brandname, me.ServiceData.Label)
 			break
 		}
 
@@ -257,6 +294,12 @@ func (me *Daemon) GetState() (sts status.Status) {
 		displayString += fmt.Sprintf("%s Heartbeat - Service NOT installed [%s]\n", global.Brandname, me.ServiceData.Label)
 	}
 
+	if me.IsRunning() {
+		displayString += fmt.Sprintf("%s Heartbeat - Service running [%s]\n", global.Brandname, me.ServiceData.Label)
+	} else {
+		displayString += fmt.Sprintf("%s Heartbeat - Service NOT running [%s]\n", global.Brandname, me.ServiceData.Label)
+	}
+
 /*
 	foo1, _ := process.Pids()
 	for i, p := range foo1 {
@@ -322,7 +365,7 @@ func (me *Daemon) IsLoaded() (yesNo bool) {
 
 		_, err := os.Open(me.ServiceFile)
 		if err != nil {
-			sts = status.Wrap(err, &status.Args{
+			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("%s Heartbeat - Service file doesn't exist - %s", global.Brandname, me.ServiceFile),
 				Help:    help.ContactSupportHelp(), // @TODO need better support here
 				Data:    err,
@@ -333,14 +376,98 @@ func (me *Daemon) IsLoaded() (yesNo bool) {
 		// cmd := exec.Command("launchctl", "list", me.ServiceData.Label)
 		// err = cmd.Run()
 		sts, _, _, exitCode := me.RunCommand("launchctl", "list", me.ServiceData.Label)
-		if exitCode == 0 {
+		if exitCode != 0 {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("Heartbeat - Error checking launchd: %v", err),
+				Help:    help.ContactSupportHelp(), // @TODO need better support here
+				Data:    err,
+			})
+			break
+		}
+
+		yesNo = true
+		sts = status.Success("Heartbeat - Service loaded.")
+	}
+
+	return yesNo
+}
+
+
+func (me *Daemon) IsRunning() (yesNo bool) {
+
+	for range only.Once {
+		sts := EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		sts = me.CreatePlist()
+		if is.Error(sts) {
+			break
+		}
+
+		_, err := os.Open(me.ServiceFile)
+		if err != nil {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("%s Heartbeat - Service file doesn't exist - %s", global.Brandname, me.ServiceFile),
+				Help:    help.ContactSupportHelp(), // @TODO need better support here
+				Data:    err,
+			})
+			break
+		}
+
+		// cmd := exec.Command("launchctl", "list", me.ServiceData.Label)
+		// err = cmd.Run()
+		sts, stdout, _, exitCode := me.RunCommand("launchctl", "list", me.ServiceData.Label)
+		if exitCode != 0 {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("Heartbeat - Error checking launchd: %v", err),
+				Help:    help.ContactSupportHelp(), // @TODO need better support here
+				Data:    err,
+			})
+			break
+		}
+
+		re := regexp.MustCompile(`"PID" = ([0-9]+);`)
+		matches := re.FindStringSubmatch(stdout)
+		if len(matches) == 2 {
 			yesNo = true
-		} else {
-			yesNo = false
+
+			sts = status.Success("Heartbeat - Process running.")
+			break
 		}
 	}
 
 	return yesNo
+
+/*
+	for range only.Once {
+		sts := EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		fmt.Printf("PPID:%v:\n", IsParentInit())
+
+		foo1, _ := process.Pids()
+		for i, p := range foo1 {
+			fmt.Printf("process.Pids:%v:	%v:\n", i, p)
+		}
+
+		foo2, _ := process.Processes()
+		for _, p := range foo2 {
+			c, _ := p.Cmdline()
+			fmt.Printf("process.Processes:%v:	'%s'\n", p.Pid, c)
+		}
+
+		infoStat, _ := host.Info()
+		fmt.Printf("Total processes: %v\n", infoStat.Procs)
+
+		miscStat, _ := load.Misc()
+		fmt.Printf("Running processes: %v\n", miscStat.ProcsRunning)
+
+	}
+*/
 }
 
 

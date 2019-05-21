@@ -34,6 +34,7 @@ type Unfsd struct {
 	NfsArgs        []string
 	Server         Server
 	Daemon         *daemon.Daemon
+	State          UnfsdState
 
 	// State polling delays.
 	NoWait      bool
@@ -62,6 +63,14 @@ type Server struct {
 	Exported         map[string]struct{} `json:"exported"`
 	ClientValidator  NfsClientValidator  `json:"clientValidator"`
 }
+
+type UnfsdState struct {
+	Name         string
+	LastSts      status.Status
+	CurrentState int
+	WantState    int
+}
+
 
 // Refine facade.DfsValidator to avoid circular dependencies
 type NfsClientValidator interface {
@@ -94,6 +103,7 @@ var ExportTemplate = `{{range .}}
 {{.MountPoint}} {{range .Options}} {{.Options}} {{end}}
 {{end}}`
 
+const DefaultBaseDir		= "heartbeat/unfsd"
 const DefaultExportsFile	= "heartbeat/unfsd/etc/exports"
 const DefaultExportsJson	= "heartbeat/unfsd/etc/exports.json"
 const DefaultNfsBin			= "heartbeat/unfsd/bin/unfsd"
@@ -176,6 +186,8 @@ func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 		fmt.Printf("ExportsFile:%s\n", _args.ExportsFile)
 		fmt.Printf("NfsCmd:%s\n", _args.NfsCmd)
 
+		execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/" + DefaultBaseDir	// os.Getwd()
+
 		// Start a new UNFSD instance.
 		_args.Daemon = daemon.NewDaemon(_args.OsSupport, daemon.Args{
 			Boxname: _args.Boxname,
@@ -183,6 +195,8 @@ func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 				Label: "com.gearbox.unfsd",
 				Program:   _args.NfsCmd,
 				ProgramArgs: _args.NfsArgs,
+				PidFile: _args.PidFile,
+				Path: execCwd,
 				KeepAlive: true,
 				RunAtLoad: true,
 			},
@@ -417,7 +431,7 @@ func (me *Unfsd) writeNfsExport() (status.Status) {
 
 			filteredContent += line + "\n"
 		}
-		fmt.Printf("filteredContent:%v\n", filteredContent)
+		// fmt.Printf("filteredContent:%v\n", filteredContent)
 
 		// create file content
 		preamble, postamble := filteredContent, ""
@@ -497,53 +511,24 @@ func (me *Unfsd) NewServer(basePath, exportedName, network string) (error) {
 }
 
 
-// Sync ensures that the nfs exports are visible to all clients
-func (me *Unfsd) Sync() (error, status.Status) {
+// Reload ensures that the nfs exports are visible to all clients
+func (me *Unfsd) Reload() (status.Status) {
 
 	var sts status.Status
-	var err error
 
 	me.Server.Lock()
 	defer me.Server.Unlock()
 
-	for range only.Once {
+	// Not implemented yet.
 
-		sts = me.writeNfsExport()
-		if is.Error(sts) {
-			break
-		}
-
-		if err = start(); err != nil {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("UNFSD: Error starting: %v", err),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    err,
-			})
-			break
-		}
-
-		if err = reload(); err != nil {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("UNFSD: Error reloading: %v", err),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    err,
-			})
-			break
-		}
-	}
-
-	return nil, sts
+	return sts
 }
 
 
 // Restart restarts the nfs subsystem
-func (me *Unfsd) Restart() (error, status.Status) {
+func (me *Unfsd) Restart() (status.Status) {
 
 	var sts status.Status
-	var err error
-
-	me.Server.Lock()
-	defer me.Server.Unlock()
 
 	for range only.Once {
 
@@ -552,22 +537,23 @@ func (me *Unfsd) Restart() (error, status.Status) {
 			break
 		}
 
-		if err = restart(); err != nil {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("UNFSD: Error restarting: %v", err),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    err,
-			})
+		sts = me.Stop()
+		if is.Error(sts) {
+			break
+		}
+
+		sts = me.Start();
+		if is.Error(sts) {
 			break
 		}
 	}
 
-	return nil, sts
+	return sts
 }
 
 
 // Stop stops the nfs subsystem
-func (me *Unfsd) Stop() (error, status.Status) {
+func (me *Unfsd) Stop() (status.Status) {
 
 	var sts status.Status
 
@@ -576,7 +562,12 @@ func (me *Unfsd) Stop() (error, status.Status) {
 
 	for range only.Once {
 
-		if err := stop(); err != nil {
+		if !me.Daemon.IsLoaded() {
+			sts = status.Success("UNFSD: Stopped.")
+			break
+		}
+
+		if err := me.Daemon.Unload(); err != nil {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("UNFSD: Error stopping: %v", err),
 				Help:    help.ContactSupportHelp(), // @TODO need better support here
@@ -586,7 +577,73 @@ func (me *Unfsd) Stop() (error, status.Status) {
 		}
 	}
 
-	return nil, sts
+	sts = status.Success("UNFSD: Stopped.")
+
+	return sts
+}
+
+
+// Stop stops the nfs subsystem
+func (me *Unfsd) Start() (status.Status) {
+
+	var sts status.Status
+	var err error
+
+	me.Server.Lock()
+	defer me.Server.Unlock()
+
+	for range only.Once {
+
+		if me.Daemon.IsLoaded() {
+			sts = status.Success("UNFSD: Started.")
+			break
+		}
+
+		sts = me.writeNfsExport()
+		if is.Error(sts) {
+			break
+		}
+
+		if err = me.Daemon.Load(); err != nil {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("UNFSD: Error starting: %v", err),
+				Help:    help.ContactSupportHelp(), // @TODO need better support here
+				Data:    err,
+			})
+			break
+		}
+	}
+
+	sts = status.Success("UNFSD: Started.")
+
+	return sts
+}
+
+func (me *Unfsd) GetState() (state UnfsdState, sts status.Status) {
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		if !me.Daemon.IsLoaded() {
+			me.State.LastSts = status.Warn("not loaded")
+			me.State.CurrentState = StateLoaded
+			break
+		}
+
+		if !me.Daemon.IsRunning() {
+			me.State.LastSts = status.Warn("halted")
+			me.State.CurrentState = StateDown
+			break
+		}
+
+		me.State.LastSts = status.Success("running")
+		me.State.CurrentState = StateUp
+	}
+
+	return me.State, me.State.LastSts
 }
 
 
@@ -931,40 +988,5 @@ func WriteFile(filename string, data []byte, perm os.FileMode) (error, status.St
 	}
 
 	return err, sts
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Daemon methods.
-
-func (me *Unfsd) DaemonLoop() (error) {
-
-	return nil
-}
-
-
-func start() (error) {
-
-	return nil
-}
-
-
-func stop() (error) {
-
-	return nil
-}
-
-
-func restart() (error) {
-
-	return nil
-}
-
-
-func reload() (error) {
-
-	return nil
 }
 

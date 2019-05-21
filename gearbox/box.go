@@ -28,7 +28,7 @@ func (me *Gearbox) StartBox(args box.Args) (sts status.Status) {
 			break
 		}
 
-		sts = bx.StartBox()
+		sts = bx.Start()
 		if is.Error(sts) {
 			break
 		}
@@ -48,7 +48,7 @@ func (me *Gearbox) StopBox(args box.Args) (sts status.Status) {
 			break
 		}
 
-		sts = bx.StopBox()
+		sts = bx.Stop()
 		if is.Error(sts) {
 			break
 		}
@@ -68,7 +68,7 @@ func (me *Gearbox) RestartBox(args box.Args) (sts status.Status) {
 			break
 		}
 
-		sts = bx.RestartBox()
+		sts = bx.Restart()
 		if is.Error(sts) {
 			break
 		}
