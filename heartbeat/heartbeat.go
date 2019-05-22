@@ -327,7 +327,7 @@ func (me *Heartbeat) onReady() {
 				}
 
 				me.SetMenuState(menu)
-				time.Sleep(5 * time.Second)
+				time.Sleep(10 * time.Second)
 			}
 		}
 	}()
@@ -373,6 +373,7 @@ func (me *Heartbeat) onReady() {
 
 				case <- menu.createEntry.ClickedCh:
 					fmt.Printf("Menu: Create\n")
+					intentDelay = true
 					if me.BoxInstance.State.VM.CurrentState == box.VmStateNotPresent {
 						sts := me.BoxInstance.CreateBox()
 						if is.Error(sts) {
@@ -381,6 +382,7 @@ func (me *Heartbeat) onReady() {
 							dialog.Message("Success! Gearbox OS VM created: %s", me.Boxname).Title("GearBox OS Creation").Info()
 						}
 					}
+					intentDelay = false
 
 				case <- menu.restartEntry.ClickedCh:
 					fmt.Printf("Menu: Restart\n")

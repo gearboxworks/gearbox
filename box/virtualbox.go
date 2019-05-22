@@ -524,7 +524,13 @@ func (me *Box) cmdModifyVmStorage() (KeyValueMap, status.Status) {
 			fileName := me.VmBaseDir + "/" + me.Boxname + "/" + disk.Name
 			order := strconv.Itoa(index)
 			_, _, sts = me.Run("createmedium", "disk", "--filename", fileName, "--size", disk.Size, "--format", disk.Format, "--variant", "Stream")
+			if is.Error(sts) {
+				break
+			}
 			_, _, sts = me.Run("storageattach", me.Boxname, "--storagectl", "SATA", "--port", order, "--device", "0", "--type", "hdd", "--medium", fileName, "--hotpluggable", "off")
+			if is.Error(sts) {
+				break
+			}
 		}
 
 		kvm, sts = me.cmdListVm()
