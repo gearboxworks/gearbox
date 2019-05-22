@@ -421,6 +421,7 @@ func (me *Box) cmdModifyVmNetwork() (KeyValueMap, status.Status) {
 			break
 		}
 
+/*
 		nic, sts := me.findFirstNic()
 		if is.Error(sts) {
 			sts = status.Fail(&status.Args{
@@ -430,6 +431,7 @@ func (me *Box) cmdModifyVmNetwork() (KeyValueMap, status.Status) {
 			})
 			break
 		}
+*/
 
 		_, _, sts = me.Run("modifyvm", me.Boxname, "--nic1", "nat", "--nictype1", "82540EM", "--cableconnected1", "on", "--macaddress1", "auto")
 		if is.Error(sts) {
@@ -451,7 +453,8 @@ func (me *Box) cmdModifyVmNetwork() (KeyValueMap, status.Status) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--nic2", "bridged", "--bridgeadapter2", nic["Name"], "--nictype2", "82540EM", "--cableconnected2", "on", "--macaddress2", "auto", "--nicpromisc2", "deny")
+		// _, _, sts = me.Run("modifyvm", me.Boxname, "--nic2", "bridged", "--bridgeadapter2", nic["Name"], "--nictype2", "82540EM", "--cableconnected2", "on", "--macaddress2", "auto", "--nicpromisc2", "deny")
+		_, _, sts = me.Run("modifyvm", me.Boxname, "--nic2", "hostonly", "--hostonlyadapter2", "vboxnet0", "--nictype2", "82540EM", "--cableconnected2", "on", "--macaddress2", "auto", "--nicpromisc2", "deny")
 		if is.Error(sts) {
 			break
 		}
