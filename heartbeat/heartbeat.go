@@ -88,7 +88,6 @@ type GearboxVM struct {
 	virtualbox.VM
 }
 
-var intentDelay = false		// Used to change delay times when we have just performed an action.
 
 func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 
@@ -243,6 +242,7 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 func (me *Heartbeat) onReady() {
 
 	var menu menuStruct
+	var intentDelay = false		// Used to change delay times when the user has just performed an action.
 
 	fmt.Printf("Gearbox: Heartbeat started.\n")
 
@@ -252,11 +252,11 @@ func (me *Heartbeat) onReady() {
 	menu.helpEntry = systray.AddMenuItem("About Gearbox", "Contact Gearbox help")
 
 	systray.AddSeparator()
-	menu.vmStatusEntry = systray.AddMenuItem("VM: Idle", "Current state of Gearbox VM")
+	menu.vmStatusEntry = systray.AddMenuItem("Box: Idle", "Current state of Gearbox VM")
 	menu.vmStatusEntry.SetIcon(me.getIcon(DefaultLogo))
 	menu.apiStatusEntry = systray.AddMenuItem("API: Idle", "Current state of Gearbox API")
 	menu.apiStatusEntry.SetIcon(me.getIcon(DefaultLogo))
-	menu.unfsdStatusEntry = systray.AddMenuItem("NFS: Idle", "Current state of Gearbox NFS service")
+	menu.unfsdStatusEntry = systray.AddMenuItem("FS: Idle", "Current state of Gearbox NFS service")
 	menu.unfsdStatusEntry.SetIcon(me.getIcon(DefaultLogo))
 
 	systray.AddSeparator()
@@ -273,11 +273,6 @@ func (me *Heartbeat) onReady() {
 	menu.restartEntry = systray.AddMenuItem("Restart Heartbeat", fmt.Sprintf("Restart this app [pid:%v]", pid))
 	menu.quitEntry = systray.AddMenuItem("Quit",fmt.Sprintf("Terminate this app [pid:%v]", pid))
 
-//	sts := me.NfsInstance.Daemon.Unload()
-//	if is.Error(sts) {
-//		fmt.Printf("%s\n", sts.Message())
-//		return
-//	}
 	sts := me.NfsInstance.Daemon.Load()
 	if is.Error(sts) {
 		fmt.Printf("%s\n", sts.Message())
@@ -309,6 +304,7 @@ func (me *Heartbeat) onReady() {
 					// .
 				}
 
+				me.SetMenuState(menu)
 				time.Sleep(time.Second)
 
 			} else {
@@ -327,10 +323,9 @@ func (me *Heartbeat) onReady() {
 					// .
 				}
 
+				me.SetMenuState(menu)
 				time.Sleep(5 * time.Second)
 			}
-
-			me.SetMenuState(menu)
 		}
 	}()
 
@@ -497,82 +492,91 @@ func (me *Heartbeat) getIcon(s string) []byte {
 
 
 func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue int) {
-// This can clearly be recfactored a LOT.
+	// This can clearly be refactored a LOT.
 
-	switch me.State.Box.VM.CurrentState {
-		case box.StateUnknown:
+	fmt.Printf("me.State.Box.VM=%v\n", me.State.Box.VM)
+	menu.vmStatusEntry.SetTooltip(me.State.Box.VM.LastSts.Message())
+	switch {
+		case me.State.Box.VM.CurrentState == box.StateUnknown:
 			menu.vmStatusEntry.SetIcon(me.getIcon(IconError))
-			menu.vmStatusEntry.SetTitle("VM: unknown")
-			menu.vmStatusEntry.Enable()
+			menu.vmStatusEntry.SetTitle("Box: unknown error")
 
-		case box.StateDown:
-			menu.vmStatusEntry.SetIcon(me.getIcon(IconDown))
-			menu.vmStatusEntry.SetTitle("VM: halted")
-			menu.vmStatusEntry.Disable()
+		case (me.State.Box.VM.CurrentState == box.StateUp) && (me.State.Box.VM.WantState == box.StateDown):
+			menu.vmStatusEntry.SetIcon(me.getIcon(IconStopping))
+			menu.vmStatusEntry.SetTitle("Box: stopping")
 
-		case box.StateUp:
+		case (me.State.Box.VM.CurrentState == box.StateDown) && (me.State.Box.VM.WantState == box.StateUp):
+			menu.vmStatusEntry.SetIcon(me.getIcon(IconStarting))
+			menu.vmStatusEntry.SetTitle("Box: starting")
+
+		case (me.State.Box.VM.CurrentState == box.StateUp) && (me.State.Box.VM.WantState == box.StateUp):
 			menu.vmStatusEntry.SetIcon(me.getIcon(IconUp))
-			menu.vmStatusEntry.SetTitle("VM: running")
-			menu.vmStatusEntry.Disable()
+			menu.vmStatusEntry.SetTitle("Box: running")
+
+		case (me.State.Box.VM.CurrentState == box.StateDown) && (me.State.Box.VM.WantState == box.StateDown):
+			menu.vmStatusEntry.SetIcon(me.getIcon(IconDown))
+			menu.vmStatusEntry.SetTitle("Box: halted")
 
 		default:
 			menu.vmStatusEntry.SetIcon(me.getIcon(IconWarning))
-			menu.vmStatusEntry.SetTitle("VM: unknown error")
-			menu.vmStatusEntry.Enable()
+			menu.vmStatusEntry.SetTitle("Box: unknown")
 	}
 
-	switch me.State.Box.VM.CurrentState {
-		case box.StateUnknown:
-			menu.apiStatusEntry.SetIcon(me.getIcon(IconError))
-			menu.apiStatusEntry.SetTitle("API: unknown")
-			menu.apiStatusEntry.Enable()
+	fmt.Printf("me.State.Box.API=%v\n", me.State.Box.API)
+	menu.apiStatusEntry.SetTooltip(me.State.Box.API.LastSts.Message())
+	switch {
+		case me.State.Box.API.CurrentState == box.StateUnknown:
+			menu.apiStatusEntry.SetIcon(me.getIcon(IconDown))
+			menu.apiStatusEntry.SetTitle("API: halted")
 
-		case box.StateStarting:
-			menu.apiStatusEntry.SetIcon(me.getIcon(IconStarting))
-			menu.apiStatusEntry.SetTitle("API: starting")
-			menu.apiStatusEntry.Disable()
-
-		case box.StateStopping:
+		case (me.State.Box.API.CurrentState == box.StateUp && me.State.Box.API.WantState == box.StateDown) || (me.State.Box.API.CurrentState == box.StateStopping):
 			menu.apiStatusEntry.SetIcon(me.getIcon(IconStopping))
 			menu.apiStatusEntry.SetTitle("API: stopping")
-			menu.apiStatusEntry.Disable()
+
+		case (me.State.Box.API.CurrentState == box.StateDown && me.State.Box.API.WantState == box.StateUp) || (me.State.Box.API.CurrentState == box.StateStarting):
+			menu.apiStatusEntry.SetIcon(me.getIcon(IconStarting))
+			menu.apiStatusEntry.SetTitle("API: starting")
+
+		case (me.State.Box.API.CurrentState == box.StateUp) && (me.State.Box.API.WantState == box.StateUp):
+			menu.apiStatusEntry.SetIcon(me.getIcon(IconUp))
+			menu.apiStatusEntry.SetTitle("API: running")
+
+		case (me.State.Box.API.CurrentState == box.StateDown) && (me.State.Box.API.WantState == box.StateDown):
+			menu.apiStatusEntry.SetIcon(me.getIcon(IconDown))
+			menu.apiStatusEntry.SetTitle("API: halted")
 
 		default:
 			menu.apiStatusEntry.SetIcon(me.getIcon(IconWarning))
 			menu.apiStatusEntry.SetTitle("API: unknown")
-			menu.apiStatusEntry.Enable()
 	}
 
-	switch me.State.Unfsd.CurrentState {
-		case monitor.StateUnknown:
+
+	fmt.Printf("me.State.Unfsd=%v\n", me.State.Unfsd)
+	menu.unfsdStatusEntry.SetTooltip(me.State.Unfsd.LastSts.Message())
+	switch {
+		case me.State.Unfsd.CurrentState == monitor.StateUnknown:
 			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconError))
-			menu.unfsdStatusEntry.SetTitle("NFS: unknown")
-			menu.unfsdStatusEntry.Enable()
+			menu.unfsdStatusEntry.SetTitle("FS: unknown error")
 
-		case monitor.StateDown:
-			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconDown))
-			menu.unfsdStatusEntry.SetTitle("NFS: halted")
-			menu.unfsdStatusEntry.Disable()
-
-		case monitor.StateUp:
-			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconUp))
-			menu.unfsdStatusEntry.SetTitle("NFS: running")
-			menu.unfsdStatusEntry.Disable()
-
-		case monitor.StateStarting:
-			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconStarting))
-			menu.unfsdStatusEntry.SetTitle("NFS: starting")
-			menu.unfsdStatusEntry.Disable()
-
-		case monitor.StateStopping:
+		case (me.State.Unfsd.CurrentState == monitor.StateUp) && (me.State.Unfsd.WantState == monitor.StateDown):
 			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconStopping))
-			menu.unfsdStatusEntry.SetTitle("NFS: stopping")
-			menu.unfsdStatusEntry.Disable()
+			menu.unfsdStatusEntry.SetTitle("FS: stopping")
+
+		case (me.State.Unfsd.CurrentState == monitor.StateDown) && (me.State.Unfsd.WantState == monitor.StateUp):
+			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconStarting))
+			menu.unfsdStatusEntry.SetTitle("FS: starting")
+
+		case (me.State.Unfsd.CurrentState == monitor.StateUp) && (me.State.Unfsd.WantState == monitor.StateUp):
+			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconUp))
+			menu.unfsdStatusEntry.SetTitle("FS: running")
+
+		case (me.State.Unfsd.CurrentState == monitor.StateDown) && (me.State.Unfsd.WantState == monitor.StateDown):
+			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconDown))
+			menu.unfsdStatusEntry.SetTitle("FS: halted")
 
 		default:
 			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconWarning))
-			menu.unfsdStatusEntry.SetTitle("NFS: unknown")
-			menu.unfsdStatusEntry.Enable()
+			menu.unfsdStatusEntry.SetTitle("FS: unknown")
 	}
 
 
@@ -760,6 +764,14 @@ func (me *Heartbeat) StopHeartbeat() (sts status.Status) {
 
 
 func (me *Heartbeat) RestartHeartbeat() (sts status.Status) {
+
+	// Hacky hack for debugging.
+	fmt.Printf("VB DEBUGGING ENTER.\n")
+	sts = me.BoxInstance.CreateBox()
+	fmt.Printf("sts='%v'.\n", sts)
+	fmt.Printf("VB DEBUGGING EXIT.\n")
+
+	os.Exit(1)
 
 	for range only.Once {
 

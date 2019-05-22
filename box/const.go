@@ -47,6 +47,8 @@ var StateMeaning = [...]States {
 	},
 }
 
+const IconLogo = "heartbeat/img/IconLogo.png"
+
 
 /*
 @TODO

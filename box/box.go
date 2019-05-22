@@ -2,7 +2,6 @@ package box
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"gearbox/global"
 	"gearbox/help"
@@ -11,19 +10,17 @@ import (
 	"gearbox/ssh"
 	"gearbox/util"
 	lbssh "github.com/apcera/libretto/ssh"
-	"github.com/apcera/libretto/virtualmachine"
 	"github.com/apcera/libretto/virtualmachine/virtualbox"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	// dmvb "github.com/docker/machine/drivers/virtualbox"
 	// "github.com/docker/machine/libmachine/drivers/plugin"
 	"net"
-	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 	"time"
 )
+
 
 type BoxEntity struct {
 	Name         string
@@ -43,6 +40,7 @@ type Box struct {
 	VmInstance virtualbox.VM
 	State    BoxState
 	OvaFile  string
+	VmBaseDir	string
 
 	// SSH related - Need to fix this. It's used within CreateBox()
 	SshUsername  string
@@ -114,6 +112,10 @@ func NewBox(OsSupport oss.OsSupporter, args ...Args) *Box {
 
 	if _args.SshPublicKey == "" {
 		_args.SshPublicKey = ssh.DefaultKeyFile
+	}
+
+	if _args.VmBaseDir == "" {
+		_args.VmBaseDir = string(OsSupport.GetUserConfigDir() + "/vm")
 	}
 
 	_args.VmInstance = virtualbox.VM{
@@ -375,54 +377,6 @@ func (me *Box) Stop() (sts status.Status) {
 }
 
 
-// This is here because it's not implemented in libretto.
-func (me *Box) ReplacementBoxHalt() error {
-
-	_, err := me.RunCombinedError("controlvm", global.Brandname, "acpipowerbutton")
-	if err != nil {
-		return virtualmachine.WrapErrors(virtualmachine.ErrStoppingVM, err)
-	}
-	return nil
-}
-
-
-// Run runs a VBoxManage command.
-func (me *Box) Run(args ...string) (string, string, error) {
-	var vboxManagePath string
-	// If vBoxManage is not found in the system path, fall back to the
-	// hard coded path.
-	if path, err := exec.LookPath("VBoxManage"); err == nil {
-		vboxManagePath = path
-	} else {
-		vboxManagePath = virtualbox.VBOXMANAGE
-	}
-	cmd := exec.Command(vboxManagePath, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout, cmd.Stderr = &stdout, &stderr
-	err := cmd.Run()
-	return stdout.String(), stderr.String(), err
-}
-
-
-// RunCombinedError runs a VBoxManage command.  The output is stdout and the the
-// combined err/stderr from the command.
-func (me *Box) RunCombinedError(args ...string) (string, error) {
-	wout, werr, err := me.Run(args...)
-	if err != nil {
-		if werr != "" {
-			return wout, fmt.Errorf("%s: %s", err, werr)
-		}
-		return wout, err
-	}
-
-	return wout, nil
-}
-
-
 func (me *Box) Restart() (sts status.Status) {
 
 	for range only.Once {
@@ -581,7 +535,7 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts st
 	// Connect to this console
 	conn, err := net.Dial("tcp", me.ConsoleHost+":"+me.ConsolePort)
 	if err != nil {
-		me.State.API.CurrentState = StateUnknown
+		me.State.API.CurrentState = StateDown
 		me.State.API.LastSts = status.Fail(&status.Args{
 			Message: fmt.Sprintf("%s API - timeout", global.Brandname),
 			Help:    help.ContactSupportHelp(), // @TODO need better support here
@@ -665,46 +619,6 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts st
 	return me.State.API.LastSts
 }
 
-
-func (me *Box) CreateBox() (sts status.Status) {
-
-	for range only.Once {
-		if me == nil {
-			sts = status.Fail(&status.Args{
-				Message: "unexpected failure",
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    UnknownState,
-			})
-			break
-		}
-
-		state, err := me.VmInstance.GetState()
-		if err == nil {
-			sts = status.Success("%s VM already exists and is in state %s.\n", global.Brandname, state)
-			break
-		}
-
-		if _, err := os.Stat(me.OvaFile); os.IsNotExist(err) {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("%s VM OVA file '%s' does not exist", global.Brandname, me.OvaFile),
-				Data:    UnknownState,
-			})
-			break
-		}
-
-		err = me.VmInstance.Provision()
-		if err != nil {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("failed to provision %s VM", global.Brandname),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    UnknownState,
-			})
-			break
-		}
-	}
-
-	return sts
-}
 
 func EnsureNotNil(bx *Box) (sts status.Status) {
 	if bx == nil {

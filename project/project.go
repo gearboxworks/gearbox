@@ -92,7 +92,7 @@ func (me *Project) Renew(path types.RelativePath) (sts status.Status) {
 func (me *Project) Enable() (sts status.Status) {
 	for range only.Once {
 
-		// .
+		// MICKMAKE - To be added.
 		if is.Error(sts) {
 			break
 		}
@@ -104,7 +104,7 @@ func (me *Project) Enable() (sts status.Status) {
 func (me *Project) Disable() (sts status.Status) {
 	for range only.Once {
 
-		// .
+		// MICKMAKE - To be added.
 		if is.Error(sts) {
 			break
 		}

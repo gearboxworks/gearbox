@@ -296,6 +296,7 @@ func (me *Unfsd) readJsonExport() (status.Status) {
 		}
 
 		if is.Warn(sts) {
+			// Or use me.OsSupport.GetSuggestedBasedir()
 			me.NewServer(me.ExportsBaseDir, "Sites", "0.0.0.0/0")
 			me.Server.AddVolume("default")
 			sts = me.WriteExport()
@@ -567,6 +568,7 @@ func (me *Unfsd) Stop() (status.Status) {
 			break
 		}
 
+		me.State.WantState = StateDown
 		if err := me.Daemon.Unload(); err != nil {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("UNFSD: Error stopping: %v", err),
@@ -575,9 +577,9 @@ func (me *Unfsd) Stop() (status.Status) {
 			})
 			break
 		}
-	}
 
-	sts = status.Success("UNFSD: Stopped.")
+		me.State, sts = me.GetState()
+	}
 
 	return sts
 }
@@ -604,6 +606,7 @@ func (me *Unfsd) Start() (status.Status) {
 			break
 		}
 
+		me.State.WantState = StateUp
 		if err = me.Daemon.Load(); err != nil {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("UNFSD: Error starting: %v", err),
@@ -612,12 +615,13 @@ func (me *Unfsd) Start() (status.Status) {
 			})
 			break
 		}
-	}
 
-	sts = status.Success("UNFSD: Started.")
+		me.State, sts = me.GetState()
+	}
 
 	return sts
 }
+
 
 func (me *Unfsd) GetState() (state UnfsdState, sts status.Status) {
 
@@ -627,19 +631,23 @@ func (me *Unfsd) GetState() (state UnfsdState, sts status.Status) {
 			break
 		}
 
+		if me.State.WantState == StateInit {
+			me.State.WantState = me.State.CurrentState
+		}
+
 		if !me.Daemon.IsLoaded() {
-			me.State.LastSts = status.Warn("not loaded")
+			me.State.LastSts = status.Warn("%s UNFSD - not loaded", global.Brandname)
 			me.State.CurrentState = StateLoaded
 			break
 		}
 
 		if !me.Daemon.IsRunning() {
-			me.State.LastSts = status.Warn("halted")
+			me.State.LastSts = status.Warn("%s UNFSD - halted", global.Brandname)
 			me.State.CurrentState = StateDown
 			break
 		}
 
-		me.State.LastSts = status.Success("running")
+		me.State.LastSts = status.Success("%s UNFSD - running", global.Brandname)
 		me.State.CurrentState = StateUp
 	}
 
