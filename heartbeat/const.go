@@ -9,6 +9,7 @@ const (
 	UnknownState = "unknown"
 )
 
+
 const (
 	DefaultWaitDelay       = time.Second
 	DefaultWaitRetries     = 90
@@ -20,7 +21,9 @@ const (
 	DefaultPidFile         = "heartbeat/heartbeat.pid"
 )
 
+
 const pidName = "[Gearbox]"
+
 
 const (
 	DefaultLogo = "heartbeat/img/IconLogo.ico"
@@ -35,3 +38,4 @@ const (
 	IconStarting = "heartbeat/img/IconStarting.ico"
 	IconStopping = "heartbeat/img/IconStopping.ico"
 )
+

@@ -568,7 +568,7 @@ func (me *Unfsd) Stop() (status.Status) {
 			break
 		}
 
-		me.State.WantState = StateDown
+		me.State.WantState = StatePowerOff
 		if err := me.Daemon.Unload(); err != nil {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("UNFSD: Error stopping: %v", err),
@@ -606,7 +606,7 @@ func (me *Unfsd) Start() (status.Status) {
 			break
 		}
 
-		me.State.WantState = StateUp
+		me.State.WantState = StateRunning
 		if err = me.Daemon.Load(); err != nil {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("UNFSD: Error starting: %v", err),
@@ -643,12 +643,12 @@ func (me *Unfsd) GetState() (state UnfsdState, sts status.Status) {
 
 		if !me.Daemon.IsRunning() {
 			me.State.LastSts = status.Warn("%s UNFSD - halted", global.Brandname)
-			me.State.CurrentState = StateDown
+			me.State.CurrentState = StatePowerOff
 			break
 		}
 
 		me.State.LastSts = status.Success("%s UNFSD - running", global.Brandname)
-		me.State.CurrentState = StateUp
+		me.State.CurrentState = StateRunning
 	}
 
 	return me.State, me.State.LastSts

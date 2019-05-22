@@ -24,6 +24,75 @@ type Disk struct {
 type Disks []Disk
 
 
+func (me *Box) CreateBox() (sts status.Status) {
+
+	// fmt.Printf("CreateBox() ENTRY.\n")
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+		steps := 0
+
+/*
+		// 0. Destroy existing VM.
+		fmt.Printf("#### %d. Destroy VM - ", steps); steps++
+		destroyVm, sts := me.cmdDestroyVm()
+		if !is.Success(sts) {
+			fmt.Printf("VM still exists:%v\n", destroyVm["name"])
+			// Convert to warning message.
+			sts = sts.SetWarning(true)
+			fmt.Printf("sts:%v\n", sts)
+			break
+		} else {
+			fmt.Printf("\n")
+		}
+*/
+
+		// 1. Check if a VM already exists by that name.
+		fmt.Printf("#### %d. Check for VM - ", steps); steps++
+		listVm, sts := me.cmdListVm()
+		if is.Success(sts) {
+			fmt.Printf("VM exists:%v\n", listVm["name"])
+			// Convert to warning message.
+			sts = sts.SetWarning(true)
+			fmt.Printf("sts:%v\n", sts)
+			break
+		} else {
+			fmt.Printf("\n")
+		}
+
+		// 2. Create VM OVA file.
+		fmt.Printf("#### %d. Create VM - ", steps); steps++
+		createVm, sts := me.cmdCreateVm()
+		if !is.Success(sts) {
+			// Convert to warning message.
+			sts = sts.SetWarning(true)
+			fmt.Printf("sts:%v\n", sts)
+			break
+		} else {
+			fmt.Printf("Created:%v\n", createVm["name"])
+		}
+
+		// 3. Modify VM OVA file.
+		fmt.Printf("#### %d. Modify VM.\n", steps); steps++
+		modifyVm, sts := me.cmdModifyVm()
+		if !is.Success(sts) {
+			// Convert to warning message.
+			sts = sts.SetWarning(true)
+			fmt.Printf("sts:%v\n", sts)
+			break
+		} else {
+			fmt.Printf("Modified:%v\n", modifyVm["name"])
+		}
+
+
+	}
+
+	return sts
+}
+
+
 func (kvs *KeyValues) decodeBridgeIfs() (KeyValuesMap, bool) {
 
 	ok := false
@@ -110,6 +179,7 @@ func (me *Box) cmdListVm() (KeyValueMap, status.Status) {
 			break
 		}
 
+		me.State.VM.CurrentState = kvm["VMState"]
 		sts = status.Success("%s VM - Box exists and is in state %s.\n", global.Brandname, kvm["VMState"])
 	}
 
@@ -124,8 +194,7 @@ func (me *Box) cmdCreateVm() (KeyValueMap, status.Status) {
 	var sts status.Status
 	var kvm KeyValueMap
 
-	fmt.Printf("cmdCreateVm() ENTRY.\n")
-
+	// fmt.Printf("cmdCreateVm() ENTRY.\n")
 	for range only.Once {
 		sts = EnsureNotNil(me)
 		if is.Error(sts) {
@@ -196,7 +265,7 @@ func (me *Box) cmdModifyVmBasic() (KeyValueMap, status.Status) {
 	var sts status.Status
 	var kvm KeyValueMap
 
-	fmt.Printf("cmdModifyVmBasic() ENTRY.\n")
+	// fmt.Printf("cmdModifyVmBasic() ENTRY.\n")
 	for range only.Once {
 		sts = EnsureNotNil(me)
 		if is.Error(sts) {
@@ -268,7 +337,7 @@ func (me *Box) cmdModifyVmNetwork() (KeyValueMap, status.Status) {
 	var sts status.Status
 	var kvm KeyValueMap
 
-	fmt.Printf("cmdModifyVmNetwork() ENTRY.\n")
+	// fmt.Printf("cmdModifyVmNetwork() ENTRY.\n")
 	for range only.Once {
 		sts = EnsureNotNil(me)
 		if is.Error(sts) {
@@ -339,7 +408,7 @@ func (me *Box) cmdModifyVmStorage() (KeyValueMap, status.Status) {
 	var sts status.Status
 	var kvm KeyValueMap
 
-	fmt.Printf("cmdModifyVmStorage() ENTRY.\n")
+	// fmt.Printf("cmdModifyVmStorage() ENTRY.\n")
 	for range only.Once {
 		sts = EnsureNotNil(me)
 		if is.Error(sts) {
@@ -405,7 +474,7 @@ func (me *Box) cmdModifyVmIso() (KeyValueMap, status.Status) {
 	var sts status.Status
 	var kvm KeyValueMap
 
-	fmt.Printf("cmdModifyVmIso() ENTRY.\n")
+	// fmt.Printf("cmdModifyVmIso() ENTRY.\n")
 	for range only.Once {
 		sts = EnsureNotNil(me)
 		if is.Error(sts) {
@@ -422,19 +491,9 @@ func (me *Box) cmdModifyVmIso() (KeyValueMap, status.Status) {
 			break
 		}
 
-/*
-   # Create IDE bus for ISO.
-   VBoxManage storagectl ${VM_NAME} --name "IDE" --add ide --hostiocache on --bootable on
-   VBoxManage storageattach ${VM_NAME} --storagectl "IDE" --port 0 --device 0 --type dvddrive --tempeject on  --medium $HOME/.gearbox/box/iso/gearbox-0.5.0.iso
-		fileName := me.VmBaseDir + "/" + me.Boxname + "/" + disk.Name
-		order := strconv.Itoa(index)
-		_, _, sts = me.Run("createmedium", "disk", "--filename", fileName, "--size", disk.Size, "--format", disk.Format, "--variant", "Stream")
-		_, _, sts = me.Run("storageattach", me.Boxname, "--storagectl", "SATA", "--port", order, "--device", "0", "--type", "hdd", "--medium", fileName, "--hotpluggable", "off")
-*/
-
-		// "--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--tempeject", "on", "--medium", $HOME/.gearbox/box/iso/gearbox-0.5.0.iso
-		_, _, sts = me.Run("storageattach", me.Boxname, "--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--tempeject", "on", "--medium") //, $HOME/.gearbox/box/iso/gearbox-0.5.0.iso)
+		_, _, sts = me.Run("storageattach", me.Boxname, "--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--tempeject", "on", "--medium", me.VmIsoFile) //, $HOME/.gearbox/box/iso/gearbox-0.5.0.iso)
 		if is.Error(sts) {
+			fmt.Printf("Error: %v\n", sts.Data())
 			break
 		}
 
@@ -455,8 +514,7 @@ func (me *Box) cmdModifyVm() (KeyValueMap, status.Status) {
 	var sts status.Status
 	var kvm KeyValueMap
 
-	fmt.Printf("cmdModifyVm() ENTRY.\n")
-
+	// fmt.Printf("cmdModifyVm() ENTRY.\n")
 	for range only.Once {
 		sts = EnsureNotNil(me)
 		if is.Error(sts) {
@@ -498,7 +556,7 @@ func (me *Box) findFirstNic() (KeyValueMap, status.Status) {
 	var sts status.Status
 	var nic KeyValueMap
 
-	fmt.Printf("findFirstNic() ENTRY.\n")
+	// fmt.Printf("findFirstNic() ENTRY.\n")
 	for range only.Once {
 		sts = EnsureNotNil(me)
 		if is.Error(sts) {
@@ -538,106 +596,8 @@ func (me *Box) findFirstNic() (KeyValueMap, status.Status) {
 			break
 		}
 	}
-	fmt.Printf("findFirstNic() %v.\n", sts)
 
 	return nic, sts
-}
-
-
-func (me *Box) CreateBox() (sts status.Status) {
-
-	fmt.Printf("CreateBox() ENTRY.\n")
-	for range only.Once {
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
-			break
-		}
-		me.Boxname = "harry"
-
-		steps := 0
-		// 0. Destroy existing VM.
-		fmt.Printf("#### %d. Destroy VM - ", steps); steps++
-		destroyVm, sts := me.cmdDestroyVm()
-		if !is.Success(sts) {
-			fmt.Printf("VM still exists:%v\n", destroyVm["name"])
-			// Convert to warning message.
-			sts = sts.SetWarning(true)
-			fmt.Printf("sts:%v\n", sts)
-			break
-		} else {
-			fmt.Printf("\n")
-		}
-
-		// 1. Check if a VM already exists by that name.
-		fmt.Printf("#### %d. Check for VM - ", steps); steps++
-		listVm, sts := me.cmdListVm()
-		if is.Success(sts) {
-			fmt.Printf("VM exists:%v\n", listVm["name"])
-			// Convert to warning message.
-			sts = sts.SetWarning(true)
-			fmt.Printf("sts:%v\n", sts)
-			break
-		} else {
-			fmt.Printf("\n")
-		}
-
-		// 2. Create VM OVA file.
-		fmt.Printf("#### %d. Create VM - ", steps); steps++
-		createVm, sts := me.cmdCreateVm()
-		if !is.Success(sts) {
-			// Convert to warning message.
-			sts = sts.SetWarning(true)
-			fmt.Printf("sts:%v\n", sts)
-			break
-		} else {
-			fmt.Printf("test:%v\n", createVm["name"])
-		}
-
-		// 3. Modify VM OVA file.
-		fmt.Printf("#### %d. Modify VM.\n", steps); steps++
-		modifyVm, sts := me.cmdModifyVm()
-		if !is.Success(sts) {
-			// Convert to warning message.
-			sts = sts.SetWarning(true)
-			fmt.Printf("sts:%v\n", sts)
-			break
-		} else {
-			fmt.Printf("test:%v\n", modifyVm["name"])
-		}
-
-
-	}
-
-	return sts
-
-
-	var err error
-	var stdout string
-	var stderr string
-	var state string
-
-	for range only.Once {
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
-			break
-		}
-
-		state, err = me.VmInstance.GetState()
-		if err == nil {
-			sts = status.Success("%s VM already exists and is in state %s.\n", global.Brandname, state)
-			break
-		}
-
-		stdout, stderr, err = me.Run("list", "bridgedifs", "-s")
-		if is.Error(sts) {
-			break
-		}
-		fmt.Printf("STDOUT:%v\n", stdout)
-		fmt.Printf("STDERR:%v\n", stderr)
-
-	}
-
-	return sts
 }
 
 
@@ -667,7 +627,7 @@ func (me *Box) Run(args ...string) (string, string, status.Status) {
 		vboxManagePath = virtualbox.VBOXMANAGE
 	}
 
-	fmt.Printf("EXEC:%v\n", args)
+	fmt.Printf("EXEC:%v \"%v\"\n", vboxManagePath, strings.Join(args, `" "`))
 	cmd := exec.Command(vboxManagePath, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -683,7 +643,7 @@ func (me *Box) Run(args ...string) (string, string, status.Status) {
 				sts = status.Fail(&status.Args{
 					Message: fmt.Sprintf("%s VM - No such Box called '%s'.\n", global.Brandname, me.Boxname),
 					Help:    help.ContactSupportHelp(), // @TODO need better support here
-					Data:    stderr,
+					Data:    stderr.String(),
 				})
 				//fmt.Printf("stdout:%v\n", stdout.String())
 				//fmt.Printf("stderr:%v\n", stderr.String())
