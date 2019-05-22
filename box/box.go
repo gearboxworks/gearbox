@@ -258,6 +258,7 @@ func (me *Box) Start() (sts status.Status) {
 			break
 		}
 
+/*
 		switch {
 			case me.State.VM.CurrentState == VmStateUnknown:
 				sts = me.State.LastSts
@@ -278,16 +279,10 @@ func (me *Box) Start() (sts status.Status) {
 			case me.State.VM.CurrentState == VmStatePowerOff:
 				// fall-through
 		}
+*/
 
-		me.State.VM.WantState = VmStateRunning
-		me.State.API.WantState = VmStateRunning
-		err := me.VmInstance.Start()
-		if err != nil {
-			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("%s VM failed to start", global.Brandname),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    ErrorState,
-			})
+		_, sts = me.StartBox()
+		if is.Error(sts) {
 			break
 		}
 
@@ -296,7 +291,7 @@ func (me *Box) Start() (sts status.Status) {
 		}
 
 		if me.WaitForVmState(fmt.Sprintf("%s VM: Starting", global.Brandname)) == true {
-			err = me.GetApiStatus(fmt.Sprintf("%s API: Starting", global.Brandname), 30)
+			sts = me.GetApiStatus(fmt.Sprintf("%s API: Starting", global.Brandname), 30)
 		}
 	}
 
@@ -319,6 +314,7 @@ func (me *Box) Stop() (sts status.Status) {
 			break
 		}
 
+/*
 		switch {
 			case me.State.VM.CurrentState == VmStateUnknown:
 				sts = me.State.LastSts
@@ -339,16 +335,10 @@ func (me *Box) Stop() (sts status.Status) {
 				sts = me.State.LastSts
 				break
 		}
+*/
 
-		me.State.VM.WantState = VmStatePowerOff
-		me.State.API.WantState = VmStatePowerOff
-		err = me.VmInstance.Halt()
-		if err != nil {
-			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("%s VM failed to stop", global.Brandname),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    ErrorState,
-			})
+		_, sts = me.StopBox()
+		if is.Error(sts) {
 			break
 		}
 
@@ -356,6 +346,7 @@ func (me *Box) Stop() (sts status.Status) {
 			break
 		}
 
+		fmt.Printf("FO\n")
 		if me.WaitForVmState(fmt.Sprintf("%s VM: Stopping", global.Brandname)) == true {
 			break
 		}
@@ -443,17 +434,18 @@ func (me *Box) GetState() (BoxState, status.Status) {
 			break
 		}
 		if me.State.VM.CurrentState != VmStateRunning {
+			me.State.API.CurrentState = VmStatePowerOff
 			break
 		}
+		me.State.API.WantState = me.State.VM.WantState
 
 		sts = me.GetApiStatus("", 10)
-		if is.Error(sts) {
-			break
-		}
 
-		vmState := me.State.GetStateMeaning()
-		sts = vmState.Sts
-		me.State.LastSts = sts
+		if me.State.VM.WantState == VmStateInit {
+			me.State.VM.WantState = me.State.VM.CurrentState
+		}
+		//me.State.GetStateMeaning()
+		//me.State.LastSts = sts
 		//fmt.Printf("FOO:", vmState)
 
 		//		if err == nil {
@@ -487,14 +479,14 @@ func (me *Box) GetVmStatus() (status.Status) {
 			break
 		}
 
-		if me.State.VM.WantState == VmStateInit {
-			me.State.VM.WantState = me.State.VM.CurrentState
-		}
-
 		_, sts = me.cmdListVm()
 		// fmt.Printf("Box '%s' is in state: '%s'\n", kvm["name"], kvm["VMState"])
 		if is.Error(sts) {
 			me.State.VM.CurrentState = VmStateNotPresent
+		}
+
+		if me.State.VM.WantState == VmStateInit {
+			me.State.VM.WantState = me.State.VM.CurrentState
 		}
 
 /*
@@ -563,16 +555,12 @@ func (me *Box) GetVmStatus() (status.Status) {
 // So, we're simply establishing a boolean that indicates this fact.
 // var alreadyRunning = false
 // @TODO - OK, so that's not working out.
-func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) status.Status {
+func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts status.Status) {
 
 	for range only.Once {
-		sts := EnsureNotNil(me)
+		sts = EnsureNotNil(me)
 		if is.Error(sts) {
 			break
-		}
-
-		if me.State.API.WantState == VmStateInit {
-			me.State.API.WantState = me.State.API.CurrentState
 		}
 
 		spinner := newSpinner(displayString)
@@ -587,7 +575,7 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) status.
 		conn, err := net.Dial("tcp", me.ConsoleHost+":"+me.ConsolePort)
 		if err != nil {
 			me.State.API.CurrentState = VmStatePowerOff
-			me.State.LastSts = status.Fail(&status.Args{
+			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("%s API - timeout", global.Brandname),
 				Help:    help.ContactSupportHelp(), // @TODO need better support here
 				Data:    me.State.API.CurrentState,
@@ -599,7 +587,7 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) status.
 
 		// Set default state before we begin.
 		me.State.API.CurrentState = VmStateUnknown
-		me.State.LastSts = status.Fail(&status.Args{
+		sts = status.Fail(&status.Args{
 			Message: fmt.Sprintf("%s API - no data", global.Brandname),
 			Help:    help.ContactSupportHelp(), // @TODO need better support here
 			Data:    me.State.API.CurrentState,
@@ -611,7 +599,7 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) status.
 			err = conn.SetDeadline(time.Now().Add(me.ConsoleReadWait))
 			if err != nil {
 				me.State.API.CurrentState = VmStateUnknown
-				me.State.LastSts = status.Fail(&status.Args{
+				sts = status.Fail(&status.Args{
 					Message: fmt.Sprintf("%s API - deadline", global.Brandname),
 					Help:    help.ContactSupportHelp(), // @TODO need better support here
 					Data:    me.State.API.CurrentState,
@@ -625,7 +613,7 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) status.
 			// bytesRead := len(readBuffer)
 			if err != nil {
 				me.State.API.CurrentState = VmStateUnknown
-				me.State.LastSts = status.Fail(&status.Args{
+				sts = status.Fail(&status.Args{
 					Message: fmt.Sprintf("%s API - no data", global.Brandname),
 					Help:    help.ContactSupportHelp(), // @TODO need better support here
 					Data:    me.State.API.CurrentState,
@@ -641,12 +629,17 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) status.
 				sts = me.heartbeatOk(readBuffer, bytesRead)
 				if sts != nil {
 					me.State.API.CurrentState = VmStateRunning
-					me.State.LastSts = status.Success("%s API - running", global.Brandname)
+					sts = status.Success("%s API - running", global.Brandname)
 					break
 
 				} else {
-					me.State.API.CurrentState = VmStateStarting
-					me.State.LastSts = status.Success("%s API - starting", global.Brandname)
+					if me.State.API.WantState == VmStatePowerOff {
+						me.State.API.CurrentState = VmStateStopping
+						sts = status.Success("%s API - stopping", global.Brandname)
+					} else if me.State.API.WantState == VmStateRunning {
+						me.State.API.CurrentState = VmStateStarting
+						sts = status.Success("%s API - starting", global.Brandname)
+					}
 					// Do not break.
 				}
 			}
@@ -666,9 +659,9 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) status.
 		}
 	}
 
-	fmt.Printf("vmState: %v\n", me.State.LastSts)
+	fmt.Printf("apiState: %v\n", sts)
 
-	return me.State.LastSts
+	return sts
 }
 
 

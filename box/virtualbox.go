@@ -6,7 +6,6 @@ import (
 	"gearbox/global"
 	"gearbox/help"
 	"gearbox/only"
-	"github.com/apcera/libretto/virtualmachine"
 	"github.com/apcera/libretto/virtualmachine/virtualbox"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
@@ -86,10 +85,77 @@ func (me *Box) CreateBox() (sts status.Status) {
 			fmt.Printf("Modified:%v\n", modifyVm["name"])
 		}
 
-
+		listVm, sts = me.cmdListVm()
+		if is.Error(sts) {
+			break
+		}
 	}
 
 	return sts
+}
+
+
+func (me *Box) StartBox() (KeyValueMap, status.Status) {
+
+	//var stdout string
+	//var stderr string
+	var sts status.Status
+	var kvm KeyValueMap
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		me.State.VM.WantState = VmStateRunning
+		me.State.API.WantState = VmStateRunning
+
+		// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
+		_, _, sts = me.Run("startvm", me.Boxname)
+		if is.Error(sts) {
+			break
+		}
+
+		_, sts = me.cmdListVm()
+		if is.Error(sts) {
+			break
+		}
+	}
+
+	return kvm, sts
+}
+
+
+func (me *Box) StopBox() (KeyValueMap, status.Status) {
+
+	//var stdout string
+	//var stderr string
+	var sts status.Status
+	var kvm KeyValueMap
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		me.State.VM.WantState = VmStatePowerOff
+		me.State.API.WantState = VmStatePowerOff
+
+		// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
+		_, _, sts = me.Run("controlvm", global.Brandname, "acpipowerbutton")
+		if is.Error(sts) {
+			break
+		}
+
+		_, sts = me.cmdListVm()
+		if is.Error(sts) {
+			break
+		}
+	}
+
+	return kvm, sts
 }
 
 
@@ -180,6 +246,7 @@ func (me *Box) cmdListVm() (KeyValueMap, status.Status) {
 		}
 
 		me.State.VM.CurrentState = kvm["VMState"]
+
 		sts = status.Success("%s VM - Box exists and is in state %s.\n", global.Brandname, kvm["VMState"])
 	}
 
@@ -598,18 +665,6 @@ func (me *Box) findFirstNic() (KeyValueMap, status.Status) {
 	}
 
 	return nic, sts
-}
-
-
-// This is here because it's not implemented in libretto.
-func (me *Box) ReplacementBoxHalt() error {
-
-	_, err := me.RunCombinedError("controlvm", global.Brandname, "acpipowerbutton")
-	if err != nil {
-		return virtualmachine.WrapErrors(virtualmachine.ErrStoppingVM, err)
-	}
-
-	return nil
 }
 
 

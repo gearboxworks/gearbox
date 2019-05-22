@@ -92,7 +92,7 @@ func (me *Gearbox) PrintBoxStatus(args box.Args) (sts status.Status) {
 			break
 		}
 
-		//		// var state string
+//		// var state string
 //		state, sts = sts.GetString()
 //		meaning := box.GetStateMeaning(box.State(state))
 //		if meaning == "" {
@@ -100,7 +100,7 @@ func (me *Gearbox) PrintBoxStatus(args box.Args) (sts status.Status) {
 //			break
 //		}
 //		fmt.Println(meaning)
-		fmt.Println(state)
+		fmt.Printf(">%s\n", state)
 	}
 
 	return sts

@@ -110,7 +110,7 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 	} else {
 		_args.BoxInstance.Boxname = _args.Boxname
 	}
-	_args.BoxInstance.Boxname = "harry"		// DEBUG
+	//_args.BoxInstance.Boxname = "harry"		// DEBUG
 
 	if _args.WaitDelay == 0 {
 		_args.BoxInstance.WaitDelay = DefaultWaitDelay
@@ -295,7 +295,7 @@ func (me *Heartbeat) onReady() {
 
 				// Check state of VM.
 				me.State.Box, sts = me.BoxInstance.GetCachedState()
-				if is.Error(sts) || is.Error(state.Box.LastSts) {
+				if is.Error(sts) {
 					// .
 				}
 
@@ -315,7 +315,7 @@ func (me *Heartbeat) onReady() {
 				// Check state of VM.
 				me.State.Box, sts = me.BoxInstance.GetState()
 				//fmt.Printf("STATE:\n%v\n%v\n", me.State.Box, sts)
-				if is.Error(sts) || is.Error(state.Box.LastSts) {
+				if is.Error(sts) {
 					// .
 				}
 
@@ -511,7 +511,6 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 	menu.vmStatusEntry.SetIcon(me.getIcon(vmState.VmIconState))
 	menu.vmStatusEntry.SetTitle(vmState.VmTitleState)
 
-
 /*
 	if me.State.Box.VM.LastSts != nil {
 		menu.vmStatusEntry.SetTooltip(me.State.Box.VM.LastSts.Message())
@@ -611,7 +610,6 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 	}
 
 	switch vmState.Name {
-		case box.VmStateInit:
 		case box.VmStateNotPresent:
 			fmt.Printf("STATE: NOT PRESENT\n")
 			systray.SetIcon(me.getIcon(IconWarning))
