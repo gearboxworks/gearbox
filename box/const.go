@@ -209,7 +209,7 @@ var DisplayState = map[string]VmDisplayState{
 
 		VmTitleState:	fmt.Sprintf("%s VM: stopping", global.Brandname),
 		VmHintState:	"VM is being shut down.",
-		VmIconState:	IconUp,
+		VmIconState:	IconStopping,
 
 		ApiTitleState:	fmt.Sprintf("%s API: stopping", global.Brandname),
 		ApiHintState:	"API is being shut down.",

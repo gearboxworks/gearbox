@@ -345,47 +345,56 @@ func (me *Box) cmdModifyVmBasic() (KeyValueMap, status.Status) {
 		}
 
 		// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsSupport.GetAdminRootDir()) + "/" + IconLogo)
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsSupport.GetAdminRootDir()) + "/" + IconLogoPng)
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--description", me.Boxname + " OS VM", "--iconfile", string(me.OsSupport.GetAdminRootDir()) + "/" + IconLogoPng)
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--ioapic", "on", "--acpi", "on", "--biosbootmenu", "disabled", "--biosapic", "apic")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--ioapic", "on", "--acpi", "on", "--biosbootmenu", "disabled", "--biosapic", "apic")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--boot1", "dvd", "--boot2", "none", "--boot3", "none", "--boot4", "none")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--boot1", "dvd", "--boot2", "none", "--boot3", "none", "--boot4", "none")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--vrde", "off", "--autostart-enabled", "off")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--vrde", "off", "--autostart-enabled", "off")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--cpuhotplug", "on", "--cpus", "4", "--pae", "off", "--longmode", "on", "--largepages", "on", "--paravirtprovider", "default")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--cpuhotplug", "on", "--cpus", "4", "--pae", "off", "--longmode", "on", "--largepages", "on", "--paravirtprovider", "default")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--accelerate3d", "off", "--accelerate2dvideo", "off", "--mouse", "usbtablet")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--accelerate3d", "off", "--accelerate2dvideo", "off", "--mouse", "usbtablet")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--defaultfrontend", "headless", "--snapshotfolder", "default")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--defaultfrontend", "headless", "--snapshotfolder", "default")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--memory", "2048", "--vram", "128")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--memory", "2048", "--vram", "128")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--audio", "none")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--audio", "none")
 		if is.Error(sts) {
 			break
 		}
@@ -433,33 +442,39 @@ func (me *Box) cmdModifyVmNetwork() (KeyValueMap, status.Status) {
 		}
 */
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--nic1", "nat", "--nictype1", "82540EM", "--cableconnected1", "on", "--macaddress1", "auto")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--nic1", "nat", "--nictype1", "82540EM", "--cableconnected1", "on", "--macaddress1", "auto")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--natnet1", "default", "--natpf1", "API,tcp,,9970,,9970")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--natnet1", "default", "--natpf1", "API,tcp,,9970,,9970")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--natnet1", "default", "--natpf1", "SSH,tcp,,2222,,22")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--natnet1", "default", "--natpf1", "SSH,tcp,,2222,,22")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--natnet1", "default", "--natpf1", "VMcontrol,tcp,,9971,,9971")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--natnet1", "default", "--natpf1", "VMcontrol,tcp,,9971,,9971")
 		if is.Error(sts) {
 			break
 		}
 
 		// _, _, sts = me.Run("modifyvm", me.Boxname, "--nic2", "bridged", "--bridgeadapter2", nic["Name"], "--nictype2", "82540EM", "--cableconnected2", "on", "--macaddress2", "auto", "--nicpromisc2", "deny")
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--nic2", "hostonly", "--hostonlyadapter2", "vboxnet0", "--nictype2", "82540EM", "--cableconnected2", "on", "--macaddress2", "auto", "--nicpromisc2", "deny")
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--nic2", "hostonly", "--hostonlyadapter2", "vboxnet0", "--nictype2", "82540EM", "--cableconnected2", "on", "--macaddress2", "auto", "--nicpromisc2", "deny")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--uart1", "0x3f8", "4", "--uartmode1", "tcpserver", me.ConsolePort)
+		_, _, sts = me.Run("modifyvm", me.Boxname,
+			"--uart1", "0x3f8", "4", "--uartmode1", "tcpserver", me.ConsolePort)
 		if is.Error(sts) {
 			break
 		}
@@ -495,7 +510,8 @@ func (me *Box) cmdModifyVmStorage() (KeyValueMap, status.Status) {
 			break
 		}
 
-		_, _, sts = me.Run("storagectl", me.Boxname, "--name", "SATA", "--add", "sata", "--controller", "IntelAHCI", "--portcount", "4", "--hostiocache", "off", "--bootable", "on")
+		_, _, sts = me.Run("storagectl", me.Boxname,
+			"--name", "SATA", "--add", "sata", "--controller", "IntelAHCI", "--portcount", "4", "--hostiocache", "off", "--bootable", "on")
 		if is.Error(sts) {
 			break
 		}
@@ -530,7 +546,8 @@ func (me *Box) cmdModifyVmStorage() (KeyValueMap, status.Status) {
 			if is.Error(sts) {
 				break
 			}
-			_, _, sts = me.Run("storageattach", me.Boxname, "--storagectl", "SATA", "--port", order, "--device", "0", "--type", "hdd", "--medium", fileName, "--hotpluggable", "off")
+			_, _, sts = me.Run("storageattach", me.Boxname,
+				"--storagectl", "SATA", "--port", order, "--device", "0", "--type", "hdd", "--medium", fileName, "--hotpluggable", "off")
 			if is.Error(sts) {
 				break
 			}
@@ -567,12 +584,14 @@ func (me *Box) cmdModifyVmIso() (KeyValueMap, status.Status) {
 			break
 		}
 
-		_, _, sts = me.Run("storagectl", me.Boxname, "--name", "IDE", "--add", "ide", "--hostiocache", "on", "--bootable", "on")
+		_, _, sts = me.Run("storagectl", me.Boxname,
+			"--name", "IDE", "--add", "ide", "--hostiocache", "on", "--bootable", "on")
 		if is.Error(sts) {
 			break
 		}
 
-		_, _, sts = me.Run("storageattach", me.Boxname, "--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--tempeject", "on", "--medium", me.VmIsoFile) //, $HOME/.gearbox/box/iso/gearbox-0.5.0.iso)
+		_, _, sts = me.Run("storageattach", me.Boxname,
+			"--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--tempeject", "on", "--medium", me.VmIsoFile) //, $HOME/.gearbox/box/iso/gearbox-0.5.0.iso)
 		if is.Error(sts) {
 			fmt.Printf("Error: %v\n", sts.Data())
 			break
