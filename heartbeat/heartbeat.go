@@ -110,7 +110,7 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 	} else {
 		_args.BoxInstance.Boxname = _args.Boxname
 	}
-	//_args.BoxInstance.Boxname = "harry"		// DEBUG
+	_args.BoxInstance.Boxname = "harry"		// DEBUG
 
 	if _args.WaitDelay == 0 {
 		_args.BoxInstance.WaitDelay = DefaultWaitDelay
@@ -201,8 +201,8 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 			break
 		}
 
-		//if !daemon.IsParentInit() {
-		if daemon.IsParentInit() {
+		if !daemon.IsParentInit() {
+		//if daemon.IsParentInit() {
 			fmt.Printf("Gearbox: Sub-command not available for user.\n")
 			sts = status.Fail(&status.Args{
 				Message: "Sub-command not available for user",
@@ -280,6 +280,7 @@ func (me *Heartbeat) onReady() {
 		return
 	}
 
+
 	// Concurrent process: Provide status updates on systray.
 	// Ideally, this should also send messages on message bus for actions to be taken. EG: Retry startup, disk full, etc.
 	// Even further, these should be brokem out into methods to avoid having to hard code specific entities to monitor.
@@ -331,10 +332,22 @@ func (me *Heartbeat) onReady() {
 		}
 	}()
 
+
 	// Concurrent process: Handle user clicky clicks on menu.
 	go func() {
 		for {
 			select {
+				case <- menu.helpEntry.ClickedCh:
+					fmt.Printf("Menu: Help\n")
+					me.openAbout()
+
+				case <- menu.vmStatusEntry.ClickedCh:
+					// Ignore.
+				case <- menu.apiStatusEntry.ClickedCh:
+					// Ignore.
+				case <- menu.unfsdStatusEntry.ClickedCh:
+					// Ignore.
+
 				case <- menu.startEntry.ClickedCh:
 					fmt.Printf("Menu: Start\n")
 					intentDelay = true
@@ -358,16 +371,14 @@ func (me *Heartbeat) onReady() {
 					fmt.Printf("Menu: SSH\n")
 					me.openTerminal()
 
-				case <- menu.helpEntry.ClickedCh:
-					fmt.Printf("Menu: Help\n")
-					me.openAbout()
-
 				case <- menu.createEntry.ClickedCh:
 					fmt.Printf("Menu: Create\n")
 					if me.BoxInstance.State.VM.CurrentState == box.VmStateNotPresent {
 						sts := me.BoxInstance.CreateBox()
 						if is.Error(sts) {
-							// Throw error
+							dialog.Message("Error! Creating Gearbox OS VM: %s", me.Boxname).Title("GearBox OS Creation").Error()
+						} else {
+							dialog.Message("Success! Gearbox OS VM created: %s", me.Boxname).Title("GearBox OS Creation").Info()
 						}
 					}
 
@@ -393,6 +404,7 @@ func (me *Heartbeat) onReady() {
 			}
 		}
 	}()
+
 }
 
 
@@ -579,7 +591,7 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 	}
 */
 
-	fmt.Printf("me.State.Unfsd=%v\n", me.State.Unfsd)
+	//fmt.Printf("me.State.Unfsd=%v\n", me.State.Unfsd)
 	if me.State.Unfsd.LastSts != nil {
 		menu.unfsdStatusEntry.SetTooltip(me.State.Unfsd.LastSts.Message())
 	}

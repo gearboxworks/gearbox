@@ -85,7 +85,6 @@ func DaemonizeMe(function func()) (bool) {
 
 
 	if len(daemon.ActiveFlags()) > 0 {
-		fmt.Printf("SHIT2\n")
 		d, err := cntxt.Search()
 		if err != nil {
 			log.Fatalln("Unable send signal to the daemon:", err)
@@ -124,7 +123,7 @@ func (vm *GearboxVM) startGearbox() (bool) {
 	fmt.Printf("Menu: Start\n")
 	err := vm.Start()
 	if err != nil {
-		fmt.Printf("Shit! an error: %s\n", err)
+		fmt.Printf("An error: %s\n", err)
 	}
 
 	return true

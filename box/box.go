@@ -346,7 +346,6 @@ func (me *Box) Stop() (sts status.Status) {
 			break
 		}
 
-		fmt.Printf("FO\n")
 		if me.WaitForVmState(fmt.Sprintf("%s VM: Stopping", global.Brandname)) == true {
 			break
 		}
@@ -544,7 +543,7 @@ func (me *Box) GetVmStatus() (status.Status) {
 		}
 */
 
-		fmt.Printf("vmState: %v\n", sts)
+		// fmt.Printf("vmState: %v\n", sts)
 	}
 
 	return sts
@@ -659,7 +658,7 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts st
 		}
 	}
 
-	fmt.Printf("apiState: %v\n", sts)
+	// fmt.Printf("apiState: %v\n", sts)
 
 	return sts
 }

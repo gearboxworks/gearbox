@@ -49,6 +49,7 @@ const (
 	DefaultUp = "heartbeat/img/UpArrow.ico"
 	DefaultDown = "heartbeat/img/DownArrow.ico"
 
+	IconLogoPng = "heartbeat/img/IconLogo.png"
 	IconLogo = "heartbeat/img/IconLogo.ico"
 	IconError = "heartbeat/img/IconError.ico"
 	IconWarning = "heartbeat/img/IconWarning.ico"
@@ -102,11 +103,11 @@ var DisplayState = map[string]VmDisplayState{
 		Name:			VmStateInit,
 
 		VmTitleState:	fmt.Sprintf("%s VM: idle", global.Brandname),
-		VmHintState:	fmt.Sprintf("%s VM: idle", global.Brandname),
+		VmHintState:	"VM is in idle state.",
 		VmIconState:	IconLogo,
 
 		ApiTitleState:	fmt.Sprintf("%s API: halted", global.Brandname),
-		ApiHintState:	fmt.Sprintf("%s API: halted", global.Brandname),
+		ApiHintState:	"API not running due to VM running.",
 		ApiIconState:	IconLogo,
 
 		Title:			fmt.Sprintf("%s is idle", global.Brandname),
@@ -117,11 +118,11 @@ var DisplayState = map[string]VmDisplayState{
 		Name:			VmStateNotPresent,
 
 		VmTitleState:	fmt.Sprintf("%s VM: is not present", global.Brandname),
-		VmHintState:	fmt.Sprintf("%s VM: is not present", global.Brandname),
+		VmHintState:	"Click on 'Create Box' to create.",
 		VmIconState:	IconWarning,
 
 		ApiTitleState:	fmt.Sprintf("%s API: halted", global.Brandname),
-		ApiHintState:	fmt.Sprintf("%s API: halted", global.Brandname),
+		ApiHintState:	"API not running due to VM not existing.",
 		ApiIconState:	IconWarning,
 
 		Title:			fmt.Sprintf("%s VM creation", global.Brandname),
@@ -132,11 +133,11 @@ var DisplayState = map[string]VmDisplayState{
 		Name:			VmStatePowerOff,
 
 		VmTitleState:	fmt.Sprintf("%s VM: halted", global.Brandname),
-		VmHintState:	fmt.Sprintf("%s VM: halted", global.Brandname),
+		VmHintState:	"VM is powered off.",
 		VmIconState:	IconDown,
 
 		ApiTitleState:	fmt.Sprintf("%s API: halted", global.Brandname),
-		ApiHintState:	fmt.Sprintf("%s API: halted", global.Brandname),
+		ApiHintState:	"API not running due to VM running.",
 		ApiIconState:	IconDown,
 
 		Title:			fmt.Sprintf("%s VM halted", global.Brandname),
@@ -147,11 +148,11 @@ var DisplayState = map[string]VmDisplayState{
 		Name:			VmStatePaused,
 
 		VmTitleState:	fmt.Sprintf("%s VM: paused", global.Brandname),
-		VmHintState:	fmt.Sprintf("%s VM: paused", global.Brandname),
+		VmHintState:	"VM is paused.",
 		VmIconState:	IconDown,
 
 		ApiTitleState:	fmt.Sprintf("%s API: halted", global.Brandname),
-		ApiHintState:	fmt.Sprintf("%s API: halted", global.Brandname),
+		ApiHintState:	"API not running due to VM running.",
 		ApiIconState:	IconDown,
 
 		Title:			fmt.Sprintf("%s VM paused", global.Brandname),
@@ -162,11 +163,11 @@ var DisplayState = map[string]VmDisplayState{
 		Name:			VmStateSaved,
 
 		VmTitleState:	fmt.Sprintf("%s VM: saved", global.Brandname),
-		VmHintState:	fmt.Sprintf("%s VM: saved", global.Brandname),
+		VmHintState:	"VM is in the saved state.",
 		VmIconState:	IconDown,
 
 		ApiTitleState:	fmt.Sprintf("%s API: halted", global.Brandname),
-		ApiHintState:	fmt.Sprintf("%s API: halted", global.Brandname),
+		ApiHintState:	"API not running due to VM running.",
 		ApiIconState:	IconDown,
 
 		Title:			fmt.Sprintf("%s VM saved", global.Brandname),
@@ -177,11 +178,11 @@ var DisplayState = map[string]VmDisplayState{
 		Name:			VmStateRunning,
 
 		VmTitleState:	fmt.Sprintf("%s VM: running", global.Brandname),
-		VmHintState:	fmt.Sprintf("%s VM: running", global.Brandname),
+		VmHintState:	"VM is up and running.",
 		VmIconState:	IconUp,
 
 		ApiTitleState:	fmt.Sprintf("%s API: running", global.Brandname),
-		ApiHintState:	fmt.Sprintf("%s API: running", global.Brandname),
+		ApiHintState:	"API is up and running.",
 		ApiIconState:	IconUp,
 
 		Title:			fmt.Sprintf("%s running", global.Brandname),
@@ -192,11 +193,11 @@ var DisplayState = map[string]VmDisplayState{
 		Name:			VmStateStarting,
 
 		VmTitleState:	fmt.Sprintf("%s VM: running", global.Brandname),
-		VmHintState:	fmt.Sprintf("%s VM: running", global.Brandname),
+		VmHintState:	"VM is up and running.",
 		VmIconState:	IconUp,
 
 		ApiTitleState:	fmt.Sprintf("%s API: starting", global.Brandname),
-		ApiHintState:	fmt.Sprintf("%s API: starting", global.Brandname),
+		ApiHintState:	"API is starting up.",
 		ApiIconState:	IconStarting,
 
 		Title:			fmt.Sprintf("%s API starting", global.Brandname),
@@ -207,11 +208,11 @@ var DisplayState = map[string]VmDisplayState{
 		Name:			VmStateStopping,
 
 		VmTitleState:	fmt.Sprintf("%s VM: stopping", global.Brandname),
-		VmHintState:	fmt.Sprintf("%s VM: stopping", global.Brandname),
+		VmHintState:	"VM is being shut down.",
 		VmIconState:	IconUp,
 
 		ApiTitleState:	fmt.Sprintf("%s API: stopping", global.Brandname),
-		ApiHintState:	fmt.Sprintf("%s API: stopping", global.Brandname),
+		ApiHintState:	"API is being shut down.",
 		ApiIconState:	IconStopping,
 
 		Title:			fmt.Sprintf("%s VM stopping", global.Brandname),
@@ -222,11 +223,11 @@ var DisplayState = map[string]VmDisplayState{
 		Name:			VmStateUnknown,
 
 		VmTitleState:	fmt.Sprintf("%s VM: unknown", global.Brandname),
-		VmHintState:	fmt.Sprintf("%s VM: unknown", global.Brandname),
+		VmHintState:	"VM is in an unknown state.",
 		VmIconState:	IconWarning,
 
 		ApiTitleState:	fmt.Sprintf("%s API: unknown", global.Brandname),
-		ApiHintState:	fmt.Sprintf("%s API: unknown", global.Brandname),
+		ApiHintState:	"API is in an unknown state.",
 		ApiIconState:	IconWarning,
 
 		Title:			fmt.Sprintf("%s VM is unknown", global.Brandname),
@@ -265,54 +266,54 @@ var DecodeState = []VmFsmState{
 func (state *BoxState) GetStateMeaning() (VmDisplayState) {
 
 	var s VmFsmState
-	var i int
+	//var i int
 	found := false
 
-	for i, s = range DecodeState {
+	for _, s = range DecodeState {
 		switch {
 			case (s.VmState == VmStateDontCare) && (s.ApiState == state.API.CurrentState) && (s.VmWantState == VmStateDontCare) && (s.ApiWantState == VmStateDontCare):
 				// Handle don't care states first.
-				fmt.Printf("1:")
+				//fmt.Printf("1:")
 				found = true
 				break
 
 			case (s.VmState == state.VM.CurrentState) && (s.ApiState == VmStateDontCare) && (s.VmWantState == VmStateDontCare) && (s.ApiWantState == VmStateDontCare):
 				// Handle don't care states first.
-				fmt.Printf("2:")
+				//fmt.Printf("2:")
 				found = true
 				break
 
 
 			case (s.VmState == state.VM.CurrentState) && (s.ApiState == state.API.CurrentState) && (s.VmWantState == VmStateDontCare) && (s.ApiWantState == VmStateDontCare):
 				// .
-				fmt.Printf("3:")
+				//fmt.Printf("3:")
 				found = true
 				break
 
 			case (s.VmState == VmStateDontCare) && (s.ApiState == VmStateDontCare) && (s.VmWantState == state.VM.WantState) && (s.VmState == state.VM.CurrentState):
 				// Handle want states last.
-				fmt.Printf("4:")
+				//fmt.Printf("4:")
 				found = true
 				break
 
 
 			case (s.VmState == state.VM.CurrentState) && (s.ApiState == state.API.CurrentState) && (s.VmWantState == state.VM.WantState) && (s.VmState == state.VM.CurrentState):
 				// Handle want states last.
-				fmt.Printf("4:")
+				//fmt.Printf("4:")
 				found = true
 				break
 
 			default:
-				fmt.Printf("D:")
+				//fmt.Printf("D:")
 		}
-		fmt.Printf("Name: %s(%d)   \tVmState:%v   \tVmWantState:%v   \tApiState:%v   \tApiWantState:%v\n",
-			s.Name, i,
-			state.VM.CurrentState, state.VM.WantState,
-			state.API.CurrentState, state.API.WantState,
-			)
+//		fmt.Printf("Name: %s(%d)   \tVmState:%v   \tVmWantState:%v   \tApiState:%v   \tApiWantState:%v\n",
+//			s.Name, i,
+//			state.VM.CurrentState, state.VM.WantState,
+//			state.API.CurrentState, state.API.WantState,
+//			)
 
 		if found == true {
-			fmt.Printf("MOREF\n")
+//			fmt.Printf("MOREF\n")
 			break
 		}
 	}
@@ -321,7 +322,7 @@ func (state *BoxState) GetStateMeaning() (VmDisplayState) {
 		s.Name = VmStateUnknown
 	}
 
-	fmt.Printf("E:%v(%d) '%v' : '%v'\n", s.Name, i, state.VM.CurrentState, state.API.CurrentState)
+//	fmt.Printf("E:%v(%d) '%v' : '%v'\n", s.Name, i, state.VM.CurrentState, state.API.CurrentState)
 
 	return DisplayState[s.Name]
 }

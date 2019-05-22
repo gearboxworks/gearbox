@@ -112,7 +112,7 @@ func (me *Box) StartBox() (KeyValueMap, status.Status) {
 		me.State.API.WantState = VmStateRunning
 
 		// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
-		_, _, sts = me.Run("startvm", me.Boxname)
+		_, _, sts = me.Run("startvm", me.Boxname, "--type", "headless")
 		if is.Error(sts) {
 			break
 		}
@@ -144,7 +144,7 @@ func (me *Box) StopBox() (KeyValueMap, status.Status) {
 		me.State.API.WantState = VmStatePowerOff
 
 		// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
-		_, _, sts = me.Run("controlvm", global.Brandname, "acpipowerbutton")
+		_, _, sts = me.Run("controlvm", me.Boxname, "acpipowerbutton")
 		if is.Error(sts) {
 			break
 		}
@@ -345,7 +345,12 @@ func (me *Box) cmdModifyVmBasic() (KeyValueMap, status.Status) {
 		}
 
 		// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsSupport.GetAdminRootDir()) + "/" + IconLogo)
-		_, _, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsSupport.GetAdminRootDir()) + "/" + IconLogo)
+		_, _, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsSupport.GetAdminRootDir()) + "/" + IconLogoPng)
+		if is.Error(sts) {
+			break
+		}
+
+		_, _, sts = me.Run("modifyvm", me.Boxname, "--ioapic", "on", "--acpi", "on", "--biosbootmenu", "disabled", "--biosapic", "apic")
 		if is.Error(sts) {
 			break
 		}
