@@ -6,7 +6,6 @@ import (
 	"gearbox/global"
 	"gearbox/help"
 	"gearbox/only"
-	"github.com/apcera/libretto/virtualmachine/virtualbox"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"os"
@@ -591,7 +590,7 @@ func (me *Box) cmdModifyVmIso() (KeyValueMap, status.Status) {
 		}
 
 		_, _, sts = me.Run("storageattach", me.Boxname,
-			"--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--tempeject", "on", "--medium", me.VmIsoFile) //, $HOME/.gearbox/box/iso/gearbox-0.5.0.iso)
+			"--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--tempeject", "on", "--medium", me.VmIsoFile)
 		if is.Error(sts) {
 			fmt.Printf("Error: %v\n", sts.Data())
 			break
@@ -712,7 +711,7 @@ func (me *Box) Run(args ...string) (string, string, status.Status) {
 	if path, err := exec.LookPath("VBoxManage"); err == nil {
 		vboxManagePath = path
 	} else {
-		vboxManagePath = virtualbox.VBOXMANAGE
+		vboxManagePath = VBOXMANAGE
 	}
 
 	fmt.Printf("EXEC:%v \"%v\"\n", vboxManagePath, strings.Join(args, `" "`))

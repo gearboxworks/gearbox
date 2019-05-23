@@ -9,8 +9,6 @@ import (
 	"gearbox/os_support"
 	"gearbox/ssh"
 	"gearbox/util"
-	lbssh "github.com/apcera/libretto/ssh"
-	"github.com/apcera/libretto/virtualmachine/virtualbox"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	// dmvb "github.com/docker/machine/drivers/virtualbox"
@@ -23,12 +21,15 @@ import (
 
 
 type Box struct {
-	Boxname    string
-	VmInstance virtualbox.VM
-	State      BoxState
-	OvaFile    string
-	VmBaseDir  string
-	VmIsoFile  string
+	Boxname         string
+	State           BoxState
+	VmBaseDir       string
+	VmIsoDir        string
+	VmIsoVersion    string
+	VmIsoFile       string
+	VmIsoUrl 		string
+	VmIsoInfo	    Release
+	VmIsoDlIndex	int
 
 	// SSH related - Need to fix this. It's used within CreateBox()
 	SshUsername  string
@@ -55,112 +56,90 @@ type Args Box
 func NewBox(OsSupport oss.OsSupporter, args ...Args) *Box {
 
 	var _args Args
-
-	if len(args) > 0 {
-		_args = args[0]
-	}
-
-	_args.OsSupport = OsSupport
-
-	if _args.Boxname == "" {
-		_args.Boxname = global.Brandname
-	}
-
-	if _args.WaitDelay == 0 {
-		_args.WaitDelay = DefaultWaitDelay
-	}
-
-	if _args.WaitRetries == 0 {
-		_args.WaitRetries = DefaultWaitRetries
-	}
-
-	if _args.ConsoleHost == "" {
-		_args.ConsoleHost = DefaultConsoleHost
-	}
-
-	if _args.ConsolePort == "" {
-		_args.ConsolePort = DefaultConsolePort
-	}
-
-	if _args.ConsoleOkString == "" {
-		_args.ConsoleOkString = DefaultConsoleOkString
-	}
-
-	if _args.ConsoleReadWait == 0 {
-		_args.ConsoleReadWait = DefaultConsoleReadWait
-	}
-
-	if _args.SshUsername == "" {
-		_args.SshUsername = ssh.DefaultUsername
-	}
-
-	if _args.SshPassword == "" {
-		_args.SshPassword = ssh.DefaultPassword
-	}
-
-	if _args.SshPublicKey == "" {
-		_args.SshPublicKey = ssh.DefaultKeyFile
-	}
-
-	if _args.VmBaseDir == "" {
-		_args.VmBaseDir = string(OsSupport.GetUserConfigDir() + "/box/vm")
-	}
-
-	if _args.VmIsoFile == "" {
-		_args.VmIsoFile = string(OsSupport.GetUserConfigDir() + "/box/iso/gearbox-0.5.0.iso")
-	}
-
-	_args.VmInstance = virtualbox.VM{
-		Name: _args.Boxname,
-		Src:  _args.OvaFile,
-		Credentials: lbssh.Credentials{
-			// Need a way of obtaining this.
-			SSHUser:       _args.SshUsername,
-			SSHPassword:   _args.SshPassword,
-			SSHPrivateKey: _args.SshPublicKey,
-		},
-	}
-
+	var sts status.Status
 	box := &Box{}
-	*box = Box(_args)
 
-	// Query VB to see if it exists.
-	// If not return nil.
+	for range only.Once {
+
+		if len(args) > 0 {
+			_args = args[0]
+		}
+
+		_args.OsSupport = OsSupport
+
+		if _args.Boxname == "" {
+			_args.Boxname = global.Brandname
+		}
+
+		if _args.WaitDelay == 0 {
+			_args.WaitDelay = DefaultWaitDelay
+		}
+
+		if _args.WaitRetries == 0 {
+			_args.WaitRetries = DefaultWaitRetries
+		}
+
+		if _args.ConsoleHost == "" {
+			_args.ConsoleHost = DefaultConsoleHost
+		}
+
+		if _args.ConsolePort == "" {
+			_args.ConsolePort = DefaultConsolePort
+		}
+
+		if _args.ConsoleOkString == "" {
+			_args.ConsoleOkString = DefaultConsoleOkString
+		}
+
+		if _args.ConsoleReadWait == 0 {
+			_args.ConsoleReadWait = DefaultConsoleReadWait
+		}
+
+		if _args.SshUsername == "" {
+			_args.SshUsername = ssh.DefaultUsername
+		}
+
+		if _args.SshPassword == "" {
+			_args.SshPassword = ssh.DefaultPassword
+		}
+
+		if _args.SshPublicKey == "" {
+			_args.SshPublicKey = ssh.DefaultKeyFile
+		}
+
+		if _args.VmBaseDir == "" {
+			_args.VmBaseDir = string(OsSupport.GetUserConfigDir() + "/box/vm")
+		}
+
+		if _args.VmIsoDir == "" {
+			_args.VmIsoDir = string(OsSupport.GetUserConfigDir() + "/box/iso")
+		}
+
+		_args.VmIsoDlIndex = 100
+
+		*box = Box(_args)
+
+		sts = box.SelectRelease(ReleaseSelector{})
+		if is.Error(sts) {
+			break
+		}
+
+		sts = box.VmIsoInfo.ShowRelease()
+		if is.Error(sts) {
+			break
+		}
+	}
+	//sts = box.GetIso()
+	//fmt.Printf("STS:%v\n", sts)
+
+	//os.Exit(0)
 
 	return box
 }
 
 
 func (me *Box) Initialize() (sts status.Status) {
-	for range only.Once {
-		if me.OvaFile != "" {
-			break
-		}
 
-		cfgdir := me.OsSupport.GetUserConfigDir()
-
-		me.OvaFile = fmt.Sprintf("%s/%s", cfgdir, OvaFileName)
-
-		// The OvaFile is created from an export from within VirtualBox.
-		// VBoxManage export Parent -o Parent.ova --options manifest
-		// This was the best way to create a base template, avoiding too much code bloat.
-		// And allows multiple VM frameworks to be used with libretto.
-		// It doesn't include the ISO image yet as it is too large.
-		// Once the ISO image size has been reduced, we can do this:
-		// VBoxManage export Parent -o Parent.ova --options iso,manifest
-
-//		_, err := os.Stat(me.OvaFile)
-//		if os.IsExist(err) {
-//			break
-//		}
-//		err = vm.RestoreAssets(string(cfgdir), strings.TrimLeft(OvaFileName, string(os.PathSeparator)))
-//		if err != nil {
-//			sts = status.Wrap(err, &status.Args{
-//				Message: fmt.Sprintf("%s: VM OVA file cannot be created as'%s'.", global.Brandname, me.OvaFile),
-//			})
-//			break
-//		}
-	}
 	return sts
 }
 
@@ -397,7 +376,8 @@ func (me *Box) Restart() (sts status.Status) {
 
 func (me *Box) GetCachedState() (state BoxState, sts status.Status) {
 
-	// This is required so that not more than one
+	// This is required so that not more than one process bashes VB at the same time.
+	// This causes no end of issues.
 
 	for range only.Once {
 		sts = EnsureNotNil(me)

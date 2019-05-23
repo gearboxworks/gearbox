@@ -9,7 +9,6 @@ import (
 
 const (
 	Basedir     = "/home/gearbox/projects"
-	OvaFileName = "/box/vm/Gearbox.ova"
 )
 
 const (
@@ -24,25 +23,10 @@ const (
 	VmStateDontCare		= "dont care"
 	VmStateUnknown		= "unknown"
 
-	ErrorState   = "error"
-	VmStateHalted  = "halted"
 	OkState      = "ok"
 	NotOkState   = "nok"
 )
 
-const (
-	StateInit			= iota
-	StateNotPresent	= iota
-	StatePowerOff		= iota
-	StatePaused		= iota
-	StateSaved		= iota
-	StateRunning		= iota
-	StateStarting		= iota
-	StateStopping		= iota
-	StateStarting2	= iota
-	StateStopping2	= iota
-	StateUnknown		= iota
-)
 
 const (
 	DefaultLogo = "heartbeat/img/IconLogo.ico"

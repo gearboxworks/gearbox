@@ -10,7 +10,6 @@ import (
 	"gearbox/only"
 	"gearbox/os_support"
 	"gearbox/ssh"
-	"github.com/apcera/libretto/virtualmachine/virtualbox"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/sqweek/dialog"
@@ -19,9 +18,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
-
-	//	"github.com/apcera/libretto/virtualmachine/virtualbox"
-	//	lbssh "github.com/apcera/libretto/ssh"
 	"github.com/getlantern/systray"
 	"github.com/jinzhu/copier"
 	"os"
@@ -69,23 +65,20 @@ type Args Heartbeat
 
 
 type menuStruct struct {
-	vmStatusEntry  *systray.MenuItem
-	apiStatusEntry  *systray.MenuItem
-	unfsdStatusEntry  *systray.MenuItem
+	vmStatusEntry    *systray.MenuItem
+	apiStatusEntry   *systray.MenuItem
+	unfsdStatusEntry *systray.MenuItem
+	startEntry       *systray.MenuItem
+	stopEntry        *systray.MenuItem
+	adminEntry       *systray.MenuItem
+	sshEntry         *systray.MenuItem
+	quitEntry        *systray.MenuItem
+	restartEntry     *systray.MenuItem
 
-	startEntry  *systray.MenuItem
-	stopEntry   *systray.MenuItem
-	adminEntry  *systray.MenuItem
-	sshEntry    *systray.MenuItem
-	quitEntry   *systray.MenuItem
-	restartEntry *systray.MenuItem
-	helpEntry   *systray.MenuItem
-	createEntry *systray.MenuItem
-}
-
-
-type GearboxVM struct {
-	virtualbox.VM
+	helpEntry        *systray.MenuItem
+	versionEntry     *systray.MenuItem
+	updateEntry      *systray.MenuItem
+	createEntry      *systray.MenuItem
 }
 
 
@@ -93,100 +86,103 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 
 	var _args Args
 	var sts status.Status
-
-	if len(args) > 0 {
-		_args = args[0]
-	}
-
-	_args.OsSupport = OsSupport
-	foo := box.Args{}
-	copier.Copy(&foo, &_args)
-
-	// Start a new VM Box instance.
-	_args.BoxInstance = box.NewBox(OsSupport, foo)
-
-	if _args.Boxname == "" {
-		_args.BoxInstance.Boxname = global.Brandname
-	} else {
-		_args.BoxInstance.Boxname = _args.Boxname
-	}
-	_args.BoxInstance.Boxname = "harry"		// DEBUG
-
-	if _args.WaitDelay == 0 {
-		_args.BoxInstance.WaitDelay = DefaultWaitDelay
-	} else {
-		_args.BoxInstance.WaitDelay = _args.WaitDelay
-	}
-
-	if _args.WaitRetries == 0 {
-		_args.BoxInstance.WaitRetries = DefaultWaitRetries
-	} else {
-		_args.BoxInstance.WaitRetries = _args.WaitRetries
-	}
-
-	if _args.ConsoleHost == "" {
-		_args.BoxInstance.ConsoleHost = DefaultConsoleHost
-	} else {
-		_args.BoxInstance.ConsoleHost = _args.ConsoleHost
-	}
-
-	if _args.ConsolePort == "" {
-		_args.BoxInstance.ConsolePort = DefaultConsolePort
-	} else {
-		_args.BoxInstance.ConsolePort = _args.ConsolePort
-	}
-
-	if _args.ConsoleOkString == "" {
-		_args.BoxInstance.ConsoleOkString = DefaultConsoleOkString
-	} else {
-		_args.BoxInstance.ConsoleOkString = _args.ConsoleOkString
-	}
-
-	if _args.ConsoleReadWait == 0 {
-		_args.BoxInstance.ConsoleReadWait = DefaultConsoleReadWait
-	} else {
-		_args.BoxInstance.ConsoleReadWait = _args.ConsoleReadWait
-	}
-
-	if _args.SshUsername == "" {
-		_args.BoxInstance.SshUsername = ssh.DefaultUsername
-	} else {
-		_args.BoxInstance.SshUsername = _args.SshUsername
-	}
-
-	if _args.SshPassword == "" {
-		_args.BoxInstance.SshPassword = ssh.DefaultPassword
-	} else {
-		_args.BoxInstance.SshPassword = _args.SshPassword
-	}
-
-	if _args.SshPublicKey == "" {
-		_args.BoxInstance.SshPublicKey = ssh.DefaultKeyFile
-	} else {
-		_args.BoxInstance.SshPublicKey = _args.SshPublicKey
-	}
-
-	execPath, _ := os.Executable()
-	execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/heartbeat"	// os.Getwd()
-
-	_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetAdminRootDir(), DefaultPidFile))
-
-	// Start a new Daemon instance.
-	_args.DaemonInstance = daemon.NewDaemon(_args.OsSupport, daemon.Args{
-		Boxname: _args.Boxname,
-		ServiceData: daemon.PlistData {
-			Label: "com.gearbox.heartbeat",
-			Program:   execPath,
-			ProgramArgs: []string{"heartbeat", "daemon"},
-			Path:      execCwd,
-			PidFile: _args.PidFile,
-			KeepAlive: true,
-			RunAtLoad: true,
-		},
-	})
-
 	hb := &Heartbeat{}
-	*hb = Heartbeat(_args)
+
+	for range only.Once {
+
+		if len(args) > 0 {
+			_args = args[0]
+		}
+
+		_args.OsSupport = OsSupport
+		foo := box.Args{}
+		copier.Copy(&foo, &_args)
+
+		// Start a new VM Box instance.
+		_args.BoxInstance = box.NewBox(OsSupport, foo)
+
+		if _args.Boxname == "" {
+			_args.BoxInstance.Boxname = global.Brandname
+		} else {
+			_args.BoxInstance.Boxname = _args.Boxname
+		}
+		_args.BoxInstance.Boxname = "harry" // DEBUG
+
+		if _args.WaitDelay == 0 {
+			_args.BoxInstance.WaitDelay = DefaultWaitDelay
+		} else {
+			_args.BoxInstance.WaitDelay = _args.WaitDelay
+		}
+
+		if _args.WaitRetries == 0 {
+			_args.BoxInstance.WaitRetries = DefaultWaitRetries
+		} else {
+			_args.BoxInstance.WaitRetries = _args.WaitRetries
+		}
+
+		if _args.ConsoleHost == "" {
+			_args.BoxInstance.ConsoleHost = DefaultConsoleHost
+		} else {
+			_args.BoxInstance.ConsoleHost = _args.ConsoleHost
+		}
+
+		if _args.ConsolePort == "" {
+			_args.BoxInstance.ConsolePort = DefaultConsolePort
+		} else {
+			_args.BoxInstance.ConsolePort = _args.ConsolePort
+		}
+
+		if _args.ConsoleOkString == "" {
+			_args.BoxInstance.ConsoleOkString = DefaultConsoleOkString
+		} else {
+			_args.BoxInstance.ConsoleOkString = _args.ConsoleOkString
+		}
+
+		if _args.ConsoleReadWait == 0 {
+			_args.BoxInstance.ConsoleReadWait = DefaultConsoleReadWait
+		} else {
+			_args.BoxInstance.ConsoleReadWait = _args.ConsoleReadWait
+		}
+
+		if _args.SshUsername == "" {
+			_args.BoxInstance.SshUsername = ssh.DefaultUsername
+		} else {
+			_args.BoxInstance.SshUsername = _args.SshUsername
+		}
+
+		if _args.SshPassword == "" {
+			_args.BoxInstance.SshPassword = ssh.DefaultPassword
+		} else {
+			_args.BoxInstance.SshPassword = _args.SshPassword
+		}
+
+		if _args.SshPublicKey == "" {
+			_args.BoxInstance.SshPublicKey = ssh.DefaultKeyFile
+		} else {
+			_args.BoxInstance.SshPublicKey = _args.SshPublicKey
+		}
+
+		execPath, _ := os.Executable()
+		execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/heartbeat" // os.Getwd()
+
+		_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetAdminRootDir(), DefaultPidFile))
+
+		// Start a new Daemon instance.
+		_args.DaemonInstance = daemon.NewDaemon(_args.OsSupport, daemon.Args{
+			Boxname: _args.Boxname,
+			ServiceData: daemon.PlistData{
+				Label:       "com.gearbox.heartbeat",
+				Program:     execPath,
+				ProgramArgs: []string{"heartbeat", "daemon"},
+				Path:        execCwd,
+				PidFile:     _args.PidFile,
+				KeepAlive:   true,
+				RunAtLoad:   true,
+			},
+		})
+
+		*hb = Heartbeat(_args)
+	}
 
 	return hb, sts
 }
@@ -201,8 +197,8 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 			break
 		}
 
-		if !daemon.IsParentInit() {
-		//if daemon.IsParentInit() {
+		//if !daemon.IsParentInit() {
+		if daemon.IsParentInit() {
 			fmt.Printf("Gearbox: Sub-command not available for user.\n")
 			sts = status.Fail(&status.Args{
 				Message: "Sub-command not available for user",
@@ -251,6 +247,7 @@ func (me *Heartbeat) onReady() {
 	systray.SetTitle("")
 
 	menu.helpEntry = systray.AddMenuItem("About Gearbox", "Contact Gearbox help for" + me.BoxInstance.Boxname)
+	menu.versionEntry = systray.AddMenuItem(fmt.Sprintf("Gearbox (v%s)", me.BoxInstance.VmIsoVersion), "Running v" + me.BoxInstance.VmIsoVersion)
 
 	systray.AddSeparator()
 	menu.vmStatusEntry = systray.AddMenuItem("Box: Idle", "Current state of Gearbox VM")
@@ -263,6 +260,7 @@ func (me *Heartbeat) onReady() {
 	systray.AddSeparator()
 	menu.adminEntry = systray.AddMenuItem("Admin", "Open Gearbox admin interface")
 	menu.createEntry = systray.AddMenuItem("Create Box", "Create a Gearbox OS instance")
+	menu.updateEntry = systray.AddMenuItem("Update Box", "Check for Gearbox OS updates")
 	menu.startEntry = systray.AddMenuItem("Start Box", "Start Gearbox OS instance")
 	menu.stopEntry = systray.AddMenuItem("Stop Box", "Stop Gearbox OS instance")
 
@@ -326,6 +324,20 @@ func (me *Heartbeat) onReady() {
 					// .
 				}
 
+				if me.BoxInstance.VmIsoDlIndex == 100 {
+					sts = me.BoxInstance.IsIsoFilePresent()
+					if !is.Success(sts) {
+						fmt.Printf("Get ready agent: %v\n", sts)
+						fmt.Printf("Downloading...\n")
+						me.BoxInstance.VmIsoDlIndex = 0
+						intentDelay = true
+						go me.BoxInstance.GetIso()
+						intentDelay = false
+						// var b struct{}
+						// menu.updateEntry.ClickedCh <- b
+					}
+				}
+
 				me.SetMenuState(menu)
 				time.Sleep(10 * time.Second)
 			}
@@ -340,6 +352,9 @@ func (me *Heartbeat) onReady() {
 				case <- menu.helpEntry.ClickedCh:
 					fmt.Printf("Menu: Help\n")
 					me.openAbout()
+
+				case <- menu.versionEntry.ClickedCh:
+					fmt.Printf("Menu: Version\n")
 
 				case <- menu.vmStatusEntry.ClickedCh:
 					// Ignore.
@@ -364,9 +379,6 @@ func (me *Heartbeat) onReady() {
 					fmt.Printf("Menu: Admin\n")
 					me.openAdmin()
 
-				//case <- menu.consoleEntry.ClickedCh:
-				//	fmt.Printf("Menu: Console\n")
-
 				case <- menu.sshEntry.ClickedCh:
 					fmt.Printf("Menu: SSH\n")
 					me.openTerminal()
@@ -383,6 +395,15 @@ func (me *Heartbeat) onReady() {
 						}
 					}
 					intentDelay = false
+
+				case <- menu.updateEntry.ClickedCh:
+					fmt.Printf("Menu: Update\n")
+					if me.BoxInstance.VmIsoDlIndex == 100 {
+						me.BoxInstance.VmIsoDlIndex = 0
+						intentDelay = true
+						go me.BoxInstance.GetIso()
+						intentDelay = false
+					}
 
 				case <- menu.restartEntry.ClickedCh:
 					fmt.Printf("Menu: Restart\n")
@@ -516,6 +537,27 @@ func (me *Heartbeat) getIcon(s string) []byte {
 func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 	// This can clearly be refactored a LOT.
 
+	if me.BoxInstance.VmIsoDlIndex < 100 {
+		menu.versionEntry.SetTitle(fmt.Sprintf("Gearbox (v%s) updating ...", me.BoxInstance.VmIsoVersion))
+		menu.versionEntry.SetTooltip("Updating v" + me.BoxInstance.VmIsoVersion)
+
+		menu.updateEntry.SetTitle(fmt.Sprintf("Updating Box (%d%%)", me.BoxInstance.VmIsoDlIndex))
+		menu.updateEntry.SetTooltip(fmt.Sprintf("Downloading v%s - %d%% complete", me.BoxInstance.VmIsoVersion, me.BoxInstance.VmIsoDlIndex))
+		menu.updateEntry.Disable()
+
+	} else {
+		menu.versionEntry.SetTitle(fmt.Sprintf("Gearbox (v%s)", me.BoxInstance.VmIsoVersion))
+		menu.versionEntry.SetTooltip("Running v" + me.BoxInstance.VmIsoVersion)
+
+		menu.updateEntry.SetTitle("Update Box")
+		menu.updateEntry.SetTooltip("Check for Gearbox OS updates")
+		menu.updateEntry.Enable()
+	}
+	// 		sts = me.IsIsoFilePresent()
+	//		if is.Error(sts) {
+	//			break
+	//		}
+
 	vmState := me.State.Box.GetStateMeaning()
 	menu.apiStatusEntry.SetTooltip(vmState.ApiHintState)
 	menu.apiStatusEntry.SetIcon(me.getIcon(vmState.ApiIconState))
@@ -630,9 +672,9 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 			systray.SetTooltip("Gearbox VM needs to be created.")
 
 			returnValue = box.VmStateNotPresent
-			menu.stopEntry.Disable()
-			menu.startEntry.Disable()
-			menu.sshEntry.Disable()
+			menu.stopEntry.Hide()
+			menu.startEntry.Hide()
+			menu.sshEntry.Hide()
 			menu.createEntry.Enable()
 
 		case box.VmStateUnknown:
@@ -641,9 +683,9 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 			systray.SetTooltip("Gearbox is in an unknown state.")
 
 			returnValue = box.VmStateUnknown
-			menu.stopEntry.Disable()
-			menu.startEntry.Disable()
-			menu.sshEntry.Disable()
+			menu.stopEntry.Hide()
+			menu.startEntry.Hide()
+			menu.sshEntry.Hide()
 			menu.createEntry.Enable()
 
 		case box.VmStatePaused:
@@ -656,10 +698,10 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 			systray.SetTooltip("Gearbox is halted.")
 
 			returnValue = box.VmStatePowerOff
-			menu.stopEntry.Disable()
+			menu.stopEntry.Hide()
 			menu.startEntry.Enable()
-			menu.sshEntry.Disable()
-			menu.createEntry.Disable()
+			menu.sshEntry.Hide()
+			menu.createEntry.Hide()
 
 		case box.VmStateRunning:
 			// fmt.Printf("STATE: RUNNING\n")
@@ -668,9 +710,9 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 
 			returnValue = box.VmStateRunning
 			menu.stopEntry.Enable()
-			menu.startEntry.Disable()
+			menu.startEntry.Hide()
 			menu.sshEntry.Enable()
-			menu.createEntry.Disable()
+			menu.createEntry.Hide()
 
 		case box.VmStateStarting:
 			fmt.Printf("STATE: STARTING\n")
@@ -678,10 +720,10 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 			systray.SetTooltip("Gearbox starting up.")
 
 			returnValue = box.VmStateStarting
-			menu.stopEntry.Disable()
-			menu.startEntry.Disable()
-			menu.sshEntry.Disable()
-			menu.createEntry.Disable()
+			menu.stopEntry.Hide()
+			menu.startEntry.Hide()
+			menu.sshEntry.Hide()
+			menu.createEntry.Hide()
 
 		case box.VmStateStopping:
 			fmt.Printf("STATE: STOPPING\n")
@@ -689,10 +731,10 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 			systray.SetTooltip("Gearbox is stopping.")
 
 			returnValue = box.VmStateStopping
-			menu.stopEntry.Disable()
-			menu.startEntry.Disable()
-			menu.sshEntry.Disable()
-			menu.createEntry.Disable()
+			menu.stopEntry.Hide()
+			menu.startEntry.Hide()
+			menu.sshEntry.Hide()
+			menu.createEntry.Hide()
 
 	}
 
@@ -701,39 +743,6 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 
 
 func (me *Heartbeat) Initialize() (sts status.Status) {
-
-	//var boxArgs box.Args
-
-	for range only.Once {
-
-		cfgdir := me.OsSupport.GetUserConfigDir()
-
-		// sts := gearbox.BoxInstance.Start(boxArgs)
-
-		me.OvaFile = fmt.Sprintf("%s/%s", cfgdir, "foo")
-
-		// The OvaFile is created from an export from within VirtualBox.
-		// VBoxManage export Parent -o Parent.ova --options manifest
-		// This was the best way to create a base template, avoiding too much code bloat.
-		// And allows multiple VM frameworks to be used with libretto.
-		// It doesn't include the ISO image yet as it is too large.
-		// Once the ISO image size has been reduced, we can do this:
-		// VBoxManage export Parent -o Parent.ova --options iso,manifest
-
-/*
-		_, err := os.Stat(me.OvaFile)
-		if os.IsExist(err) {
-			break
-		}
-		err = vm.RestoreAssets(string(cfgdir), strings.TrimLeft(OvaFileName, string(os.PathSeparator)))
-		if err != nil {
-			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("%s: VM OVA file cannot be created as'%s'.", global.Brandname, me.OvaFile),
-			})
-			break
-		}
-*/
-	}
 
 	return sts
 }

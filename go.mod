@@ -1,8 +1,8 @@
 module gearbox
 
 require (
-	github.com/apcera/libretto v0.11.0
 	github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48
+	github.com/cavaliercoder/grab v2.0.0+incompatible
 
 	github.com/clbanning/checkjson v0.0.0-20190418161636-abd3ee163e3e
 	github.com/cznic/golex v0.0.0-20181122101858-9c343928389c // indirect
@@ -20,6 +20,8 @@ require (
 	github.com/getlantern/systray v0.0.0-20190131073753-26d5b920200d
 	github.com/go-bindata/go-bindata v1.0.0
 	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/google/go-github v17.0.0+incompatible
+	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.1.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jinzhu/copier v0.0.0-20180308034124-7e38e58719c3
@@ -44,6 +46,7 @@ require (
 	github.com/zserge/lorca v0.1.6
 	github.com/zserge/webview v0.0.0-20190123072648-16c93bcaeaeb
 	golang.org/x/crypto v0.0.0-20190211182817-74369b46fc67
+	golang.org/x/net v0.0.0-20181102091132-c10e9556a7bc
 	google.golang.org/grpc v1.18.0
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/guregu/null.v2 v2.1.2 // indirect
