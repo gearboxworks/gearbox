@@ -89,6 +89,30 @@ func (me *Project) Renew(path types.RelativePath) (sts status.Status) {
 	return sts
 }
 
+func (me *Project) Enable() (sts status.Status) {
+	for range only.Once {
+
+		// MICKMAKE - To be added.
+		if is.Error(sts) {
+			break
+		}
+	}
+
+	return sts
+}
+
+func (me *Project) Disable() (sts status.Status) {
+	for range only.Once {
+
+		// MICKMAKE - To be added.
+		if is.Error(sts) {
+			break
+		}
+	}
+
+	return sts
+}
+
 func (me *Project) Load() (sts status.Status) {
 	for range only.Once {
 		var fp types.AbsoluteFilepath

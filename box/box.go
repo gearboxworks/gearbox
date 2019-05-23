@@ -2,35 +2,34 @@ package box
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
-	"gearbox/box/vm"
 	"gearbox/global"
 	"gearbox/help"
 	"gearbox/only"
 	"gearbox/os_support"
 	"gearbox/ssh"
 	"gearbox/util"
-	lbssh "github.com/apcera/libretto/ssh"
-	"github.com/apcera/libretto/virtualmachine"
-	"github.com/apcera/libretto/virtualmachine/virtualbox"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	// dmvb "github.com/docker/machine/drivers/virtualbox"
+	// "github.com/docker/machine/libmachine/drivers/plugin"
 	"net"
-	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 	"time"
 )
 
-type State string
 
 type Box struct {
-	Boxname  string
-	Instance virtualbox.VM
-	State    State
-	OvaFile  string
+	Boxname         string
+	State           BoxState
+	VmBaseDir       string
+	VmIsoDir        string
+	VmIsoVersion    string
+	VmIsoFile       string
+	VmIsoUrl 		string
+	VmIsoInfo	    Release
+	VmIsoDlIndex	int
 
 	// SSH related - Need to fix this. It's used within CreateBox()
 	SshUsername  string
@@ -53,147 +52,137 @@ type Box struct {
 }
 type Args Box
 
+
 func NewBox(OsSupport oss.OsSupporter, args ...Args) *Box {
+
 	var _args Args
-	if len(args) > 0 {
-		_args = args[0]
-	}
-
-	_args.OsSupport = OsSupport
-
-	if _args.Boxname == "" {
-		_args.Boxname = global.Brandname
-	}
-
-	if _args.WaitDelay == 0 {
-		_args.WaitDelay = DefaultWaitDelay
-	}
-
-	if _args.WaitRetries == 0 {
-		_args.WaitRetries = DefaultWaitRetries
-	}
-
-	if _args.ConsoleHost == "" {
-		_args.ConsoleHost = DefaultConsoleHost
-	}
-
-	if _args.ConsolePort == "" {
-		_args.ConsolePort = DefaultConsolePort
-	}
-
-	if _args.ConsoleOkString == "" {
-		_args.ConsoleOkString = DefaultConsoleOkString
-	}
-
-	if _args.ConsoleReadWait == 0 {
-		_args.ConsoleReadWait = DefaultConsoleReadWait
-	}
-
-	if _args.SshUsername == "" {
-		_args.SshUsername = ssh.DefaultUsername
-	}
-
-	if _args.SshPassword == "" {
-		_args.SshPassword = ssh.DefaultPassword
-	}
-
-	if _args.SshPublicKey == "" {
-		_args.SshPublicKey = ssh.DefaultKeyFile
-	}
-
-	_args.Instance = virtualbox.VM{
-		Name: _args.Boxname,
-		Src:  _args.OvaFile,
-		Credentials: lbssh.Credentials{
-			// Need a way of obtaining this.
-			SSHUser:       _args.SshUsername,
-			SSHPassword:   _args.SshPassword,
-			SSHPrivateKey: _args.SshPublicKey,
-		},
-	}
-
+	var sts status.Status
 	box := &Box{}
-	*box = Box(_args)
 
-	// Query VB to see if it exists.
-	// If not return nil.
+	for range only.Once {
+
+		if len(args) > 0 {
+			_args = args[0]
+		}
+
+		_args.OsSupport = OsSupport
+
+		if _args.Boxname == "" {
+			_args.Boxname = global.Brandname
+		}
+
+		if _args.WaitDelay == 0 {
+			_args.WaitDelay = DefaultWaitDelay
+		}
+
+		if _args.WaitRetries == 0 {
+			_args.WaitRetries = DefaultWaitRetries
+		}
+
+		if _args.ConsoleHost == "" {
+			_args.ConsoleHost = DefaultConsoleHost
+		}
+
+		if _args.ConsolePort == "" {
+			_args.ConsolePort = DefaultConsolePort
+		}
+
+		if _args.ConsoleOkString == "" {
+			_args.ConsoleOkString = DefaultConsoleOkString
+		}
+
+		if _args.ConsoleReadWait == 0 {
+			_args.ConsoleReadWait = DefaultConsoleReadWait
+		}
+
+		if _args.SshUsername == "" {
+			_args.SshUsername = ssh.DefaultUsername
+		}
+
+		if _args.SshPassword == "" {
+			_args.SshPassword = ssh.DefaultPassword
+		}
+
+		if _args.SshPublicKey == "" {
+			_args.SshPublicKey = ssh.DefaultKeyFile
+		}
+
+		if _args.VmBaseDir == "" {
+			_args.VmBaseDir = string(OsSupport.GetUserConfigDir() + "/box/vm")
+		}
+
+		if _args.VmIsoDir == "" {
+			_args.VmIsoDir = string(OsSupport.GetUserConfigDir() + "/box/iso")
+		}
+
+		_args.VmIsoDlIndex = 100
+
+		*box = Box(_args)
+
+		sts = box.SelectRelease(ReleaseSelector{})
+		if is.Error(sts) {
+			break
+		}
+
+		sts = box.VmIsoInfo.ShowRelease()
+		if is.Error(sts) {
+			break
+		}
+	}
+	//sts = box.GetIso()
+	//fmt.Printf("STS:%v\n", sts)
+
+	//os.Exit(0)
 
 	return box
 }
 
+
 func (me *Box) Initialize() (sts status.Status) {
-	for range only.Once {
-		if me.OvaFile != "" {
-			break
-		}
 
-		cfgdir := me.OsSupport.GetUserConfigDir()
-
-		me.OvaFile = fmt.Sprintf("%s/%s", cfgdir, OvaFileName)
-
-		// The OvaFile is created from an export from within VirtualBox.
-		// VBoxManage export Gearbox -o Gearbox.ova --options manifest
-		// This was the best way to create a base template, avoiding too much code bloat.
-		// And allows multiple VM frameworks to be used with libretto.
-		// It doesn't include the ISO image yet as it is too large.
-		// Once the ISO image size has been reduced, we can do this:
-		// VBoxManage export Gearbox -o Gearbox.ova --options iso,manifest
-
-		_, err := os.Stat(me.OvaFile)
-		if os.IsExist(err) {
-			break
-		}
-		err = vm.RestoreAssets(string(cfgdir), strings.TrimLeft(OvaFileName, string(os.PathSeparator)))
-		if err != nil {
-			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("%s: VM OVA file cannot be created as'%s'.", global.Brandname, me.OvaFile),
-			})
-			break
-		}
-	}
 	return sts
 }
 
-func (me *Box) WaitForState(waitForState State, displayString string) (sts status.Status) {
 
-	for range only.Once {
-		var waitCount int
+func (me *Box) WaitForVmState(displayString string) bool {
 
-		spinner := util.NewSpinner(util.SpinnerArgs{
-			Text:    displayString,
-			ExitOK:  displayString + " - OK",
-			ExitNOK: displayString + " - FAILED",
-		})
-		spinner.Start()
+	found := false
+	var waitCount int
 
-		for waitCount = 0; waitCount < me.WaitRetries; waitCount++ {
-			sts = me.GetState()
-			if is.Error(sts) {
-				spinner.Stop(false)
-				break
-			}
-			if sts.Data().(State) == waitForState {
-				spinner.Stop(true)
-				break
-			}
-			time.Sleep(me.WaitDelay)
-			spinner.Update(fmt.Sprintf("%s [%d]", displayString, waitCount))
+	spinner := util.NewSpinner(util.SpinnerArgs{
+		Text:    displayString,
+		ExitOK:  displayString + " - OK",
+		ExitNOK: displayString + " - FAILED",
+	})
+	spinner.Start()
+
+	for waitCount = 0; waitCount < me.WaitRetries; waitCount++ {
+
+		_, sts := me.GetState()
+		if is.Error(sts) {
+			found = false
+			break
 		}
 
+		if me.State.VM.CurrentState == me.State.VM.WantState {
+			found = true
+			break
+		}
+
+		time.Sleep(me.WaitDelay)
+		spinner.Update(fmt.Sprintf("%s [%d]", displayString, waitCount))
 	}
-	if is.Error(sts) {
-		sts = status.Wrap(sts, &status.Args{
-			Message: fmt.Sprintf("%s VM failed to stop", global.Brandname),
-			Help:    help.ContactSupportHelp(), // @TODO need better support here
-			Data:    ErrorState,
-		})
-	}
-	return sts
+
+	spinner.Stop(found)
+
+	return found
 }
+
 
 func closeDialConnection(conn net.Conn) {
 	_ = conn.Close()
 }
+
 
 func newSpinner(displayString string) *util.Spinner {
 	return util.NewSpinner(util.SpinnerArgs{
@@ -203,16 +192,31 @@ func newSpinner(displayString string) *util.Spinner {
 	})
 }
 
+
 func (me *Box) heartbeatOk(b []byte, n int) (sts status.Status) {
+
 	for range only.Once {
 		apiSplit := strings.Split(string(b[:n]), ";")
 		if len(apiSplit) <= 1 {
 			break
 		}
+
 		match, _ := regexp.MatchString(me.ConsoleOkString, apiSplit[1])
 		if !match {
 			break
 		}
+
+		fmt.Printf("API:%v\n", apiSplit)
+		if len(apiSplit) < 2 {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("did not receive 'OK' from console: %s",
+					apiSplit[2],
+				),
+				Data: NotOkState,
+			})
+			break
+		}
+
 		if apiSplit[2] != "OK" {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("did not receive 'OK' from console: %s",
@@ -222,39 +226,335 @@ func (me *Box) heartbeatOk(b []byte, n int) (sts status.Status) {
 			})
 			break
 		}
-		sts = status.Success("received 'OK' from console").SetData(OkState)
+
+		sts = status.Success("received 'OK' from console")
+		sts.SetData(OkState)
 	}
+
 	return sts
 }
 
-func (me *Box) WaitForConsole(displayString string, waitFor time.Duration) (sts status.Status) {
 
-	spinner := newSpinner(displayString)
-	displaySpinner := !me.ShowConsole && displayString != ""
+func (me *Box) Start() (sts status.Status) {
 
 	for range only.Once {
 		sts = EnsureNotNil(me)
 		if is.Error(sts) {
 			break
 		}
-		sts = me.GetState()
+
+		_, sts := me.GetState()
 		if is.Error(sts) {
 			break
 		}
 
-		state, sts := sts.GetString()
+/*
+		switch {
+			case me.State.VM.CurrentState == VmStateUnknown:
+				sts = me.State.LastSts
+				break
+
+			case me.State.VM.CurrentState == VmStateStarting:
+				sts = me.State.LastSts
+				break
+
+			case me.State.VM.CurrentState == VmStateRunning:
+				sts = me.State.LastSts
+				break
+
+			case me.State.VM.CurrentState == VmStateStopping:
+				sts = me.State.LastSts
+				break
+
+			case me.State.VM.CurrentState == VmStatePowerOff:
+				// fall-through
+		}
+*/
+
+		_, sts = me.StartBox()
 		if is.Error(sts) {
 			break
 		}
-		if state != RunningState {
+
+		if me.NoWait != false {
+			break
+		}
+
+		if me.WaitForVmState(fmt.Sprintf("%s VM: Starting", global.Brandname)) == true {
+			sts = me.GetApiStatus(fmt.Sprintf("%s API: Starting", global.Brandname), 30)
+		}
+	}
+
+	return sts
+}
+
+
+func (me *Box) Stop() (sts status.Status) {
+
+	var err error
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		_, sts := me.GetState()
+		if is.Error(sts) {
+			break
+		}
+
+/*
+		switch {
+			case me.State.VM.CurrentState == VmStateUnknown:
+				sts = me.State.LastSts
+				break
+
+			case me.State.VM.CurrentState == VmStateStarting:
+				sts = me.State.LastSts
+				break
+
+			case me.State.VM.CurrentState == VmStateRunning:
+				// fall-through
+
+			case me.State.VM.CurrentState == VmStateStopping:
+				sts = me.State.LastSts
+				break
+
+			case me.State.VM.CurrentState == VmStatePowerOff:
+				sts = me.State.LastSts
+				break
+		}
+*/
+
+		_, sts = me.StopBox()
+		if is.Error(sts) {
+			break
+		}
+
+		if me.NoWait != false {
+			break
+		}
+
+		if me.WaitForVmState(fmt.Sprintf("%s VM: Stopping", global.Brandname)) == true {
+			break
+		}
+	}
+
+	if err == nil {
+		sts = status.Success("%s VM stopped", global.Brandname)
+	}
+
+	return sts
+}
+
+
+func (me *Box) Restart() (sts status.Status) {
+
+	for range only.Once {
+
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		me.Stop()
+		if me.State.VM.CurrentState != me.State.VM.WantState {
 			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("unable to wait for console with %s VM in '%s' state",
-					global.Brandname,
-					state,
-				),
+				Message: fmt.Sprintf("%s VM in an unknown state: %s", global.Brandname, me.State),
+				Data:    VmStateUnknown,
 			})
 			break
 		}
+
+		me.Start()
+		if me.State.VM.CurrentState != me.State.VM.WantState {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("%s VM in an unknown state: %s", global.Brandname, me.State),
+				Data:    VmStateUnknown,
+			})
+			break
+		}
+	}
+
+	if me.State.VM.CurrentState == me.State.VM.WantState {
+		sts = status.Success("%s VM restarted OK", global.Brandname)
+	}
+
+	return sts
+}
+
+
+func (me *Box) GetCachedState() (state BoxState, sts status.Status) {
+
+	// This is required so that not more than one process bashes VB at the same time.
+	// This causes no end of issues.
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		state = me.State
+	}
+
+	return
+}
+
+
+func (me *Box) GetState() (BoxState, status.Status) {
+
+	// Possible VM states:
+	// running
+	// paused
+	// saved
+	// poweroff
+
+	var sts status.Status
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		sts = me.GetVmStatus()
+		if is.Error(sts) {
+			break
+		}
+		if me.State.VM.CurrentState != VmStateRunning {
+			me.State.API.CurrentState = VmStatePowerOff
+			break
+		}
+		me.State.API.WantState = me.State.VM.WantState
+
+		sts = me.GetApiStatus("", 10)
+
+		if me.State.VM.WantState == VmStateInit {
+			me.State.VM.WantState = me.State.VM.CurrentState
+		}
+		//me.State.GetStateMeaning()
+		//me.State.LastSts = sts
+		//fmt.Printf("FOO:", vmState)
+
+		//		if err == nil {
+//			sts = status.Success("%s VM in a valid state: %s", global.Brandname, state)
+//			sts.SetData(state)
+//
+//		}
+
+		//sts = me.State.LastSts
+		//fmt.Printf("STATE2: %v\n", sts)
+	}
+
+	return me.State, sts
+}
+
+
+func (me *Box) GetVmStatus() (status.Status) {
+
+	// Possible VM states:
+	// running
+	// paused
+	// saved
+	// poweroff
+
+	var sts status.Status
+	// var kvm KeyValueMap
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		_, sts = me.cmdListVm()
+		// fmt.Printf("Box '%s' is in state: '%s'\n", kvm["name"], kvm["VMState"])
+		if is.Error(sts) {
+			me.State.VM.CurrentState = VmStateNotPresent
+		}
+
+		if me.State.VM.WantState == VmStateInit {
+			me.State.VM.WantState = me.State.VM.CurrentState
+		}
+
+/*
+		// First check on the VM.
+		// state, err := me.VmInstance.GetState()
+		switch kvm["VMState"] {
+			case VmStateRunning:
+				me.State.VM.CurrentState = VmStateRunning
+
+			case VmStatePowerOff:
+				fallthrough
+			case VmStateSaved:
+				fallthrough
+			case VmStatePaused:
+				me.State.VM.CurrentState = VmStatePowerOff
+				me.State.API.CurrentState = VmStatePowerOff
+		}
+*/
+
+/*
+		switch {
+			case err != nil:
+				// No Gearbox VM available - need to create one.
+				me.State.VM.CurrentState = VmStateUnknown
+				me.State.LastSts = status.Fail(&status.Args{
+					Message: fmt.Sprintf("%s VM - needs to be created", global.Brandname),
+					Help:    help.ContactSupportHelp(), // @TODO need better support here
+					Data:    me.State.VM.CurrentState,
+				})
+				break
+
+			case (me.State.VM.CurrentState == me.State.VM.WantState) && (state == VmStatePowerOff):
+				// If we are not changing states and the VM is halted.
+				me.State.VM.CurrentState = VmStatePowerOff
+				me.State.LastSts = status.Success("%s VM - halted", global.Brandname)
+				break
+
+			case (me.State.VM.CurrentState == me.State.VM.WantState) && (state == VmStateRunning):
+				// If we are not changing states and the VM is running.
+				me.State.VM.CurrentState = VmStateRunning
+				me.State.LastSts = status.Success("%s VM - running", global.Brandname)
+				// Don't break here - need to check on the API.
+
+			case (me.State.VM.CurrentState != me.State.VM.WantState) && (state == VmStatePowerOff):
+				// If we are changing states then the VM is halting.
+				me.State.VM.CurrentState = VmStateStopping
+				me.State.LastSts = status.Success("%s VM - stopping", global.Brandname)
+				// Don't break here - need to check on the API.
+
+			case (me.State.VM.CurrentState != me.State.VM.WantState) && (state == VmStateRunning):
+				// If we are changing states then the VM is starting.
+				me.State.VM.CurrentState = VmStateStarting
+				me.State.LastSts = status.Success("%s VM - starting", global.Brandname)
+				// Don't break here - need to check on the API.
+		}
+*/
+
+		// fmt.Printf("vmState: %v\n", sts)
+	}
+
+	return sts
+}
+
+
+// We have to have some way to block access to other concurrent processes/threads
+// So, we're simply establishing a boolean that indicates this fact.
+// var alreadyRunning = false
+// @TODO - OK, so that's not working out.
+func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts status.Status) {
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		spinner := newSpinner(displayString)
+		displaySpinner := !me.ShowConsole && displayString != ""
 
 		if displaySpinner {
 			// We want to display just a spinner instead of console output.
@@ -263,22 +563,36 @@ func (me *Box) WaitForConsole(displayString string, waitFor time.Duration) (sts 
 
 		// Connect to this console
 		conn, err := net.Dial("tcp", me.ConsoleHost+":"+me.ConsolePort)
-		defer closeDialConnection(conn)
 		if err != nil {
-			sts = status.Wrap(err, &status.Args{
-				Message: "unable to connect to console",
+			me.State.API.CurrentState = VmStatePowerOff
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("%s API - timeout", global.Brandname),
+				Help:    help.ContactSupportHelp(), // @TODO need better support here
+				Data:    me.State.API.CurrentState,
 			})
 			break
 		}
+		// defer closeDialConnection(conn)
+		defer conn.Close()
+
+		// Set default state before we begin.
+		me.State.API.CurrentState = VmStateUnknown
+		sts = status.Fail(&status.Args{
+			Message: fmt.Sprintf("%s API - no data", global.Brandname),
+			Help:    help.ContactSupportHelp(), // @TODO need better support here
+			Data:    me.State.API.CurrentState,
+		})
 
 		exitWhen := time.Now().Add(time.Second * waitFor)
-
 		readBuffer := make([]byte, 512)
 		for waitCount := 0; time.Now().Unix() < exitWhen.Unix(); waitCount++ {
 			err = conn.SetDeadline(time.Now().Add(me.ConsoleReadWait))
 			if err != nil {
-				sts = status.Wrap(err, &status.Args{
-					Message: "unable to set deadline while waiting for console connection",
+				me.State.API.CurrentState = VmStateUnknown
+				sts = status.Fail(&status.Args{
+					Message: fmt.Sprintf("%s API - deadline", global.Brandname),
+					Help:    help.ContactSupportHelp(), // @TODO need better support here
+					Data:    me.State.API.CurrentState,
 				})
 				break
 			}
@@ -288,9 +602,11 @@ func (me *Box) WaitForConsole(displayString string, waitFor time.Duration) (sts 
 			// readBuffer, err := bufio.NewReader(conn).ReadString('\n')
 			// bytesRead := len(readBuffer)
 			if err != nil {
-				sts = status.Wrap(err, &status.Args{
-					Message: "unable to set read from connection while waiting for console",
-					Data:    NotOkState,
+				me.State.API.CurrentState = VmStateUnknown
+				sts = status.Fail(&status.Args{
+					Message: fmt.Sprintf("%s API - no data", global.Brandname),
+					Help:    help.ContactSupportHelp(), // @TODO need better support here
+					Data:    me.State.API.CurrentState,
 				})
 				break
 			}
@@ -299,305 +615,54 @@ func (me *Box) WaitForConsole(displayString string, waitFor time.Duration) (sts 
 				if me.ShowConsole {
 					fmt.Printf("%s", string(readBuffer[:bytesRead]))
 				}
+
 				sts = me.heartbeatOk(readBuffer, bytesRead)
 				if sts != nil {
+					me.State.API.CurrentState = VmStateRunning
+					sts = status.Success("%s API - running", global.Brandname)
 					break
+
+				} else {
+					if me.State.API.WantState == VmStatePowerOff {
+						me.State.API.CurrentState = VmStateStopping
+						sts = status.Success("%s API - stopping", global.Brandname)
+					} else if me.State.API.WantState == VmStateRunning {
+						me.State.API.CurrentState = VmStateStarting
+						sts = status.Success("%s API - starting", global.Brandname)
+					}
+					// Do not break.
 				}
 			}
+
 			time.Sleep(me.WaitDelay)
 			if displaySpinner {
 				spinner.Update(fmt.Sprintf("%s [%d]", displayString, waitCount))
 			}
 		}
 
+		if me.ShowConsole {
+			fmt.Printf("\n\n# Exiting Console.\n")
+		}
+
+		if displaySpinner {
+			spinner.Stop(false)
+		}
 	}
 
-	if me.ShowConsole {
-		fmt.Printf("\n\n# Exiting Console.\n")
-	}
-
-	if displaySpinner {
-		spinner.Stop(false)
-	}
+	// fmt.Printf("apiState: %v\n", sts)
 
 	return sts
 }
 
-func (me *Box) StartBox() (sts status.Status) {
-	for range only.Once {
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
-			break
-		}
-
-		sts := me.GetState()
-		if is.Error(sts) {
-			break
-		}
-
-		if me.State == StartedState {
-			sts = status.Success("%s VM is starting", global.Brandname)
-		}
-
-		if me.State == RunningState {
-			sts = status.Success("%s VM is running", global.Brandname)
-		}
-
-		err := me.Instance.Start()
-		if err == nil {
-			if me.NoWait {
-				break
-			}
-			err = me.WaitForState(RunningState, fmt.Sprintf("%s VM: Starting", global.Brandname))
-			if err == nil {
-				err = me.WaitForConsole(fmt.Sprintf("%s VM: Starting", global.Brandname), 30)
-			}
-		}
-
-		if err != nil {
-			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("%s VM failed to start", global.Brandname),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    ErrorState,
-			})
-			break
-		}
-
-	}
-
-	return sts
-}
-
-func (me *Box) StopBox() (sts status.Status) {
-
-	var err error
-	for range only.Once {
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
-			break
-		}
-
-		sts := me.GetState()
-		if is.Error(sts) {
-			break
-		}
-
-		if me.State == HaltedState {
-			break
-		}
-
-		err = me.Instance.Halt()
-		if err != nil {
-			break
-		}
-
-		if me.NoWait != false {
-			break
-		}
-
-		sts = me.WaitForState(HaltedState, fmt.Sprintf("%s VM stopping", global.Brandname))
-		if is.Error(sts) {
-			break
-		}
-
-		err = me.WaitForConsole(fmt.Sprintf("%s VM stopping", global.Brandname), 30)
-
-	}
-	if err == nil {
-		sts = status.Success("%s VM stopped", global.Brandname)
-	} else {
-		sts = status.Wrap(err, &status.Args{
-			Message: fmt.Sprintf("%s VM failed to stop", global.Brandname),
-			Help:    help.ContactSupportHelp(), // @TODO need better support here
-			Data:    ErrorState,
-		})
-	}
-	return sts
-}
-
-//var runner virtualbox.Runner
-
-// This is here because it's not implemented in libretto.
-func (me *Box) ReplacementBoxHalt() error {
-
-	_, err := me.RunCombinedError("controlvm", global.Brandname, "acpipowerbutton")
-	if err != nil {
-		return virtualmachine.WrapErrors(virtualmachine.ErrStoppingVM, err)
-	}
-	return nil
-}
-
-// Run runs a VBoxManage command.
-func (me *Box) Run(args ...string) (string, string, error) {
-	var vboxManagePath string
-	// If vBoxManage is not found in the system path, fall back to the
-	// hard coded path.
-	if path, err := exec.LookPath("VBoxManage"); err == nil {
-		vboxManagePath = path
-	} else {
-		vboxManagePath = virtualbox.VBOXMANAGE
-	}
-	cmd := exec.Command(vboxManagePath, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout, cmd.Stderr = &stdout, &stderr
-	err := cmd.Run()
-	return stdout.String(), stderr.String(), err
-}
-
-// RunCombinedError runs a VBoxManage command.  The output is stdout and the the
-// combined err/stderr from the command.
-func (me *Box) RunCombinedError(args ...string) (string, error) {
-	wout, werr, err := me.Run(args...)
-	if err != nil {
-		if werr != "" {
-			return wout, fmt.Errorf("%s: %s", err, werr)
-		}
-		return wout, err
-	}
-
-	return wout, nil
-}
-
-func (me *Box) RestartBox() (sts status.Status) {
-
-	for range only.Once {
-
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
-			break
-		}
-
-		sts = me.GetState()
-		if is.Error(sts) {
-			break
-		}
-
-		switch me.State {
-		case OkState:
-			fallthrough
-		case NotOkState:
-			fallthrough
-		case RunningState:
-			fallthrough
-		case StartedState:
-			sts = me.StopBox()
-			if is.Error(sts) {
-				break
-			}
-			sts = me.StartBox()
-			if is.Error(sts) {
-				break
-			}
-
-		case HaltedState:
-			sts = me.StartBox()
-			if is.Error(sts) {
-				break
-			}
-
-		case UnknownState:
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("%s VM in an unknown state: %s", global.Brandname, me.State),
-				Data:    UnknownState,
-			})
-		}
-
-	}
-	if me.State != RunningState {
-		sts = status.Wrap(sts, &status.Args{
-			Message: fmt.Sprintf("%s VM failed to restart", global.Brandname),
-		})
-	}
-	return sts
-}
-
-func (me *Box) GetState() (sts status.Status) {
-	for range only.Once {
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
-			break
-		}
-		state, err := me.Instance.GetState()
-		if err != nil {
-			sts = status.Success("%s VM in a valid state: %s", global.Brandname, state).SetData(state)
-		} else {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("%s VM in an invalid state", global.Brandname),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    state,
-			})
-			break
-		}
-		if state == RunningState {
-			err := me.WaitForConsole("", 10)
-			if err != nil {
-				sts = status.Wrap(err, &status.Args{
-					Message: fmt.Sprintf("%s VM's API failed to respond", global.Brandname),
-					Help:    help.ContactSupportHelp(), // @TODO need better support here
-					Data:    state,
-				})
-			}
-		}
-	}
-	return sts
-}
-
-func (me *Box) CreateBox() (sts status.Status) {
-
-	for range only.Once {
-		if me == nil {
-			sts = status.Fail(&status.Args{
-				Message: "unexpected failure",
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    UnknownState,
-			})
-			break
-		}
-
-		state, err := me.Instance.GetState()
-		if err == nil {
-			sts = status.Success("%s VM already exists and is in state %s.\n", global.Brandname, state)
-			break
-		}
-
-		if _, err := os.Stat(me.OvaFile); os.IsNotExist(err) {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("%s VM OVA file '%s' does not exist", global.Brandname, me.OvaFile),
-				Data:    UnknownState,
-			})
-			break
-		}
-
-		err = me.Instance.Provision()
-		if err != nil {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("failed to provision %s VM", global.Brandname),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    UnknownState,
-			})
-			break
-		}
-	}
-
-	return sts
-}
 
 func EnsureNotNil(bx *Box) (sts status.Status) {
 	if bx == nil {
 		sts = status.Fail(&status.Args{
 			Message: "unexpected error",
 			Help:    help.ContactSupportHelp(), // @TODO need better support here
-			Data:    UnknownState,
+			Data:    VmStateUnknown,
 		})
 	}
-	return sts
-}
 
-func GetStateMeaning(state State) string {
-	m, _ := StateMeaning[state]
-	return m
+	return sts
 }

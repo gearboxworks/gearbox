@@ -9,6 +9,7 @@ import (
 	"gearbox/dockerhub"
 	"gearbox/gears"
 	"gearbox/global"
+	"gearbox/heartbeat"
 	"gearbox/only"
 	"gearbox/os_support"
 	"gearbox/project"
@@ -42,8 +43,6 @@ type Gearboxer interface {
 	AddNamedStack(*gears.NamedStack) status.Status
 	AddProject(*project.Project) status.Status
 	Admin(ViewerType)
-	ConnectSSH(ssh.Args) status.Status
-	CreateBox(box.Args) status.Status
 	DeleteBasedir(types.Nickname) status.Status
 	DeleteNamedStack(stackid types.StackId) status.Status
 	DeleteProject(hostname types.Hostname) status.Status
@@ -65,15 +64,27 @@ type Gearboxer interface {
 	IsDebug() bool
 	BasedirExists(types.Nickname) bool
 	NoCache() bool
-	PrintBoxStatus(box.Args) status.Status
 	ProjectExists(types.Hostname) (bool, status.Status)
 	RequestAvailableContainers(...*dockerhub.ContainerQuery) (dockerhub.ContainerNames, status.Status)
+
+	// VM related.
+	CreateBox(box.Args) status.Status
+	StartBox(box.Args) status.Status
+	StopBox(box.Args) status.Status
 	RestartBox(box.Args) status.Status
+	PrintBoxStatus(box.Args) status.Status
+	ConnectSSH(ssh.Args) status.Status
+
+	// Heartbeat related.
+	HeartbeatDaemon(heartbeat.Args) status.Status
+	StartHeartbeat(heartbeat.Args) status.Status
+	StopHeartbeat(heartbeat.Args) status.Status
+	RestartHeartbeat(heartbeat.Args) status.Status
+	PrintHeartbeatStatus(heartbeat.Args) status.Status
+
 	SetConfig(config.Configer)
 	SetApi(api api.Apier)
 	SetRouteName(types.RouteName)
-	StartBox(box.Args) status.Status
-	StopBox(box.Args) status.Status
 	UpdateBasedir(types.Nickname, types.AbsoluteDir) status.Status
 	UpdateNamedStack(*gears.NamedStack) status.Status
 	UpdateProject(*project.Project) status.Status

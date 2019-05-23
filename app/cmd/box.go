@@ -127,8 +127,7 @@ func init() {
 	boxCmd.PersistentFlags().StringVarP(&boxArgs.ConsolePort, "console-port", "", box.DefaultConsolePort, "Box (VM) console port number.")
 	boxCmd.PersistentFlags().BoolVarP(&boxArgs.ShowConsole, "show-console", "", box.DefaultShowConsole, "Show Box (VM) console output.")
 
-	// Mike will not like this bit.
-	boxCmd.PersistentFlags().StringVarP(&boxArgs.Instance.Credentials.SSHUser, "user", "u", ssh.DefaultUsername, "Alternate Gearbox SSH username.") // boxCmd.PersistentFlags().BoolP("no-wait", "w", false, "Don't wait for Box (VM) operation to complete.")
-	boxCmd.PersistentFlags().StringVarP(&boxArgs.Instance.Credentials.SSHPassword, "password", "p", ssh.DefaultPassword, "Alternate Gearbox SSH password.")
-	boxCmd.PersistentFlags().StringVarP(&boxArgs.Instance.Credentials.SSHPassword, "key-file", "k", ssh.DefaultKeyFile, "Gearbox SSH public key file.") // boxCmd.Flag("no-wait")
+	boxCmd.PersistentFlags().StringVarP(&boxArgs.SshUsername, "user", "u", ssh.DefaultUsername, "Alternate Gearbox SSH username.") // boxCmd.PersistentFlags().BoolP("no-wait", "w", false, "Don't wait for Box (VM) operation to complete.")
+	boxCmd.PersistentFlags().StringVarP(&boxArgs.SshPassword, "password", "p", ssh.DefaultPassword, "Alternate Gearbox SSH password.")
+	boxCmd.PersistentFlags().StringVarP(&boxArgs.SshPublicKey, "key-file", "k", ssh.DefaultKeyFile, "Gearbox SSH public key file.") // boxCmd.Flag("no-wait")
 }
