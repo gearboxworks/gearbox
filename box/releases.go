@@ -454,7 +454,7 @@ func (me *Box) GetIso() (status.Status) {
 				select {
 				case <-t.C:
 					me.VmIsoDlIndex = int(100*resp.Progress())
-					fmt.Printf("File '%s' transferred %v / %v bytes (%.2f%%)\n", me.VmIsoFile, resp.BytesComplete(), resp.Size, me.VmIsoDlIndex)
+					fmt.Printf("File '%s' transferred %v / %v bytes (%d%%)\n", me.VmIsoFile, resp.BytesComplete(), resp.Size, me.VmIsoDlIndex)
 
 				case <-resp.Done:
 					// download is complete

@@ -206,6 +206,17 @@ func (me *Box) heartbeatOk(b []byte, n int) (sts status.Status) {
 			break
 		}
 
+		fmt.Printf("API:%v\n", apiSplit)
+		if len(apiSplit) < 2 {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("did not receive 'OK' from console: %s",
+					apiSplit[2],
+				),
+				Data: NotOkState,
+			})
+			break
+		}
+
 		if apiSplit[2] != "OK" {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("did not receive 'OK' from console: %s",

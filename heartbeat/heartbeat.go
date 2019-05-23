@@ -197,8 +197,8 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 			break
 		}
 
-		//if !daemon.IsParentInit() {
-		if daemon.IsParentInit() {
+		if !daemon.IsParentInit() {
+		//if daemon.IsParentInit() {
 			fmt.Printf("Gearbox: Sub-command not available for user.\n")
 			sts = status.Fail(&status.Args{
 				Message: "Sub-command not available for user",
@@ -675,7 +675,7 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 			menu.stopEntry.Hide()
 			menu.startEntry.Hide()
 			menu.sshEntry.Hide()
-			menu.createEntry.Enable()
+			menu.createEntry.Show()
 
 		case box.VmStateUnknown:
 			fmt.Printf("STATE: UNKNOWN\n")
@@ -686,7 +686,7 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 			menu.stopEntry.Hide()
 			menu.startEntry.Hide()
 			menu.sshEntry.Hide()
-			menu.createEntry.Enable()
+			menu.createEntry.Show()
 
 		case box.VmStatePaused:
 			fallthrough
@@ -699,7 +699,7 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 
 			returnValue = box.VmStatePowerOff
 			menu.stopEntry.Hide()
-			menu.startEntry.Enable()
+			menu.startEntry.Show()
 			menu.sshEntry.Hide()
 			menu.createEntry.Hide()
 
@@ -709,9 +709,9 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 			systray.SetTooltip("Gearbox is running.")
 
 			returnValue = box.VmStateRunning
-			menu.stopEntry.Enable()
+			menu.stopEntry.Show()
 			menu.startEntry.Hide()
-			menu.sshEntry.Enable()
+			menu.sshEntry.Show()
 			menu.createEntry.Hide()
 
 		case box.VmStateStarting:
