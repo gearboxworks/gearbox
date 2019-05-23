@@ -106,7 +106,7 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 		} else {
 			_args.BoxInstance.Boxname = _args.Boxname
 		}
-		_args.BoxInstance.Boxname = "harry" // DEBUG
+		// _args.BoxInstance.Boxname = "harry" // DEBUG
 
 		if _args.WaitDelay == 0 {
 			_args.BoxInstance.WaitDelay = DefaultWaitDelay
