@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"reflect"
 	"strings"
 )
 
@@ -36,43 +35,18 @@ func (me *DirectoryController) GetNilItem(ctx *Context) ItemModeler {
 	return NilDirectoryModel
 }
 
-func (me *DirectoryController) GetRelatedFields() RelatedFields {
-	return RelatedFields{}
-}
-
 func (me *DirectoryController) GetName() types.RouteName {
 	return DirectoryControllerName
-}
-
-func (me *DirectoryController) GetListLinkMap(*Context, ...FilterPath) (lm LinkMap, sts Status) {
-	return LinkMap{
-		//RelatedRelType: Link("foobarbaz"),
-	}, sts
 }
 
 func (me *DirectoryController) GetBasepath() types.Basepath {
 	return DirectoriesBasepath
 }
 
-func (me *DirectoryController) GetItemType() reflect.Kind {
-	return reflect.Struct
-}
-
 func (me *DirectoryController) GetIdParams() IdParams {
 	return IdParams{
 		DirectoryIdParam,
 	}
-}
-
-func (me *DirectoryController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
-	for range only.Once {
-		list = make(List, 0)
-	}
-	return list, sts
-}
-
-func (me *DirectoryController) FilterList(ctx *Context, filterPath FilterPath) (list List, sts Status) {
-	return me.GetList(ctx, filterPath)
 }
 
 func (me *DirectoryController) GetListIds(ctx *Context, filterPath ...FilterPath) (itemids ItemIds, sts Status) {
@@ -126,14 +100,15 @@ func (me *DirectoryController) AddItem(ctx *Context, item ItemModeler) (im ItemM
 		if is.Error(sts) {
 			break
 		}
-		if !CanAddDirectory(dm.Directory) {
-			sts = status.YourBad("unable to add directory '%s'", dm.Directory).
-				SetHttpStatus(http.StatusCreated)
+		sts = CanAddDirectory(dm.Directory)
+		if is.Error(sts) {
+			break
 		}
 		sts = AddDirectory(dm.Directory)
 		if is.Error(sts) {
 			break
 		}
+		im = dm
 		sts = status.Success("directory '%s' added", dm.Directory).
 			SetHttpStatus(http.StatusCreated)
 	}
@@ -180,91 +155,6 @@ func (me *DirectoryController) setDirectoryModelId(dm *DirectoryModel, itemid It
 	return sts
 }
 
-func AssertDirectoryModel(item ItemModeler) (dm *DirectoryModel, sts Status) {
-	dm, ok := item.(*DirectoryModel)
-	if !ok {
-		sts = status.Fail(&status.Args{
-			Message: fmt.Sprintf("item not a %T: %s",
-				(*DirectoryModel)(nil),
-				item.GetId(),
-			),
-		})
-	}
-	return dm, sts
-}
-
-func GetDirectoryFilterMap() FilterMap {
-	return FilterMap{}
-}
-
-func FindDirectory(dir types.AbsoluteDir) (item ItemModeler, sts Status) {
-	d := &DirectoryModel{}
-	for range only.Once {
-		if !util.DirExists(dir) {
-			sts = status.Fail().
-				SetMessage("directory '%s' does not exist", dir).
-				SetHttpStatus(http.StatusNotFound)
-			break
-		}
-		d.Directory = dir
-		sts = status.Success("directory '%s' exists", dir)
-	}
-	return d, sts
-}
-
-func CanAddDirectory(dir types.AbsoluteDir, sts ...Status) (ok bool) {
-	for range only.Once {
-		hd, err := homedir.Dir()
-		if err != nil {
-			sts[0] = status.Wrap(err)
-			break
-		}
-		if strings.HasPrefix(string(dir), hd) {
-			sts[0] = status.Fail().
-				SetMessage("cannot add directory '%s'", dir).
-				SetDetail("directory '%s' is not within your home directory '%s'", dir, hd)
-			break
-		}
-		if util.DirExists(dir) {
-			sts[0] = status.Fail().
-				SetMessage("cannot add directory '%s'", dir).
-				SetDetail("directory '%s' already exists", dir)
-			break
-		}
-		ok = true
-	}
-	return ok
-}
-
-func AddDirectory(dir types.AbsoluteDir) (sts Status) {
-	for range only.Once {
-		if !CanAddDirectory(dir, sts) {
-			break
-		}
-		err := os.Mkdir(string(dir), os.ModePerm)
-		if err != nil {
-			sts = status.Wrap(err).
-				SetMessage("unable to add directory '%s'", dir)
-			break
-		}
-		sts = status.Success("directory '%s' added", dir)
-	}
-	return sts
-}
-
-func UnescapeDirectory(dir types.AbsoluteDir) (d types.AbsoluteDir, sts Status) {
-	for range only.Once {
-		cleandir, err := url.QueryUnescape(string(dir))
-		if err != nil {
-			sts = status.Wrap(err).
-				SetMessage("unable to unencode directory '%d'", dir).
-				SetHttpStatus(http.StatusBadRequest)
-		}
-		d = types.AbsoluteDir(cleandir)
-	}
-	return d, sts
-}
-
 func (me *DirectoryController) getDirectoryModelFromItem(item ItemModeler) (dm *DirectoryModel, sts Status) {
 	for range only.Once {
 		var ro *jsonapi.ResourceObject
@@ -302,4 +192,92 @@ func (me *DirectoryController) getDirectoryModelFromItem(item ItemModeler) (dm *
 		}
 	}
 	return dm, sts
+}
+
+func AssertDirectoryModel(item ItemModeler) (dm *DirectoryModel, sts Status) {
+	dm, ok := item.(*DirectoryModel)
+	if !ok {
+		sts = status.Fail(&status.Args{
+			Message: fmt.Sprintf("item not a %T: %s",
+				(*DirectoryModel)(nil),
+				item.GetId(),
+			),
+		})
+	}
+	return dm, sts
+}
+
+func GetDirectoryFilterMap() FilterMap {
+	return FilterMap{}
+}
+
+func FindDirectory(dir types.AbsoluteDir) (item ItemModeler, sts Status) {
+	d := &DirectoryModel{}
+	for range only.Once {
+		if !util.DirExists(dir) {
+			sts = status.Fail().
+				SetMessage("directory '%s' does not exist", dir).
+				SetHttpStatus(http.StatusNotFound)
+			break
+		}
+		d.Directory = dir
+		sts = status.Success("directory '%s' exists", dir)
+	}
+	return d, sts
+}
+
+func CanAddDirectory(dir types.AbsoluteDir) (sts Status) {
+	for range only.Once {
+		hd, err := homedir.Dir()
+		if err != nil {
+			sts = status.Wrap(err)
+			break
+		}
+		if !strings.HasPrefix(string(dir), hd) {
+			sts = status.Fail().
+				SetMessage("cannot add directory '%s'", dir).
+				SetDetail("directory '%s' is not within your home directory '%s'", dir, hd).
+				SetHttpStatus(http.StatusBadRequest)
+			break
+		}
+		if util.DirExists(dir) {
+			sts = status.Fail().
+				SetMessage("cannot add directory '%s'", dir).
+				SetDetail("directory '%s' already exists", dir).
+				SetHttpStatus(http.StatusConflict)
+
+			break
+		}
+	}
+	return sts
+}
+
+func AddDirectory(dir types.AbsoluteDir) (sts Status) {
+	for range only.Once {
+		sts = CanAddDirectory(dir)
+		if is.Error(sts) {
+			break
+		}
+		err := os.Mkdir(string(dir), os.ModePerm)
+		if err != nil {
+			sts = status.Wrap(err).
+				SetMessage("unable to add directory '%s'", dir)
+			break
+		}
+		sts = status.Success("directory '%s' added", dir)
+	}
+	return sts
+}
+
+func UnescapeDirectory(dir types.AbsoluteDir) (d types.AbsoluteDir, sts Status) {
+	for range only.Once {
+		cleandir, err := url.QueryUnescape(string(dir))
+		if err != nil {
+			sts = status.Wrap(err).
+				SetMessage("unable to unencode directory '%d'", dir).
+				SetHttpStatus(http.StatusBadRequest)
+		}
+		d = types.AbsoluteDir(cleandir)
+	}
+	return d, sts
 }

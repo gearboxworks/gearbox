@@ -29,6 +29,7 @@ type ServiceModel struct {
 	Version     types.Version       `json:"version,omitempty"`
 	//GearspecIds gearspec.Identifiers `json:"gearspec_ids,omitempty"`
 	Gears *gears.Gears `json:"-"`
+	Model
 }
 
 func (me *ServiceModel) GetAttributeMap() apiworks.AttributeMap {
@@ -111,20 +112,6 @@ func (me *ServiceModel) SetId(ItemId) Status {
 
 func (me *ServiceModel) GetType() ItemType {
 	return ServiceModelType
-}
-
-func (me *ServiceModel) GetItem() (ItemModeler, Status) {
-	return me, nil
-}
-
-func (me *ServiceModel) GetItemLinkMap(*Context) (lm LinkMap, sts Status) {
-	return LinkMap{
-		//RelatedRelType: Link("https://example.com"),
-	}, sts
-}
-
-func (me *ServiceModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
-	return make(List, 0), sts
 }
 
 func GetServiceModelsFromServiceServicerMap(ctx *Context, sm service.ServicerMap) (sms ServiceModels, sts Status) {

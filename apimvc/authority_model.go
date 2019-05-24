@@ -19,6 +19,7 @@ type AuthorityModels []*AuthorityModel
 
 type AuthorityModel struct {
 	AuthorityId types.AuthorityDomain `json:"authority_id"`
+	Model
 }
 
 func (me *AuthorityModel) GetAttributeMap() apiworks.AttributeMap {
@@ -33,10 +34,6 @@ func NewAuthority(authority types.AuthorityDomain) *AuthorityModel {
 	return &AuthorityModel{
 		AuthorityId: authority,
 	}
-}
-
-func (me *AuthorityModel) GetItemLinkMap(*Context) (LinkMap, Status) {
-	return LinkMap{}, nil
 }
 
 func (me *AuthorityModel) GetType() ItemType {
@@ -62,12 +59,4 @@ func (me *AuthorityModel) SetId(itemid ItemId) (sts Status) {
 		me.AuthorityId = types.AuthorityDomain(itemid)
 	}
 	return sts
-}
-
-func (me *AuthorityModel) GetItem() (ItemModeler, Status) {
-	return me, nil
-}
-
-func (me *AuthorityModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
-	return make(List, 0), sts
 }

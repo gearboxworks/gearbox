@@ -29,6 +29,7 @@ type (
 	LinkMap         = apiworks.LinkMap
 	List            = apiworks.List
 	ListController  = apiworks.ListController
+	Model           = apiworks.Model
 	RelatedField    = apiworks.RelatedField
 	RelatedFields   = apiworks.RelatedFields
 	RelType         = apiworks.RelType

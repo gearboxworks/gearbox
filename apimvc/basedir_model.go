@@ -21,6 +21,7 @@ type BasedirModels []*BasedirModel
 type BasedirModel struct {
 	Nickname types.Nickname    `json:"nickname"`
 	Basedir  types.AbsoluteDir `json:"basedir"`
+	Model
 }
 
 func (me *BasedirModel) GetAttributeMap() (am apiworks.AttributeMap) {
@@ -53,18 +54,4 @@ func (me *BasedirModel) SetId(id ItemId) (sts Status) {
 
 func (me *BasedirModel) GetType() ItemType {
 	return BasedirModelType
-}
-
-func (me *BasedirModel) GetItem() (ItemModeler, Status) {
-	return me, nil
-}
-
-func (me *BasedirModel) GetItemLinkMap(*Context) (lm LinkMap, sts Status) {
-	return LinkMap{
-		//RelatedRelType: Link("https://example.com"),
-	}, sts
-}
-
-func (me *BasedirModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
-	return make(List, 0), sts
 }
