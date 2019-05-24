@@ -5,6 +5,7 @@ import (
 	"gearbox/box"
 	"gearbox/global"
 	"gearbox/heartbeat/daemon"
+	"gearbox/heartbeat/gbevents"
 	"gearbox/heartbeat/monitor"
 	"gearbox/help"
 	"gearbox/only"
@@ -12,15 +13,15 @@ import (
 	"gearbox/ssh"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/getlantern/systray"
+	"github.com/jinzhu/copier"
 	"github.com/sqweek/dialog"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"syscall"
-	"github.com/getlantern/systray"
-	"github.com/jinzhu/copier"
-	"os"
 	"time"
 )
 
@@ -35,6 +36,7 @@ type State struct {
 
 type Heartbeat struct {
 	Boxname        string
+	Events		   *gbevents.ServiceEvents
 	BoxInstance    *box.Box
 	DaemonInstance *daemon.Daemon
 	NfsInstance    *monitor.Unfsd
@@ -181,6 +183,11 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 			},
 		})
 
+		_args.Events, sts = gbevents.New(_args.OsSupport, gbevents.Args{Boxname: _args.Boxname, PidFile: _args.PidFile})
+		if is.Error(sts) {
+			break
+		}
+
 		*hb = Heartbeat(_args)
 	}
 
@@ -196,6 +203,20 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
+
+		sts = gbevents.EnsureNotNil(me.Events)
+		if is.Error(sts) {
+			break
+		}
+
+		sts = me.Events.StartEventServer()
+		if is.Error(sts) {
+			break
+		}
+		fmt.Printf("DEBUYg\n")
+		time.Sleep(time.Hour * 60)
+
+		//se.RegisterService()
 
 		if !daemon.IsParentInit() {
 		//if daemon.IsParentInit() {
@@ -214,6 +235,7 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 		//			fmt.Printf("Sub-command not available for user.\n")
 		//			//break
 		//		}
+
 
 		// Handle exit signals.
 		sigs := make(chan os.Signal, 1)

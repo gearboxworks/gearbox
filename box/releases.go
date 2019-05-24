@@ -85,6 +85,9 @@ func (release *Release) ShowRelease() (status.Status) {
 		if is.Error(sts) {
 			break
 		}
+		if release.Name == nil {
+			break
+		}
 
 		fmt.Printf("Assets for release:	%v\n", *release.Name)
 		for _, asset := range release.Assets {

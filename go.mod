@@ -7,7 +7,9 @@ require (
 	github.com/clbanning/checkjson v0.0.0-20190418161636-abd3ee163e3e
 	github.com/cznic/golex v0.0.0-20181122101858-9c343928389c // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/fatih/color v1.7.0
+	github.com/fhmq/hmq v0.0.0-20190424074534-daf4a0e0f564
 	github.com/gearboxworks/go-status v0.0.0-20190509061414-712a29394535
 	github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813
 	github.com/gernest/wow v0.1.0
@@ -34,19 +36,19 @@ require (
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nsf/jsondiff v0.0.0-20190302080047-dbf513526b7f
+	github.com/olebedev/emitter v0.0.0-20190110104742-e8d1457e6aee
 	github.com/oxtoacart/bpool v0.0.0-20190227141107-8c4636f812cc // indirect
 	github.com/shirou/gopsutil v2.18.12+incompatible
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/sqweek/dialog v0.0.0-20190520121633-84f1ae115cc9
-	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4 // indirect
 	github.com/z7zmey/php-parser v0.6.0
 	github.com/zserge/lorca v0.1.6
 	github.com/zserge/webview v0.0.0-20190123072648-16c93bcaeaeb
-	golang.org/x/crypto v0.0.0-20190211182817-74369b46fc67
-	golang.org/x/net v0.0.0-20181102091132-c10e9556a7bc
+	golang.org/x/crypto v0.0.0-20190422183909-d864b10871cd
+	golang.org/x/net v0.0.0-20190424024845-afe8014c977f
 	google.golang.org/grpc v1.18.0
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/guregu/null.v2 v2.1.2 // indirect
