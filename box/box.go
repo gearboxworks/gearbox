@@ -19,17 +19,16 @@ import (
 	"time"
 )
 
-
 type Box struct {
-	Boxname         string
-	State           BoxState
-	VmBaseDir       string
-	VmIsoDir        string
-	VmIsoVersion    string
-	VmIsoFile       string
-	VmIsoUrl 		string
-	VmIsoInfo	    Release
-	VmIsoDlIndex	int
+	Boxname      string
+	State        State
+	VmBaseDir    string
+	VmIsoDir     string
+	VmIsoVersion string
+	VmIsoFile    string
+	VmIsoUrl     string
+	VmIsoInfo    Release
+	VmIsoDlIndex int
 
 	// SSH related - Need to fix this. It's used within CreateBox()
 	SshUsername  string
@@ -51,7 +50,6 @@ type Box struct {
 	OsSupport oss.OsSupporter
 }
 type Args Box
-
 
 func NewBox(OsSupport oss.OsSupporter, args ...Args) *Box {
 
@@ -137,12 +135,10 @@ func NewBox(OsSupport oss.OsSupporter, args ...Args) *Box {
 	return box
 }
 
-
 func (me *Box) Initialize() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Box) WaitForVmState(displayString string) bool {
 
@@ -178,11 +174,9 @@ func (me *Box) WaitForVmState(displayString string) bool {
 	return found
 }
 
-
 func closeDialConnection(conn net.Conn) {
 	_ = conn.Close()
 }
-
 
 func newSpinner(displayString string) *util.Spinner {
 	return util.NewSpinner(util.SpinnerArgs{
@@ -191,7 +185,6 @@ func newSpinner(displayString string) *util.Spinner {
 		ExitNOK: displayString + " - FAILED",
 	})
 }
-
 
 func (me *Box) heartbeatOk(b []byte, n int) (sts status.Status) {
 
@@ -228,12 +221,11 @@ func (me *Box) heartbeatOk(b []byte, n int) (sts status.Status) {
 		}
 
 		sts = status.Success("received 'OK' from console")
-		sts.SetData(OkState)
+		_ = sts.SetData(OkState)
 	}
 
 	return sts
 }
-
 
 func (me *Box) Start() (sts status.Status) {
 
@@ -248,28 +240,28 @@ func (me *Box) Start() (sts status.Status) {
 			break
 		}
 
-/*
-		switch {
-			case me.State.VM.CurrentState == VmStateUnknown:
-				sts = me.State.LastSts
-				break
+		/*
+			switch {
+				case me.State.VM.CurrentState == VmStateUnknown:
+					sts = me.State.LastSts
+					break
 
-			case me.State.VM.CurrentState == VmStateStarting:
-				sts = me.State.LastSts
-				break
+				case me.State.VM.CurrentState == VmStateStarting:
+					sts = me.State.LastSts
+					break
 
-			case me.State.VM.CurrentState == VmStateRunning:
-				sts = me.State.LastSts
-				break
+				case me.State.VM.CurrentState == VmStateRunning:
+					sts = me.State.LastSts
+					break
 
-			case me.State.VM.CurrentState == VmStateStopping:
-				sts = me.State.LastSts
-				break
+				case me.State.VM.CurrentState == VmStateStopping:
+					sts = me.State.LastSts
+					break
 
-			case me.State.VM.CurrentState == VmStatePowerOff:
-				// fall-through
-		}
-*/
+				case me.State.VM.CurrentState == VmStatePowerOff:
+					// fall-through
+			}
+		*/
 
 		_, sts = me.StartBox()
 		if is.Error(sts) {
@@ -288,10 +280,7 @@ func (me *Box) Start() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Box) Stop() (sts status.Status) {
-
-	var err error
 
 	for range only.Once {
 		sts = EnsureNotNil(me)
@@ -304,28 +293,28 @@ func (me *Box) Stop() (sts status.Status) {
 			break
 		}
 
-/*
-		switch {
-			case me.State.VM.CurrentState == VmStateUnknown:
-				sts = me.State.LastSts
-				break
+		/*
+			switch {
+				case me.State.VM.CurrentState == VmStateUnknown:
+					sts = me.State.LastSts
+					break
 
-			case me.State.VM.CurrentState == VmStateStarting:
-				sts = me.State.LastSts
-				break
+				case me.State.VM.CurrentState == VmStateStarting:
+					sts = me.State.LastSts
+					break
 
-			case me.State.VM.CurrentState == VmStateRunning:
-				// fall-through
+				case me.State.VM.CurrentState == VmStateRunning:
+					// fall-through
 
-			case me.State.VM.CurrentState == VmStateStopping:
-				sts = me.State.LastSts
-				break
+				case me.State.VM.CurrentState == VmStateStopping:
+					sts = me.State.LastSts
+					break
 
-			case me.State.VM.CurrentState == VmStatePowerOff:
-				sts = me.State.LastSts
-				break
-		}
-*/
+				case me.State.VM.CurrentState == VmStatePowerOff:
+					sts = me.State.LastSts
+					break
+			}
+		*/
 
 		_, sts = me.StopBox()
 		if is.Error(sts) {
@@ -341,13 +330,12 @@ func (me *Box) Stop() (sts status.Status) {
 		}
 	}
 
-	if err == nil {
+	if !is.Error(sts) {
 		sts = status.Success("%s VM stopped", global.Brandname)
 	}
 
 	return sts
 }
-
 
 func (me *Box) Restart() (sts status.Status) {
 
@@ -358,7 +346,10 @@ func (me *Box) Restart() (sts status.Status) {
 			break
 		}
 
-		me.Stop()
+		sts = me.Stop()
+		if is.Error(sts) {
+			break
+		}
 		if me.State.VM.CurrentState != me.State.VM.WantState {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("%s VM in an unknown state: %s", global.Brandname, me.State),
@@ -367,7 +358,10 @@ func (me *Box) Restart() (sts status.Status) {
 			break
 		}
 
-		me.Start()
+		sts = me.Start()
+		if is.Error(sts) {
+			break
+		}
 		if me.State.VM.CurrentState != me.State.VM.WantState {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("%s VM in an unknown state: %s", global.Brandname, me.State),
@@ -384,8 +378,7 @@ func (me *Box) Restart() (sts status.Status) {
 	return sts
 }
 
-
-func (me *Box) GetCachedState() (state BoxState, sts status.Status) {
+func (me *Box) GetCachedState() (state State, sts status.Status) {
 
 	// This is required so that not more than one process bashes VB at the same time.
 	// This causes no end of issues.
@@ -402,8 +395,7 @@ func (me *Box) GetCachedState() (state BoxState, sts status.Status) {
 	return
 }
 
-
-func (me *Box) GetState() (BoxState, status.Status) {
+func (me *Box) GetState() (State, status.Status) {
 
 	// Possible VM states:
 	// running
@@ -439,10 +431,10 @@ func (me *Box) GetState() (BoxState, status.Status) {
 		//fmt.Printf("FOO:", vmState)
 
 		//		if err == nil {
-//			sts = status.Success("%s VM in a valid state: %s", global.Brandname, state)
-//			sts.SetData(state)
-//
-//		}
+		//			sts = status.Success("%s VM in a valid state: %s", global.Brandname, state)
+		//			sts.SetData(state)
+		//
+		//		}
 
 		//sts = me.State.LastSts
 		//fmt.Printf("STATE2: %v\n", sts)
@@ -451,8 +443,7 @@ func (me *Box) GetState() (BoxState, status.Status) {
 	return me.State, sts
 }
 
-
-func (me *Box) GetVmStatus() (status.Status) {
+func (me *Box) GetVmStatus() status.Status {
 
 	// Possible VM states:
 	// running
@@ -479,67 +470,66 @@ func (me *Box) GetVmStatus() (status.Status) {
 			me.State.VM.WantState = me.State.VM.CurrentState
 		}
 
-/*
-		// First check on the VM.
-		// state, err := me.VmInstance.GetState()
-		switch kvm["VMState"] {
-			case VmStateRunning:
-				me.State.VM.CurrentState = VmStateRunning
+		/*
+			// First check on the VM.
+			// state, err := me.VmInstance.GetState()
+			switch kvm["VMState"] {
+				case VmStateRunning:
+					me.State.VM.CurrentState = VmStateRunning
 
-			case VmStatePowerOff:
-				fallthrough
-			case VmStateSaved:
-				fallthrough
-			case VmStatePaused:
-				me.State.VM.CurrentState = VmStatePowerOff
-				me.State.API.CurrentState = VmStatePowerOff
-		}
-*/
+				case VmStatePowerOff:
+					fallthrough
+				case VmStateSaved:
+					fallthrough
+				case VmStatePaused:
+					me.State.VM.CurrentState = VmStatePowerOff
+					me.State.API.CurrentState = VmStatePowerOff
+			}
+		*/
 
-/*
-		switch {
-			case err != nil:
-				// No Gearbox VM available - need to create one.
-				me.State.VM.CurrentState = VmStateUnknown
-				me.State.LastSts = status.Fail(&status.Args{
-					Message: fmt.Sprintf("%s VM - needs to be created", global.Brandname),
-					Help:    help.ContactSupportHelp(), // @TODO need better support here
-					Data:    me.State.VM.CurrentState,
-				})
-				break
+		/*
+			switch {
+				case err != nil:
+					// No Gearbox VM available - need to create one.
+					me.State.VM.CurrentState = VmStateUnknown
+					me.State.LastSts = status.Fail(&status.Args{
+						Message: fmt.Sprintf("%s VM - needs to be created", global.Brandname),
+						Help:    help.ContactSupportHelp(), // @TODO need better support here
+						Data:    me.State.VM.CurrentState,
+					})
+					break
 
-			case (me.State.VM.CurrentState == me.State.VM.WantState) && (state == VmStatePowerOff):
-				// If we are not changing states and the VM is halted.
-				me.State.VM.CurrentState = VmStatePowerOff
-				me.State.LastSts = status.Success("%s VM - halted", global.Brandname)
-				break
+				case (me.State.VM.CurrentState == me.State.VM.WantState) && (state == VmStatePowerOff):
+					// If we are not changing states and the VM is halted.
+					me.State.VM.CurrentState = VmStatePowerOff
+					me.State.LastSts = status.Success("%s VM - halted", global.Brandname)
+					break
 
-			case (me.State.VM.CurrentState == me.State.VM.WantState) && (state == VmStateRunning):
-				// If we are not changing states and the VM is running.
-				me.State.VM.CurrentState = VmStateRunning
-				me.State.LastSts = status.Success("%s VM - running", global.Brandname)
-				// Don't break here - need to check on the API.
+				case (me.State.VM.CurrentState == me.State.VM.WantState) && (state == VmStateRunning):
+					// If we are not changing states and the VM is running.
+					me.State.VM.CurrentState = VmStateRunning
+					me.State.LastSts = status.Success("%s VM - running", global.Brandname)
+					// Don't break here - need to check on the API.
 
-			case (me.State.VM.CurrentState != me.State.VM.WantState) && (state == VmStatePowerOff):
-				// If we are changing states then the VM is halting.
-				me.State.VM.CurrentState = VmStateStopping
-				me.State.LastSts = status.Success("%s VM - stopping", global.Brandname)
-				// Don't break here - need to check on the API.
+				case (me.State.VM.CurrentState != me.State.VM.WantState) && (state == VmStatePowerOff):
+					// If we are changing states then the VM is halting.
+					me.State.VM.CurrentState = VmStateStopping
+					me.State.LastSts = status.Success("%s VM - stopping", global.Brandname)
+					// Don't break here - need to check on the API.
 
-			case (me.State.VM.CurrentState != me.State.VM.WantState) && (state == VmStateRunning):
-				// If we are changing states then the VM is starting.
-				me.State.VM.CurrentState = VmStateStarting
-				me.State.LastSts = status.Success("%s VM - starting", global.Brandname)
-				// Don't break here - need to check on the API.
-		}
-*/
+				case (me.State.VM.CurrentState != me.State.VM.WantState) && (state == VmStateRunning):
+					// If we are changing states then the VM is starting.
+					me.State.VM.CurrentState = VmStateStarting
+					me.State.LastSts = status.Success("%s VM - starting", global.Brandname)
+					// Don't break here - need to check on the API.
+			}
+		*/
 
 		// fmt.Printf("vmState: %v\n", sts)
 	}
 
 	return sts
 }
-
 
 // We have to have some way to block access to other concurrent processes/threads
 // So, we're simply establishing a boolean that indicates this fact.
@@ -653,7 +643,6 @@ func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts st
 
 	return sts
 }
-
 
 func EnsureNotNil(bx *Box) (sts status.Status) {
 	if bx == nil {

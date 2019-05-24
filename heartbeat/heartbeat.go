@@ -12,24 +12,23 @@ import (
 	"gearbox/ssh"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/getlantern/systray"
+	"github.com/jinzhu/copier"
 	"github.com/sqweek/dialog"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"syscall"
-	"github.com/getlantern/systray"
-	"github.com/jinzhu/copier"
-	"os"
 	"time"
 )
-
 
 // This really needs to be refactored!
 type State struct {
 	Code    int
 	Overall string
-	Box     box.BoxState
+	Box     box.State
 	Unfsd   monitor.UnfsdState
 }
 
@@ -63,7 +62,6 @@ type Heartbeat struct {
 }
 type Args Heartbeat
 
-
 type menuStruct struct {
 	vmStatusEntry    *systray.MenuItem
 	apiStatusEntry   *systray.MenuItem
@@ -75,12 +73,11 @@ type menuStruct struct {
 	quitEntry        *systray.MenuItem
 	restartEntry     *systray.MenuItem
 
-	helpEntry        *systray.MenuItem
-	versionEntry     *systray.MenuItem
-	updateEntry      *systray.MenuItem
-	createEntry      *systray.MenuItem
+	helpEntry    *systray.MenuItem
+	versionEntry *systray.MenuItem
+	updateEntry  *systray.MenuItem
+	createEntry  *systray.MenuItem
 }
-
 
 func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 
@@ -187,7 +184,6 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 	return hb, sts
 }
 
-
 func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 
 	for range only.Once {
@@ -198,7 +194,7 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 		}
 
 		if !daemon.IsParentInit() {
-		//if daemon.IsParentInit() {
+			//if daemon.IsParentInit() {
 			fmt.Printf("Gearbox: Sub-command not available for user.\n")
 			sts = status.Fail(&status.Args{
 				Message: "Sub-command not available for user",
@@ -235,19 +231,18 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Heartbeat) onReady() {
 
 	var menu menuStruct
-	var intentDelay = false		// Used to change delay times when the user has just performed an action.
+	var intentDelay = false // Used to change delay times when the user has just performed an action.
 
 	fmt.Printf("Gearbox: Heartbeat started.\n")
 
 	systray.SetIcon(me.getIcon(DefaultLogo))
 	systray.SetTitle("")
 
-	menu.helpEntry = systray.AddMenuItem("About Gearbox", "Contact Gearbox help for" + me.BoxInstance.Boxname)
-	menu.versionEntry = systray.AddMenuItem(fmt.Sprintf("Gearbox (v%s)", me.BoxInstance.VmIsoVersion), "Running v" + me.BoxInstance.VmIsoVersion)
+	menu.helpEntry = systray.AddMenuItem("About Gearbox", "Contact Gearbox help for"+me.BoxInstance.Boxname)
+	menu.versionEntry = systray.AddMenuItem(fmt.Sprintf("Gearbox (v%s)", me.BoxInstance.VmIsoVersion), "Running v"+me.BoxInstance.VmIsoVersion)
 
 	systray.AddSeparator()
 	menu.vmStatusEntry = systray.AddMenuItem("Box: Idle", "Current state of Gearbox VM")
@@ -270,14 +265,13 @@ func (me *Heartbeat) onReady() {
 	systray.AddSeparator()
 	pid := os.Getpid()
 	menu.restartEntry = systray.AddMenuItem("Restart Heartbeat", fmt.Sprintf("Restart this app [pid:%v]", pid))
-	menu.quitEntry = systray.AddMenuItem("Quit",fmt.Sprintf("Terminate this app [pid:%v]", pid))
+	menu.quitEntry = systray.AddMenuItem("Quit", fmt.Sprintf("Terminate this app [pid:%v]", pid))
 
 	sts := me.NfsInstance.Daemon.Load()
 	if is.Error(sts) {
 		fmt.Printf("%s\n", sts.Message())
 		return
 	}
-
 
 	// Concurrent process: Provide status updates on systray.
 	// Ideally, this should also send messages on message bus for actions to be taken. EG: Retry startup, disk full, etc.
@@ -344,92 +338,90 @@ func (me *Heartbeat) onReady() {
 		}
 	}()
 
-
 	// Concurrent process: Handle user clicky clicks on menu.
 	go func() {
 		for {
 			select {
-				case <- menu.helpEntry.ClickedCh:
-					fmt.Printf("Menu: Help\n")
-					me.openAbout()
+			case <-menu.helpEntry.ClickedCh:
+				fmt.Printf("Menu: Help\n")
+				me.openAbout()
 
-				case <- menu.versionEntry.ClickedCh:
-					fmt.Printf("Menu: Version\n")
+			case <-menu.versionEntry.ClickedCh:
+				fmt.Printf("Menu: Version\n")
 
-				case <- menu.vmStatusEntry.ClickedCh:
-					// Ignore.
-				case <- menu.apiStatusEntry.ClickedCh:
-					// Ignore.
-				case <- menu.unfsdStatusEntry.ClickedCh:
-					// Ignore.
+			case <-menu.vmStatusEntry.ClickedCh:
+				// Ignore.
+			case <-menu.apiStatusEntry.ClickedCh:
+				// Ignore.
+			case <-menu.unfsdStatusEntry.ClickedCh:
+				// Ignore.
 
-				case <- menu.startEntry.ClickedCh:
-					fmt.Printf("Menu: Start\n")
+			case <-menu.startEntry.ClickedCh:
+				fmt.Printf("Menu: Start\n")
+				intentDelay = true
+				me.BoxInstance.Start()
+				intentDelay = false
+
+			case <-menu.stopEntry.ClickedCh:
+				fmt.Printf("Menu: Stop\n")
+				intentDelay = true
+				me.BoxInstance.Stop()
+				intentDelay = false
+
+			case <-menu.adminEntry.ClickedCh:
+				fmt.Printf("Menu: Admin\n")
+				me.openAdmin()
+
+			case <-menu.sshEntry.ClickedCh:
+				fmt.Printf("Menu: SSH\n")
+				me.openTerminal()
+
+			case <-menu.createEntry.ClickedCh:
+				fmt.Printf("Menu: Create\n")
+				intentDelay = true
+				if me.BoxInstance.State.VM.CurrentState == box.VmStateNotPresent {
+					sts := me.BoxInstance.CreateBox()
+					if is.Error(sts) {
+						dialog.Message("Error! Creating Gearbox OS VM: %s", me.Boxname).Title("GearBox OS Creation").Error()
+					} else {
+						dialog.Message("Success! Gearbox OS VM created: %s", me.Boxname).Title("GearBox OS Creation").Info()
+					}
+				}
+				intentDelay = false
+
+			case <-menu.updateEntry.ClickedCh:
+				fmt.Printf("Menu: Update\n")
+				if me.BoxInstance.VmIsoDlIndex == 100 {
+					me.BoxInstance.VmIsoDlIndex = 0
 					intentDelay = true
-					me.BoxInstance.Start()
+					go me.BoxInstance.GetIso()
 					intentDelay = false
+				}
 
-				case <- menu.stopEntry.ClickedCh:
-					fmt.Printf("Menu: Stop\n")
+			case <-menu.restartEntry.ClickedCh:
+				fmt.Printf("Menu: Restart\n")
+				if me.confirmDialog("Restart Gearbox", "This will restart Gearbox Heartbeat, but keep services running.\nAre you sure?") {
+					fmt.Printf("HEY!")
+					systray.Quit()
+				}
+
+			case <-menu.quitEntry.ClickedCh:
+				fmt.Printf("Menu: Quit\n")
+				if me.confirmDialog("Shutdown Gearbox", "This will shutdown Gearbox and all Gearbox related services.\nAre you sure?") {
 					intentDelay = true
 					me.BoxInstance.Stop()
+					me.NfsInstance.Stop()
 					intentDelay = false
 
-				case <- menu.adminEntry.ClickedCh:
-					fmt.Printf("Menu: Admin\n")
-					me.openAdmin()
+					me.StopHeartbeat()
 
-				case <- menu.sshEntry.ClickedCh:
-					fmt.Printf("Menu: SSH\n")
-					me.openTerminal()
-
-				case <- menu.createEntry.ClickedCh:
-					fmt.Printf("Menu: Create\n")
-					intentDelay = true
-					if me.BoxInstance.State.VM.CurrentState == box.VmStateNotPresent {
-						sts := me.BoxInstance.CreateBox()
-						if is.Error(sts) {
-							dialog.Message("Error! Creating Gearbox OS VM: %s", me.Boxname).Title("GearBox OS Creation").Error()
-						} else {
-							dialog.Message("Success! Gearbox OS VM created: %s", me.Boxname).Title("GearBox OS Creation").Info()
-						}
-					}
-					intentDelay = false
-
-				case <- menu.updateEntry.ClickedCh:
-					fmt.Printf("Menu: Update\n")
-					if me.BoxInstance.VmIsoDlIndex == 100 {
-						me.BoxInstance.VmIsoDlIndex = 0
-						intentDelay = true
-						go me.BoxInstance.GetIso()
-						intentDelay = false
-					}
-
-				case <- menu.restartEntry.ClickedCh:
-					fmt.Printf("Menu: Restart\n")
-					if me.confirmDialog("Restart Gearbox", "This will restart Gearbox Heartbeat, but keep services running.\nAre you sure?") {
-						fmt.Printf("HEY!")
-						systray.Quit()
-					}
-
-				case <- menu.quitEntry.ClickedCh:
-					fmt.Printf("Menu: Quit\n")
-					if me.confirmDialog("Shutdown Gearbox", "This will shutdown Gearbox and all Gearbox related services.\nAre you sure?") {
-						intentDelay = true
-						me.BoxInstance.Stop()
-						me.NfsInstance.Stop()
-						intentDelay = false
-
-						me.StopHeartbeat()
-
-						systray.Quit()
-					}
+					systray.Quit()
+				}
 			}
 		}
 	}()
 
 }
-
 
 func (me *Heartbeat) fileDialog(t string, m string) bool {
 	dialog.Message("%s", "Please select a file").Title("Hello world!").Info()
@@ -441,14 +433,12 @@ func (me *Heartbeat) fileDialog(t string, m string) bool {
 	return true
 }
 
-
 func (me *Heartbeat) confirmDialog(t string, m string) bool {
 
 	ok := dialog.Message("%s", m).Title(t).YesNo()
 
 	return ok
 }
-
 
 func (me *Heartbeat) openAdmin() error {
 
@@ -462,7 +452,7 @@ func (me *Heartbeat) openAdmin() error {
 		fmt.Printf("Menu: Admin - %s\n", execCwd)
 	}
 
-	cmd := exec.Command(execPath,"admin")
+	cmd := exec.Command(execPath, "admin")
 	err = cmd.Run()
 
 	if err != nil {
@@ -471,7 +461,6 @@ func (me *Heartbeat) openAdmin() error {
 
 	return err
 }
-
 
 func (me *Heartbeat) openTerminal() error {
 
@@ -495,7 +484,6 @@ func (me *Heartbeat) openTerminal() error {
 	return err
 }
 
-
 func (me *Heartbeat) openAbout() error {
 
 	cmd := exec.Command("open", "https://gearbox.works/")
@@ -504,11 +492,9 @@ func (me *Heartbeat) openAbout() error {
 	return err
 }
 
-
 func (me *Heartbeat) onExit() {
 	// Cleaning stuff here.
 }
-
 
 func getClockTime(tz string) string {
 	t := time.Now()
@@ -516,7 +502,6 @@ func getClockTime(tz string) string {
 
 	return t.In(utc).Format("15:04:05")
 }
-
 
 func (me *Heartbeat) getIcon(s string) []byte {
 
@@ -532,7 +517,6 @@ func (me *Heartbeat) getIcon(s string) []byte {
 
 	return b
 }
-
 
 func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 	// This can clearly be refactored a LOT.
@@ -567,186 +551,184 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 	menu.vmStatusEntry.SetIcon(me.getIcon(vmState.VmIconState))
 	menu.vmStatusEntry.SetTitle(vmState.VmTitleState)
 
-/*
-	if me.State.Box.VM.LastSts != nil {
-		menu.vmStatusEntry.SetTooltip(me.State.Box.VM.LastSts.Message())
-	}
+	/*
+		if me.State.Box.VM.LastSts != nil {
+			menu.vmStatusEntry.SetTooltip(me.State.Box.VM.LastSts.Message())
+		}
 
-	switch {
-		case me.State.Box.VM.CurrentState == box.VmStateNotPresent:
-			menu.vmStatusEntry.SetIcon(me.getIcon(IconLogo))
-			menu.vmStatusEntry.SetTitle("Box: VM not created")
+		switch {
+			case me.State.Box.VM.CurrentState == box.VmStateNotPresent:
+				menu.vmStatusEntry.SetIcon(me.getIcon(IconLogo))
+				menu.vmStatusEntry.SetTitle("Box: VM not created")
 
-		case me.State.Box.VM.CurrentState == box.VmStateUnknown:
-			menu.vmStatusEntry.SetIcon(me.getIcon(IconError))
-			menu.vmStatusEntry.SetTitle("Box: unknown error")
+			case me.State.Box.VM.CurrentState == box.VmStateUnknown:
+				menu.vmStatusEntry.SetIcon(me.getIcon(IconError))
+				menu.vmStatusEntry.SetTitle("Box: unknown error")
 
-		case (me.State.Box.VM.CurrentState == box.VmStateRunning) && (me.State.Box.VM.WantState == box.VmStatePowerOff):
-			menu.vmStatusEntry.SetIcon(me.getIcon(IconStopping))
-			menu.vmStatusEntry.SetTitle("Box: stopping")
+			case (me.State.Box.VM.CurrentState == box.VmStateRunning) && (me.State.Box.VM.WantState == box.VmStatePowerOff):
+				menu.vmStatusEntry.SetIcon(me.getIcon(IconStopping))
+				menu.vmStatusEntry.SetTitle("Box: stopping")
 
-		case (me.State.Box.VM.CurrentState == box.VmStatePowerOff) && (me.State.Box.VM.WantState == box.VmStateRunning):
-			menu.vmStatusEntry.SetIcon(me.getIcon(IconStarting))
-			menu.vmStatusEntry.SetTitle("Box: starting")
+			case (me.State.Box.VM.CurrentState == box.VmStatePowerOff) && (me.State.Box.VM.WantState == box.VmStateRunning):
+				menu.vmStatusEntry.SetIcon(me.getIcon(IconStarting))
+				menu.vmStatusEntry.SetTitle("Box: starting")
 
-		case (me.State.Box.VM.CurrentState == box.VmStateRunning) && (me.State.Box.VM.WantState == box.VmStateRunning):
-			menu.vmStatusEntry.SetIcon(me.getIcon(IconUp))
-			menu.vmStatusEntry.SetTitle("Box: running")
+			case (me.State.Box.VM.CurrentState == box.VmStateRunning) && (me.State.Box.VM.WantState == box.VmStateRunning):
+				menu.vmStatusEntry.SetIcon(me.getIcon(IconUp))
+				menu.vmStatusEntry.SetTitle("Box: running")
 
-		case (me.State.Box.VM.CurrentState == box.VmStatePowerOff) && (me.State.Box.VM.WantState == box.VmStatePowerOff):
-			menu.vmStatusEntry.SetIcon(me.getIcon(IconDown))
-			menu.vmStatusEntry.SetTitle("Box: halted")
+			case (me.State.Box.VM.CurrentState == box.VmStatePowerOff) && (me.State.Box.VM.WantState == box.VmStatePowerOff):
+				menu.vmStatusEntry.SetIcon(me.getIcon(IconDown))
+				menu.vmStatusEntry.SetTitle("Box: halted")
 
-		default:
-			menu.vmStatusEntry.SetIcon(me.getIcon(IconWarning))
-			menu.vmStatusEntry.SetTitle("Box: unknown")
-	}
-*/
+			default:
+				menu.vmStatusEntry.SetIcon(me.getIcon(IconWarning))
+				menu.vmStatusEntry.SetTitle("Box: unknown")
+		}
+	*/
 
-/*
-	if me.State.Box.API.LastSts != nil {
-		menu.apiStatusEntry.SetTooltip(me.State.Box.API.LastSts.Message())
-	}
+	/*
+		if me.State.Box.API.LastSts != nil {
+			menu.apiStatusEntry.SetTooltip(me.State.Box.API.LastSts.Message())
+		}
 
-	switch {
-		case me.State.Box.API.CurrentState == box.VmStateUnknown:
-			menu.apiStatusEntry.SetIcon(me.getIcon(IconDown))
-			menu.apiStatusEntry.SetTitle("API: halted")
+		switch {
+			case me.State.Box.API.CurrentState == box.VmStateUnknown:
+				menu.apiStatusEntry.SetIcon(me.getIcon(IconDown))
+				menu.apiStatusEntry.SetTitle("API: halted")
 
-		case (me.State.Box.API.CurrentState == box.VmStateRunning && me.State.Box.API.WantState == box.VmStatePowerOff) || (me.State.Box.API.CurrentState == box.VmStateStopping):
-			menu.apiStatusEntry.SetIcon(me.getIcon(IconStopping))
-			menu.apiStatusEntry.SetTitle("API: stopping")
+			case (me.State.Box.API.CurrentState == box.VmStateRunning && me.State.Box.API.WantState == box.VmStatePowerOff) || (me.State.Box.API.CurrentState == box.VmStateStopping):
+				menu.apiStatusEntry.SetIcon(me.getIcon(IconStopping))
+				menu.apiStatusEntry.SetTitle("API: stopping")
 
-		case (me.State.Box.API.CurrentState == box.VmStatePowerOff && me.State.Box.API.WantState == box.VmStateRunning) || (me.State.Box.API.CurrentState == box.VmStateStarting):
-			menu.apiStatusEntry.SetIcon(me.getIcon(IconStarting))
-			menu.apiStatusEntry.SetTitle("API: starting")
+			case (me.State.Box.API.CurrentState == box.VmStatePowerOff && me.State.Box.API.WantState == box.VmStateRunning) || (me.State.Box.API.CurrentState == box.VmStateStarting):
+				menu.apiStatusEntry.SetIcon(me.getIcon(IconStarting))
+				menu.apiStatusEntry.SetTitle("API: starting")
 
-		case (me.State.Box.API.CurrentState == box.VmStateRunning) && (me.State.Box.API.WantState == box.VmStateRunning):
-			menu.apiStatusEntry.SetIcon(me.getIcon(IconUp))
-			menu.apiStatusEntry.SetTitle("API: running")
+			case (me.State.Box.API.CurrentState == box.VmStateRunning) && (me.State.Box.API.WantState == box.VmStateRunning):
+				menu.apiStatusEntry.SetIcon(me.getIcon(IconUp))
+				menu.apiStatusEntry.SetTitle("API: running")
 
-		case (me.State.Box.API.CurrentState == box.VmStatePowerOff) && (me.State.Box.API.WantState == box.VmStatePowerOff):
-			menu.apiStatusEntry.SetIcon(me.getIcon(IconDown))
-			menu.apiStatusEntry.SetTitle("API: halted")
+			case (me.State.Box.API.CurrentState == box.VmStatePowerOff) && (me.State.Box.API.WantState == box.VmStatePowerOff):
+				menu.apiStatusEntry.SetIcon(me.getIcon(IconDown))
+				menu.apiStatusEntry.SetTitle("API: halted")
 
-		default:
-			menu.apiStatusEntry.SetIcon(me.getIcon(IconWarning))
-			menu.apiStatusEntry.SetTitle("API: unknown")
-	}
-*/
+			default:
+				menu.apiStatusEntry.SetIcon(me.getIcon(IconWarning))
+				menu.apiStatusEntry.SetTitle("API: unknown")
+		}
+	*/
 
 	//fmt.Printf("me.State.Unfsd=%v\n", me.State.Unfsd)
 	if me.State.Unfsd.LastSts != nil {
 		menu.unfsdStatusEntry.SetTooltip(me.State.Unfsd.LastSts.Message())
 	}
 	switch {
-		case me.State.Unfsd.CurrentState == monitor.StateUnknown:
-			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconError))
-			menu.unfsdStatusEntry.SetTitle("FS: unknown error")
+	case me.State.Unfsd.CurrentState == monitor.StateUnknown:
+		menu.unfsdStatusEntry.SetIcon(me.getIcon(IconError))
+		menu.unfsdStatusEntry.SetTitle("FS: unknown error")
 
-		case (me.State.Unfsd.CurrentState == monitor.StateRunning) && (me.State.Unfsd.WantState == monitor.StatePowerOff):
-			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconStopping))
-			menu.unfsdStatusEntry.SetTitle("FS: stopping")
+	case (me.State.Unfsd.CurrentState == monitor.StateRunning) && (me.State.Unfsd.WantState == monitor.StatePowerOff):
+		menu.unfsdStatusEntry.SetIcon(me.getIcon(IconStopping))
+		menu.unfsdStatusEntry.SetTitle("FS: stopping")
 
-		case (me.State.Unfsd.CurrentState == monitor.StatePowerOff) && (me.State.Unfsd.WantState == monitor.StateRunning):
-			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconStarting))
-			menu.unfsdStatusEntry.SetTitle("FS: starting")
+	case (me.State.Unfsd.CurrentState == monitor.StatePowerOff) && (me.State.Unfsd.WantState == monitor.StateRunning):
+		menu.unfsdStatusEntry.SetIcon(me.getIcon(IconStarting))
+		menu.unfsdStatusEntry.SetTitle("FS: starting")
 
-		case (me.State.Unfsd.CurrentState == monitor.StateRunning) && (me.State.Unfsd.WantState == monitor.StateRunning):
-			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconUp))
-			menu.unfsdStatusEntry.SetTitle("FS: running")
+	case (me.State.Unfsd.CurrentState == monitor.StateRunning) && (me.State.Unfsd.WantState == monitor.StateRunning):
+		menu.unfsdStatusEntry.SetIcon(me.getIcon(IconUp))
+		menu.unfsdStatusEntry.SetTitle("FS: running")
 
-		case (me.State.Unfsd.CurrentState == monitor.StatePowerOff) && (me.State.Unfsd.WantState == monitor.StatePowerOff):
-			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconDown))
-			menu.unfsdStatusEntry.SetTitle("FS: halted")
+	case (me.State.Unfsd.CurrentState == monitor.StatePowerOff) && (me.State.Unfsd.WantState == monitor.StatePowerOff):
+		menu.unfsdStatusEntry.SetIcon(me.getIcon(IconDown))
+		menu.unfsdStatusEntry.SetTitle("FS: halted")
 
-		default:
-			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconWarning))
-			menu.unfsdStatusEntry.SetTitle("FS: unknown")
+	default:
+		menu.unfsdStatusEntry.SetIcon(me.getIcon(IconWarning))
+		menu.unfsdStatusEntry.SetTitle("FS: unknown")
 	}
 
 	switch vmState.Name {
-		case box.VmStateNotPresent:
-			fmt.Printf("STATE: NOT PRESENT\n")
-			systray.SetIcon(me.getIcon(IconWarning))
-			systray.SetTooltip("Gearbox VM needs to be created.")
+	case box.VmStateNotPresent:
+		fmt.Printf("STATE: NOT PRESENT\n")
+		systray.SetIcon(me.getIcon(IconWarning))
+		systray.SetTooltip("Gearbox VM needs to be created.")
 
-			returnValue = box.VmStateNotPresent
-			menu.stopEntry.Hide()
-			menu.startEntry.Hide()
-			menu.sshEntry.Hide()
-			menu.createEntry.Show()
+		returnValue = box.VmStateNotPresent
+		menu.stopEntry.Hide()
+		menu.startEntry.Hide()
+		menu.sshEntry.Hide()
+		menu.createEntry.Show()
 
-		case box.VmStateUnknown:
-			fmt.Printf("STATE: UNKNOWN\n")
-			systray.SetIcon(me.getIcon(IconWarning))
-			systray.SetTooltip("Gearbox is in an unknown state.")
+	case box.VmStateUnknown:
+		fmt.Printf("STATE: UNKNOWN\n")
+		systray.SetIcon(me.getIcon(IconWarning))
+		systray.SetTooltip("Gearbox is in an unknown state.")
 
-			returnValue = box.VmStateUnknown
-			menu.stopEntry.Hide()
-			menu.startEntry.Hide()
-			menu.sshEntry.Hide()
-			menu.createEntry.Show()
+		returnValue = box.VmStateUnknown
+		menu.stopEntry.Hide()
+		menu.startEntry.Hide()
+		menu.sshEntry.Hide()
+		menu.createEntry.Show()
 
-		case box.VmStatePaused:
-			fallthrough
-		case box.VmStateSaved:
-			fallthrough
-		case box.VmStatePowerOff:
-			// fmt.Printf("STATE: HALTED\n")
-			systray.SetIcon(me.getIcon(IconDown))
-			systray.SetTooltip("Gearbox is halted.")
+	case box.VmStatePaused:
+		fallthrough
+	case box.VmStateSaved:
+		fallthrough
+	case box.VmStatePowerOff:
+		// fmt.Printf("STATE: HALTED\n")
+		systray.SetIcon(me.getIcon(IconDown))
+		systray.SetTooltip("Gearbox is halted.")
 
-			returnValue = box.VmStatePowerOff
-			menu.stopEntry.Hide()
-			menu.startEntry.Show()
-			menu.sshEntry.Hide()
-			menu.createEntry.Hide()
+		returnValue = box.VmStatePowerOff
+		menu.stopEntry.Hide()
+		menu.startEntry.Show()
+		menu.sshEntry.Hide()
+		menu.createEntry.Hide()
 
-		case box.VmStateRunning:
-			// fmt.Printf("STATE: RUNNING\n")
-			systray.SetIcon(me.getIcon(IconUp))
-			systray.SetTooltip("Gearbox is running.")
+	case box.VmStateRunning:
+		// fmt.Printf("STATE: RUNNING\n")
+		systray.SetIcon(me.getIcon(IconUp))
+		systray.SetTooltip("Gearbox is running.")
 
-			returnValue = box.VmStateRunning
-			menu.stopEntry.Show()
-			menu.startEntry.Hide()
-			menu.sshEntry.Show()
-			menu.createEntry.Hide()
+		returnValue = box.VmStateRunning
+		menu.stopEntry.Show()
+		menu.startEntry.Hide()
+		menu.sshEntry.Show()
+		menu.createEntry.Hide()
 
-		case box.VmStateStarting:
-			fmt.Printf("STATE: STARTING\n")
-			systray.SetIcon(me.getIcon(IconStarting))
-			systray.SetTooltip("Gearbox starting up.")
+	case box.VmStateStarting:
+		fmt.Printf("STATE: STARTING\n")
+		systray.SetIcon(me.getIcon(IconStarting))
+		systray.SetTooltip("Gearbox starting up.")
 
-			returnValue = box.VmStateStarting
-			menu.stopEntry.Hide()
-			menu.startEntry.Hide()
-			menu.sshEntry.Hide()
-			menu.createEntry.Hide()
+		returnValue = box.VmStateStarting
+		menu.stopEntry.Hide()
+		menu.startEntry.Hide()
+		menu.sshEntry.Hide()
+		menu.createEntry.Hide()
 
-		case box.VmStateStopping:
-			fmt.Printf("STATE: STOPPING\n")
-			systray.SetIcon(me.getIcon(IconStopping))
-			systray.SetTooltip("Gearbox is stopping.")
+	case box.VmStateStopping:
+		fmt.Printf("STATE: STOPPING\n")
+		systray.SetIcon(me.getIcon(IconStopping))
+		systray.SetTooltip("Gearbox is stopping.")
 
-			returnValue = box.VmStateStopping
-			menu.stopEntry.Hide()
-			menu.startEntry.Hide()
-			menu.sshEntry.Hide()
-			menu.createEntry.Hide()
+		returnValue = box.VmStateStopping
+		menu.stopEntry.Hide()
+		menu.startEntry.Hide()
+		menu.sshEntry.Hide()
+		menu.createEntry.Hide()
 
 	}
 
 	return
 }
 
-
 func (me *Heartbeat) Initialize() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Heartbeat) StartHeartbeat() (sts status.Status) {
 
@@ -757,21 +739,21 @@ func (me *Heartbeat) StartHeartbeat() (sts status.Status) {
 			break
 		}
 
-//		if me.DaemonInstance.IsRunning() {
-//			fmt.Printf("%s Heartbeat - Restarting service.\n", global.Brandname)
-//			sts = me.DaemonInstance.Unload()
-//			if is.Error(sts) {
-//				break
-//			}
-//		}
+		//		if me.DaemonInstance.IsRunning() {
+		//			fmt.Printf("%s Heartbeat - Restarting service.\n", global.Brandname)
+		//			sts = me.DaemonInstance.Unload()
+		//			if is.Error(sts) {
+		//				break
+		//			}
+		//		}
 
-//		if me.DaemonInstance.IsLoaded() {
-//			fmt.Printf("%s Heartbeat - Restarting service.\n", global.Brandname)
-//			sts = me.DaemonInstance.Unload()
-//			if is.Error(sts) {
-//				break
-//			}
-//		}
+		//		if me.DaemonInstance.IsLoaded() {
+		//			fmt.Printf("%s Heartbeat - Restarting service.\n", global.Brandname)
+		//			sts = me.DaemonInstance.Unload()
+		//			if is.Error(sts) {
+		//				break
+		//			}
+		//		}
 
 		sts = me.DaemonInstance.Load()
 		if is.Error(sts) {
@@ -783,7 +765,6 @@ func (me *Heartbeat) StartHeartbeat() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Heartbeat) StopHeartbeat() (sts status.Status) {
 
@@ -806,7 +787,6 @@ func (me *Heartbeat) StopHeartbeat() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Heartbeat) RestartHeartbeat() (sts status.Status) {
 
 	for range only.Once {
@@ -825,7 +805,6 @@ func (me *Heartbeat) RestartHeartbeat() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Heartbeat) GetState() (sts status.Status) {
 
@@ -856,7 +835,6 @@ func (me *Heartbeat) GetState() (sts status.Status) {
 
 	return sts
 }
-
 
 func EnsureNotNil(bx *Heartbeat) (sts status.Status) {
 	if bx == nil {
