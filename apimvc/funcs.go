@@ -14,6 +14,7 @@ func AddControllers(gb gearbox.Gearboxer) (sts Status) {
 	for range only.Once {
 
 		controllers := []ListController{
+			NewDirectoryController(),
 			NewProjectController(gb),
 			NewStackController(gb),
 			NewServiceController(gb),
