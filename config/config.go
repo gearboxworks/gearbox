@@ -101,21 +101,26 @@ func init() {
 	sanitizer = regexp.MustCompile("[^a-z0-9 ]+")
 }
 
-func (me *Config) MakeUniqueBasedirNickname(basedir types.AbsoluteDir) (nn types.Nickname) {
-	try := strings.ToLower(filepath.Base(string(basedir)))
+func (me *Config) MakeUniqueBasedirNickname(dir types.AbsoluteDir) (nn types.Nickname) {
+	try := strings.ToLower(filepath.Base(string(dir)))
 	try = sanitizer.ReplaceAllString(try, "")
 	try = strings.Replace(try, " ", "-", -1)
 	base := try
 	i := 2
-	for nn = range me.GetBasedirMap() {
-		if nn != types.Nickname(try) {
-			nn = types.Nickname(try)
+	bdm := me.GetBasedirMap()
+	for {
+		nn = types.Nickname(try)
+		bd, ok := bdm[nn]
+		if !ok {
+			break
+		}
+		if bd.Basedir == dir {
 			break
 		}
 		try = fmt.Sprintf("%s%d", base, i)
 		i++
 	}
-	return types.Nickname(nn)
+	return nn
 }
 
 func (me *Config) AddProject(p *Project) (sts Status) {
