@@ -8,7 +8,7 @@ require (
 	github.com/cznic/golex v0.0.0-20181122101858-9c343928389c // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/fatih/color v1.7.0
-	github.com/gearboxworks/go-status v0.0.0-20190525030210-4476d4f95515
+	github.com/gearboxworks/go-status v0.0.0-20190525034440-b35e2afd5b01
 	github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813
 	github.com/gernest/wow v0.1.0
 	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
