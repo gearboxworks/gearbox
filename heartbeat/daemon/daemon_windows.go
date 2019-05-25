@@ -29,19 +29,11 @@ import (
 type Daemon struct {
 	Boxname     string
 	ServiceFile string
-	ServiceData plistData
+	ServiceData PlistData
 
 	OsSupport oss.OsSupporter
 }
 type Args Daemon
-
-type plistData struct {
-	Label     string
-	Program   string
-	Path      string
-	KeepAlive bool
-	RunAtLoad bool
-}
 
 var plistTemplate = `
 `
@@ -61,7 +53,7 @@ func NewDaemon(OsSupport oss.OsSupporter, args ...Args) *Daemon {
 	execPath, _ := os.Executable()
 	execCwd, _ := os.Getwd()
 
-	_args.ServiceData = plistData{
+	_args.ServiceData = PlistData{
 		Label:     "com.gearbox.heartbeat", // Reverse-DNS naming convention
 		Program:   execPath,
 		Path:      execCwd,

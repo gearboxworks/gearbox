@@ -101,10 +101,10 @@ var ExportTemplate = `{{range .}}
 {{end}}`
 
 const DefaultBaseDir = "heartbeat/unfsd"
-const DefaultExportsFile = "heartbeat/unfsd/etc/exports"
-const DefaultExportsJson = "heartbeat/unfsd/etc/exports.json"
-const DefaultNfsBin = "heartbeat/unfsd/bin/unfsd"
-const DefaultPidFile = "heartbeat/unfsd/etc/unfsd.pid"
+const DefaultExportsFile = DefaultBaseDir + "/etc/exports"
+const DefaultExportsJson = DefaultBaseDir + "/etc/exports.json"
+const DefaultNfsBin = DefaultBaseDir + "/bin/unfsd"
+const DefaultPidFile = DefaultBaseDir + "/etc/unfsd.pid"
 
 func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 
@@ -290,8 +290,16 @@ func (me *Unfsd) readJsonExport() status.Status {
 
 		if is.Warn(sts) {
 			// Or use me.OsSupport.GetSuggestedBasedir()
-			me.NewServer(me.ExportsBaseDir, "Sites", "0.0.0.0/0")
-			me.Server.AddVolume("default")
+			err = me.NewServer(me.ExportsBaseDir, "Sites", "0.0.0.0/0")
+			if err != nil {
+				sts = status.Wrap(err).SetMessage("unable to instantiate server for 'Sites")
+				break
+			}
+			err = me.Server.AddVolume("default")
+			if err != nil {
+				sts = status.Wrap(err).SetMessage("unable to add volume default for 'Sites")
+				break
+			}
 			sts = me.WriteExport()
 			break
 		}
@@ -300,7 +308,7 @@ func (me *Unfsd) readJsonExport() status.Status {
 		if err != nil {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("UNFSD: Failed to read JSON file '%s' - %v", me.ExportsJson, err),
-				Help:    fmt.Sprintf("Ensure '%s' is in correct format per %s"),
+				Help:    fmt.Sprintf("Ensure '%s' is in correct format per %s", "TODO", "TODO"),
 				Data:    err,
 			})
 			break
@@ -352,7 +360,7 @@ func (me *Unfsd) writeNfsExport() status.Status {
 
 	var sts status.Status
 	var err error
-	var serviced_exports string
+	var servicedExports string
 
 	for range only.Once {
 
@@ -381,7 +389,7 @@ func (me *Unfsd) writeNfsExport() status.Status {
 		}
 
 		exports := make(map[string]struct{})
-		serviced_exports = fmt.Sprintf("%s\t%s(rw,fsid=0,no_root_squash,insecure,no_subtree_check,async,crossmnt)\n",
+		servicedExports = fmt.Sprintf("%s\t%s(rw,fsid=0,no_root_squash,insecure,no_subtree_check,async,crossmnt)\n",
 			me.ExportsBaseDir+"/"+me.Server.ExportedName, network)
 		for volume, fsid := range me.Server.Volumes {
 			volume = filepath.Clean(volume)
@@ -389,7 +397,7 @@ func (me *Unfsd) writeNfsExport() status.Status {
 			exports[volName] = struct{}{}
 			exported := filepath.Join(edir, volName)
 
-			serviced_exports += fmt.Sprintf("%s\t%s(rw,fsid=%d,no_root_squash,insecure,no_subtree_check,async)\n",
+			servicedExports += fmt.Sprintf("%s\t%s(rw,fsid=%d,no_root_squash,insecure,no_subtree_check,async)\n",
 				exported, network, fsid)
 		}
 		me.Server.Exported = exports
@@ -434,7 +442,7 @@ func (me *Unfsd) writeNfsExport() status.Status {
 				postamble = remainder[index+len(etcExportsEndMarker):]
 			}
 		}
-		fileContents := preamble + etcExportsStartMarker + serviced_exports + etcExportsEndMarker + postamble
+		fileContents := preamble + etcExportsStartMarker + servicedExports + etcExportsEndMarker + postamble
 
 		err, sts = WriteFile(me.ExportsFile, []byte(fileContents), 0664)
 	}
@@ -444,7 +452,7 @@ func (me *Unfsd) writeNfsExport() status.Status {
 		//syscall.Kill(me.getPid(), syscall.SIGHUP)
 	}
 
-	sts = status.Success("UNFSD: Exported:\n %s", serviced_exports)
+	sts = status.Success("UNFSD: Exported:\n %s", servicedExports)
 
 	return sts
 }
