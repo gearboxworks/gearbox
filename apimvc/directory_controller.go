@@ -236,14 +236,14 @@ func CanAddDirectory(dir types.AbsoluteDir) (sts Status) {
 		if !strings.HasPrefix(string(dir), hd) {
 			sts = status.Fail().
 				SetMessage("cannot add directory '%s'", dir).
-				SetDetail("directory '%s' is not within your home directory '%s'", dir, hd).
+				SetAdditional("directory '%s' is not within your home directory '%s'", dir, hd).
 				SetHttpStatus(http.StatusBadRequest)
 			break
 		}
 		if util.DirExists(dir) {
 			sts = status.Fail().
 				SetMessage("cannot add directory '%s'", dir).
-				SetDetail("directory '%s' already exists", dir).
+				SetAdditional("directory '%s' already exists", dir).
 				SetHttpStatus(http.StatusConflict)
 
 			break

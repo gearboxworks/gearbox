@@ -149,7 +149,7 @@ func (me BasedirMap) DeleteBasedir(config Configer, nickname types.Nickname) (st
 		delete(me, nickname)
 		sts = status.Success("basedir '%s' deleted",
 			nickname,
-		).SetDetail("'%s' was nickname for '%s'",
+		).SetAdditional("'%s' was nickname for '%s'",
 			nickname,
 			bd.Basedir,
 			/** Setting status code explicitly @see https://stackoverflow.com/a/2342589/102699 */
@@ -193,7 +193,7 @@ func (me BasedirMap) UpdateBasedir(config Configer, basedir *Basedir) (sts Statu
 		}
 		me[basedir.Nickname] = basedir
 		sts = status.Success("basedir '%s' updated", basedir.Nickname).
-			SetDetail("'%s' is nickname for '%s'", basedir.Nickname, basedir.Basedir)
+			SetAdditional("'%s' is nickname for '%s'", basedir.Nickname, basedir.Basedir)
 	}
 	return sts
 }
@@ -230,7 +230,7 @@ func (me BasedirMap) AddBasedir(config Configer, basedir *Basedir) (sts Status) 
 			if err != nil {
 				sts = status.Wrap(err).
 					SetMessage("unable to create directory '%s'", basedir.Basedir).
-					SetDetail("base directory '%s' has nickname '%s'",
+					SetAdditional("base directory '%s' has nickname '%s'",
 						basedir.Basedir,
 						basedir.Nickname,
 					)
@@ -239,7 +239,7 @@ func (me BasedirMap) AddBasedir(config Configer, basedir *Basedir) (sts Status) 
 		me[basedir.Nickname] = basedir
 		sts = status.Success("base directory '%s' was added", basedir.Basedir).
 			SetHttpStatus(http.StatusCreated).
-			SetDetail("base directory '%s' has nickname '%s'",
+			SetAdditional("base directory '%s' has nickname '%s'",
 				basedir.Basedir,
 				basedir.Nickname,
 			)
@@ -265,7 +265,7 @@ func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts S
 
 		if string(nickname) != validNicknameChars.ReplaceAllString(string(nickname), "") {
 			sts = status.YourBad("nickname has invalid characters '%s'", nickname).
-				SetDetail("nickname can only contain digits (0-9), lowercase letters (a-z) and/or dashes (-)")
+				SetAdditional("nickname can only contain digits (0-9), lowercase letters (a-z) and/or dashes (-)")
 			break
 		}
 

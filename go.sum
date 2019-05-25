@@ -24,6 +24,14 @@ github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5Kwzbycv
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/gearboxworks/go-status v0.0.0-20190509061414-712a29394535 h1:9Y2d7GGiVJB4XVDWAyLw/ab/x+8orOruwMxxo7g+KDA=
 github.com/gearboxworks/go-status v0.0.0-20190509061414-712a29394535/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
+github.com/gearboxworks/go-status v0.0.0-20190525022520-af9007c6aa01 h1:5hpJmjes/30hRWgOK/g0vlK6EoxOn/zd0kxwE0cbT2o=
+github.com/gearboxworks/go-status v0.0.0-20190525022520-af9007c6aa01/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
+github.com/gearboxworks/go-status v0.0.0-20190525023748-668746ddd844 h1:hv0e6DdtDTQcosPmxzOWVPW9TDQHrt3/vE6dCIa0gVE=
+github.com/gearboxworks/go-status v0.0.0-20190525023748-668746ddd844/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
+github.com/gearboxworks/go-status v0.0.0-20190525023954-f841f08fff43 h1:AszojOlCn50+Bd5Yx4LXNrRQ7LJbbyjXzzD850ZTavg=
+github.com/gearboxworks/go-status v0.0.0-20190525023954-f841f08fff43/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
+github.com/gearboxworks/go-status v0.0.0-20190525030210-4476d4f95515 h1:y3V6EH11rdC/I+jg0at8TdPIozNS4QlAMoeFdfQBcSk=
+github.com/gearboxworks/go-status v0.0.0-20190525030210-4476d4f95515/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813 h1:Uc+IZ7gYqAf/rSGFplbWBSHaGolEQlNLgMgSE3ccnIQ=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813/go.mod h1:P+oSoE9yhSRvsmYyZsshflcR6ePWYLql6UU1amW13IM=
 github.com/gernest/wow v0.1.0 h1:g9xdwCwP0+xgVYlA2sopI0gZHqXe7HjI/7/LykG4fks=
