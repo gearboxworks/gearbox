@@ -19,10 +19,8 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
 )
-
 
 type Unfsd struct {
 	Boxname        string
@@ -52,7 +50,7 @@ type ExportData struct {
 
 // Server manages exporting an NFS mount.
 type Server struct {
-	sync.Mutex                           `json:"-"`
+	sync.Mutex       `json:"-"`
 	BasePath         string              `json:"basePath"`
 	ExportedName     string              `json:"exportedName"`
 	ExportedNamePath string              `json:"exportedNamePath"`
@@ -70,7 +68,6 @@ type UnfsdState struct {
 	CurrentState int
 	WantState    int
 }
-
 
 // Refine facade.DfsValidator to avoid circular dependencies
 type NfsClientValidator interface {
@@ -103,12 +100,11 @@ var ExportTemplate = `{{range .}}
 {{.MountPoint}} {{range .Options}} {{.Options}} {{end}}
 {{end}}`
 
-const DefaultBaseDir		= "heartbeat/unfsd"
-const DefaultExportsFile	= "heartbeat/unfsd/etc/exports"
-const DefaultExportsJson	= "heartbeat/unfsd/etc/exports.json"
-const DefaultNfsBin			= "heartbeat/unfsd/bin/unfsd"
-const DefaultPidFile		= "heartbeat/unfsd/etc/unfsd.pid"
-
+const DefaultBaseDir = "heartbeat/unfsd"
+const DefaultExportsFile = "heartbeat/unfsd/etc/exports"
+const DefaultExportsJson = "heartbeat/unfsd/etc/exports.json"
+const DefaultNfsBin = "heartbeat/unfsd/bin/unfsd"
+const DefaultPidFile = "heartbeat/unfsd/etc/unfsd.pid"
 
 func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 
@@ -145,7 +141,7 @@ func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 
 		// Need to check for existance of UNFSD pid.
 
-		_args.NfsArgs = []string {
+		_args.NfsArgs = []string{
 			"-e",
 			_args.ExportsFile,
 
@@ -169,14 +165,14 @@ func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 			// "-C",		// Enable clustering extension - good for minor changes across files.
 			// "path",		// Enable clustering extension - good for minor changes across files.
 
-			"-s",			// Single user mode - force all UID/GID mapping to be that of the client side.
+			"-s", // Single user mode - force all UID/GID mapping to be that of the client side.
 
 			// "-b",		// Brute force file searching - Makes NFS really slow, but avoids .nfsd* files being created.
 
-			"-l",			// Bind to specific address.
-			"0.0.0.0",		// Bind to specific address.
+			"-l",      // Bind to specific address.
+			"0.0.0.0", // Bind to specific address.
 
-			"-d",			// Don't detach from terminal.
+			"-d", // Don't detach from terminal.
 
 			// "-r",		// Report unreadable executables as readable - usually not required to be enabled.
 
@@ -186,19 +182,19 @@ func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 		fmt.Printf("ExportsFile:%s\n", _args.ExportsFile)
 		fmt.Printf("NfsCmd:%s\n", _args.NfsCmd)
 
-		execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/" + DefaultBaseDir	// os.Getwd()
+		execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/" + DefaultBaseDir // os.Getwd()
 
 		// Start a new UNFSD instance.
 		_args.Daemon = daemon.NewDaemon(_args.OsSupport, daemon.Args{
 			Boxname: _args.Boxname,
-			ServiceData: daemon.PlistData {
-				Label: "com.gearbox.unfsd",
-				Program:   _args.NfsCmd,
+			ServiceData: daemon.PlistData{
+				Label:       "com.gearbox.unfsd",
+				Program:     _args.NfsCmd,
 				ProgramArgs: _args.NfsArgs,
-				PidFile: _args.PidFile,
-				Path: execCwd,
-				KeepAlive: true,
-				RunAtLoad: true,
+				PidFile:     _args.PidFile,
+				Path:        execCwd,
+				KeepAlive:   true,
+				RunAtLoad:   true,
 			},
 		})
 
@@ -221,8 +217,7 @@ func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 	return unfsd, sts
 }
 
-
-func (me *Unfsd) ReadExport() (status.Status) {
+func (me *Unfsd) ReadExport() status.Status {
 
 	// Ensure we read the JSON export file and update the UNFSD exports file.
 	// UNFSD exports file will ALWAYS be updated to reflect the JSON file.
@@ -249,8 +244,7 @@ func (me *Unfsd) ReadExport() (status.Status) {
 	return sts
 }
 
-
-func (me *Unfsd) WriteExport() (status.Status) {
+func (me *Unfsd) WriteExport() status.Status {
 
 	// Ensure we write the JSON export file and update the UNFSD exports file.
 	var sts status.Status
@@ -276,8 +270,7 @@ func (me *Unfsd) WriteExport() (status.Status) {
 	return sts
 }
 
-
-func (me *Unfsd) readJsonExport() (status.Status) {
+func (me *Unfsd) readJsonExport() status.Status {
 
 	var sts status.Status
 	var content []byte
@@ -307,8 +300,8 @@ func (me *Unfsd) readJsonExport() (status.Status) {
 		if err != nil {
 			sts = status.Fail(&status.Args{
 				Message: fmt.Sprintf("UNFSD: Failed to read JSON file '%s' - %v", me.ExportsJson, err),
-				Help: fmt.Sprintf("Ensure '%s' is in correct format per %s"),
-				Data: err,
+				Help:    fmt.Sprintf("Ensure '%s' is in correct format per %s"),
+				Data:    err,
 			})
 			break
 		}
@@ -322,8 +315,7 @@ func (me *Unfsd) readJsonExport() (status.Status) {
 	return sts
 }
 
-
-func (me *Unfsd) writeJsonExport() (status.Status) {
+func (me *Unfsd) writeJsonExport() status.Status {
 
 	var sts status.Status
 	var err error
@@ -356,8 +348,7 @@ func (me *Unfsd) writeJsonExport() (status.Status) {
 	return sts
 }
 
-
-func (me *Unfsd) writeNfsExport() (status.Status) {
+func (me *Unfsd) writeNfsExport() status.Status {
 
 	var sts status.Status
 	var err error
@@ -367,7 +358,7 @@ func (me *Unfsd) writeNfsExport() (status.Status) {
 
 		network := me.Server.Network
 		if network == "0.0.0.0/0" {
-			network = ""	// "*" // turn this in to nfs 'allow all hosts' syntax
+			network = "" // "*" // turn this in to nfs 'allow all hosts' syntax
 		}
 
 		if err := os.MkdirAll(me.ExportsBaseDir, 0775); err != nil {
@@ -391,7 +382,7 @@ func (me *Unfsd) writeNfsExport() (status.Status) {
 
 		exports := make(map[string]struct{})
 		serviced_exports = fmt.Sprintf("%s\t%s(rw,fsid=0,no_root_squash,insecure,no_subtree_check,async,crossmnt)\n",
-			me.ExportsBaseDir + "/" + me.Server.ExportedName, network)
+			me.ExportsBaseDir+"/"+me.Server.ExportedName, network)
 		for volume, fsid := range me.Server.Volumes {
 			volume = filepath.Clean(volume)
 			_, volName := filepath.Split(volume)
@@ -450,7 +441,7 @@ func (me *Unfsd) writeNfsExport() (status.Status) {
 
 	// Force UNFSD to re-read exports file.
 	if me.getPid() > 0 {
-		syscall.Kill(me.getPid(), syscall.SIGHUP)
+		//syscall.Kill(me.getPid(), syscall.SIGHUP)
 	}
 
 	sts = status.Success("UNFSD: Exported:\n %s", serviced_exports)
@@ -458,8 +449,7 @@ func (me *Unfsd) writeNfsExport() (status.Status) {
 	return sts
 }
 
-
-func (me *Unfsd) readNfsExport() (status.Status) {
+func (me *Unfsd) readNfsExport() status.Status {
 
 	// Stub method.
 	// We won't ever need to read the UNFSD exports file because it will ALWAYS
@@ -468,12 +458,11 @@ func (me *Unfsd) readNfsExport() (status.Status) {
 	return nil
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // NewServer returns a Unfsd.Server object that manages the given nfs mounts to
 // configured clients;  basePath is the path for volumes, exportedName is the container dir to hold exported volumes
-func (me *Unfsd) NewServer(basePath, exportedName, network string) (error) {
+func (me *Unfsd) NewServer(basePath, exportedName, network string) error {
 
 	if len(exportedName) < 2 || strings.Contains(exportedName, "/") {
 		return ErrInvalidExportedName
@@ -511,9 +500,8 @@ func (me *Unfsd) NewServer(basePath, exportedName, network string) (error) {
 	return nil
 }
 
-
 // Reload ensures that the nfs exports are visible to all clients
-func (me *Unfsd) Reload() (status.Status) {
+func (me *Unfsd) Reload() status.Status {
 
 	var sts status.Status
 
@@ -525,9 +513,8 @@ func (me *Unfsd) Reload() (status.Status) {
 	return sts
 }
 
-
 // Restart restarts the nfs subsystem
-func (me *Unfsd) Restart() (status.Status) {
+func (me *Unfsd) Restart() status.Status {
 
 	var sts status.Status
 
@@ -543,7 +530,7 @@ func (me *Unfsd) Restart() (status.Status) {
 			break
 		}
 
-		sts = me.Start();
+		sts = me.Start()
 		if is.Error(sts) {
 			break
 		}
@@ -552,9 +539,8 @@ func (me *Unfsd) Restart() (status.Status) {
 	return sts
 }
 
-
 // Stop stops the nfs subsystem
-func (me *Unfsd) Stop() (status.Status) {
+func (me *Unfsd) Stop() status.Status {
 
 	var sts status.Status
 
@@ -584,9 +570,8 @@ func (me *Unfsd) Stop() (status.Status) {
 	return sts
 }
 
-
 // Stop stops the nfs subsystem
-func (me *Unfsd) Start() (status.Status) {
+func (me *Unfsd) Start() status.Status {
 
 	var sts status.Status
 	var err error
@@ -622,7 +607,6 @@ func (me *Unfsd) Start() (status.Status) {
 	return sts
 }
 
-
 func (me *Unfsd) GetState() (state UnfsdState, sts status.Status) {
 
 	for range only.Once {
@@ -654,7 +638,6 @@ func (me *Unfsd) GetState() (state UnfsdState, sts status.Status) {
 	return me.State, me.State.LastSts
 }
 
-
 func (me *Unfsd) getPid() (pid int) {
 
 	var exists bool
@@ -680,8 +663,6 @@ func (me *Unfsd) getPid() (pid int) {
 	return pid
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // Server methods
 
@@ -691,13 +672,11 @@ func (me *Server) ExportPath() string {
 	return filepath.Join("/", me.ExportedName)
 }
 
-
 // Returns the export path name; a combination of the me.ExportsBaseDir and ExportPath
 func (me *Server) ExportNamePath() string {
 
 	return me.ExportedNamePath
 }
-
 
 // Clients returns the IP Addresses of the current clients
 func (me *Server) Clients() []string {
@@ -712,12 +691,10 @@ func (me *Server) Clients() []string {
 	return clients
 }
 
-
 func (me *Server) SetClientValidator(validator NfsClientValidator) {
 
 	me.ClientValidator = validator
 }
-
 
 // SetClients replaces the existing clients with the new clients
 func (me *Server) SetClients(clients ...string) {
@@ -734,7 +711,6 @@ func (me *Server) SetClients(clients ...string) {
 
 }
 
-
 // VolumeCreated set that path of a volume that should be exported
 func (me *Server) AddVolume(volumePath string) error {
 
@@ -747,7 +723,6 @@ func (me *Server) AddVolume(volumePath string) error {
 	return nil
 }
 
-
 // VolumeCreated set that path of a volume that should be exported
 func (me *Server) RemoveVolume(volumePath string) error {
 
@@ -758,7 +733,6 @@ func (me *Server) RemoveVolume(volumePath string) error {
 
 	return nil
 }
-
 
 func (me *Server) filterHostsWithoutPerms(clients []string) []string {
 
@@ -779,8 +753,6 @@ func (me *Server) filterHostsWithoutPerms(clients []string) []string {
 	return filteredClients
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // Misc functions.
 
@@ -794,7 +766,6 @@ func EnsureNotNil(bx *Unfsd) (sts status.Status) {
 	}
 	return sts
 }
-
 
 func verifyExportsBaseDir(path string) error {
 	stat, err := os.Stat(path)
@@ -814,7 +785,6 @@ func verifyExportsBaseDir(path string) error {
 	return err
 }
 
-
 func readFileIfExists(path string) (s string, err error) {
 
 	var exists bool
@@ -833,7 +803,6 @@ func readFileIfExists(path string) (s string, err error) {
 
 	return s, nil
 }
-
 
 // removeDeprecated will clean up any old exports path
 func removeDeprecated(dirpath string) status.Status {
@@ -882,7 +851,6 @@ func removeDeprecated(dirpath string) status.Status {
 	return sts
 }
 
-
 func doesExist(path string) (bool, error) {
 
 	_, err := os.Stat(path)
@@ -896,7 +864,6 @@ func doesExist(path string) (bool, error) {
 
 	return false, err
 }
-
 
 func ReadFile(filename string) ([]byte, status.Status) {
 
@@ -924,7 +891,6 @@ func ReadFile(filename string) ([]byte, status.Status) {
 
 	return data, sts
 }
-
 
 // WriteFile will write the given data to the filename in an atomic manner so that
 // partial writes are not possible.
@@ -997,4 +963,3 @@ func WriteFile(filename string, data []byte, perm os.FileMode) (error, status.St
 
 	return err, sts
 }
-
