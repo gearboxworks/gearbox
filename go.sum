@@ -34,6 +34,10 @@ github.com/gearboxworks/go-status v0.0.0-20190525030210-4476d4f95515 h1:y3V6EH11
 github.com/gearboxworks/go-status v0.0.0-20190525030210-4476d4f95515/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
 github.com/gearboxworks/go-status v0.0.0-20190525034440-b35e2afd5b01 h1:q5b4/wIT0/V506+h5czSSPVT7YbHB9EZTNNUOKtlwdc=
 github.com/gearboxworks/go-status v0.0.0-20190525034440-b35e2afd5b01/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
+github.com/gearboxworks/go-status v0.0.0-20190525034818-c735e0e70ed8 h1:ln2pBbN1WhiTAv/KEo6js91g88v/qBzXQQqZUPbWp60=
+github.com/gearboxworks/go-status v0.0.0-20190525034818-c735e0e70ed8/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
+github.com/gearboxworks/go-status v0.0.0-20190525035244-0db205ffea62 h1:5wx6GQDjQsadWFWFiI3CBRWZuCX9vteMifB2zH6AzlA=
+github.com/gearboxworks/go-status v0.0.0-20190525035244-0db205ffea62/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813 h1:Uc+IZ7gYqAf/rSGFplbWBSHaGolEQlNLgMgSE3ccnIQ=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813/go.mod h1:P+oSoE9yhSRvsmYyZsshflcR6ePWYLql6UU1amW13IM=
 github.com/gernest/wow v0.1.0 h1:g9xdwCwP0+xgVYlA2sopI0gZHqXe7HjI/7/LykG4fks=
