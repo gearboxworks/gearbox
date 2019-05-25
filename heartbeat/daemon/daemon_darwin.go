@@ -20,6 +20,8 @@ import (
 	"text/template"
 )
 
+// @TODO Mick - Any reason we can't move all OS-specific logic to os_support?
+
 // @TODO Consider using https://github.com/kardianos/service
 // 	Daemon "github.com/kardianos/service"
 
