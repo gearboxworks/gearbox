@@ -101,10 +101,10 @@ var ExportTemplate = `{{range .}}
 {{end}}`
 
 const DefaultBaseDir = "heartbeat/unfsd"
-const DefaultExportsFile = "heartbeat/unfsd/etc/exports"
-const DefaultExportsJson = "heartbeat/unfsd/etc/exports.json"
-const DefaultNfsBin = "heartbeat/unfsd/bin/unfsd"
-const DefaultPidFile = "heartbeat/unfsd/etc/unfsd.pid"
+const DefaultExportsFile = DefaultBaseDir + "/etc/exports"
+const DefaultExportsJson = DefaultBaseDir + "/etc/exports.json"
+const DefaultNfsBin = DefaultBaseDir + "/bin/unfsd"
+const DefaultPidFile = DefaultBaseDir + "/etc/unfsd.pid"
 
 func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 

@@ -35,14 +35,6 @@ type Daemon struct {
 }
 type Args Daemon
 
-type PlistData struct {
-	Label     string
-	Program   string
-	Path      string
-	KeepAlive bool
-	RunAtLoad bool
-}
-
 var plistTemplate = `
 `
 
