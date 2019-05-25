@@ -2,17 +2,22 @@
 package daemon
 
 import (
+	"bytes"
 	"fmt"
 	"gearbox/global"
 	"gearbox/help"
 	"gearbox/only"
-	"gearbox/os_support"
+	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/process"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"syscall"
 )
 
 // @TODO Consider using https://github.com/kardianos/service
@@ -21,11 +26,11 @@ import (
 // @TODO These should be stubs, but it's just a copy of daemon_darwin.go
 
 type Daemon struct {
-	Boxname      string
-	ServiceFile  string
-	ServiceData	 plistData
+	Boxname     string
+	ServiceFile string
+	ServiceData plistData
 
-	OsSupport    oss.OsSupporter
+	OsSupport oss.OsSupporter
 }
 type Args Daemon
 
@@ -39,7 +44,6 @@ type plistData struct {
 
 var plistTemplate = `
 `
-
 
 func NewDaemon(OsSupport oss.OsSupporter, args ...Args) *Daemon {
 	var _args Args
@@ -74,7 +78,6 @@ func NewDaemon(OsSupport oss.OsSupporter, args ...Args) *Daemon {
 	return daemon
 }
 
-
 func (me *Daemon) CreatePlist() (sts status.Status) {
 
 	for range only.Once {
@@ -107,7 +110,6 @@ func (me *Daemon) CreatePlist() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Daemon) Load() (sts status.Status) {
 
@@ -154,7 +156,6 @@ func (me *Daemon) Load() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Daemon) Unload() (sts status.Status) {
 
 	for range only.Once {
@@ -195,7 +196,6 @@ func (me *Daemon) Unload() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Daemon) getFile(s string) []byte {
 
 	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), s))
@@ -210,7 +210,6 @@ func (me *Daemon) getFile(s string) []byte {
 
 	return b
 }
-
 
 func (me *Daemon) GetState() (sts status.Status) {
 
@@ -263,7 +262,6 @@ func (me *Daemon) GetState() (sts status.Status) {
 	return sts
 }
 
-
 func EnsureNotNil(bx *Daemon) (sts status.Status) {
 	if bx == nil {
 		sts = status.Fail(&status.Args{
@@ -275,8 +273,7 @@ func EnsureNotNil(bx *Daemon) (sts status.Status) {
 	return sts
 }
 
-
-func (me *Daemon) IsParentInit() (bool) {
+func (me *Daemon) IsParentInit() bool {
 
 	ppid := os.Getppid()
 	if ppid == 1 {
@@ -286,8 +283,7 @@ func (me *Daemon) IsParentInit() (bool) {
 	return false
 }
 
-
-func (me *Daemon) IsRunning() (bool) {
+func (me *Daemon) IsRunning() bool {
 
 	fmt.Printf("PPID:%v:\n", me.IsParentInit())
 
@@ -310,7 +306,6 @@ func (me *Daemon) IsRunning() (bool) {
 
 	return false
 }
-
 
 func (me *Daemon) IsLoaded() (yesNo bool) {
 
@@ -348,8 +343,8 @@ func (me *Daemon) IsLoaded() (yesNo bool) {
 	return yesNo
 }
 
-
 const defaultFailedCode = 1
+
 func (me *Daemon) RunCommand(name string, args ...string) (sts status.Status, stdout string, stderr string, exitCode int) {
 
 	var outbuf, errbuf bytes.Buffer

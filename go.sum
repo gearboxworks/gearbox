@@ -38,6 +38,8 @@ github.com/gearboxworks/go-status v0.0.0-20190525034818-c735e0e70ed8 h1:ln2pBbN1
 github.com/gearboxworks/go-status v0.0.0-20190525034818-c735e0e70ed8/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
 github.com/gearboxworks/go-status v0.0.0-20190525035244-0db205ffea62 h1:5wx6GQDjQsadWFWFiI3CBRWZuCX9vteMifB2zH6AzlA=
 github.com/gearboxworks/go-status v0.0.0-20190525035244-0db205ffea62/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
+github.com/gearboxworks/go-status v0.0.0-20190525035621-b70a9a4bbbbc h1:rNMJaG7MC5wJmHCzr7p8Q9vCLPcv9yXoKUSSZU+tSo8=
+github.com/gearboxworks/go-status v0.0.0-20190525035621-b70a9a4bbbbc/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813 h1:Uc+IZ7gYqAf/rSGFplbWBSHaGolEQlNLgMgSE3ccnIQ=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813/go.mod h1:P+oSoE9yhSRvsmYyZsshflcR6ePWYLql6UU1amW13IM=
 github.com/gernest/wow v0.1.0 h1:g9xdwCwP0+xgVYlA2sopI0gZHqXe7HjI/7/LykG4fks=
