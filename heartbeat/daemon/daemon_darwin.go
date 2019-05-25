@@ -23,25 +23,14 @@ import (
 // @TODO Consider using https://github.com/kardianos/service
 // 	Daemon "github.com/kardianos/service"
 
-
 type Daemon struct {
-	Boxname      string
-	ServiceFile  string
-	ServiceData	 PlistData
+	Boxname     string
+	ServiceFile string
+	ServiceData PlistData
 
-	OsSupport    oss.OsSupporter
+	OsSupport oss.OsSupporter
 }
 type Args Daemon
-
-type PlistData struct {
-	Label       string
-	Program     string
-	ProgramArgs []string
-	Path        string
-	KeepAlive   bool
-	RunAtLoad   bool
-	PidFile		string
-}
 
 var PlistTemplate = `
 <?xml version='1.0' encoding='UTF-8'?>
@@ -64,7 +53,6 @@ var PlistTemplate = `
 	</dict>
 </plist>
 `
-
 
 func NewDaemon(OsSupport oss.OsSupporter, args ...Args) *Daemon {
 	var _args Args
@@ -106,37 +94,36 @@ func NewDaemon(OsSupport oss.OsSupporter, args ...Args) *Daemon {
 	daemon := &Daemon{}
 	*daemon = Daemon(_args)
 
-/*
-	svcConfig := &SysSvc.Config{
-		Name:        daemon.Boxname,
-		DisplayName: "Gearbox",
-		Description: "This is an example Go service.",
-		Executable:	 daemon.ServiceData.Program,
-		Arguments: daemon.ServiceData.ProgramArgs,
-		Option: SysSvc.KeyValue{
-			"KeepAlive": true,
-			"RunAtLoad": true,
-			"PIDFile": daemon.ServiceData.PidFile,
-		},
-	}
+	/*
+		svcConfig := &SysSvc.Config{
+			Name:        daemon.Boxname,
+			DisplayName: "Gearbox",
+			Description: "This is an example Go service.",
+			Executable:	 daemon.ServiceData.Program,
+			Arguments: daemon.ServiceData.ProgramArgs,
+			Option: SysSvc.KeyValue{
+				"KeepAlive": true,
+				"RunAtLoad": true,
+				"PIDFile": daemon.ServiceData.PidFile,
+			},
+		}
 
-	prg := &program{}
-	s, err := SysSvc.New(prg, svcConfig)
-	if err != nil {
-		//		log.Fatal(err)
-	}
-	//	logger, err = s.Logger(nil)
-	if err != nil {
-		//		log.Fatal(err)
-	}
-	err = s.Run()
-	if err != nil {
-		//		logger.Error(err)
-	}
-*/
+		prg := &program{}
+		s, err := SysSvc.New(prg, svcConfig)
+		if err != nil {
+			//		log.Fatal(err)
+		}
+		//	logger, err = s.Logger(nil)
+		if err != nil {
+			//		log.Fatal(err)
+		}
+		err = s.Run()
+		if err != nil {
+			//		logger.Error(err)
+		}
+	*/
 	return daemon
 }
-
 
 func (me *Daemon) CreatePlist() (sts status.Status) {
 
@@ -170,7 +157,6 @@ func (me *Daemon) CreatePlist() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Daemon) Load() (sts status.Status) {
 
@@ -222,7 +208,6 @@ func (me *Daemon) Load() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Daemon) Unload() (sts status.Status) {
 
 	for range only.Once {
@@ -263,7 +248,6 @@ func (me *Daemon) Unload() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Daemon) getFile(s string) []byte {
 
 	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), s))
@@ -278,7 +262,6 @@ func (me *Daemon) getFile(s string) []byte {
 
 	return b
 }
-
 
 func (me *Daemon) GetState() (sts status.Status) {
 
@@ -300,43 +283,42 @@ func (me *Daemon) GetState() (sts status.Status) {
 		displayString += fmt.Sprintf("%s Heartbeat - Service NOT running [%s]\n", global.Brandname, me.ServiceData.Label)
 	}
 
-/*
-	foo1, _ := process.Pids()
-	for i, p := range foo1 {
-		fmt.Printf("process.Pids:%v:	%v:\n", i, p)
-	}
+	/*
+		foo1, _ := process.Pids()
+		for i, p := range foo1 {
+			fmt.Printf("process.Pids:%v:	%v:\n", i, p)
+		}
 
-	foo2, _ := process.Processes()
-	for _, p := range foo2 {
-		c, _ := p.Cmdline()
-		fmt.Printf("process.Processes:%v:	'%s'\n", p.Pid, c)
-	}
+		foo2, _ := process.Processes()
+		for _, p := range foo2 {
+			c, _ := p.Cmdline()
+			fmt.Printf("process.Processes:%v:	'%s'\n", p.Pid, c)
+		}
 
-	infoStat, _ := host.Info()
-	fmt.Printf("Total processes: %v\n", infoStat.Procs)
+		infoStat, _ := host.Info()
+		fmt.Printf("Total processes: %v\n", infoStat.Procs)
 
-	miscStat, _ := load.Misc()
-	fmt.Printf("Running processes: %v\n", miscStat.ProcsRunning)
-*/
+		miscStat, _ := load.Misc()
+		fmt.Printf("Running processes: %v\n", miscStat.ProcsRunning)
+	*/
 
-/*
-	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), s))
-	if fp == "" {
-		return nil
-	}
+	/*
+		fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), s))
+		if fp == "" {
+			return nil
+		}
 
-	b, err := ioutil.ReadFile(fp)
-	if err != nil {
-		fmt.Print(err)
-	}
+		b, err := ioutil.ReadFile(fp)
+		if err != nil {
+			fmt.Print(err)
+		}
 
-	return b
-*/
+		return b
+	*/
 	sts = status.Success(displayString)
 
 	return sts
 }
-
 
 func EnsureNotNil(bx *Daemon) (sts status.Status) {
 	if bx == nil {
@@ -348,7 +330,6 @@ func EnsureNotNil(bx *Daemon) (sts status.Status) {
 	}
 	return sts
 }
-
 
 func (me *Daemon) IsLoaded() (yesNo bool) {
 
@@ -391,7 +372,6 @@ func (me *Daemon) IsLoaded() (yesNo bool) {
 
 	return yesNo
 }
-
 
 func (me *Daemon) IsRunning() (yesNo bool) {
 
@@ -440,38 +420,38 @@ func (me *Daemon) IsRunning() (yesNo bool) {
 
 	return yesNo
 
-/*
-	for range only.Once {
-		sts := EnsureNotNil(me)
-		if is.Error(sts) {
-			break
+	/*
+		for range only.Once {
+			sts := EnsureNotNil(me)
+			if is.Error(sts) {
+				break
+			}
+
+			fmt.Printf("PPID:%v:\n", IsParentInit())
+
+			foo1, _ := process.Pids()
+			for i, p := range foo1 {
+				fmt.Printf("process.Pids:%v:	%v:\n", i, p)
+			}
+
+			foo2, _ := process.Processes()
+			for _, p := range foo2 {
+				c, _ := p.Cmdline()
+				fmt.Printf("process.Processes:%v:	'%s'\n", p.Pid, c)
+			}
+
+			infoStat, _ := host.Info()
+			fmt.Printf("Total processes: %v\n", infoStat.Procs)
+
+			miscStat, _ := load.Misc()
+			fmt.Printf("Running processes: %v\n", miscStat.ProcsRunning)
+
 		}
-
-		fmt.Printf("PPID:%v:\n", IsParentInit())
-
-		foo1, _ := process.Pids()
-		for i, p := range foo1 {
-			fmt.Printf("process.Pids:%v:	%v:\n", i, p)
-		}
-
-		foo2, _ := process.Processes()
-		for _, p := range foo2 {
-			c, _ := p.Cmdline()
-			fmt.Printf("process.Processes:%v:	'%s'\n", p.Pid, c)
-		}
-
-		infoStat, _ := host.Info()
-		fmt.Printf("Total processes: %v\n", infoStat.Procs)
-
-		miscStat, _ := load.Misc()
-		fmt.Printf("Running processes: %v\n", miscStat.ProcsRunning)
-
-	}
-*/
+	*/
 }
 
-
 const defaultFailedCode = 1
+
 func (me *Daemon) RunCommand(name string, args ...string) (sts status.Status, stdout string, stderr string, exitCode int) {
 
 	var outbuf, errbuf bytes.Buffer

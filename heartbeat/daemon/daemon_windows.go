@@ -18,6 +18,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"syscall"
+	"text/template"
 )
 
 // @TODO Consider using https://github.com/kardianos/service
