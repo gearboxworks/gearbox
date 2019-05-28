@@ -53,7 +53,7 @@ func (me *Box) CreateBox() (sts status.Status) {
 		if is.Success(sts) {
 			fmt.Printf("VM exists:%v\n", listVm["name"])
 			// Convert to warning message.
-			sts = sts.SetWarning(true)
+			sts = sts.SetWarn(true)
 			fmt.Printf("sts:%v\n", sts)
 			break
 		} else {
@@ -65,7 +65,7 @@ func (me *Box) CreateBox() (sts status.Status) {
 		createVm, sts := me.cmdCreateVm()
 		if !is.Success(sts) {
 			// Convert to warning message.
-			sts = sts.SetWarning(true)
+			sts = sts.SetWarn(true)
 			fmt.Printf("sts:%v\n", sts)
 			break
 		} else {
@@ -77,7 +77,7 @@ func (me *Box) CreateBox() (sts status.Status) {
 		modifyVm, sts := me.cmdModifyVm()
 		if !is.Success(sts) {
 			// Convert to warning message.
-			sts = sts.SetWarning(true)
+			sts = sts.SetWarn(true)
 			fmt.Printf("sts:%v\n", sts)
 			break
 		} else {

@@ -7,19 +7,14 @@ import (
 	"github.com/gearboxworks/go-status/is"
 )
 
-func newHeartbeat(me Gearboxer, args heartbeat.Args) (bx *heartbeat.Heartbeat, sts status.Status) {
 
-	bx, _ = heartbeat.New(me.GetOsSupport(), args)
-	sts = bx.Initialize()
-
-	return bx, sts
-}
 
 func (me *Gearbox) HeartbeatDaemon(args heartbeat.Args) (sts status.Status) {
 
 	for range only.Once {
 		var bx *heartbeat.Heartbeat
-		bx, sts = newHeartbeat(me, args)
+
+		bx, sts = heartbeat.New(me.GetOsSupport(), args)
 		if is.Error(sts) {
 			break
 		}
@@ -29,6 +24,7 @@ func (me *Gearbox) HeartbeatDaemon(args heartbeat.Args) (sts status.Status) {
 			break
 		}
 	}
+	//status.Log(sts)
 
 	return sts
 }
@@ -38,7 +34,7 @@ func (me *Gearbox) StartHeartbeat(args heartbeat.Args) (sts status.Status) {
 	for range only.Once {
 		var bx *heartbeat.Heartbeat
 
-		bx, sts = newHeartbeat(me, args)
+		bx, sts = heartbeat.New(me.GetOsSupport(), args)
 		if is.Error(sts) {
 			break
 		}
@@ -48,6 +44,7 @@ func (me *Gearbox) StartHeartbeat(args heartbeat.Args) (sts status.Status) {
 			break
 		}
 	}
+	status.Log(sts)
 
 	return sts
 }
@@ -57,7 +54,7 @@ func (me *Gearbox) StopHeartbeat(args heartbeat.Args) (sts status.Status) {
 	for range only.Once {
 		var bx *heartbeat.Heartbeat
 
-		bx, sts = newHeartbeat(me, args)
+		bx, sts = heartbeat.New(me.GetOsSupport(), args)
 		if is.Error(sts) {
 			break
 		}
@@ -67,6 +64,7 @@ func (me *Gearbox) StopHeartbeat(args heartbeat.Args) (sts status.Status) {
 			break
 		}
 	}
+	status.Log(sts)
 
 	return sts
 }
@@ -76,7 +74,7 @@ func (me *Gearbox) RestartHeartbeat(args heartbeat.Args) (sts status.Status) {
 	for range only.Once {
 		var bx *heartbeat.Heartbeat
 
-		bx, sts = newHeartbeat(me, args)
+		bx, sts = heartbeat.New(me.GetOsSupport(), args)
 		if is.Error(sts) {
 			break
 		}
@@ -86,6 +84,7 @@ func (me *Gearbox) RestartHeartbeat(args heartbeat.Args) (sts status.Status) {
 			break
 		}
 	}
+	status.Log(sts)
 
 	return sts
 }
@@ -95,7 +94,7 @@ func (me *Gearbox) PrintHeartbeatStatus(args heartbeat.Args) (sts status.Status)
 	for range only.Once {
 		var bx *heartbeat.Heartbeat
 
-		bx, sts = newHeartbeat(me, args)
+		bx, sts = heartbeat.New(me.GetOsSupport(), args)
 		if is.Error(sts) {
 			break
 		}
@@ -114,6 +113,7 @@ func (me *Gearbox) PrintHeartbeatStatus(args heartbeat.Args) (sts status.Status)
 //		}
 //		fmt.Println(meaning)
 	}
+	status.Log(sts)
 
 	return sts
 }

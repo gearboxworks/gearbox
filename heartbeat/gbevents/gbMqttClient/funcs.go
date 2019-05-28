@@ -1,12 +1,11 @@
-package gbevents
+package gbMqttClient
 
 import (
 	"gearbox/help"
 	"github.com/gearboxworks/go-status"
 )
 
-
-func EnsureNotNil(bx *EventBroker) (sts status.Status) {
+func EnsureNotNil(bx *Client) (sts status.Status) {
 	if bx == nil {
 		sts = status.Fail().
 			SetMessage("unexpected software error").
@@ -16,4 +15,3 @@ func EnsureNotNil(bx *EventBroker) (sts status.Status) {
 	}
 	return sts
 }
-

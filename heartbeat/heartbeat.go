@@ -26,64 +26,6 @@ import (
 )
 
 
-// This really needs to be refactored!
-type State struct {
-	Code    int
-	Overall string
-	Box     box.BoxState
-	Unfsd   monitor.UnfsdState
-}
-
-type Heartbeat struct {
-	Boxname        string
-	Events		   *gbevents.ServiceEvents
-	BoxInstance    *box.Box
-	DaemonInstance *daemon.Daemon
-	NfsInstance    *monitor.Unfsd
-	State          State
-	OvaFile        string
-	PidFile        string
-
-	// SSH related - Need to fix this. It's used within CreateBox()
-	SshUsername  string
-	SshPassword  string
-	SshPublicKey string
-
-	// State polling delays.
-	NoWait      bool
-	WaitDelay   time.Duration
-	WaitRetries int
-
-	// Console related.
-	ConsoleHost     string
-	ConsolePort     string
-	ConsoleOkString string
-	ConsoleReadWait time.Duration
-	ShowConsole     bool
-
-	OsSupport oss.OsSupporter
-}
-type Args Heartbeat
-
-
-type menuStruct struct {
-	vmStatusEntry    *systray.MenuItem
-	apiStatusEntry   *systray.MenuItem
-	unfsdStatusEntry *systray.MenuItem
-	startEntry       *systray.MenuItem
-	stopEntry        *systray.MenuItem
-	adminEntry       *systray.MenuItem
-	sshEntry         *systray.MenuItem
-	quitEntry        *systray.MenuItem
-	restartEntry     *systray.MenuItem
-
-	helpEntry        *systray.MenuItem
-	versionEntry     *systray.MenuItem
-	updateEntry      *systray.MenuItem
-	createEntry      *systray.MenuItem
-}
-
-
 func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 
 	var _args Args
@@ -98,7 +40,16 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 
 		_args.OsSupport = OsSupport
 		foo := box.Args{}
-		copier.Copy(&foo, &_args)
+		err := copier.Copy(&foo, &_args)
+		if err != nil {
+			sts = status.Wrap(err).
+				SetMessage("unable to copy Heartbeat config").
+				SetAdditional("", ).
+				SetData("").
+				SetCause(err).
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			break
+		}
 
 		// Start a new VM Box instance.
 		_args.BoxInstance = box.NewBox(OsSupport, foo)
@@ -183,7 +134,7 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 			},
 		})
 
-		_args.Events, sts = gbevents.New(_args.OsSupport, gbevents.Args{Boxname: _args.Boxname, PidFile: _args.PidFile})
+		_args.EventBroker, sts = gbevents.New(_args.OsSupport, gbevents.Args{Boxname: _args.Boxname, PidFile: _args.PidFile})
 		if is.Error(sts) {
 			break
 		}
@@ -204,28 +155,28 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 			break
 		}
 
-		sts = gbevents.EnsureNotNil(me.Events)
+		sts = gbevents.EnsureNotNil(me.EventBroker)
 		if is.Error(sts) {
 			break
 		}
 
-		sts = me.Events.StartEventServer()
+		sts = me.EventBroker.Start()
 		if is.Error(sts) {
 			break
 		}
-		fmt.Printf("DEBUYg\n")
+
+		sts = status.Success("DEBUG - exit early")
+		break
 		time.Sleep(time.Hour * 60)
-
-		//se.RegisterService()
 
 		if !daemon.IsParentInit() {
 		//if daemon.IsParentInit() {
 			fmt.Printf("Gearbox: Sub-command not available for user.\n")
-			sts = status.Fail(&status.Args{
-				Message: "Sub-command not available for user",
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    UnknownState,
-			})
+			sts = status.Fail().
+				SetMessage("daemon mode cannot be run by user specifically").
+				SetAdditional("use 'gearbox heartbeat start' to start daemon", ).
+				SetData("").
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
 		fmt.Printf("Gearbox: Starting Heartbeat daemon.\n")
@@ -253,6 +204,7 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 		systray.Run(me.onReady, me.onExit)
 		// Should never exit, unless we get a signal to do so.
 	}
+	status.Log(sts)
 
 	return sts
 }
@@ -764,12 +716,6 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 }
 
 
-func (me *Heartbeat) Initialize() (sts status.Status) {
-
-	return sts
-}
-
-
 func (me *Heartbeat) StartHeartbeat() (sts status.Status) {
 
 	for range only.Once {
@@ -859,11 +805,11 @@ func (me *Heartbeat) GetState() (sts status.Status) {
 		}
 
 		if me == nil {
-			sts = status.Fail(&status.Args{
-				Message: "unexpected failure",
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    UnknownState,
-			})
+			sts = status.Fail().
+				SetMessage("unexpected software error").
+				SetAdditional("", ).
+				SetData("").
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
 
@@ -879,14 +825,3 @@ func (me *Heartbeat) GetState() (sts status.Status) {
 	return sts
 }
 
-
-func EnsureNotNil(bx *Heartbeat) (sts status.Status) {
-	if bx == nil {
-		sts = status.Fail(&status.Args{
-			Message: "unexpected error",
-			Help:    help.ContactSupportHelp(), // @TODO need better support here
-			Data:    UnknownState,
-		})
-	}
-	return sts
-}

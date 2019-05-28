@@ -5,6 +5,7 @@ import (
 	"gearbox/gearbox"
 	"gearbox/heartbeat"
 	"gearbox/ssh"
+	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/spf13/cobra"
 )
@@ -38,6 +39,7 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			sts := gearbox.Instance.HeartbeatDaemon(heartbeatArgs)
 			if is.Error(sts) {
+				status.Log(sts)
 				fmt.Println(sts.Message())
 			}
 		},
@@ -59,6 +61,7 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			sts := gearbox.Instance.StartHeartbeat(heartbeatArgs)
 			if is.Error(sts) {
+				status.Log(sts)
 				fmt.Println(sts.Message())
 			}
 		},
@@ -79,6 +82,7 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			sts := gearbox.Instance.StopHeartbeat(heartbeatArgs)
 			if is.Error(sts) {
+				status.Log(sts)
 				fmt.Println(sts.Message())
 			}
 		},
@@ -90,6 +94,7 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			sts := gearbox.Instance.PrintHeartbeatStatus(heartbeatArgs)
 			if is.Error(sts) {
+				status.Log(sts)
 				fmt.Println(sts.Message())
 			}
 		},
@@ -109,6 +114,7 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			sts := gearbox.Instance.RestartHeartbeat(heartbeatArgs)
 			if is.Error(sts) {
+				status.Log(sts)
 				fmt.Println(sts.Message())
 			}
 		},

@@ -10,7 +10,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/fatih/color v1.7.0
 	github.com/fhmq/hmq v0.0.0-20190424074534-daf4a0e0f564
-	github.com/gearboxworks/go-status v0.0.0-20190509061414-712a29394535
+	github.com/gearboxworks/go-status v0.0.0-20190527221625-f28ff3f7ae17
 	github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813
 	github.com/gernest/wow v0.1.0
 	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
@@ -38,7 +38,11 @@ require (
 	github.com/nsf/jsondiff v0.0.0-20190302080047-dbf513526b7f
 	github.com/olebedev/emitter v0.0.0-20190110104742-e8d1457e6aee
 	github.com/oxtoacart/bpool v0.0.0-20190227141107-8c4636f812cc // indirect
+	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
+	github.com/sebest/logrusly v0.0.0-20180315190218-3235eccb8edc
+	github.com/segmentio/go-loggly v0.5.0 // indirect
 	github.com/shirou/gopsutil v2.18.12+incompatible
+	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/sqweek/dialog v0.0.0-20190520121633-84f1ae115cc9

@@ -2,30 +2,28 @@ package gbevents
 
 import (
 	"fmt"
+	"gearbox/heartbeat/gbevents/gbChannels"
+	"gearbox/heartbeat/gbevents/gbMqttBroker"
+	"gearbox/heartbeat/gbevents/gbMqttClient"
 	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-status"
 	"github.com/olebedev/emitter"
-	"net/url"
-	"time"
 )
 
 
-type ServiceEvents struct {
+type EventBroker struct {
 	Identifier string
 	Boxname    string
 	PidFile    string
-	StsMqtt    status.Status
-	StsEmitter status.Status
 
-	mqttServer url.URL
-	emitter    emitter.Emitter
-	events     emitter.Event
-	emits      chan struct{}
-	group      emitter.Group
+	MqttBroker gbMqttBroker.Broker
+	MqttClient gbMqttClient.Client
+	Channels	gbChannels.Channels
+	StsEmitter status.Status
 
 	OsSupport  oss.OsSupporter
 }
-type Args ServiceEvents
+type Args EventBroker
 
 type ServiceData struct {
 	Name	string
@@ -42,8 +40,9 @@ type ServiceAction struct {
 	CallBack interface{}
 }
 
+
 type Event emitter.Event
-var _ Service = (*ServiceEvents)(nil)
+var _ Service = (*EventBroker)(nil)
 
 var Instance Service
 
@@ -53,12 +52,6 @@ type Service interface {
 	Stop() status.Status
 	Restart() status.Status
 	Status() status.Status
-}
-
-type Message struct {
-	Src string
-	Time time.Time
-	Text string
 }
 
 

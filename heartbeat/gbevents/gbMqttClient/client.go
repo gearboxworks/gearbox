@@ -1,20 +1,55 @@
-package gbevents
+package gbMqttClient
 
 import (
 	"fmt"
+	"gearbox/box"
 	"gearbox/global"
+	"gearbox/heartbeat/daemon"
 	"gearbox/help"
 	"gearbox/only"
+	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/jinzhu/copier"
 	"net/url"
 	"os"
 	"time"
 )
 
 
-func (me *ServiceEvents) startMqttClient() status.Status {
+func (me *Client) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
+
+	var _args Args
+	var sts status.Status
+
+	for range only.Once {
+
+		if len(args) > 0 {
+			_args = args[0]
+		}
+
+		_args.OsSupport = OsSupport
+		foo := box.Args{}
+		err := copier.Copy(&foo, &_args)
+		if err != nil {
+			sts = status.Wrap(err).
+				SetMessage("unable to copy MQTT client config").
+				SetAdditional("", ).
+				SetData("").
+				SetCause(err).
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			break
+		}
+
+		*me = Client(_args)
+	}
+
+	return sts
+}
+
+
+func (me *Client) Start() status.Status {
 
 	var sts status.Status
 
@@ -24,17 +59,19 @@ func (me *ServiceEvents) startMqttClient() status.Status {
 			break
 		}
 
-		fmt.Printf("GBevents - MQTT client(STARTED)\n")
+		status.Success("GBevents - MQTT client(STARTED)").Log()
 		uri, err := url.Parse(os.Getenv("CLOUDMQTT_URL"))
 		if err != nil {
-			sts = status.Fail(&status.Args{
-				Message: "GBevents - MQTT client error",
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    err,
-			})
+			sts = status.Wrap(err).
+				SetMessage("unable to parse MQTT client config").
+				SetAdditional("", ).
+				SetData("").
+				SetCause(err).
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
-		topic := uri.Path[1:len(uri.Path)]
+
+		topic := "" // uri.Path[1:len(uri.Path)]
 		if topic == "" {
 			topic = "test"
 		}
@@ -52,15 +89,19 @@ func (me *ServiceEvents) startMqttClient() status.Status {
 		}
 */
 
-		fmt.Printf("GBevents - MQTT client(FINISHED)\n")
-		sts = status.Success("%s GBevents - MQTT client exited.", global.Brandname)
+		s := daemon.WaitForSignal()
+
+		status.Success("GBevents - MQTT broker(STOPPED)").Log()
+		sts = status.Success("MQTT client exited with signal %v.", s)
 	}
+	me.Sts = sts
+	status.Log(sts)
 
 	return sts
 }
 
 
-func (me *ServiceEvents) connect(clientId string, uri *url.URL) (mqtt.Client, status.Status) {
+func (me *Client) connect(clientId string, uri *url.URL) (mqtt.Client, status.Status) {
 
 	var sts status.Status
 	var client mqtt.Client
@@ -83,11 +124,12 @@ func (me *ServiceEvents) connect(clientId string, uri *url.URL) (mqtt.Client, st
 		}
 
 		if err := token.Error(); err != nil {
-			sts = status.Fail(&status.Args{
-				Message: "GBevents - MQTT client error",
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    err,
-			})
+			sts = status.Wrap(err).
+				SetMessage("unable to connect to MQTT broker").
+				SetAdditional("", ).
+				SetData("").
+				SetCause(err).
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
 
@@ -98,7 +140,7 @@ func (me *ServiceEvents) connect(clientId string, uri *url.URL) (mqtt.Client, st
 }
 
 
-func (me *ServiceEvents) createClientOptions(clientId string, uri *url.URL) (*mqtt.ClientOptions, status.Status) {
+func (me *Client) createClientOptions(clientId string, uri *url.URL) (*mqtt.ClientOptions, status.Status) {
 
 	var sts status.Status
 	var opts *mqtt.ClientOptions
@@ -123,7 +165,7 @@ func (me *ServiceEvents) createClientOptions(clientId string, uri *url.URL) (*mq
 }
 
 
-func (me *ServiceEvents) subscribe(uri *url.URL, topic string) status.Status {
+func (me *Client) subscribe(uri *url.URL, topic string) status.Status {
 
 	var sts status.Status
 	var client mqtt.Client
