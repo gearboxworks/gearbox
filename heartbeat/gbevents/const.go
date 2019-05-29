@@ -5,6 +5,7 @@ import (
 	"gearbox/heartbeat/gbevents/gbChannels"
 	"gearbox/heartbeat/gbevents/gbMqttBroker"
 	"gearbox/heartbeat/gbevents/gbMqttClient"
+	"gearbox/heartbeat/gbevents/gbZeroConf"
 	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-status"
 	"github.com/olebedev/emitter"
@@ -16,6 +17,7 @@ type EventBroker struct {
 	Boxname    string
 	PidFile    string
 
+	ZeroConf gbZeroConf.Client
 	MqttBroker gbMqttBroker.Broker
 	MqttClient gbMqttClient.Client
 	Channels	gbChannels.Channels
@@ -65,4 +67,3 @@ func (me ServiceState) String() string {
 	fmt.Printf("String\n")
 	return string(me)
 }
-

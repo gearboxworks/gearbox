@@ -3,6 +3,7 @@ module gearbox
 require (
 	github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48
 	github.com/cavaliercoder/grab v2.0.0+incompatible
+	github.com/cenkalti/backoff v2.1.1+incompatible // indirect
 
 	github.com/clbanning/checkjson v0.0.0-20190418161636-abd3ee163e3e
 	github.com/cznic/golex v0.0.0-20181122101858-9c343928389c // indirect
@@ -24,6 +25,7 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/grandcat/zeroconf v0.0.0-20190424104450-85eadb44205c
 	github.com/hashicorp/go-version v1.1.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jinzhu/copier v0.0.0-20180308034124-7e38e58719c3
@@ -34,6 +36,7 @@ require (
 	github.com/mattn/go-colorable v0.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
+	github.com/miekg/dns v1.1.13 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nsf/jsondiff v0.0.0-20190302080047-dbf513526b7f
 	github.com/olebedev/emitter v0.0.0-20190110104742-e8d1457e6aee

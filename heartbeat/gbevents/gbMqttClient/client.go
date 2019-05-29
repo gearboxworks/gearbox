@@ -3,17 +3,17 @@ package gbMqttClient
 import (
 	"fmt"
 	"gearbox/box"
-	"gearbox/global"
 	"gearbox/heartbeat/daemon"
+	"gearbox/heartbeat/gbevents/messages"
 	"gearbox/help"
 	"gearbox/only"
 	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/fhmq/hmq/lib/topics"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/jinzhu/copier"
 	"net/url"
-	"os"
 	"time"
 )
 
@@ -42,25 +42,16 @@ func (me *Client) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 			break
 		}
 
-		*me = Client(_args)
-	}
-
-	return sts
-}
-
-
-func (me *Client) Start() status.Status {
-
-	var sts status.Status
-
-	for range only.Once {
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
-			break
+		if _args.EntityId == "" {
+			_args.EntityId = "gearbox-mqtt-client"
 		}
 
-		status.Success("GBevents - MQTT client(STARTED)").Log()
-		uri, err := url.Parse(os.Getenv("CLOUDMQTT_URL"))
+		status.Success("GBevents - MQTT client(INIT)").Log()
+		if _args.Server == nil {
+
+		}
+		fmt.Printf("Server: %v\n", _args.Server)
+		me.Server, err = url.Parse(_args.Server.String())
 		if err != nil {
 			sts = status.Wrap(err).
 				SetMessage("unable to parse MQTT client config").
@@ -71,23 +62,50 @@ func (me *Client) Start() status.Status {
 			break
 		}
 
-		topic := "" // uri.Path[1:len(uri.Path)]
-		if topic == "" {
-			topic = "test"
-		}
+		_args.Config = mqtt.NewClientOptions()
+		_args.Config.AddBroker(me.Server.String())
+		_args.Config.SetUsername(me.Server.User.Username())
+		password, _ := me.Server.User.Password()
+		_args.Config.SetPassword(password)
+		_args.Config.SetClientID(_args.EntityId)
 
-		sts = me.subscribe(uri, topic)
+		topic := messages.CreateTopic(_args.EntityId)
+		_args.Config.SetWill(topic, "Last will and testament", topics.QosFailure, true)
+
+		_args.client = mqtt.NewClient(_args.Config)
+
+		*me = Client(_args)
+	}
+
+	return sts
+}
+
+
+func (me *Client) Start() status.Status {
+
+	var sts status.Status
+	status.Success("GBevents - MQTT client(STARTED)").Log()
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
 		if is.Error(sts) {
 			break
 		}
 
-/*
-		client := connect("pub", uri)
-		timer := time.NewTicker(1 * time.Second)
-		for t := range timer.C {
-			client.Publish(topic, 0, false, t.String())
+		topic := "" // uri.Path[1:len(uri.Path)]
+		if topic == "" {
+			topic = "*"
 		}
-*/
+
+		sts = me.connect()
+		if is.Error(sts) {
+			break
+		}
+
+		sts = me.subscribe(topic, nil)
+		if is.Error(sts) {
+			break
+		}
 
 		s := daemon.WaitForSignal()
 
@@ -101,11 +119,9 @@ func (me *Client) Start() status.Status {
 }
 
 
-func (me *Client) connect(clientId string, uri *url.URL) (mqtt.Client, status.Status) {
+func (me *Client) connect() (status.Status) {
 
 	var sts status.Status
-	var client mqtt.Client
-	var opts *mqtt.ClientOptions
 
 	for range only.Once {
 		sts = EnsureNotNil(me)
@@ -113,19 +129,22 @@ func (me *Client) connect(clientId string, uri *url.URL) (mqtt.Client, status.St
 			break
 		}
 
-		opts, sts = me.createClientOptions(clientId, uri)
-		if is.Error(sts) {
+		me.token = me.client.Connect()
+		if me.token == nil {
+			sts = status.Fail().
+				SetMessage("unexpected software error").
+				SetAdditional("", ).
+				SetData("").
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
 
-		client = mqtt.NewClient(opts)
-		token := client.Connect()
-		for !token.WaitTimeout(3 * time.Second) {
+		for !me.token.WaitTimeout(3 * time.Second) {
 		}
 
-		if err := token.Error(); err != nil {
+		if err := me.token.Error(); err != nil {
 			sts = status.Wrap(err).
-				SetMessage("unable to connect to MQTT broker").
+				SetMessage("unable to connect to MQTT broker %s", me.Server.String()).
 				SetAdditional("", ).
 				SetData("").
 				SetCause(err).
@@ -133,61 +152,41 @@ func (me *Client) connect(clientId string, uri *url.URL) (mqtt.Client, status.St
 			break
 		}
 
-		sts = status.Success("%s GBevents - MQTT client connected OK.", global.Brandname)
-	}
-
-	return client, sts
-}
-
-
-func (me *Client) createClientOptions(clientId string, uri *url.URL) (*mqtt.ClientOptions, status.Status) {
-
-	var sts status.Status
-	var opts *mqtt.ClientOptions
-
-	for range only.Once {
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
-			break
-		}
-
-		opts = mqtt.NewClientOptions()
-		opts.AddBroker(fmt.Sprintf("tcp://%s", uri.Host))
-		opts.SetUsername(uri.User.Username())
-		password, _ := uri.User.Password()
-		opts.SetPassword(password)
-		opts.SetClientID(clientId)
-
-		sts = status.Success("%s GBevents - MQTT client connected OK.", global.Brandname)
-	}
-
-	return opts, sts
-}
-
-
-func (me *Client) subscribe(uri *url.URL, topic string) status.Status {
-
-	var sts status.Status
-	var client mqtt.Client
-
-	for range only.Once {
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
-			break
-		}
-
-		client, sts = me.connect("sub", uri)
-		if is.Error(sts) {
-			break
-		}
-
-		client.Subscribe(topic, 0, func(client mqtt.Client, msg mqtt.Message) {
-			fmt.Printf("* [%s] %s\n", msg.Topic(), string(msg.Payload()))
-		})
-
-		sts = status.Success("%s GBevents - MQTT client connected OK.", global.Brandname)
+		sts = status.Success("MQTT client connected to %s OK.", me.Server.String())
 	}
 
 	return sts
 }
+
+
+func (me *Client) subscribe(topic string, foo mqtt.MessageHandler) status.Status {
+
+	var sts status.Status
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		cb := msgCallback{Topic: messages.Topic(topic), Function: foo2}
+		me.client.Subscribe(cb.Topic.ToString(), 0, cb.Function)
+
+		sts = status.Success("MQTT client subscribed OK")
+	}
+
+	return sts
+}
+
+
+func foo2(client mqtt.Client, msg mqtt.Message) {
+	fmt.Printf("* [%s] %s\n", msg.Topic(), string(msg.Payload()))
+}
+
+
+func callbackFunc(client mqtt.Client, msg mqtt.Message) {
+
+	fmt.Printf("* [%s] %s\n", msg.Topic(), string(msg.Payload()))
+}
+
 

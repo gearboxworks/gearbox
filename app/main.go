@@ -21,7 +21,9 @@ func main() {
 
 	for range only.Once {
 
-		_, sts := logger.NewLogger(oss.Get(), logger.Logger{})
+		var sts status.Status
+
+		_, sts = logger.NewLogger(oss.Get(), logger.Logger{})
 		if is.Error(sts) {
 			break
 		}

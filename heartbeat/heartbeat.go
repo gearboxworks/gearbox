@@ -166,8 +166,8 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 		}
 
 		sts = status.Success("DEBUG - exit early")
-		break
-		time.Sleep(time.Hour * 60)
+		// break
+		time.Sleep(time.Hour * 200)
 
 		if !daemon.IsParentInit() {
 		//if daemon.IsParentInit() {

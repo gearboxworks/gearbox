@@ -1,9 +1,11 @@
 package daemon
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
+	"time"
 )
 
 func IsParentInit() (bool) {
@@ -29,6 +31,20 @@ func WaitForSignal() os.Signal {
 	signal.Stop(signalChan)
 
 	return s
+}
+
+
+// This function will cause a Go() thread to sit and wait until
+// a signal has been sent to the process.
+// Very important for tidy up afterwards.
+func SimpleWaitLoop(t string, i int, d time.Duration) {
+
+	for iterate := 0; iterate < i; i++ {
+		fmt.Printf("> Wait: %s\n", t)
+		time.Sleep(d)
+	}
+
+	return
 }
 
 

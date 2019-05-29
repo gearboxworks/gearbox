@@ -7,6 +7,7 @@ import (
 )
 
 type Channels struct {
+	EntityId  string
 	OsSupport  oss.OsSupporter
 	Sts        status.Status
 

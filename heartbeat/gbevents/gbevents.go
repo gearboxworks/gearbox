@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"gearbox/box"
 	"gearbox/global"
+	"gearbox/heartbeat/daemon"
 	"gearbox/heartbeat/gbevents/gbChannels"
-	"gearbox/heartbeat/gbevents/gbMqttBroker"
 	"gearbox/heartbeat/gbevents/gbMqttClient"
+	"gearbox/heartbeat/gbevents/gbZeroConf"
 	"gearbox/help"
 	"gearbox/only"
 	oss "gearbox/os_support"
@@ -14,6 +15,7 @@ import (
 	"github.com/gearboxworks/go-status/is"
 	"github.com/jinzhu/copier"
 	"path/filepath"
+	"time"
 )
 
 
@@ -51,17 +53,23 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*EventBroker, status.Status) 
 			break
 		}
 
-		sts = _args.MqttBroker.New(OsSupport, gbMqttBroker.Args{})
+		sts = _args.ZeroConf.New(OsSupport, gbZeroConf.Args{})
 		if is.Error(sts) {
 			break
 		}
+		_args.ZeroConf.Browse("_workstation._tcp")
+		daemon.SimpleWaitLoop("ZeroConf", 2000, time.Second * 5)
 
-		sts = _args.MqttClient.New(OsSupport, gbMqttClient.Args{})
+		sts = _args.MqttBroker.New(OsSupport, )
 		if is.Error(sts) {
 			break
 		}
+		fmt.Printf(">> %v\n", _args.MqttBroker.Server)
 
-		_args.MqttClient.Server.Host = fmt.Sprintf("%s:%d", _args.MqttBroker.Config.Host, _args.MqttBroker.Config.Port)
+		sts = _args.MqttClient.New(OsSupport, gbMqttClient.Args{Server: _args.MqttBroker.Server})
+		if is.Error(sts) {
+			break
+		}
 
 		_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetAdminRootDir(), defaultPidFile))
 
@@ -101,14 +109,14 @@ func (me *EventBroker) Start() status.Status {
 			break
 		}
 
-		sts = status.Success("me.EventBroker.Start() - DEBUG")
-		break
-
 		// Start the inter-thread channels service.
 		go func() {
 			sts := me.Channels.Start()
 			sts.Log()
 		}()
+
+		//sts = status.Success("me.EventBroker.Start() - DEBUG")
+		//break
 
 		// Start the inter-process service.
 		go func() {
@@ -116,11 +124,11 @@ func (me *EventBroker) Start() status.Status {
 			sts.Log()
 		}()
 
-		// Start the inter-process service client.
-		go func() {
-			sts := me.MqttClient.Start()
-			sts.Log()
-		}()
+//		// Start the inter-process service client.
+//		go func() {
+//			sts := me.MqttClient.Start()
+//			sts.Log()
+//		}()
 
 		sts = status.Success("started event broker")
 	}

@@ -1,6 +1,7 @@
 package gbMqttBroker
 
 import (
+	"fmt"
 	"gearbox/box"
 	"gearbox/heartbeat/daemon"
 	"gearbox/help"
@@ -10,6 +11,8 @@ import (
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/jinzhu/copier"
+	"net/url"
+	"os"
 )
 
 
@@ -37,23 +40,34 @@ func (me *Broker) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 			break
 		}
 
-		_args.Config = broker.DefaultConfig
-/*
+		if _args.EntityId == "" {
+			_args.EntityId = "gearbox-mqtt-broker"
+		}
+
 		_args.Config, err = broker.ConfigureConfig(os.Args[1:])
 		if err != nil {
-			// err == cause.
-			// SetMessage == specific, descriptive, short message.
-			// SetAdditional == elaboration of SetMessage
-			// SetData == os.Args[1:]
 			sts = status.Wrap(err).
-				SetMessage("unable to configure MQTT broker").
+				SetMessage("unable to parse MQTT client config").
 				SetAdditional("", ).
 				SetData("").
 				SetCause(err).
 				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
-*/
+		_args.Config = broker.DefaultConfig
+
+		_args.Server, err = url.Parse(fmt.Sprintf("tcp://%s:%s/", _args.Config.Host, _args.Config.Port))
+		if err != nil {
+			sts = status.Wrap(err).
+				SetMessage("unable to parse MQTT broker url").
+				SetAdditional("", ).
+				SetData("").
+				SetCause(err).
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			break
+		}
+		//_args.Config.Host = me.Server.Host
+
 		_args.instance, err = broker.NewBroker(_args.Config)
 		if err != nil {
 			sts = status.Wrap(err).
@@ -64,6 +78,8 @@ func (me *Broker) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
+
+		// _args.Server = fmt.Sprintf("tcp://%s:%s/", _args.Config.Host, _args.Config.Port)
 
 		*me = Broker(_args)
 	}

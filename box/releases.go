@@ -86,6 +86,11 @@ func (release *Release) ShowRelease() (status.Status) {
 			break
 		}
 		if release.Name == nil {
+			sts = status.Fail().
+				SetMessage("no release version specified").
+				SetAdditional("", ).
+				SetData("").
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
 
@@ -126,13 +131,14 @@ func (me *Box) GetReleases() (Releases, status.Status) {
 		client := github.NewClient(nil)
 		ctx := context.Background()
 		opt := &github.ListOptions{}
-		releases, rsp, err := client.Repositories.ListReleases(ctx, "gearboxworks", "gearbox-os", opt)
+		releases, _, err := client.Repositories.ListReleases(ctx, "gearboxworks", "gearbox-os", opt)
 		if err != nil {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("%s Releases - Can't fetch data.\n", global.Brandname),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    rsp,
-			})
+			sts = status.Wrap(err).
+				SetMessage("can't fetch GitHub releases").
+				SetAdditional("", ).
+				SetData("").
+				SetCause(err).
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
 
@@ -417,11 +423,11 @@ func (me *Box) GetIso() (status.Status) {
 		}
 
 		if me.VmIsoFile == "" {
-			sts = status.Fail(&status.Args{
-				Message: "No ISO file defined.",
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    me.VmIsoFile,
-			})
+			sts = status.Fail().
+				SetMessage("no Gearbox OS iso file found").
+				SetAdditional("VmIsoUrl:%s VmIsoFile:%s", me.VmIsoUrl, me.VmIsoFile).
+				SetData(me.VmIsoFile).
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
 
@@ -431,11 +437,11 @@ func (me *Box) GetIso() (status.Status) {
 		}
 
 		if me.VmIsoUrl == "" {
-			sts = status.Fail(&status.Args{
-				Message: "No ISO URL defined.",
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    me.VmIsoUrl,
-			})
+			sts = status.Fail().
+				SetMessage("no Gearbox OS iso url found").
+				SetAdditional("VmIsoUrl:%s VmIsoFile:%s", me.VmIsoUrl, me.VmIsoFile).
+				SetData(me.VmIsoFile).
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
 
@@ -467,11 +473,12 @@ func (me *Box) GetIso() (status.Status) {
 
 		// check for errors
 		if err := resp.Err(); err != nil {
-			sts = status.Fail(&status.Args{
-				Message: "ISO download failed.",
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    err,
-			})
+			sts = status.Wrap(err).
+				SetMessage("iso download failed").
+				SetAdditional("VmIsoUrl:%s VmIsoFile:%s", me.VmIsoUrl, me.VmIsoFile).
+				SetData("").
+				SetCause(err).
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
 
@@ -494,6 +501,12 @@ func (me *Box) IsIsoFilePresent() status.Status {
 		sts = status.Success("%s VM - ISO already fetched from '%s' and saved to '%s'.\n", global.Brandname, me.VmIsoUrl, me.VmIsoFile)
 
 	} else {
+		sts = status.Wrap(err).
+			SetMessage("can't download iso release from GitHub").
+			SetAdditional("VmIsoUrl:%s VmIsoFile:%s", me.VmIsoUrl, me.VmIsoFile).
+			SetData("").
+			SetCause(err).
+			SetHelp(status.AllHelp, help.ContactSupportHelp())
 		sts = status.Fail(&status.Args{
 			Message: fmt.Sprintf("%s VM - ISO not downloaded from '%s' and saved to '%s'.\n", global.Brandname, me.VmIsoUrl, me.VmIsoFile),
 			Help:    help.ContactSupportHelp(), // @TODO need better support here

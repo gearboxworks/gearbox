@@ -44,10 +44,66 @@ func (me *Channels) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 			break
 		}
 
+		if _args.EntityId == "" {
+			_args.EntityId = "gearbox-channels"
+		}
+
 		_args.emitter = emitter.Emitter{}
 
-
 		*me = Channels(_args)
+
+		go func() {
+			me.TestWaitForExit()
+		}()
+
+		me.TestSendAnExit()
+	}
+
+	return sts
+}
+
+
+func (me *Channels) TestWaitForExit() status.Status {
+
+	var sts status.Status
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		log.Println("Starting.")
+		for event := range me.emitter.On("/channel/exit") {
+			if event.Args == nil {
+				continue
+			}
+
+			foo := event.Args[0].(messages.Message)
+			fmt.Printf("%s -> %s (%d): Event2(%s)\n", foo.Src, foo.Text, foo.Time.Unix(), event.OriginalTopic)
+		}
+		log.Println("Stopping.")
+	}
+
+	return sts
+}
+
+
+func (me *Channels) TestSendAnExit() status.Status {
+
+	var sts status.Status
+
+	for range only.Once {
+		sts = EnsureNotNil(me)
+		if is.Error(sts) {
+			break
+		}
+
+		log.Println("Waiting .")
+		time.Sleep(time.Second * 5)
+		me.Emit("/channel/exit", "HELLO")
+
+		log.Println("Shutting down.")
 	}
 
 	return sts
