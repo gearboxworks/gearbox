@@ -1,6 +1,7 @@
 module gearbox
 
 require (
+	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48
 	github.com/cavaliercoder/grab v2.0.0+incompatible
 
@@ -19,6 +20,7 @@ require (
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f // indirect
 	github.com/getlantern/systray v0.0.0-20190131073753-26d5b920200d
 	github.com/go-bindata/go-bindata v1.0.0
+	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect
@@ -36,6 +38,7 @@ require (
 	github.com/nsf/jsondiff v0.0.0-20190302080047-dbf513526b7f
 	github.com/oxtoacart/bpool v0.0.0-20190227141107-8c4636f812cc // indirect
 	github.com/shirou/gopsutil v2.18.12+incompatible
+	github.com/shirou/w32 v0.0.0-20160930032740-bb4de0191aa4 // indirect
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/sqweek/dialog v0.0.0-20190520121633-84f1ae115cc9
