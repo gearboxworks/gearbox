@@ -242,7 +242,7 @@ func (me *RootDocument) SetLinks(linkmap apiworks.LinkMap) (sts status.Status) {
 func (me *RootDocument) SetErrors(err error) {
 	sts, ok := err.(status.Status)
 	if ok {
-		err = sts.FullError()
+		err = sts.LongError()
 	}
 	if err == nil {
 		err = fmt.Errorf("unexpected error")

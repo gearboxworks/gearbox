@@ -492,7 +492,7 @@ func (me *Config) AddBasedir(args *BasedirArgs) (bd *Basedir, sts Status) {
 	for range only.Once {
 		if args.Nickname != "" {
 			sts = status.YourBad("nickname must be empty").
-				SetAdditional("invalid nickname set as '%s'", args.Nickname)
+				SetDetail("invalid nickname set as '%s'", args.Nickname)
 			break
 		}
 		if args.Basedir == "" {
