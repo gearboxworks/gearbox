@@ -1,6 +1,7 @@
 package gbMqttBroker
 
 import (
+	"gearbox/heartbeat/gbevents/messages"
 	oss "gearbox/os_support"
 	"github.com/fhmq/hmq/broker"
 	"github.com/gearboxworks/go-status"
@@ -8,7 +9,7 @@ import (
 )
 
 type Broker struct {
-	EntityId  string
+	EntityId  messages.MessageAddress
 	OsSupport oss.OsSupporter
 	Sts       status.Status
 	Server    *url.URL

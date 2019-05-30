@@ -9,7 +9,7 @@ import (
 )
 
 type Client struct {
-	EntityId  string
+	EntityId  messages.MessageAddress
 	OsSupport oss.OsSupporter
 	Sts       status.Status
 	Config    *mqtt.ClientOptions

@@ -5,7 +5,7 @@ import (
 	"github.com/gearboxworks/go-status"
 )
 
-func EnsureNotNil(bx *Channels) (sts status.Status) {
+func (bx *Channels) EnsureNotNil() (sts status.Status) {
 	if bx == nil {
 		sts = status.Fail().
 			SetMessage("unexpected software error").
@@ -13,5 +13,6 @@ func EnsureNotNil(bx *Channels) (sts status.Status) {
 			SetData("").
 			SetHelp(status.AllHelp, help.ContactSupportHelp())
 	}
+
 	return sts
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gearbox/box"
+	"gearbox/heartbeat/daemon"
 	"gearbox/help"
 	"gearbox/only"
 	oss "gearbox/os_support"
@@ -12,10 +13,6 @@ import (
 	"github.com/grandcat/zeroconf"
 	"github.com/jinzhu/copier"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 func (me *Client) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
@@ -149,21 +146,7 @@ func (me *Client) Register(s Service) status.Status {
 		log.Println("- Domain:", s.Domain)
 		log.Println("- Port:", s.Port)
 
-		// Clean exit.
-		sig := make(chan os.Signal, 1)
-		signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
-		// Timeout timer.
-		var tc <-chan time.Time
-		if me.WaitTime > 0 {
-			tc = time.After(me.WaitTime)
-		}
-
-		select {
-			case <-sig:
-				// Exit by user
-			case <-tc:
-				// Exit by timeout
-		}
+		daemon.WaitForTimeout(me.WaitTime)
 
 		log.Println("Shutting down.")
 	}

@@ -9,7 +9,6 @@ import (
 	"gearbox/only"
 	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/fhmq/hmq/lib/topics"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/jinzhu/copier"
@@ -67,10 +66,10 @@ func (me *Client) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 		_args.Config.SetUsername(me.Server.User.Username())
 		password, _ := me.Server.User.Password()
 		_args.Config.SetPassword(password)
-		_args.Config.SetClientID(_args.EntityId)
+		_args.Config.SetClientID(_args.EntityId.String())
 
-		topic := messages.CreateTopic(_args.EntityId)
-		_args.Config.SetWill(topic, "Last will and testament", topics.QosFailure, true)
+//		topic := messages.CreateTopic(_args.EntityId.String())
+//		_args.Config.SetWill(topic, "Last will and testament", topics.QosFailure, true)
 
 		_args.client = mqtt.NewClient(_args.Config)
 
@@ -92,9 +91,14 @@ func (me *Client) Start() status.Status {
 			break
 		}
 
-		topic := "" // uri.Path[1:len(uri.Path)]
-		if topic == "" {
-			topic = "*"
+		topic := messages.Topic{
+			Address: me.EntityId,
+			SubTopic: "*",
+		}
+		// uri.Path[1:len(uri.Path)]
+		sts = topic.EnsureNotNil()
+		if is.Error(sts) {
+			break
 		}
 
 		sts = me.connect()
@@ -159,7 +163,7 @@ func (me *Client) connect() (status.Status) {
 }
 
 
-func (me *Client) subscribe(topic string, foo mqtt.MessageHandler) status.Status {
+func (me *Client) subscribe(topic messages.Topic, foo mqtt.MessageHandler) status.Status {
 
 	var sts status.Status
 
@@ -170,7 +174,7 @@ func (me *Client) subscribe(topic string, foo mqtt.MessageHandler) status.Status
 		}
 
 		cb := msgCallback{Topic: messages.Topic(topic), Function: foo2}
-		me.client.Subscribe(cb.Topic.ToString(), 0, cb.Function)
+		me.client.Subscribe(cb.Topic.String(), 0, cb.Function)
 
 		sts = status.Success("MQTT client subscribed OK")
 	}

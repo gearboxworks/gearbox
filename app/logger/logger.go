@@ -231,3 +231,107 @@ func (me *Logger) Fatal(msg status.Msg) {
 	me.printLog(DebugLevel, filename, linenumber, msg)
 }
 
+
+func (me *Logger) Cause() error {
+	panic("implement me")
+}
+
+func (me *Logger) Data() interface{} {
+	panic("implement me")
+}
+
+func (me *Logger) Additional() string {
+	panic("implement me")
+}
+
+func (me *Logger) ErrorCode() int {
+	panic("implement me")
+}
+
+func (me *Logger) FullError() error {
+	panic("implement me")
+}
+
+func (me *Logger) GetFullDetails() string {
+	panic("implement me")
+}
+
+func (me *Logger) GetFullMessage() string {
+	panic("implement me")
+}
+
+func (me *Logger) GetHelp(status.HelpType) string {
+	panic("implement me")
+}
+
+func (me *Logger) Help() string {
+	panic("implement me")
+}
+
+func (me *Logger) HttpStatus() int {
+	panic("implement me")
+}
+
+func (me *Logger) IsError() bool {
+	panic("implement me")
+}
+
+func (me *Logger) IsSuccess() bool {
+	panic("implement me")
+}
+
+func (me *Logger) IsWarn() bool {
+	panic("implement me")
+}
+
+func (me *Logger) LogTo() status.LogType {
+	panic("implement me")
+}
+
+func (me *Logger) Message() string {
+	panic("implement me")
+}
+
+func (me *Logger) SetCause(error) status.Status {
+	panic("implement me")
+}
+
+func (me *Logger) SetData(interface{}) status.Status {
+	panic("implement me")
+}
+
+func (me *Logger) SetAdditional(string, ...interface{}) status.Status {
+	panic("implement me")
+}
+
+func (me *Logger) SetErrorCode(int) status.Status {
+	panic("implement me")
+}
+
+func (me *Logger) SetHelp(status.HelpType, string, ...interface{}) status.Status {
+	panic("implement me")
+}
+
+func (me *Logger) SetHttpStatus(int) status.Status {
+	panic("implement me")
+}
+
+func (me *Logger) SetLogTo(status.LogType) status.Status {
+	panic("implement me")
+}
+
+func (me *Logger) SetMessage(string, ...interface{}) status.Status {
+	panic("implement me")
+}
+
+func (me *Logger) SetOtherHelp(status.HelpTypeMap) status.Status {
+	panic("implement me")
+}
+
+func (me *Logger) SetSuccess(bool) status.Status {
+	panic("implement me")
+}
+
+func (me *Logger) SetWarn(bool) status.Status {
+	panic("implement me")
+}

@@ -11,15 +11,24 @@ import (
 	"gearbox/os_support"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"log"
+	"net/http"
 	"os"
 )
 
 //go:generate go-bindata -dev -o gearbox/assets.go -pkg gearbox admin/dist/...
 
+var startProfiler = false
 
 func main() {
 
 	for range only.Once {
+
+		if startProfiler == true {
+			go func() {
+				log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
+			}()
+		}
 
 		var sts status.Status
 

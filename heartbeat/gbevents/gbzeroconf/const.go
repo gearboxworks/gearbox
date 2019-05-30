@@ -1,13 +1,14 @@
 package gbZeroConf
 
 import (
+	"gearbox/heartbeat/gbevents/messages"
 	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-status"
 	"time"
 )
 
 type Client struct {
-	EntityId  string
+	EntityId  messages.MessageAddress
 	OsSupport oss.OsSupporter
 	Sts       status.Status
 

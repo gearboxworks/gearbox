@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"syscall"
 	"time"
 )
 
@@ -31,6 +32,35 @@ func WaitForSignal() os.Signal {
 	signal.Stop(signalChan)
 
 	return s
+}
+
+
+// This function will cause a Go() thread to sit and wait until
+// a signal has been sent to the process.
+// Very important for tidy up afterwards.
+func WaitForTimeout(wt time.Duration) bool {
+
+	var exitState bool
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+
+	// Timeout timer.
+	var tc <-chan time.Time
+	if wt > 0 {
+		tc = time.After(wt)
+	}
+
+	select {
+		case <-sig:
+			exitState = false
+			// Exit by user
+		case <-tc:
+			exitState = true
+			// Exit by timeout
+	}
+
+	return exitState
 }
 
 
