@@ -35,6 +35,12 @@ export default new Vuex.Store({
     connectionStatus: {
       networkError: null,
       remainingRetries: 5
+    },
+    showProjectsHaving: {
+      'states': ['running', 'stopped', 'candidates'],
+      'basedir': 'all',
+      'stacks': 'all',
+      'programs': 'all'
     }
   },
   getters: {
@@ -62,6 +68,54 @@ export default new Vuex.Store({
       return (fieldName === 'id')
         ? state.projects.records.find(p => p.id === fieldValue)
         : state.projects.records.find(p => p.attributes[fieldName] === fieldValue)
+    },
+    filterProjectsBy: (state) => (fieldName, allowedValues) => {
+      const attrs = ['basedir', 'enabled', 'filepath', 'hostname', 'path', 'project_dir']
+      let valuesArray = Array.isArray(allowedValues) ? allowedValues : [allowedValues]
+      // 'notes' and 'stack' are not included on purpose because simple comparison does not work on them
+      let projects = []
+
+      if (fieldName === 'id') {
+        projects = state.projects.records.filter(p => valuesArray.indexOf(p.id) !== -1)
+      } else if (attrs.indexOf(fieldName) !== -1) {
+        projects = state.projects.records.filter(p => valuesArray.indexOf(p.attributes[fieldName]) !== -1)
+      } else if (fieldName === 'stacks') {
+        projects = state.projects.records.filter(p => p.attributes.stack.some(s => valuesArray.some(val => s.gearspec_id.indexOf(val) > -1)))
+      } else if (fieldName === 'programs') {
+        projects = state.projects.records.filter(p => p.attributes.stack.some(s => valuesArray.some(val => s.service_id.split('/')[1].split(':')[0] === val)))
+      }
+
+      return projects
+    },
+    filteredProjects: (state, getters) => {
+      let projects = state.projects.records
+      for (const field in state.showProjectsHaving) {
+        const values = state.showProjectsHaving[field]
+        console.log(field, values)
+        if (values === 'all') {
+          continue
+        }
+        if (field === 'states') {
+          if (values.length === 3) {
+            continue
+          } else {
+            console.log('filter by state')
+            if (values.indexOf('running') > -1) {
+              projects = projects.filter(p => getters.filterProjectsBy('enabled', true).includes(p))
+            }
+            if (values.indexOf('stopped') > -1) {
+              projects = projects.filter(p => getters.filterProjectsBy('enabled', false).includes(p))
+            }
+            // TODO merge candidates into projects array
+            // if (values.indexOf('candidates') > -1) {
+            //   projects = projects.filter(p => getters.filterProjectsBy('candidate', true).includes(p))
+            // }
+          }
+          continue
+        }
+        projects = projects.filter(p => getters.filterProjectsBy(field, values).includes(p))
+      }
+      return projects
     },
     projectStackItemIndexBy: (state) => (project, fieldName, fieldValue) => {
       let memberIndex = -1
@@ -298,8 +352,10 @@ export default new Vuex.Store({
        * TODO: call the API and commit when it returns
        */
       commit('CHANGE_PROJECT_STATE', payload)
+    },
+    setProjectsFilter ({ commit }, payload) {
+      commit('SET_PROJECTS_FILTER', payload)
     }
-
   },
   mutations: {
     /**
@@ -409,6 +465,12 @@ export default new Vuex.Store({
       if (project) {
         project.attributes.enabled = !!isEnabled
       }
+    },
+    SET_PROJECTS_FILTER (state, payload) {
+      const { field, values } = payload
+      console.log('SET_PROJECTS_FILTER', field, values)
+
+      Vue.set(state.showProjectsHaving, field, values)
     }
   }
 

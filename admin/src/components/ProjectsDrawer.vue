@@ -15,9 +15,9 @@
             switches
             stack
           >
-            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggle_state('running')">Running</b-form-checkbox>
-            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggle_state('stopped')">Stopped</b-form-checkbox>
-            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggle_state('candidates')">Candidates</b-form-checkbox>
+            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggleState($event, 'running')">Running</b-form-checkbox>
+            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggleState($event, 'stopped')">Stopped</b-form-checkbox>
+            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggleState($event, 'candidates')">Candidates</b-form-checkbox>
             <small tabindex="-1" class="form-text text-muted">Project State</small>
           </b-form-checkbox-group>
 
@@ -28,7 +28,7 @@
             description="Location"
             v-if="hasExtraBasedirs"
           >
-            <b-select id="filter-location" variant="secondary" v-model="show_locations" :options="basedirsAsOptions">
+            <b-select id="filter-basedirs" variant="secondary" v-model="show_basedirs" :options="basedirsAsOptions" @change="changeFilter($event, 'basedir')">
               <template slot="first">
                 <option :value="null" disabled>Show projects from...</option>
                 <option value="all">All known locations</option>
@@ -42,7 +42,7 @@
             label-for="filter-stacks"
             description="Used Stacks"
           >
-            <b-select id="filter-stacks" variant="secondary" v-model="show_stacks">
+            <b-select id="filter-stacks" variant="secondary" v-model="show_stacks" @change="changeFilter($event, 'stacks')">
               <option :value="null" disabled>Filter by stacks...</option>
               <option value="all">Any stack</option>
               <optgroup label="Specific Stacks">
@@ -58,7 +58,7 @@
             label-for="filter-programs"
             description="Used Programs"
           >
-            <b-select id="filter-programs" variant="secondary" v-model="show_programs">
+            <b-select id="filter-programs" variant="secondary" v-model="show_programs" @change="changeFilter($event, 'programs')">
               <option :value="null" disabled>Filter by programs...</option>
               <option value="all">Any program</option>
               <optgroup label="Specific Program">
@@ -150,7 +150,7 @@
 
       <div class="current-filter">
         <b-badge title="Project State" :variant="states_variant">{{states_label}}</b-badge>
-        <b-badge title="Project Locations" :variant="(show_locations == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{locations_label}}</b-badge>
+        <b-badge title="Project Locations" :variant="(show_basedirs == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{basedirs_label}}</b-badge>
         <b-badge title="Stacks" :variant="(show_stacks == 'all') ? 'secondary' : 'warning'">{{stacks_label}}</b-badge>
         <b-badge title="Programs" :variant="(show_programs == 'all') ? 'secondary' : 'warning'">{{programs_label}}</b-badge>
         <b-badge title="Sorting">{{sorting_label}}</b-badge>
@@ -193,8 +193,8 @@ export default {
         ? 'secondary'
         : 'warning'
     },
-    locations_label () {
-      const basedir = (this.show_locations !== 'all') ? this.basedirBy('id', this.show_locations) : null
+    basedirs_label () {
+      const basedir = (this.show_basedirs !== 'all') ? this.basedirBy('id', this.show_basedirs) : null
       return 'From ' + (basedir ? basedir.attributes.basedir : 'all known locations')
     },
     stacks_label () {
@@ -213,7 +213,7 @@ export default {
         label = 'With no programs assigned'
       } else {
         const program = (this.show_programs !== 'all') ? this.show_programs : null
-        label = 'Using ' + (program? (program.toUpperCase()) : 'any program')
+        label = 'Using ' + (program ? program.toUpperCase() : 'any program')
       }
       return label
     },
@@ -224,10 +224,12 @@ export default {
   data () {
     return {
       expanded: false,
+
       show_states: ['running', 'stopped', 'candidates'],
-      show_locations: 'all',
+      show_basedirs: 'all',
       show_stacks: 'all',
       show_programs: 'all',
+
       sort_by: 'access-date',
       sort_ascending: true,
       view_mode: 'cards'
@@ -237,12 +239,14 @@ export default {
     // escAttr (value) {
     //   return value.replace(/\//g, '-').replace(/\./g, '-')
     // }
-    toggle_state (attribute) {
+    toggleState (value, attribute) {
       const states = this.show_states
+      const newValue = !!value
       const running = states.indexOf('running') !== -1
       const stopped = states.indexOf('stopped') !== -1
       const candidates = states.indexOf('candidates') !== -1
 
+      console.log(attribute, newValue)
       /**
        * All unselected would be and invalid state, therefore
        * make sure either candidates or running/stopped is selected
@@ -254,6 +258,14 @@ export default {
       } else if ((attribute === 'stopped') && !running && stopped && !candidates) {
         this.show_states = ['candidates']
       }
+    },
+    changeFilter (values, field) {
+      this.$store.dispatch('setProjectsFilter', { field, values })
+    }
+  },
+  watch: {
+    show_states: function (val, oldVal) {
+      this.$store.dispatch('setProjectsFilter', { field: 'states', values: this.show_states })
     }
   }
 }

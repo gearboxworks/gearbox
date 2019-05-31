@@ -1,31 +1,36 @@
 <template>
   <div class="projects-container">
     <projects-drawer visible="false" @switch-view-mode="switchViewMode"></projects-drawer>
-    <b-card-group columns class="pl-3 pr-3" v-if="viewMode==='cards'">
-      <project-card
-        v-for="(project, projectIndex) in projects"
-        :key="project.id"
-        :project="project"
-        :projectIndex="projectIndex"
-      >
-      </project-card>
-    </b-card-group>
-    <table class="projects-table" v-else>
-      <thead>
-        <tr>
-          <th>State</th><th>Project ID</th><th>Location</th><th>Stack</th><th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <project-row
+    <div v-if="projects.length" class="filtered-projects">
+      <b-card-group columns class="pl-3 pr-3" v-if="viewMode==='cards'">
+        <project-card
           v-for="(project, projectIndex) in projects"
           :key="project.id"
           :project="project"
           :projectIndex="projectIndex"
         >
-        </project-row>
-      </tbody>
-    </table>
+        </project-card>
+      </b-card-group>
+      <table class="projects-table" v-else>
+        <thead>
+          <tr>
+            <th>State</th><th>Project ID</th><th>Location</th><th>Stack</th><th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <project-row
+            v-for="(project, projectIndex) in projects"
+            :key="project.id"
+            :project="project"
+            :projectIndex="projectIndex"
+          >
+          </project-row>
+        </tbody>
+      </table>
+    </div>
+    <div v-else class="filtered-projects is-empty">
+      <h5>No projects match the current criteria.</h5>
+    </div>
   </div>
 </template>
 
@@ -49,7 +54,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      'projects': 'projects/all'
+      'projects': 'filteredProjects'
     })
   },
   methods: {
@@ -145,4 +150,9 @@ export default {
   .projects-table {
     margin-left: 1rem;
   }
+
+  .is-empty{
+    margin-left: 1rem;
+  }
+
 </style>
