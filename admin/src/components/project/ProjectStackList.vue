@@ -8,6 +8,7 @@
       :stackItems="stackItems"
       :project="project"
       :projectIndex="projectIndex"
+      :is-collapsible="isCollapsible"
     >
     </project-stack>
   </div>
@@ -28,6 +29,11 @@ export default {
     'projectIndex': {
       type: Number,
       required: true
+    },
+    'isCollapsible': {
+      type: Boolean,
+      required: false,
+      default: false
     }
   },
   data () {

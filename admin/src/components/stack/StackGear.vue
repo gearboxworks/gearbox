@@ -7,7 +7,7 @@
 
     <img
       v-if="service"
-      :src="require('../assets/'+service.attributes.program+'.svg')"
+      :src="require('../../assets/'+service.attributes.program+'.svg')"
       :class="{'service-program': true, 'is-loaded': isLoaded, 'is-switching': isSwitching, 'is-switching-same': isSwitchingSame, 'is-switching-same-again': isSwitchingSameAgain }"
       @load="onImageLoaded"
     />

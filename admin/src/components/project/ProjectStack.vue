@@ -1,33 +1,35 @@
 <template>
-  <div class="project-stack">
-    <h2 class="stack-title" @click="showAlert('Clicked ' + stackId.replace('gearbox.works/',''))">{{stackId.replace('gearbox.works/', '')}}</h2>
+  <div :class="{'project-stack': true, 'is-collapsible': isCollapsible}">
+    <h2 class="stack-title" @click="onTitleClicked">{{stackId.replace('gearbox.works/', '')}}</h2>
 
     <stack-toolbar :project="project" :projectIndex="projectIndex" :stackId="stackId"></stack-toolbar>
 
-    <ul class="service-list">
-      <li
-          v-for="(item, itemIndex) in stackItems"
-          :key="id + item.gearspec.attributes.role"
-          class="service-item"
-      >
-        <stack-gear :projectId="project.id" :stackItem="item" :projectIndex="projectIndex" :stackIndex="stackIndex" :itemIndex="itemIndex"></stack-gear>
-      </li>
-    </ul>
-    <b-alert
-      :key="stackId"
-      :show="alertShow"
-      :dismissible="alertDismissible"
-      :variant="alertVariant"
-      @dismissed="alertShow=false"
-      fade
-    >{{alertContent}}</b-alert>
+    <div class="stack-content">
+      <ul class="service-list" v-if="!isCollapsible || !isCollapsed">
+        <li
+            v-for="(item, itemIndex) in stackItems"
+            :key="id + item.gearspec.attributes.role"
+            class="service-item"
+        >
+          <stack-gear :projectId="project.id" :stackItem="item" :projectIndex="projectIndex" :stackIndex="stackIndex" :itemIndex="itemIndex"></stack-gear>
+        </li>
+      </ul>
+      <b-alert
+        :key="stackId"
+        :show="alertShow"
+        :dismissible="alertDismissible"
+        :variant="alertVariant"
+        @dismissed="alertShow=false"
+        fade
+      >{{alertContent}}</b-alert>
+    </div>
   </div>
 </template>
 
 <script>
 
-import StackToolbar from './StackToolbar.vue'
-import StackGear from './StackGear.vue'
+import StackToolbar from '../stack/StackToolbar.vue'
+import StackGear from '../stack/StackGear.vue'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -52,6 +54,11 @@ export default {
     'stackItems': {
       type: Array,
       required: true
+    },
+    'isCollapsible': {
+      type: Boolean,
+      default: false,
+      required: false
     }
   },
   data () {
@@ -60,7 +67,8 @@ export default {
       alertShow: false,
       alertContent: 'content',
       alertDismissible: true,
-      alertVariant: 'info'
+      alertVariant: 'info',
+      isCollapsed: true
     }
   },
   components: {
@@ -77,6 +85,10 @@ export default {
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+    onTitleClicked () {
+      this.isCollapsed = !this.isCollapsed
+      // this.showAlert('Clicked ' + this.stackId.replace('gearbox.works/', ''))
+    },
     showAlert (alert) {
       if (typeof alert === 'string') {
         this.alertContent = alert
@@ -92,10 +104,10 @@ export default {
 </script>
 
 <style scoped>
-  .project-stack:not(:first-child){
-    border-top: 1px solid #e0e0e0;
-    padding-top: 20px;
+  .project-stack{
+    min-width: 310px;
   }
+
   .stack-title {
     text-transform: uppercase;
     font-size: 1.25rem;
@@ -103,13 +115,31 @@ export default {
     color: #989898;
     margin-left: 5px;
   }
+  .is-collapsible .stack-title {
+    cursor: pointer;
+  }
+
+  .stack-content{
+  }
+
   .service-list{
-    margin-bottom: 15px;
     margin-top: 0px;
+
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 10px;
+
     list-style: none;
     padding-inline-start: 0;
     clear: both;
   }
+
+  .project-stack:last-child .service-list {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+
   .service-item {
     display: inline-block;
     list-style: none;

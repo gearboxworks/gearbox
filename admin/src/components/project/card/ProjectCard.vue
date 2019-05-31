@@ -47,9 +47,9 @@
 
 <script>
 
-import ProjectToolbar from './ProjectToolbar'
-import ProjectDetails from './ProjectDetails'
-import ProjectStackList from './ProjectStackList'
+import ProjectToolbar from '../ProjectToolbar'
+import ProjectDetails from './ProjectCardDetails'
+import ProjectStackList from '../ProjectStackList'
 
 export default {
   name: 'ProjectCard',

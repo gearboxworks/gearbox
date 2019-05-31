@@ -10,22 +10,20 @@
       >
       </project-card>
     </b-card-group>
-    <table v-else>
+    <table class="projects-table" v-else>
       <thead>
         <tr>
-          <th>Project ID</th><th>Status<th/>
+          <th>State</th><th>Project ID</th><th>Location</th><th>Stack</th><th>Notes</th>
         </tr>
       </thead>
       <tbody>
-      <tr
-        v-for="(project, projectIndex) in projects"
-        :key="project.id"
-        :project="project"
-        :projectIndex="projectIndex"
-      >
-        <td>{{project.id}}</td>
-        <td>{{project.attributes.enabled ? 'Running': 'Stopped'}}</td>
-      </tr>
+        <project-row
+          v-for="(project, projectIndex) in projects"
+          :key="project.id"
+          :project="project"
+          :projectIndex="projectIndex"
+        >
+        </project-row>
       </tbody>
     </table>
   </div>
@@ -34,7 +32,8 @@
 <script>
 import { mapGetters } from 'vuex'
 import ProjectsDrawer from '../components/ProjectsDrawer'
-import ProjectCard from '../components/ProjectCard'
+import ProjectCard from '../components/project/card/ProjectCard'
+import ProjectRow from '../components/project/row/ProjectRow'
 
 export default {
   name: 'ProjectList',
@@ -45,7 +44,8 @@ export default {
   },
   components: {
     ProjectsDrawer,
-    ProjectCard
+    ProjectCard,
+    ProjectRow
   },
   computed: {
     ...mapGetters({
@@ -140,5 +140,9 @@ export default {
       -moz-column-count: 6;
       column-count: 6;
     }
+  }
+
+  .projects-table {
+    margin-left: 1rem;
   }
 </style>
