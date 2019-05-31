@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+
 func IsParentInit() (bool) {
 
 	ppid := os.Getppid()
@@ -23,7 +24,9 @@ func IsParentInit() (bool) {
 // This function will cause a Go() thread to sit and wait until
 // a signal has been sent to the process.
 // Very important for tidy up afterwards.
+// func WaitForSignal(name string) os.Signal {
 func WaitForSignal() os.Signal {
+
 	signalChan := make(chan os.Signal, 1)
 	defer close(signalChan)
 
@@ -32,6 +35,17 @@ func WaitForSignal() os.Signal {
 	signal.Stop(signalChan)
 
 	return s
+}
+
+
+// Wait for an ever increasing period of time - a very simple retry back-off system.
+// This is used with processes that die too quickly and will ensure that retries don't hammer the system.
+func WaitDelay(retry int) {
+
+	// First time wait for 100mS
+	// Second time wait for 200mS
+	// And so on...
+	time.Sleep(time.Millisecond * 100 * time.Duration(retry))
 }
 
 

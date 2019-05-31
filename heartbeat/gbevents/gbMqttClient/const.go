@@ -20,6 +20,8 @@ type Client struct {
 }
 type Args Client
 
+const DefaultEntityId = "gearbox-mqtt-client"
+
 type msgCallback struct {
 	Topic    messages.Topic
 	Function mqtt.MessageHandler

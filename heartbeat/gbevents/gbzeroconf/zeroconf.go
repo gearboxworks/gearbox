@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gearbox/box"
 	"gearbox/heartbeat/daemon"
+	"gearbox/heartbeat/gbevents/messages"
 	"gearbox/help"
 	"gearbox/only"
 	oss "gearbox/os_support"
@@ -51,10 +52,54 @@ func (me *Client) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 			_args.WaitTime = defaultWaitTime
 		}
 
-		status.Success("GBevents - zeroconf(INIT)").Log()
-
 		*me = Client(_args)
+		messages.Debug("GBevents - ZeroConf init (%s).", me.EntityId.String())
 	}
+
+	return sts
+}
+
+
+func (me *Client) StartHandler() status.Status {
+
+	var sts status.Status
+
+	for range only.Once {
+		sts = me.EnsureNotNil()
+		if is.Error(sts) {
+			break
+		}
+
+		//if me.Subscribers == nil {
+		//	me.Subscribers = make(Subscribers)
+		//}
+		//
+		//if _, ok := me.Subscribers[client]; !ok {
+		//	me.Subscribers[client] = SubTopics{
+		//		Address: client,
+		//		Callbacks: make(Callbacks),
+		//		instance: &me.instance,
+		//	}
+		//}
+		//
+		//go func() {
+		//	sts = me.handler(client)
+		//	sts.Log()
+		//}()
+
+		sts = status.Success("").
+			SetMessage("started zeroconf handler for %s", me.EntityId.String()).
+			SetAdditional("").
+			SetData(me).
+			SetHelp(status.AllHelp, help.ContactSupportHelp())
+	}
+
+	if !is.Success(sts) {
+		sts.Log()
+	}
+
+	// Save last state.
+	me.Sts = sts
 
 	return sts
 }
@@ -65,13 +110,13 @@ func (me *Client) Browse(s string) status.Status {
 	var sts status.Status
 
 	for range only.Once {
-		sts = EnsureNotNil(me)
+		sts = me.EnsureNotNil()
 		if is.Error(sts) {
 			break
 		}
 
 		fmt.Printf("GBevents - ZeroConf(STARTED)\n")
-		status.Success("GBevents - ZeroConf(STARTED)").Log()
+		messages.Debug("GBevents - ZeroConf started (%s).", me.EntityId.String())
 		resolver, err := zeroconf.NewResolver(nil)
 		if err != nil {
 			sts = status.Wrap(err).
@@ -106,7 +151,7 @@ func (me *Client) Browse(s string) status.Status {
 
 		<-ctx.Done()
 		fmt.Printf("GBevents - ZeroConf(STOPPED)\n")
-		status.Success("GBevents - ZeroConf(STOPPED)").Log()
+		messages.Debug("GBevents - ZeroConf stopped (%s).", me.EntityId.String())
 	}
 
 	return sts
@@ -118,7 +163,7 @@ func (me *Client) Register(s Service) status.Status {
 	var sts status.Status
 
 	for range only.Once {
-		sts = EnsureNotNil(me)
+		sts = me.EnsureNotNil()
 		if is.Error(sts) {
 			break
 		}

@@ -42,10 +42,9 @@ func (me *Client) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 		}
 
 		if _args.EntityId == "" {
-			_args.EntityId = "gearbox-mqtt-client"
+			_args.EntityId = DefaultEntityId
 		}
 
-		status.Success("GBevents - MQTT client(INIT)").Log()
 		if _args.Server == nil {
 
 		}
@@ -74,6 +73,7 @@ func (me *Client) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 		_args.client = mqtt.NewClient(_args.Config)
 
 		*me = Client(_args)
+		status.Success("GBevents - MQTT client init (%s).", me.EntityId.String()).Log()
 	}
 
 	return sts
@@ -83,7 +83,7 @@ func (me *Client) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 func (me *Client) Start() status.Status {
 
 	var sts status.Status
-	status.Success("GBevents - MQTT client(STARTED)").Log()
+	status.Success("GBevents - MQTT client started (%s).", me.EntityId.String()).Log()
 
 	for range only.Once {
 		sts = EnsureNotNil(me)
@@ -113,7 +113,7 @@ func (me *Client) Start() status.Status {
 
 		s := daemon.WaitForSignal()
 
-		status.Success("GBevents - MQTT broker(STOPPED)").Log()
+		status.Success("GBevents - MQTT client stopped (%s).", me.EntityId.String()).Log()
 		sts = status.Success("MQTT client exited with signal %v.", s)
 	}
 	me.Sts = sts
@@ -192,5 +192,4 @@ func callbackFunc(client mqtt.Client, msg mqtt.Message) {
 
 	fmt.Printf("* [%s] %s\n", msg.Topic(), string(msg.Payload()))
 }
-
 

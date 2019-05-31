@@ -5,8 +5,8 @@ import (
 	"github.com/gearboxworks/go-status"
 )
 
-func (bx *Channels) EnsureNotNil() (sts status.Status) {
-	if bx == nil {
+func (me *Channels) EnsureNotNil() (sts status.Status) {
+	if me == nil {
 		sts = status.Fail().
 			SetMessage("unexpected software error").
 			SetAdditional("", ).

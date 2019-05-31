@@ -155,7 +155,7 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 			break
 		}
 
-		sts = gbevents.EnsureNotNil(me.EventBroker)
+		sts = me.EventBroker.EnsureNotNil()
 		if is.Error(sts) {
 			break
 		}
@@ -720,7 +720,7 @@ func (me *Heartbeat) StartHeartbeat() (sts status.Status) {
 
 	for range only.Once {
 
-		sts = EnsureNotNil(me)
+		sts = me.EnsureNotNil()
 		if is.Error(sts) {
 			break
 		}
@@ -757,7 +757,7 @@ func (me *Heartbeat) StopHeartbeat() (sts status.Status) {
 
 	for range only.Once {
 
-		sts = EnsureNotNil(me)
+		sts = me.EnsureNotNil()
 		if is.Error(sts) {
 			break
 		}
@@ -799,7 +799,7 @@ func (me *Heartbeat) GetState() (sts status.Status) {
 
 	for range only.Once {
 
-		sts = EnsureNotNil(me)
+		sts = me.EnsureNotNil()
 		if is.Error(sts) {
 			break
 		}

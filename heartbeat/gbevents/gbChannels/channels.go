@@ -39,13 +39,16 @@ func (me *Channels) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 		}
 
 		if _args.EntityId == "" {
-			_args.EntityId = "gearbox-channels"
+			_args.EntityId = DefaultEntityId
 		}
 
 		_args.instance.emitter = emitter.Emitter{}
 		_args.Subscribers = make(Subscribers)
 
 		*me = Channels(_args)
+
+		messages.Debug("GBevents - channel (%s).", me.EntityId.String())
+		sts = status.Success("MQTT started OK on ", me.EntityId.String())
 	}
 
 	if !is.Success(sts) {
@@ -315,7 +318,7 @@ func (me *Channels) handler(client messages.MessageAddress) status.Status {
 		//var wg sync.WaitGroup
 		child := 0
 
-		status.Success("GBevents - Poller started '%s'.", client.String()).Log()
+		messages.Debug("GBevents - Poller started '%s'.", client.String())
 		topicGlob := messages.CreateTopicGlob(client).String()
 		topicExit := messages.CreateTopic(client, "exit").String()
 
@@ -376,7 +379,7 @@ func (me *Channels) handler(client messages.MessageAddress) status.Status {
 		//debug.PrintStack()
 		//wg.Wait()
 
-		status.Success("GBevents - Poller stopped '%s'.", client.String()).Log()
+		messages.Debug("GBevents - Poller stopped '%s'.", client.String())
 		sts = status.Success("").
 			SetMessage("GBevents - Poller stopped '%s'.", client.String()).
 			SetAdditional("emitter:%v", me.instance.emitter).
@@ -562,7 +565,7 @@ func (me *Channels) allHandler() status.Status {
 		var wg sync.WaitGroup
 		child := 0
 
-		status.Success("GBevents - Poller(STARTED)").Log()
+		messages.Debug("GBevents - Poller(STARTED)")
 		for me.instance.events = range me.instance.emitter.On("*") {
 			if me.instance.events.Args == nil {
 				fmt.Printf("ARGS:ZERO\n")

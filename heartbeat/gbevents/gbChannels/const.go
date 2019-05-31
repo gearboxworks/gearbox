@@ -18,6 +18,8 @@ type Channels struct {
 }
 type Args Channels
 
+const DefaultEntityId = "gearbox-channels"
+
 type channelsInstance struct {
 	emitter   emitter.Emitter
 	events    emitter.Event
