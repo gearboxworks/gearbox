@@ -109,6 +109,31 @@ export default new Vuex.Store({
       })
       return options
     },
+    servicesAsOptions: (state) => {
+      const options = []
+      state.services.records.forEach((el, idx) => {
+        options.push({
+          value: el.id,
+          text: el.id
+        })
+      })
+      return options
+    },
+    programsAsOptions: (state) => {
+      const programs = []
+      const options = []
+      state.services.records.forEach((el, idx) => {
+        const program = el.attributes.program
+        if (programs.indexOf(program) === -1) {
+          programs.push(program)
+          options.push({
+            value: program,
+            text: program
+          })
+        }
+      })
+      return options
+    },
     basedirsAsOptions: (state) => {
       const options = []
       state.basedirs.records.forEach((el, idx) => {

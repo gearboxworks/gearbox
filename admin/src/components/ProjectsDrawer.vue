@@ -51,6 +51,22 @@
               <option value="none">No stacks assigned</option>
             </b-select>
           </b-form-group>
+
+          <b-form-group
+            class="form-group--programs"
+            label=""
+            label-for="filter-programs"
+            description="Used Programs"
+          >
+            <b-select id="filter-programs" variant="secondary" v-model="show_programs">
+              <option :value="null" disabled>Filter by programs...</option>
+              <option value="all">Any program</option>
+              <optgroup label="Specific Program">
+                <option v-for="item in programsAsOptions" :key="item.value" :value="item.value">{{item.text.toUpperCase()}}</option>
+              </optgroup>
+              <option value="none">No programs assigned</option>
+            </b-select>
+          </b-form-group>
         </b-form>
       </div>
 
@@ -136,6 +152,7 @@
         <b-badge title="Project State" :variant="states_variant">{{states_label}}</b-badge>
         <b-badge title="Project Locations" :variant="(show_locations == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{locations_label}}</b-badge>
         <b-badge title="Stacks" :variant="(show_stacks == 'all') ? 'secondary' : 'warning'">{{stacks_label}}</b-badge>
+        <b-badge title="Programs" :variant="(show_programs == 'all') ? 'secondary' : 'warning'">{{programs_label}}</b-badge>
         <b-badge title="Sorting">{{sorting_label}}</b-badge>
       </div>
     </div>
@@ -150,7 +167,7 @@ export default {
   name: 'ProjectsDrawer',
   props: {},
   computed: {
-    ...mapGetters([ 'basedirBy', 'stackBy', 'basedirsAsOptions', 'stacksAsOptions', 'hasExtraBasedirs' ]),
+    ...mapGetters([ 'basedirBy', 'stackBy', 'basedirsAsOptions', 'stacksAsOptions', 'programsAsOptions', 'hasExtraBasedirs' ]),
     states_label () {
       const states = this.show_states
       const running = (states.indexOf('running') !== -1) ? 'Running projects' : ''
@@ -190,6 +207,16 @@ export default {
       }
       return label
     },
+    programs_label () {
+      let label
+      if (this.show_programs === 'none') {
+        label = 'With no programs assigned'
+      } else {
+        const program = (this.show_programs !== 'all') ? this.show_programs : null
+        label = 'Using ' + (program? (program.toUpperCase()) : 'any program')
+      }
+      return label
+    },
     sorting_label () {
       return 'Sorted by ' + this.sort_by.replace('-', ' ') + (this.sort_ascending ? '' : ' (reverse)')
     }
@@ -200,6 +227,7 @@ export default {
       show_states: ['running', 'stopped', 'candidates'],
       show_locations: 'all',
       show_stacks: 'all',
+      show_programs: 'all',
       sort_by: 'access-date',
       sort_ascending: true,
       view_mode: 'cards'
