@@ -11,12 +11,15 @@
       :is-collapsible="cardsMode"
     >
     </project-stack>
+
   </div>
 </template>
 
 <script>
 
 import ProjectStack from '../stack/StackCard.vue'
+// import ProjectStackSelect from './ProjectStackSelect'
+
 import { mapGetters } from 'vuex'
 
 export default {
@@ -44,6 +47,7 @@ export default {
   },
   components: {
     ProjectStack
+    // ProjectStackSelect
   },
   computed: {
     ...mapGetters(['serviceBy', 'gearspecBy']),

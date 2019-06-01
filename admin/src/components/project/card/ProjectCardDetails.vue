@@ -36,8 +36,8 @@
 
 <script>
 import ProjectLocation from '../ProjectLocation'
-import ProjectNotes from '../ProjectNotes'
-import ProjectStackSelect from '../ProjectStackSelect'
+import ProjectNotes from '../ProjectNote'
+import ProjectStackSelect from '../ProjectStack'
 
 export default {
   name: 'ProjectCardDetails',

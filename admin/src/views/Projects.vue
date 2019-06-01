@@ -164,7 +164,7 @@ export default {
   }
 
   .th--location {
-    max-width: 400px;
+    width: 400px;
   }
 
   .th--notes {

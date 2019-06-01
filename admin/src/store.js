@@ -328,14 +328,39 @@ export default new Vuex.Store({
     addProjectStack ({ commit }, payload) {
       /**
        * TODO: call the API and commit when it returns
+       * TODO: remove delay
        */
-      commit('ADD_PROJECT_STACK', payload)
+      console.log('TODO: call API method to add project stack')
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          commit('ADD_PROJECT_STACK', payload)
+          resolve()
+        }, 3000)
+      })
     },
     removeProjectStack ({ commit }, payload) {
       /**
        * TODO: call the API and commit when it returns
        */
       commit('REMOVE_PROJECT_STACK', payload)
+    },
+    addProjectNote ({ commit }, payload) {
+      console.log('TODO: call API method to add a note to the project')
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          commit('ADD_PROJECT_NOTE', payload)
+          resolve()
+        }, 3000)
+      })
+    },
+    updateProjectHostname ({ commit }, payload) {
+      console.log('TODO: call API method to update project hostname')
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          commit('UPDATE_PROJECT_HOSTNAME', payload)
+          resolve()
+        }, 3000)
+      })
     },
     changeProjectService ({ commit }, payload) {
       /**
@@ -467,6 +492,15 @@ export default new Vuex.Store({
     SET_PROJECTS_FILTER (state, payload) {
       const { field, values } = payload
       Vue.set(state.showProjectsHaving, field, values)
+    },
+    ADD_PROJECT_NOTE (state, payload) {
+      // const { projectId, text } = payload
+      /**
+       * TODO: update model to support multiple notes per project (/w timestamps)
+       */
+    },
+    UPDATE_PROJECT_HOSTNAME (state, payload) {
+      // const { projectId, hostname } = payload
     }
   }
 

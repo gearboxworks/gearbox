@@ -1,33 +1,11 @@
 <template>
   <b-card
-    :class="{'card--project': true,'showing-details': showingDetails, 'not-showing-details': !showingDetails}"
-    :to="{path:'/project/'+id}"
+    class="card--project"
   >
-    <b-form class="clearfix">
-      <b-form-group
-        :id="`hostname-group-${projectIndex}`"
-        class="hostname-group"
-        label=""
-        :label-for="`hostname-input-${projectIndex}`"
-        :description="showingDetails ? 'Hostname' : ''"
-      >
-        <b-form-input
-          :id="`hostname-input-${projectIndex}`"
-          class="hostname-input"
-          type="text"
-          v-model="hostname"
-          @change="maybeSubmit"
-          size="lg"
-          required
-          @click="showingDetails = true"
-          placeholder="" />
-      </b-form-group>
-
+    <div class="clearfix">
+      <project-hostname :project="project" :projectIndex="projectIndex" :is-multimodal="true"></project-hostname>
       <project-toolbar :project="project" :projectIndex="projectIndex" @run-stop="onRunStop"></project-toolbar>
-
-      <project-details :project="project" :projectIndex="projectIndex" v-if="showingDetails" @toggle-details="toggleDetails"></project-details>
-
-    </b-form>
+    </div>
 
     <b-alert
       :show="alertShow"
@@ -37,8 +15,17 @@
       fade
     >{{alertContent}}</b-alert>
 
-    <div slot="footer" v-if="project.attributes.stack && project.attributes.stack.length">
+    <div class="clearfix" slot="footer" v-if="project.attributes.stack && project.attributes.stack.length">
       <project-stack-list :project="project" :projectIndex="projectIndex"></project-stack-list>
+
+      <project-stack :project="project" :projectIndex="projectIndex"></project-stack>
+
+      <project-location :project="project" :projectIndex="projectIndex"></project-location>
+
+      <project-note :project="project" :projectIndex="projectIndex"></project-note>
+
+      <project-note-list :project="project" :projectIndex="projectIndex"></project-note-list>
+
     </div>
 
   </b-card>
@@ -48,8 +35,12 @@
 <script>
 
 import ProjectToolbar from '../ProjectToolbar'
-import ProjectDetails from './ProjectCardDetails'
+import ProjectHostname from '../ProjectHostname'
+import ProjectLocation from '../ProjectLocation'
+import ProjectNote from '../ProjectNote'
 import ProjectStackList from '../ProjectStackList'
+import ProjectStack from '../ProjectStack'
+import ProjectNoteList from '../ProjectNoteList'
 
 export default {
   name: 'ProjectCard',
@@ -76,8 +67,12 @@ export default {
   },
   components: {
     ProjectToolbar,
-    ProjectDetails,
-    ProjectStackList
+    ProjectHostname,
+    ProjectLocation,
+    ProjectStackList,
+    ProjectStack,
+    ProjectNoteList,
+    ProjectNote
   },
   computed: {
     projectBase () {
@@ -138,22 +133,9 @@ export default {
     box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
   }
 
-  .card--project.not-showing-details .card-body {
-    padding-bottom: 14px;
+  .card-body {
+    padding: 0.75rem;
   }
-
-/*
-  margin-left: 0;
-  width: calc(100%);
-  margin-top: 10px;
-  margin-bottom: 0;
-  border-radius: 0;
-  font-size: 12px;
-  padding-top: 10px;
-  padding-left: 12px;
-  padding-bottom: 10px;
-  box-shadow: 0px 1px 3px rgba(0,0,0,0.1);
-  */
 
   .card-body .alert {
     margin-left: -1.25rem;
@@ -168,11 +150,6 @@ export default {
     padding-bottom: 1rem;
   }
 
-  .card--project.showing-details .card-body .alert {
-    margin-top: 1.25rem;
-    margin-bottom: -19px;
-  }
-
   .card-body .alert-dismissible .close {
     padding: 0.5rem 0.75rem;
     right: 0px;
@@ -184,74 +161,71 @@ export default {
     margin-bottom: 0;
   }
 
-  .hostname-group{
-    display: inline-block;
-    float: left;
-    margin-top: -6px;
-    width: calc(100% - 42px);
+  .card-footer {
+    padding: 0.75rem 0.75rem;
+  }
+  .btn-outline-warning,
+  .btn-outline-info {
+    border-color: transparent;
   }
 
-  .not-showing-details .hostname-group{
-    margin-bottom: 0;
+  .btn--submit-hostname {
+    border-color:#ced4da;
+  }
+  .btn-outline-warning {
+    color: #e4bd77;
   }
 
-  .hostname-input{
-    padding-left: 11px;
-    font-weight: bold;
-    /*padding: 1px 8px 1px 8px;
-    margin-left: -10px;*/
+  .btn-outline-warning:hover {
+    color: #212529;
+    background-color: #e4bd77;
+  }
+  .btn--add {
+    position:relative;
+  }
+  .btn--add span {
+    position: absolute;
+    right: 6px;
+    font-size: 17px;
+    top: -2px;
   }
 
-  .not-showing-details .hostname-input {
-    border: 1px solid transparent;
-    cursor: pointer;
+  .btn--add svg {
+    position: relative;
+    left: -2px;
+    top: 2px;
+  }
+
+  .project-note-list {
+    float:right;
+  }
+
+  .input-group--stack,
+  .input-group--location {
+    margin-bottom: 1rem;
+  }
+
+  .input-group--note {
+    margin-bottom: 0.5rem;
+  }
+
+  .input-group.is-collapsed {
+    display: inline-flex;
     width: auto;
+    margin-right: 0.5rem;
   }
 
-  .card--project.not-showing-details:hover .hostname-input {
+  .card--project:hover .input-group--hostname:not(.is-editing) .hostname-input {
     text-decoration: underline;
   }
 
-  .showing-details .hostname-input{
-    cursor: text;
-    width: 100%;
-  }
-
-  .show-details {
-    display: block;
-    position:relative;
-    top: -5px;
-    text-align: left;
-    margin-bottom: -8px;
-    line-height: 0;
-    margin-left: 7px;
-    padding: 1px 6px;
-    color: #1e69b9 !important;
-    opacity: 0;
-    cursor: pointer;
-    transition: opacity 400ms;
-    clear: both;
-  }
-  .show-details span {
-    margin-left: 5px;
-    margin-right: 5px;
-    font-weight: bold;
-    font-size: 14px;
-  }
-
-  .showing-details .show-details {
-    display: none;
-  }
-
-  .card--project:hover .show-details{
-    opacity:0.75;
-  }
-  .card--project:hover .show-details:hover {
-    opacity: 1;
-  }
-
-  .card-footer {
-    padding: 0.75rem 0.75rem;
+  .input-group--hostname{
+    margin-right: 0;
+    float: left;
+    /**
+     * leaving some room for the Run/Stop icon
+     */
+    width: calc(100% - 50px);
   }
 </style>
 
@@ -260,4 +234,5 @@ export default {
   width: 100%;
   margin-right: 0;
 }
+
 </style>

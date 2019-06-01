@@ -61,7 +61,7 @@ export default {
     float: right;
     padding-inline-start: 0;
     margin-bottom: 0;
-    margin-top: -5px;
+    margin-top: 0;
   }
   .toolbar-item {
     display: inline;
@@ -72,7 +72,8 @@ export default {
     float: right;
     font-size: 1.25rem;
     cursor: pointer;
-    margin-left: 13px;
+    padding-left: 6px;
+    padding-right: 6px;
     color: rgba(42, 85, 130, 0.98);
   }
 

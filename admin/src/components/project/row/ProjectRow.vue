@@ -5,18 +5,11 @@
     </td>
 
     <td class="td--hostname">
-      <b-form-input
-        :id="`hostname-input-${projectIndex}`"
-        class="hostname-input"
-        type="text"
-        v-model="hostname"
-        @change="maybeSubmit"
-        required
-        placeholder="" />
+      <project-hostname :project="project" :projectIndex="projectIndex" :is-multimodal="false"></project-hostname>
     </td>
 
     <td class="td--location">
-      <project-location :project="project" :projectIndex="projectIndex"></project-location>
+      <project-location :project="project" :projectIndex="projectIndex" :is-multimodal="false"></project-location>
     </td>
 
     <td class="td--stack">
@@ -25,7 +18,8 @@
     </td>
 
     <td class="td--notes">
-      <project-notes :project="project" :projectIndex="projectIndex"></project-notes>
+      <project-note-list :project="project" :projectIndex="projectIndex"></project-note-list>
+      <project-note :project="project" :projectIndex="projectIndex"></project-note>
     </td>
 
   </tr>
@@ -34,11 +28,13 @@
 
 <script>
 
+import ProjectHostname from '../ProjectHostname'
 import ProjectToolbar from '../ProjectToolbar'
 import ProjectStackList from '../ProjectStackList'
 import ProjectLocation from '../ProjectLocation'
-import ProjectNotes from '../ProjectNotes'
-import ProjectStackSelect from '../ProjectStackSelect'
+import ProjectNote from '../ProjectNote'
+import ProjectNoteList from '../ProjectNoteList'
+import ProjectStackSelect from '../ProjectStack'
 
 export default {
   name: 'ProjectRow',
@@ -63,11 +59,13 @@ export default {
     }
   },
   components: {
+    ProjectHostname,
     ProjectToolbar,
     ProjectLocation,
-    ProjectNotes,
+    ProjectNote,
     ProjectStackSelect,
-    ProjectStackList
+    ProjectStackList,
+    ProjectNoteList
   },
   computed: {
     projectBase () {
@@ -144,6 +142,36 @@ export default {
   .hostname-input {
     max-width: 300px;
   }
+
+  .input-group--stack {
+    position: relative;
+    top: -4px;
+  }
+
+  .input-group--stack,
+  .input-group--note.is-collapsed {
+    display: inline-flex;
+    width: auto;
+  }
+
+  .project-stack-list,
+  .project-note-list {
+    display: inline-block;
+  }
+
+  >>> .toolbar-link--state {
+    font-size: 18px;
+    margin-top: 6px;
+  }
+
+  >>> .input-group .btn-outline-info {
+    border-color: #ced4da;
+  }
+
+  >>> .input-group.is-collapsed .btn-outline-info {
+    border-color: transparent;
+  }
+
 </style>
 <style>
   .row--project td {
@@ -164,13 +192,5 @@ export default {
 
   .td--notes {
     max-width: 300px;
-  }
-
-  .row--project .add-stack{
-    width: auto;
-    border-radius: 5px;
-  }
-  .row--project .add-stack:not(:first-child){
-    margin-top: -9px;
   }
 </style>

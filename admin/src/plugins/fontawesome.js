@@ -13,6 +13,7 @@ import {
   faEnvelope,
   faDatabase,
   faFolder,
+  faFolderOpen,
   faTrashAlt,
   faCheckCircle,
   faPlusCircle,
@@ -20,7 +21,12 @@ import {
   faThList,
   faSortAlphaUp,
   faSortAlphaDown,
-
+  faStickyNote,
+  faLayerGroup,
+  faClone,
+  faReply,
+  faCircleNotch,
+  faSpinner
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
@@ -36,6 +42,7 @@ library.add(faEllipsisV)
 library.add(faEnvelope)
 library.add(faDatabase)
 library.add(faFolder)
+library.add(faFolderOpen)
 library.add(faTrashAlt)
 library.add(faCheckCircle)
 library.add(faPlusCircle)
@@ -43,6 +50,11 @@ library.add(faColumns)
 library.add(faThList)
 library.add(faSortAlphaUp)
 library.add(faSortAlphaDown)
-
+library.add(faStickyNote)
+library.add(faLayerGroup)
+library.add(faClone)
+library.add(faReply)
+library.add(faCircleNotch)
+library.add(faSpinner)
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)

@@ -1,6 +1,17 @@
 <template>
   <div :class="{'stack-card': true, 'is-collapsible': isCollapsible, 'is-collapsed': isCollapsed}">
-    <h2 class="stack-title" @click="onTitleClicked">{{stackId.replace('gearbox.works/', '')}}</h2>
+    <h2
+      class="stack-title"
+      @click="onTitleClicked"
+      title="Toggle stack details"
+      v-b-tooltip.hover
+    >
+      <font-awesome-icon
+      :icon="['fa', 'layer-group']"
+      style="color:silver;"
+      />&nbsp;
+      {{stackId.replace('gearbox.works/', '')}}
+    </h2>
 
     <stack-toolbar v-if="!isCollapsed" :project="project" :projectIndex="projectIndex" :stackId="stackId"></stack-toolbar>
 
@@ -130,7 +141,7 @@ export default {
 
   .stack-title {
     text-transform: uppercase;
-    font-size: 1.25rem;
+    font-size: 1rem;
     display: inline-block;
     color: #989898;
     margin-left: 5px;
