@@ -43,7 +43,7 @@
         <label :for="`${gearControlId}-input`">{{gearspec.attributes.role}}:</label>
         <b-form-select
           :id="`${gearControlId}-input`"
-          :value="preselectClosestGearService"
+          :value="preselectClosestGearServiceId"
           :tabindex="projectIndex*100+stackIndex*10+itemIndex+9"
           @change="onChangeService($event)"
         >
@@ -95,7 +95,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['gearspecBy', 'stackBy', 'stackDefaultServiceByRole', 'stackServicesByRole', 'preselectService']),
+    ...mapGetters(['serviceBy', 'gearspecBy', 'stackBy', 'stackDefaultServiceByRole', 'stackServicesByRole', 'preselectServiceId']),
     projectBase () {
       return 'gb-' + this.escAttr(this.projectId) + '-'
     },
@@ -103,7 +103,16 @@ export default {
       return this.stackItem.gearspec
     },
     service () {
-      return this.stackItem.service
+      let service = null
+      if (this.stackItem.service) {
+        service = this.stackItem.service
+      } else if (this.stackItem.serviceId) {
+        const closestServiceId = this.preselectClosestGearServiceId
+        if (closestServiceId) {
+          service = this.serviceBy('id', closestServiceId)
+        }
+      }
+      return service
     },
     stack () {
       return this.stackBy('id', this.gearspec.attributes.stack_id)
@@ -112,16 +121,16 @@ export default {
       return this.projectBase + (this.stack ? this.stack.attributes.stackname + '-' : '') + this.gearspec.attributes.role
     },
     defaultService () {
-      return this.stackDefaultServiceByRole(this.stack, this.gearspec.id)
+      return this.stackDefaultServiceByRole(this.stack, this.stackItem.gearspecId)
     },
-    preselectClosestGearService () {
+    preselectClosestGearServiceId () {
       /**
-       * As am example, for php:7.1.18 it will select php:7.1 or php:7 if exact match is not possible
+       * As an example, for php:7.1.18 it will select php:7.1 or php:7 if exact match is not possible
        */
-      return this.preselectService(
-        this.stackServicesByRole(this.stack, this.gearspec.id),
+      return this.preselectServiceId(
+        this.stackServicesByRole(this.stack, this.stackItem.gearspecId),
         this.defaultService,
-        this.service ? this.service.id : null
+        this.stackItem.serviceId
       )
     },
     servicesGroupedByRole () {
@@ -138,9 +147,19 @@ export default {
       return result
     },
     programTooltip () {
-      const attributes = this.service ? this.service.attributes : null
-      return attributes
-        ? (attributes.program + ' ' + attributes.version)
+      const serviceId = this.stackItem.serviceId
+      const attributes = (serviceId && this.service) ? this.service.attributes : null
+
+      let program = attributes ? attributes.program : ''
+      let version = attributes ? attributes.version : ''
+
+      if (serviceId && (!attributes || (this.service && this.service.id !== serviceId))) {
+        program = serviceId.split('/')[1].split(':')[0]
+        version = serviceId.split('/')[1].split(':')[1]
+      }
+
+      return (program && version)
+        ? (program + ' ' + version)
         : 'Service not selected'
     }
   },

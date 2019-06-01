@@ -91,7 +91,6 @@ export default new Vuex.Store({
       let projects = state.projects.records
       for (const field in state.showProjectsHaving) {
         const values = state.showProjectsHaving[field]
-        console.log(field, values)
         if (values === 'all') {
           continue
         }
@@ -99,7 +98,6 @@ export default new Vuex.Store({
           if (values.length === 3) {
             continue
           } else {
-            console.log('filter by state')
             if (values.indexOf('running') > -1) {
               projects = projects.filter(p => getters.filterProjectsBy('enabled', true).includes(p))
             }
@@ -201,7 +199,7 @@ export default new Vuex.Store({
     hasExtraBasedirs: (state) => {
       return state.basedirs.records.length > 1
     },
-    preselectService: (state) => (serviceIds, defaultServiceId, providedServiceId) => {
+    preselectServiceId: (state) => (serviceIds, defaultServiceId, providedServiceId) => {
       /**
        * Resolve default option:
        * - if exact match is found, use it
@@ -468,8 +466,6 @@ export default new Vuex.Store({
     },
     SET_PROJECTS_FILTER (state, payload) {
       const { field, values } = payload
-      console.log('SET_PROJECTS_FILTER', field, values)
-
       Vue.set(state.showProjectsHaving, field, values)
     }
   }

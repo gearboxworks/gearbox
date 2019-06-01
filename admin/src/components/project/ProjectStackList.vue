@@ -56,6 +56,9 @@ export default {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
     groupedStackItems (stackItems) {
+      /**
+       * returns project's services grouped by stack (indexed by stack_id)
+       */
       var result = {}
       stackItems.forEach(stackItem => {
         const gearspec = this.gearspecBy('id', stackItem.gearspec_id)
@@ -65,9 +68,16 @@ export default {
           }
           const service = stackItem.service_id ? this.serviceBy('id', stackItem.service_id) : null
           /**
-           * grouping project's services by stack
+           * note, when there is no exact match, service will be null,
+           * but we will try to find a good-enough match further down the road;
+           * that's why we need to pass over the original serviceId
            */
-          result[gearspec.attributes.stack_id].push({ gearspec, service })
+          result[gearspec.attributes.stack_id].push({
+            gearspecId: stackItem.gearspec_id,
+            gearspec,
+            serviceId: stackItem.service_id,
+            service
+          })
         }
       })
       return result
