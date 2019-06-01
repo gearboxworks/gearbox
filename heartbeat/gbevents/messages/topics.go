@@ -1,11 +1,8 @@
 package messages
 
 import (
+	"errors"
 	"fmt"
-	"gearbox/help"
-	"gearbox/only"
-	"github.com/gearboxworks/go-status"
-	"github.com/gearboxworks/go-status/is"
 	"strings"
 )
 
@@ -79,67 +76,39 @@ func SprintfTopic(address MessageAddress, topic SubTopic) string {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/*
-func (me *Topic) CreateTopic(address MessageAddress) {
 
-	foo := fmt.Sprintf("%s/%s", address, me.String())
+func (me *Topic) EnsureNotNil() error {
 
-	*me = Topic(foo)
-}
-
-func CreateTopic(id string) (string) {
-
-	var te Topic
-	te.CreateTopic(id)
-
-	return te.String()
-
-}
-*/
-
-func (me *Topic) EnsureNotNil() status.Status {
-
-	var sts status.Status
+	var err error
 
 	switch {
 		case me == nil:
-			sts = status.Warn("").
-				SetMessage("topic is nil").
-				SetAdditional("", ).
-				SetData("").
-				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			err = errors.New("topic is nil")
 
 		case me.Address.IsNil() == true:
-			sts = status.Warn("").
-				SetMessage("topic address is nil").
-				SetAdditional("", ).
-				SetData("").
-				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			err = errors.New("topic address is nil")
 
-		case me.SubTopic.EnsureNotNil().IsError():
-			sts = me.SubTopic.EnsureNotNil()
+		case me.SubTopic.EnsureNotNil() != nil:
+			err = me.SubTopic.EnsureNotNil()
 
 		default:
-			sts = status.Success("topic not nil")
+			err = nil
 	}
 
-	return sts
+	return err
 }
 
 func (me *Topic) String() string {
 
-	var sts status.Status
+	var err error
 	var s string
 
-	for range only.Once {
-
-		sts = me.EnsureNotNil()
-		if is.Error(sts) {
-			break
-		}
-
-		s = fmt.Sprintf(TopicSeparator, me.Address.String(), me.SubTopic.String())
+	err = me.EnsureNotNil()
+	if err != nil {
+		return s
 	}
+
+	s = fmt.Sprintf(TopicSeparator, me.Address.String(), me.SubTopic.String())
 
 	return s
 }
@@ -148,23 +117,19 @@ func (me *Topic) String() string {
 ////////////////////////////////////////////////////////////////////////////////
 type SubTopic string
 var IsEmptySubTopic SubTopic
-func (me *SubTopic) EnsureNotNil() status.Status {
+func (me *SubTopic) EnsureNotNil() error {
 
-	var sts status.Status
+	var err error
 
 	switch {
 		case me == nil:
-			sts = status.Warn("").
-				SetMessage("subtopic is nil").
-				SetAdditional("", ).
-				SetData("").
-				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			err = errors.New("subtopic is nil")
 
 		default:
-			sts = status.Success("subtopic not nil")
+			err = nil
 	}
 
-	return sts
+	return err
 }
 
 func (me *SubTopic) String() string {

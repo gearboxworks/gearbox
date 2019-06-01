@@ -1,18 +1,17 @@
-package gbChannels
+package channels
 
 import (
 	"fmt"
+	"errors"
 	"gearbox/heartbeat/gbevents/messages"
-	"gearbox/help"
 	oss "gearbox/os_support"
-	"github.com/gearboxworks/go-status"
 	"github.com/olebedev/emitter"
 )
 
 type Channels struct {
 	EntityId    messages.MessageAddress
 	OsSupport   oss.OsSupporter
-	Sts         status.Status
+	Error       error
 	Subscribers Subscribers
 	instance    channelsInstance
 }
@@ -35,43 +34,34 @@ type Subscriber map[messages.MessageAddress]SubTopics
 type SubTopics struct {
 	Address   messages.MessageAddress
 	Callbacks Callbacks
+	Interfaces Interfaces
 	instance *channelsInstance
 }
-type Callback func(event *messages.Message) status.Status
+type Callback func(event *messages.Message, you interface{}) error
 type Callbacks map[messages.SubTopic]Callback
+type Interface interface{}
+type Interfaces map[messages.SubTopic]Interface
 
 
-func (me *SubTopics) EnsureNotNil() status.Status {
+func (me *SubTopics) EnsureNotNil() error {
 
-	var sts status.Status
+	var err error
 
 	switch {
 		case me == nil:
-			sts = status.Warn("").
-				SetMessage("subtopic is nil").
-				SetAdditional("", ).
-				SetData("").
-				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			err = errors.New("subtopic is nil")
 
 		case me.Address.IsNil() == true:
-			sts = status.Warn("").
-				SetMessage("subtopic address is nil").
-				SetAdditional("", ).
-				SetData("").
-				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			err = errors.New("subtopic address is nil")
 
 		case me.Callbacks == nil:
-			sts = status.Warn("").
-				SetMessage("subtopic callbacks is nil").
-				SetAdditional("", ).
-				SetData("").
-				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			err = errors.New("subtopic callbacks is nil")
 
 		default:
-			sts = status.Success("subtopic not nil")
+			// err = errors.New("subtopic not nil")
 	}
 
-	return sts
+	return err
 }
 
 func (topics *SubTopics) List() {

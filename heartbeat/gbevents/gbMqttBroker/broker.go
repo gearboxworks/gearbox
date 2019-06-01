@@ -5,6 +5,7 @@ import (
 	"gearbox/box"
 	"gearbox/heartbeat/daemon"
 	"gearbox/heartbeat/gbevents/messages"
+	"gearbox/heartbeat/gbevents/tasks"
 	"gearbox/help"
 	"gearbox/only"
 	oss "gearbox/os_support"
@@ -14,7 +15,6 @@ import (
 	"github.com/gearboxworks/go-status/is"
 	"github.com/jinzhu/copier"
 	"net/url"
-	"os"
 	"time"
 )
 
@@ -53,7 +53,6 @@ func (me *Mqtt) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 		_args.Broker.EntityId = DefaultBrokerEntityId
 		// _args.Broker.State = false
 		_args.Broker.RestartAttempts = DefaultRetries
-		_args.Broker.restartCounter = 0
 		_args.Broker.config, err = broker.ConfigureConfig([]string{""})
 		if err != nil {
 			sts = status.Wrap(err).
@@ -90,7 +89,6 @@ func (me *Mqtt) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 		_args.Client.EntityId = DefaultClientEntityId
 		// _args.Client.State = false
 		_args.Client.RestartAttempts = DefaultRetries
-		_args.Client.restartCounter = 0
 		_args.Client.config = mqtt.NewClientOptions()
 		_args.Client.config.AddBroker(_args.ServerURL.String())
 		//_args.Client.config.SetUsername(me.Server.User.Username())
@@ -126,9 +124,9 @@ func (me *Mqtt) StartHandler() status.Status {
 			me.StartBrokerHandler().Log()
 		}()
 
-		go func() {
-			me.StartClientHandler().Log()
-		}()
+		//go func() {
+		//	me.StartClientHandler().Log()
+		//}()
 
 		messages.Debug("MQTT started OK on %s.", me.EntityId.String())
 		sts = status.Success("MQTT started OK on %s", me.EntityId.String())
@@ -145,6 +143,7 @@ func (me *Mqtt) StartHandler() status.Status {
 func (me *Mqtt) StartBrokerHandler() status.Status {
 
 	var sts status.Status
+	var err error
 
 	for range only.Once {
 		sts = me.EnsureNotNil()
@@ -152,37 +151,42 @@ func (me *Mqtt) StartBrokerHandler() status.Status {
 			break
 		}
 
-		if me == nil {
-			sts = status.Fail().
-				SetMessage("MQTT broker not configured").
-				SetAdditional("", ).
-				SetData("").
-				SetHelp(status.AllHelp, help.ContactSupportHelp())
+		me.Broker.Task, err = tasks.StartTask(initMqttBroker, startMqttBroker, monitorMqttBroker, stopMqttBroker, me)
+		if err != nil {
+			sts = me.Broker.Sts
 			break
 		}
 
-		for me.Broker.restartCounter = 0; me.Broker.restartCounter < me.Broker.RestartAttempts; me.Broker.restartCounter++ {
-			var sig os.Signal
+		//time.Sleep(time.Second * 10)
+		//me.Broker.Task.Stop()
 
-			if me.Broker.restartCounter == 0 {
+
+		time.Sleep(time.Hour * 24)
+
+		/*
+		for me.Broker.Task.RunCounter = 0; me.Broker.Task.RunCounter < me.Broker.RestartAttempts; me.Broker.Task.RunCounter++ {
+
+			if me.Broker.Task.RunCounter == 0 {
+				messages.Debug("MQTT broker %s started.", me.EntityId.String())
+			} else {
+				//me.Broker.State = false
+				messages.Debug("MQTT broker %s restart attempt %d.", me.EntityId.String(), me.Broker.Task.RunCounter)
+			}
+
+			// .			me.Broker.instance.Start()
+
+			if me.Broker.Task.RunCounter == 0 {
 				//me.Broker.State = true
 				messages.Debug("MQTT broker %s started.", me.EntityId.String())
 			} else {
 				//me.Broker.State = false
-				messages.Debug("MQTT broker %s restart attempt %d.", me.EntityId.String(), me.Broker.restartCounter)
+				messages.Debug("MQTT broker %s restart attempt %d.", me.EntityId.String(), me.Broker.Task.RunCounter)
 			}
 
-			me.Broker.instance.Start()
-
-			messages.Debug("MQTT broker waiting %s.", me.EntityId.String())
-
-			sig = daemon.WaitForSignal()
-
-			//me.Broker.State = false
 			messages.Debug("MQTT broker stopped %s.", me.EntityId.String())
-
-			sts = status.Success("MQTT broker exited with signal %v.", sig)
+			sts = status.Success("MQTT broker exited with signal %v.")
 		}
+		*/
 	}
 
 	if !is.Success(sts) {
@@ -194,6 +198,156 @@ func (me *Mqtt) StartBrokerHandler() status.Status {
 
 	return sts
 }
+
+
+func initMqttBroker(task *tasks.Task, i ...interface{}) error {
+
+	var err error
+
+	for range only.Once {
+		//me := (i[0]).(*Mqtt)
+		me := i[0].(*Mqtt)
+
+		sts := me.EnsureNotNil()
+		if is.Error(sts) {
+			err = sts
+			break
+		}
+
+		task.RetryLimit = DefaultRetries
+		task.RetryDelay = time.Second * 5
+
+		me.Broker.Sts = status.Success("MQTT broker %s initialized OK", me.ServerURL.String())
+		me.Broker.Sts.Log()
+
+		err = nil
+	}
+
+	return err
+}
+
+
+func startMqttBroker(task *tasks.Task, i ...interface{}) error {
+
+	var err error
+
+	for range only.Once {
+		me := i[0].(*Mqtt)
+
+		sts := me.EnsureNotNil()
+		if is.Error(sts) {
+			err = sts
+			break
+		}
+
+		if task.RetryCounter == 0 {
+			me.Broker.Sts = status.Success("MQTT broker %s started", me.ServerURL.String())
+		} else {
+			me.Broker.Sts = status.Success("MQTT broker %s restart attempt %d", me.ServerURL.String(), task.RetryCounter)
+		}
+		me.Broker.Sts.Log()
+
+		// This function will terminate almost immediately with no indication of state as it contains GoRoutines.
+		// statusMqttBroker() will perform the actual status check.
+		me.Broker.instance.Start()
+
+		me.Broker.Sts = status.Success("MQTT broker %s init OK", me.EntityId.String())
+		me.Broker.Sts.Log()
+
+		err = nil
+	}
+
+	return err
+}
+
+
+func monitorMqttBroker(task *tasks.Task, i ...interface{}) error {
+
+	var err error
+
+	for range only.Once {
+		me := i[0].(*Mqtt)
+
+		sts := me.EnsureNotNil()
+		if is.Error(sts) {
+			err = sts
+			break
+		}
+
+		me.Broker.Sts = status.Success("checking MQTT broker %s status", me.ServerURL.String())
+		me.Broker.Sts.Log()
+
+
+/*
+		// So, let's just check on things in a loop.
+		localClient := mqtt.NewClient(me.Client.config)
+		if localClient == nil {
+			me.Broker.Sts = status.Fail().
+				SetMessage("MQTT broker failed to %s start", me.ServerURL.String()).
+				SetAdditional("", ).
+				SetData("").
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			err = me.Broker.Sts
+			break
+		}
+		defer localClient.Disconnect(0)
+
+		localToken := localClient.Connect()
+		if localToken == nil {
+			me.Broker.Sts = status.Fail().
+				SetMessage("MQTT broker failed to %s start", me.ServerURL.String()).
+				SetAdditional("", ).
+				SetData("").
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			err = me.Broker.Sts
+			break
+		}
+
+		for !localToken.WaitTimeout(3 * time.Second) {
+		}
+
+		if err := localToken.Error(); err != nil {
+			me.Broker.Sts = status.Wrap(err).
+				SetMessage("MQTT broker failed to %s start", me.ServerURL.String()).
+				SetAdditional("", ).
+				SetData("").
+				SetCause(err).
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			err = me.Broker.Sts
+			break
+		}
+*/
+
+		err = nil
+	}
+
+	return err
+}
+
+
+func stopMqttBroker(task *tasks.Task, i ...interface{}) error {
+
+	var err error
+
+	for range only.Once {
+		me := i[0].(*Mqtt)
+
+		sts := me.EnsureNotNil()
+		if is.Error(sts) {
+			err = sts
+			break
+		}
+
+		me.Broker.Sts = status.Success("MQTT broker %s stopped", me.ServerURL.String())
+		me.Broker.Sts.Log()
+
+		err = nil
+	}
+
+	return err
+}
+
+
 
 
 func (me *Mqtt) StartClientHandler() status.Status {

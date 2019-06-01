@@ -2,9 +2,9 @@ package gbevents
 
 import (
 	"fmt"
-	"gearbox/heartbeat/gbevents/gbChannels"
+	"gearbox/heartbeat/gbevents/channels"
 	"gearbox/heartbeat/gbevents/gbMqttBroker"
-	"gearbox/heartbeat/gbevents/gbZeroConf"
+	"gearbox/heartbeat/gbevents/network"
 	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-status"
 	"github.com/olebedev/emitter"
@@ -16,9 +16,9 @@ type EventBroker struct {
 	Boxname    string
 	PidFile    string
 
-	ZeroConf gbZeroConf.Client
+	ZeroConf   network.Client
 	MqttBroker gbMqttBroker.Mqtt
-	Channels	gbChannels.Channels
+	Channels   channels.Channels
 	StsEmitter status.Status
 
 	OsSupport  oss.OsSupporter

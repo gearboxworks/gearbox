@@ -1,8 +1,8 @@
 package gbMqttBroker
 
 import (
-	"gearbox/heartbeat/daemon/tasks"
 	"gearbox/heartbeat/gbevents/messages"
+	"gearbox/heartbeat/gbevents/tasks"
 	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/fhmq/hmq/broker"
@@ -22,20 +22,18 @@ type Args Mqtt
 
 type Broker struct {
 	EntityId        messages.MessageAddress
-	Task            tasks.Task
+	Task            *tasks.Task
 	Sts             status.Status
 	RestartAttempts int
-	restartCounter  int
 	config          *broker.Config
 	instance        *broker.Broker
 }
 
 type Client struct {
 	EntityId        messages.MessageAddress
-	Task            tasks.Task
+	Task            *tasks.Task
 	Sts             status.Status
 	RestartAttempts int
-	restartCounter  int
 	config          *mqtt.ClientOptions
 	instance        mqtt.Client
 	token           mqtt.Token
