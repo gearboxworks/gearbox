@@ -1,11 +1,12 @@
 <template>
   <b-form-textarea
-    id="textarea"
     v-model="notes"
     placeholder="Notes..."
-    rows="3"
+    :rows="isCollapsed ? 1: 3"
+    @click="isCollapsed = false"
     max-rows="6"
     @change="maybeSubmit"
+    :class="{'project-notes':true, 'is-collapsed': isCollapsed}"
   />
 </template>
 
@@ -25,7 +26,8 @@ export default {
   data () {
     return {
       id: this.project.id,
-      ...this.project.attributes
+      ...this.project.attributes,
+      isCollapsed: true
     }
   },
   computed: {
@@ -52,4 +54,7 @@ export default {
 }
 </script>
 <style scoped>
+  .is-collapsed {
+    height: 35px;
+  }
 </style>

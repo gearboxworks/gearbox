@@ -250,4 +250,14 @@ export default {
     opacity: 1;
   }
 
+  .card-footer {
+    padding: 0.75rem 0.75rem;
+  }
+</style>
+
+<style>
+.card-footer .stack-card.is-collapsible:not(.is-collapsed) {
+  width: 100%;
+  margin-right: 0;
+}
 </style>

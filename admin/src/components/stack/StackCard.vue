@@ -1,5 +1,5 @@
 <template>
-  <div :class="{'project-stack': true, 'is-collapsible': isCollapsible, 'is-collapsed': isCollapsed}">
+  <div :class="{'stack-card': true, 'is-collapsible': isCollapsible, 'is-collapsed': isCollapsed}">
     <h2 class="stack-title" @click="onTitleClicked">{{stackId.replace('gearbox.works/', '')}}</h2>
 
     <stack-toolbar v-if="!isCollapsed" :project="project" :projectIndex="projectIndex" :stackId="stackId"></stack-toolbar>
@@ -57,7 +57,7 @@ export default {
     },
     'isCollapsible': {
       type: Boolean,
-      default: false,
+      default: true,
       required: false
     }
   },
@@ -104,26 +104,26 @@ export default {
 </script>
 
 <style scoped>
-  .project-stack:not(.is-collapsed){
+  .stack-card:not(.is-collapsed){
     min-width: 310px;
   }
 
-  .project-stack.is-collapsible{
+  .stack-card.is-collapsible{
     margin-right: 0.5rem;
     margin-bottom: 1rem;
-    border: 1px solid silver;
+    border: 1px solid #dedede;
     border-radius: 5px;
     padding: 10px;
     display: inline-block;
     align-self: flex-start;
   }
 
-  .project-stack.is-collapsible.is-collapsed {
+  .stack-card.is-collapsible.is-collapsed {
     padding-bottom: 2px;
     color: #17a2b8;
   }
 
-  .project-stack.is-collapsible.is-collapsed:hover {
+  .stack-card.is-collapsible.is-collapsed:hover {
     background-color: #17a2b8;
     color: white;
   }
@@ -135,7 +135,7 @@ export default {
     color: #989898;
     margin-left: 5px;
   }
-  .project-stack.is-collapsible .stack-title {
+  .stack-card.is-collapsible .stack-title {
     cursor: pointer;
     margin-bottom: 0;
     line-height: 0;
@@ -145,14 +145,14 @@ export default {
     left: -3px;
   }
 
-  .project-stack.is-collapsible.is-collapsed:hover .stack-title{
+  .stack-card.is-collapsible.is-collapsed:hover .stack-title{
     color: white;
   }
 
-  .project-stack.is-collapsible.is-collapsed .stack-title {
+  .stack-card.is-collapsible.is-collapsed .stack-title {
     color: #17a2b8;
   }
-  .project-stack.is-collapsible:not(.is-collapsed) .stack-title:hover {
+  .stack-card.is-collapsible:not(.is-collapsed) .stack-title:hover {
     color: #17a2b8;
   }
 
@@ -171,8 +171,8 @@ export default {
     clear: both;
   }
 
-  .project-stack.is-collapsible .service-list,
-  .project-stack:last-child .service-list {
+  .stack-card.is-collapsible .service-list,
+  .stack-card:last-child .service-list {
     border-bottom: none;
     padding-bottom: 0;
     margin-bottom: 0;
@@ -211,7 +211,7 @@ export default {
   }
 </style>
 <style>
-  .project-stack .alert-dismissible .close {
+  .stack-card .alert-dismissible .close {
     padding: 0.5rem 0.75rem;
     top: 1px;
     right: -4px;

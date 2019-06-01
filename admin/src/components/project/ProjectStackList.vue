@@ -33,7 +33,7 @@ export default {
     'cardsMode': {
       type: Boolean,
       required: false,
-      default: false
+      default: true
     }
   },
   data () {
@@ -88,6 +88,6 @@ export default {
 
 <style scoped>
   .project-stack-list.cards-mode {
-    display: inline-flex;
+    /*display: inline-flex;*/
   }
 </style>
