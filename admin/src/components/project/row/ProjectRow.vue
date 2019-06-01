@@ -1,10 +1,10 @@
 <template>
   <tr class="row--project">
-    <td>
+    <td class="td--state">
       <project-toolbar :project="project" :projectIndex="projectIndex" @run-stop="onRunStop"></project-toolbar>
     </td>
 
-    <td>
+    <td class="td--hostname">
       <b-form-input
         :id="`hostname-input-${projectIndex}`"
         class="hostname-input"
@@ -15,16 +15,16 @@
         placeholder="" />
     </td>
 
-    <td>
+    <td class="td--location">
       <project-location :project="project" :projectIndex="projectIndex"></project-location>
     </td>
 
-    <td>
+    <td class="td--stack">
+      <project-stack-list :project="project" :projectIndex="projectIndex" :cards-mode="true" v-if="project.attributes.stack.length"></project-stack-list>
       <project-stack-select :project="project" :projectIndex="projectIndex"></project-stack-select>
-      <project-stack-list :project="project" :projectIndex="projectIndex" :is-collapsible="true"></project-stack-list>
     </td>
 
-    <td>
+    <td class="td--notes">
       <project-notes :project="project" :projectIndex="projectIndex"></project-notes>
     </td>
 
@@ -117,7 +117,7 @@ export default {
 
 <style scoped>
   .row--project {
-    border-top: 1px solid silver;
+    border-top: 1px solid #f3f3f3;
     margin-bottom: 1.5rem;
     vertical-align: top;
   }
@@ -140,9 +140,37 @@ export default {
     right: 0px;
     top: 3px;
   }
+
+  .hostname-input {
+    max-width: 300px;
+  }
 </style>
 <style>
   .row--project td {
     padding: 10px 15px 10px 0;
+  }
+
+  .td--state {
+    max-width: 50px;
+  }
+
+  .td--hostname {
+    max-width: 300px;
+  }
+
+  .td--location {
+    max-width: 400px;
+  }
+
+  .td--notes {
+    max-width: 300px;
+  }
+
+  .row--project .add-stack{
+    width: auto;
+    border-radius: 5px;
+  }
+  .row--project .add-stack:not(:first-child){
+    margin-top: -9px;
   }
 </style>

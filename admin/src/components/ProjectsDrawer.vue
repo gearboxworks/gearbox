@@ -398,7 +398,7 @@ export default {
 @media (max-width: 1200px) {
 }
 
-@media (max-width: 990px) {
+@media (max-width: 1515px) {
   .right-panel{
     float: left;
   }

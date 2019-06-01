@@ -67,7 +67,7 @@ export default {
 </script>
 <style scoped>
   .location-input {
-    text-align: right;
+    /*text-align: right;*/
   }
   .btn-outline-info {
     border-color: #ced4da;

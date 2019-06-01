@@ -14,7 +14,7 @@
       <table class="projects-table" v-else>
         <thead>
           <tr>
-            <th>State</th><th>Project ID</th><th>Location</th><th>Stack</th><th>Notes</th>
+            <th class="th--state">State</th><th class="th--hostname">Project Name</th><th class="th--location">Location</th><th class="th--stack">Stack</th><th class="th--notes">Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -146,8 +146,29 @@ export default {
     }
   }
 
+  .filtered-projects{
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
   .projects-table {
-    margin-left: 1rem;
+    width: 100%;
+  }
+
+  .th--state {
+    width: 50px;
+  }
+
+  .th--hostname {
+    width: 300px;
+  }
+
+  .th--location {
+    max-width: 400px;
+  }
+
+  .th--notes {
+    width: 300px;
   }
 
   .is-empty{

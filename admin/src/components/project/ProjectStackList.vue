@@ -1,5 +1,5 @@
 <template>
-  <div role="tablist" class="project-stack-list" :id="`${projectBase}stack`">
+  <div role="tablist" :class="{'project-stack-list': true, 'cards-mode': cardsMode}" :id="`${projectBase}stack`">
     <project-stack
       v-for="(stackItems, stackId, stackIndex) in groupedStackItems(projectStackItems)"
       :key="stackId"
@@ -8,7 +8,7 @@
       :stackItems="stackItems"
       :project="project"
       :projectIndex="projectIndex"
-      :is-collapsible="isCollapsible"
+      :is-collapsible="cardsMode"
     >
     </project-stack>
   </div>
@@ -16,7 +16,7 @@
 
 <script>
 
-import ProjectStack from './ProjectStack.vue'
+import ProjectStack from '../stack/StackCard.vue'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -30,7 +30,7 @@ export default {
       type: Number,
       required: true
     },
-    'isCollapsible': {
+    'cardsMode': {
       type: Boolean,
       required: false,
       default: false
@@ -87,7 +87,7 @@ export default {
 </script>
 
 <style scoped>
-  .project-stack-list {
-    margin-top: 10px;
+  .project-stack-list.cards-mode {
+    display: inline-flex;
   }
 </style>

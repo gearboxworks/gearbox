@@ -412,7 +412,7 @@ export default new Vuex.Store({
           Vue.set(project.attributes, 'stack', [])
         }
         stack.attributes.members.forEach((el, idx) => {
-          const serviceId = this.getters.preselectService(el.services, el.default_service)
+          const serviceId = this.getters.preselectServiceId(el.services, el.default_service)
           if (el.gearspec_id) {
             // reactive!
             project.attributes.stack.push({
