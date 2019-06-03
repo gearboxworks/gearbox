@@ -177,6 +177,16 @@ export default {
     border-color: transparent;
   }
 
+  .input-group--note:not(.is-collapsed) {
+    position: absolute;
+    width: 100%;
+    top: 11px;
+    left: 0;
+  }
+
+  >>> .input-group--note:not(.is-collapsed) .input-group-append {
+    background-color: rgb(246,246,246)
+  }
 </style>
 <style>
   .row--project td {
@@ -188,7 +198,7 @@ export default {
   }
 
   .td--hostname {
-    max-width: 300px;
+    max-width: 200px;
   }
 
   .td--location {
@@ -197,5 +207,6 @@ export default {
 
   .td--notes {
     max-width: 300px;
+    position: relative;
   }
 </style>

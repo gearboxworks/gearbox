@@ -1,12 +1,13 @@
 <template>
   <b-input-group :id="`${projectBase}location`"  :class="{'input-group--location': true, 'is-collapsed': isCollapsed, 'is-multimodal': isMultimodal}" role="tabpanel">
     <b-form-input
-      disabled
-      :id="`${projectBase}location-input`"
+      readonly
+      :ref="`${projectBase}location`"
       :value="resolveDir(currentBasedir, path)"
       class="location-input"
-      v-if="!isCollapsed"
+      v-show="!isCollapsed"
       autocomplete="off"
+      autofocus
     />
     <b-input-group-append>
       <b-button
@@ -85,9 +86,14 @@ export default {
     onButtonClicked () {
       if (this.isMultimodal && this.isCollapsed) {
         this.isCollapsed = false
+        this.$nextTick(() => {
+          const el = this.$refs[`${this.projectBase}location`].$el
+          el.focus()
+          el.setSelectionRange(0, 9999)
+        })
       } else {
         // TODO call API method to open directory in file manager
-        console.log('TODO call API method to open directory in file manager')
+        console.log('TODO: call API method to open directory in file manager')
         if (this.isMultimodal) {
           this.$nextTick(() => {
             this.isCollapsed = true
@@ -98,7 +104,7 @@ export default {
     onCopyToClipboard () {
       // @TODO implement copy to clipboard
       // @see https://github.com/Inndy/vue-clipboard2
-      console.log('TODO implement copy to clipboard')
+      console.log('TODO: implement copy to clipboard')
       if (this.isMultimodal) {
         this.$nextTick(() => {
           this.isCollapsed = true
@@ -109,6 +115,10 @@ export default {
 }
 </script>
 <style scoped>
+
+  .btn-outline-info {
+    border-color: #ced4da;
+  }
 
   .is-collapsed .btn-outline-info {
     border-color: transparent;

@@ -154,6 +154,7 @@ export default {
   }
 
   .card-footer {
+    background-color: rgb(246,246,246);
     padding: 0.75rem 0.75rem 0.25rem 0.75rem;
   }
   .btn-outline-warning,
@@ -196,6 +197,21 @@ export default {
   .input-group--location,
   .input-group--note {
     margin-bottom: 0.5rem;
+  }
+
+  .input-group--stack:not(.is-collapsed),
+  .input-group--location:not(.is-collapsed),
+  .input-group--note:not(.is-collapsed) {
+    position: absolute;
+    width: calc(100% - 1.5rem);
+    z-index: 3;
+    bottom: 0.25rem;
+    left: 0.75rem;
+    background-color: rgb(246,246,246);
+  }
+
+  .input-group--location:not(.is-collapsed){
+    background-color: white;
   }
 
   .input-group.is-collapsed {

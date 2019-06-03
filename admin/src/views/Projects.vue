@@ -161,7 +161,7 @@ export default {
   }
 
   .th--hostname {
-    width: 300px;
+    width: 200px;
   }
 
   .th--location {

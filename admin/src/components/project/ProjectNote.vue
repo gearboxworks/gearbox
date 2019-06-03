@@ -1,24 +1,23 @@
 <template>
   <b-input-group
-    :id="`${projectBase}note`"
     :class="{'input-group--note': true, 'is-collapsed': isCollapsed, 'is-modified': isModified, 'is-updating': isUpdating}"
     role="tabpanel"
   >
     <b-form-input
-      :id="`${projectBase}note-input`"
+      :ref="`${projectBase}note-input`"
       v-model="notes"
       placeholder="Add note..."
       class="notes-input"
       v-if="!isCollapsed"
       :readonly="isUpdating"
       autocomplete="off"
+      autofocus
     />
     <b-input-group-append>
       <b-button
         variant="outline-info"
         :title="isCollapsed ? 'Add a note' : (isModified ? 'Submit the new note': 'Please enter some text first or Click to cancel')"
         v-b-tooltip.hover
-        :id="`${projectBase}submit-note`"
         :class="{'btn--submit': true, 'btn--add': isCollapsed}"
         @click.prevent="onButtonClicked"
         :disabled="isUpdating"
@@ -74,6 +73,8 @@ export default {
     onButtonClicked () {
       if (this.isCollapsed) {
         this.isCollapsed = false
+        // console.log(`${this.projectBase}note-input`, this.$refs[`${this.projectBase}note-input`])
+        // this.$refs[`${this.projectBase}note-input`].focus()
       } else {
         if (this.isModified) {
           this.maybeSubmit()

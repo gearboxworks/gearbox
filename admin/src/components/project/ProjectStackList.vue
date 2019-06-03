@@ -13,7 +13,6 @@
         :stackItems="stackItems"
         :project="project"
         :projectIndex="projectIndex"
-        :is-collapsible="cardsMode"
         :start-collapsed="startCollapsed || (!startCollapsed && Object.entries(groupedStackItems).length > 1)"
       >
       </stack-card>

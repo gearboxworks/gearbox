@@ -10,7 +10,9 @@
       :disabled="!hasStacksNotInProject || isUpdating"
       :required="true"
       @change="isModified=true"
-      v-if="!isCollapsed"
+      v-show="!isCollapsed"
+      :ref="`${projectBase}-select`"
+      autofocus
     >
       <option value="" disabled>{{hasStacksNotInProject ? 'Add stack...' : 'All stacks already added'}}</option>
       <option
@@ -149,6 +151,9 @@ export default {
     onButtonClicked () {
       if (this.isCollapsed) {
         this.isCollapsed = false
+        this.$nextTick(() => {
+          this.$refs[`${this.projectBase}-select`].$el.focus()
+        })
       } else {
         if (this.isModified) {
           this.maybeAddProjectStack(this.selectedStack)
