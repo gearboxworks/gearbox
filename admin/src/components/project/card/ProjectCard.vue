@@ -19,13 +19,13 @@
 
       <project-stack-list :project="project" :projectIndex="projectIndex"></project-stack-list>
 
-      <project-stack :project="project" :projectIndex="projectIndex"></project-stack>
+      <project-stack-add :project="project" :projectIndex="projectIndex"></project-stack-add>
 
       <project-location :project="project" :projectIndex="projectIndex"></project-location>
 
       <project-note-list :project="project" :projectIndex="projectIndex"></project-note-list>
 
-      <project-note :project="project" :projectIndex="projectIndex"></project-note>
+      <project-note-add :project="project" :projectIndex="projectIndex"></project-note-add>
 
     </div>
 
@@ -39,10 +39,10 @@ import { mapActions } from 'vuex'
 import ProjectToolbar from '../ProjectToolbar'
 import ProjectHostname from '../ProjectHostname'
 import ProjectLocation from '../ProjectLocation'
-import ProjectNote from '../ProjectNote'
-import ProjectStackList from '../ProjectStackList'
-import ProjectStack from '../ProjectStack'
+import ProjectNoteAdd from '../ProjectNoteAdd'
 import ProjectNoteList from '../ProjectNoteList'
+import ProjectStackAdd from '../ProjectStackAdd'
+import ProjectStackList from '../ProjectStackList'
 
 export default {
   name: 'ProjectCard',
@@ -73,9 +73,9 @@ export default {
     ProjectHostname,
     ProjectLocation,
     ProjectStackList,
-    ProjectStack,
+    ProjectStackAdd,
     ProjectNoteList,
-    ProjectNote
+    ProjectNoteAdd
   },
   computed: {
     projectBase () {
@@ -130,8 +130,8 @@ export default {
   }
 
   .card-body .alert {
-    margin-left: -1.25rem;
-    width: calc(100% + 2.5rem);
+    margin-left: -0.75rem;
+    width: calc(100% + 1.5rem);
     margin-top: 0.5rem;
     margin-bottom: -14px;
     border-top-left-radius: 0;

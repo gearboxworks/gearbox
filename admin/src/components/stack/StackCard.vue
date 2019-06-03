@@ -134,12 +134,13 @@ export default {
 
   .stack-card.is-collapsible{
     margin-right: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     border: 1px solid #dedede;
     border-radius: 5px;
     padding: 10px;
     display: inline-block;
     align-self: flex-start;
+    background-color :#eaeaea;
   }
 
   .stack-card.is-collapsible.is-collapsed {

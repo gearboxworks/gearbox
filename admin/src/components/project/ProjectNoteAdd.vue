@@ -12,6 +12,7 @@
       :readonly="isUpdating"
       autocomplete="off"
       autofocus
+      @keyup.esc="isCollapsed = true"
     />
     <b-input-group-append>
       <b-button
@@ -40,7 +41,7 @@
 <script>
 import { mapActions } from 'vuex'
 export default {
-  name: 'ProjectNote',
+  name: 'ProjectNoteAdd',
   props: {
     project: {
       type: Object,

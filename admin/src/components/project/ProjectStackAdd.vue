@@ -50,7 +50,7 @@
 import { mapGetters, mapActions } from 'vuex'
 
 export default {
-  name: 'ProjectStack',
+  name: 'ProjectStackAdd',
   props: {
     project: {
       type: Object,

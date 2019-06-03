@@ -14,7 +14,7 @@
 
     <td class="td--stack">
       <project-stack-list :project="project" :projectIndex="projectIndex" :start-collapsed="true"></project-stack-list>
-      <project-stack-select :project="project" :projectIndex="projectIndex"></project-stack-select>
+      <project-stack-add :project="project" :projectIndex="projectIndex"></project-stack-add>
     </td>
 
     <td class="td--notes">
@@ -31,11 +31,11 @@ import { mapActions } from 'vuex'
 
 import ProjectHostname from '../ProjectHostname'
 import ProjectToolbar from '../ProjectToolbar'
-import ProjectStackList from '../ProjectStackList'
 import ProjectLocation from '../ProjectLocation'
-import ProjectNote from '../ProjectNote'
+import ProjectNote from '../ProjectNoteAdd'
 import ProjectNoteList from '../ProjectNoteList'
-import ProjectStackSelect from '../ProjectStack'
+import ProjectStackAdd from '../ProjectStackAdd'
+import ProjectStackList from '../ProjectStackList'
 
 export default {
   name: 'ProjectRow',
@@ -65,7 +65,7 @@ export default {
     ProjectToolbar,
     ProjectLocation,
     ProjectNote,
-    ProjectStackSelect,
+    ProjectStackAdd,
     ProjectStackList,
     ProjectNoteList
   },
@@ -186,6 +186,10 @@ export default {
 
   >>> .input-group--note:not(.is-collapsed) .input-group-append {
     background-color: rgb(246,246,246)
+  }
+
+  >>> .stack-card.is-collapsible {
+    background-color: #fafafa;
   }
 </style>
 <style>

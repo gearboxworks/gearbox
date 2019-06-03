@@ -7,7 +7,7 @@
       class="location-input"
       v-show="!isCollapsed"
       autocomplete="off"
-      autofocus
+      @keyup.esc="isCollapsed = true"
     />
     <b-input-group-append>
       <b-button
