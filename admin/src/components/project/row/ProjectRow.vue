@@ -1,7 +1,7 @@
 <template>
   <tr class="row--project">
     <td class="td--state">
-      <project-toolbar :project="project" :projectIndex="projectIndex" @run-stop="onRunStop"></project-toolbar>
+      <project-toolbar :project="project" :projectIndex="projectIndex" @run-stop="onRunStop" :is-updating="isUpdating"></project-toolbar>
     </td>
 
     <td class="td--hostname">
@@ -27,6 +27,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
 
 import ProjectHostname from '../ProjectHostname'
 import ProjectToolbar from '../ProjectToolbar'
@@ -55,7 +56,8 @@ export default {
       alertShow: false,
       alertContent: 'content',
       alertDismissible: true,
-      alertVariant: 'warning'
+      alertVariant: 'warning',
+      isUpdating: false
     }
   },
   components: {
@@ -76,6 +78,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions(['changeProjectState']),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
@@ -102,9 +105,11 @@ export default {
     },
     onRunStop () {
       if (this.project.attributes.stack && this.project.attributes.stack.length > 0) {
-        this.$store.dispatch(
-          'changeProjectState', { 'projectId': this.id, 'isEnabled': !this.isRunning }
-        )
+        this.isUpdating = true
+        this.changeProjectState({ 'projectId': this.id, 'isEnabled': !this.isRunning })
+          .then((status) => {
+            this.isUpdating = false
+          })
       } else {
         this.showAlert('Please add some stacks first!')
       }

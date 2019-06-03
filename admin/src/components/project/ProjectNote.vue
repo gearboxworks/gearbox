@@ -18,7 +18,7 @@
         :title="isCollapsed ? 'Add a note' : (isModified ? 'Submit the new note': 'Please enter some text first or Click to cancel')"
         v-b-tooltip.hover
         :id="`${projectBase}submit-note`"
-        class="btn--add btn--submit"
+        :class="{'btn--submit': true, 'btn--add': isCollapsed}"
         @click.prevent="onButtonClicked"
         :disabled="isUpdating"
       >
@@ -29,9 +29,9 @@
         />
         <font-awesome-icon
           v-else
-          :icon="['fa', (isCollapsed || isModified) ? 'sticky-note': 'reply']"
+          :icon="['fa', isCollapsed ? 'sticky-note': (isModified ? 'check': 'times')]"
         />
-        <span v-if="!isUpdating">{{(isCollapsed || isModified) ? '+' : ''}}</span>
+        <span v-if="!isUpdating">{{isCollapsed ? '+' : ''}}</span>
       </b-button>
     </b-input-group-append>
   </b-input-group>

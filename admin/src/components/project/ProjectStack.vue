@@ -25,7 +25,7 @@
         :title="isUpdating ? 'Updating...' : (isCollapsed ? 'Add a stack' : (isModified ? 'Add the selected stack': 'Please select some stack first or Click to cancel'))"
         v-b-tooltip.hover
         :disabled="isUpdating"
-        class="btn--add btn--submit"
+        :class="{'btn--submit': true, 'btn--add': isCollapsed}"
         @click.prevent="onButtonClicked"
       >
         <font-awesome-icon
@@ -35,9 +35,9 @@
         />
         <font-awesome-icon
           v-else
-          :icon="['fa', (isCollapsed || isModified) ? 'layer-group' : 'reply']"
+          :icon="['fa', (isCollapsed ? 'layer-group' : (isModified ? 'check' : 'times'))]"
         />
-        <span>{{((isCollapsed || isModified) && !isUpdating) ? '+' : ''}}</span>
+        <span>{{(isCollapsed && !isUpdating) ? '+' : ''}}</span>
       </b-button>
     </b-input-group-append>
   </b-input-group>

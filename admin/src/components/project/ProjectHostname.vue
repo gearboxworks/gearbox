@@ -31,7 +31,7 @@
         />
         <font-awesome-icon
           v-else
-          :icon="['fa', isMultimodal ? (isModified ? 'check-circle': 'reply') : 'check-circle']"
+          :icon="['fa', isMultimodal ? (isModified ? 'check': 'times') : 'check']"
         />
       </b-button>
     </b-input-group-append>

@@ -273,7 +273,9 @@ export default new Vuex.Store({
             .then(r => r ? r.data : null)
             .then(response => {
               const project = response.data
-              commit('SET_PROJECT', project)
+              setTimeout(() => {
+                commit('SET_PROJECT', project)
+              }, 1000)
               if (response.included.length) {
                 for (const idx in response.included) {
                   const item = response.included[idx]
@@ -374,7 +376,13 @@ export default new Vuex.Store({
       /**
        * TODO: call the API and commit when it returns
        */
-      commit('CHANGE_PROJECT_STATE', payload)
+      console.log('TODO: call the API to change project state')
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          commit('CHANGE_PROJECT_STATE', payload)
+          resolve()
+        }, 3000)
+      })
     },
     setProjectsFilter ({ commit }, payload) {
       commit('SET_PROJECTS_FILTER', payload)

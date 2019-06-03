@@ -4,12 +4,16 @@
     <li class="toolbar-item">
       <a target="_blank"
          href="#"
-         :title="isRunning ? 'Stop all services' : 'Run all services'"
+         :title="isSwitching ? 'Switching state...': (isRunning ? 'Stop all services' : 'Run all services')"
          v-b-tooltip.hover
          @click.prevent="$emit('run-stop')"
          class="toolbar-link toolbar-link--state"
       >
-        <font-awesome-icon
+        <font-awesome-icon v-if="isSwitching"
+          :icon="['fa', 'circle-notch']"
+          spin
+        />
+        <font-awesome-icon v-else
           :icon="['fa', isRunning ? 'stop': 'play']"
         />
       </a>
@@ -30,6 +34,10 @@ export default {
     'projectIndex': {
       type: Number,
       required: true
+    },
+    'isUpdating': {
+      type: Boolean,
+      required: true
     }
   },
   data () {
@@ -44,6 +52,9 @@ export default {
     },
     isRunning () {
       return this.project.attributes.enabled
+    },
+    isSwitching () {
+      return this.isUpdating
     }
   },
   methods: {

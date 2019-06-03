@@ -1,29 +1,34 @@
 <template>
-  <div role="tablist" :class="{'project-stack-list': true, 'cards-mode': cardsMode}" :id="`${projectBase}stack`">
-    <project-stack
-      v-for="(stackItems, stackId, stackIndex) in groupedStackItems(projectStackItems)"
-      :key="stackId"
-      :stackId="stackId"
-      :stackIndex="stackIndex"
-      :stackItems="stackItems"
-      :project="project"
-      :projectIndex="projectIndex"
-      :is-collapsible="cardsMode"
-    >
-    </project-stack>
-
+  <div
+    :class="{'project-stack-list': true, 'cards-mode': cardsMode, 'is-loading': isLoading}"
+    :id="`${projectBase}stack`" role="tablist"
+  >
+    <font-awesome-icon v-if="isLoading" icon="circle-notch" spin title="Loading project details..."/>
+    <div v-else class="project-stack-list-wrap">
+      <stack-card
+        v-for="(stackItems, stackId, stackIndex) in groupedStackItems"
+        :key="stackId"
+        :stackId="stackId"
+        :stackIndex="stackIndex"
+        :stackItems="stackItems"
+        :project="project"
+        :projectIndex="projectIndex"
+        :is-collapsible="cardsMode"
+      >
+      </stack-card>
+    </div>
   </div>
 </template>
 
 <script>
 
-import ProjectStack from '../stack/StackCard.vue'
-// import ProjectStackSelect from './ProjectStackSelect'
+import StackCard from '../stack/StackCard.vue'
+// import StackCardSelect from './StackCardSelect'
 
 import { mapGetters } from 'vuex'
 
 export default {
-  name: 'ProjectStackList',
+  name: 'StackCardList',
   props: {
     'project': {
       type: Object,
@@ -41,29 +46,27 @@ export default {
   },
   data () {
     return {
-      id: this.project.id,
-      projectStackItems: this.project.attributes.stack
+      id: this.project.id
     }
   },
   components: {
-    ProjectStack
-    // ProjectStackSelect
+    StackCard
+    // StackCardSelect
   },
   computed: {
     ...mapGetters(['serviceBy', 'gearspecBy']),
     projectBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
-    }
-  },
-  methods: {
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
     },
-    groupedStackItems (stackItems) {
+    isLoading () {
+      return typeof this.project.attributes.stack === 'undefined'
+    },
+    groupedStackItems () {
       /**
        * returns project's services grouped by stack (indexed by stack_id)
        */
       var result = {}
+      const stackItems = this.project.attributes.stack || []
       stackItems.forEach(stackItem => {
         const gearspec = this.gearspecBy('id', stackItem.gearspec_id)
         if (gearspec) {
@@ -86,12 +89,19 @@ export default {
       })
       return result
     }
+  },
+  methods: {
+    escAttr (value) {
+      return value.replace(/\//g, '-').replace(/\./g, '-')
+    }
   }
 }
 </script>
 
 <style scoped>
-  .project-stack-list.cards-mode {
+  .project-stack-list.is-loading {
+    color: #17a2b8;
+    margin-left: 10px;
     /*display: inline-flex;*/
   }
 </style>

@@ -4,7 +4,7 @@
   >
     <div class="clearfix">
       <project-hostname :project="project" :projectIndex="projectIndex" :is-multimodal="true"></project-hostname>
-      <project-toolbar :project="project" :projectIndex="projectIndex" @run-stop="onRunStop"></project-toolbar>
+      <project-toolbar :project="project" :projectIndex="projectIndex" @run-stop="onRunStop" :isUpdating="isUpdating"></project-toolbar>
     </div>
 
     <b-alert
@@ -15,16 +15,17 @@
       fade
     >{{alertContent}}</b-alert>
 
-    <div class="clearfix" slot="footer" v-if="project.attributes.stack && project.attributes.stack.length">
+    <div class="clearfix" slot="footer">
+
       <project-stack-list :project="project" :projectIndex="projectIndex"></project-stack-list>
 
       <project-stack :project="project" :projectIndex="projectIndex"></project-stack>
 
       <project-location :project="project" :projectIndex="projectIndex"></project-location>
 
-      <project-note :project="project" :projectIndex="projectIndex"></project-note>
-
       <project-note-list :project="project" :projectIndex="projectIndex"></project-note-list>
+
+      <project-note :project="project" :projectIndex="projectIndex"></project-note>
 
     </div>
 
@@ -33,6 +34,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
 
 import ProjectToolbar from '../ProjectToolbar'
 import ProjectHostname from '../ProjectHostname'
@@ -62,7 +64,8 @@ export default {
       alertShow: false,
       alertContent: 'content',
       alertDismissible: true,
-      alertVariant: 'warning'
+      alertVariant: 'warning',
+      isUpdating: false
     }
   },
   components: {
@@ -83,11 +86,9 @@ export default {
     }
   },
   methods: {
+    ...mapActions(['changeProjectState']),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
-    toggleDetails () {
-      this.showingDetails = !this.showingDetails
     },
     showAlert (alert) {
       if (typeof alert === 'string') {
@@ -99,22 +100,13 @@ export default {
       }
       this.alertShow = true
     },
-    maybeSubmit (ev) {
-      this.$store.dispatch(
-        'updateProject',
-        {
-          id: this.id,
-          attributes: this.$data
-        }
-      ).then(() => {
-        // this.$router.push('/project/' + this.hostname)
-      })
-    },
     onRunStop () {
       if (this.project.attributes.stack && this.project.attributes.stack.length > 0) {
-        this.$store.dispatch(
-          'changeProjectState', { 'projectId': this.id, 'isEnabled': !this.isRunning }
-        )
+        this.isUpdating = true
+        this.changeProjectState({ 'projectId': this.id, 'isEnabled': !this.isRunning })
+          .then((status) => {
+            this.isUpdating = false
+          })
       } else {
         this.showAlert('Please add some stacks first!')
       }
@@ -162,7 +154,7 @@ export default {
   }
 
   .card-footer {
-    padding: 0.75rem 0.75rem;
+    padding: 0.75rem 0.75rem 0.25rem 0.75rem;
   }
   .btn-outline-warning,
   .btn-outline-info {
@@ -201,10 +193,7 @@ export default {
   }
 
   .input-group--stack,
-  .input-group--location {
-    margin-bottom: 1rem;
-  }
-
+  .input-group--location,
   .input-group--note {
     margin-bottom: 0.5rem;
   }
