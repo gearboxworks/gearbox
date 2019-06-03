@@ -1,23 +1,24 @@
 package channels
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"gearbox/heartbeat/gbevents/messages"
 	oss "gearbox/os_support"
 	"github.com/olebedev/emitter"
 )
 
 type Channels struct {
-	EntityId    messages.MessageAddress
-	OsSupport   oss.OsSupporter
+	entityId    messages.MessageAddress
+	osSupport   oss.OsSupporter
 	Error       error
-	Subscribers Subscribers
+	subscribers Subscribers
 	instance    channelsInstance
 }
 type Args Channels
 
 const DefaultEntityId = "gearbox-channels"
+const DefaultExitString = "exit"
 
 type channelsInstance struct {
 	emitter   emitter.Emitter
@@ -28,53 +29,85 @@ type channelsInstance struct {
 
 type Event emitter.Event
 
-type Subscribers Subscriber
-type Subscriber map[messages.MessageAddress]SubTopics
+type Subscribers map[messages.MessageAddress]*Subscriber
 
-type SubTopics struct {
+type Subscriber struct {
 	Address   messages.MessageAddress
+	// References
 	Callbacks Callbacks
-	Interfaces Interfaces
-	instance *channelsInstance
+	Arguments Arguments
+	Returns   Returns
+	Executed  Executed
+	instance  *channelsInstance
 }
-type Callback func(event *messages.Message, you interface{}) error
+type Callback func(event *messages.Message, you Argument) Return
 type Callbacks map[messages.SubTopic]Callback
-type Interface interface{}
-type Interfaces map[messages.SubTopic]Interface
+type Argument interface{}
+type Arguments map[messages.SubTopic]Argument
+type Return interface{}
+type Returns map[messages.SubTopic]Return
+type Executed map[messages.SubTopic]bool
+
+type Reference struct {
+	Callback
+	Argument
+	Return
+	Executed bool
+}
+type References map[messages.SubTopic]Reference
 
 
-func (me *SubTopics) EnsureNotNil() error {
+func EnsureArgumentNotNil(me Argument) error {
 
 	var err error
 
 	switch {
 		case me == nil:
-			err = errors.New("subtopic is nil")
-
-		case me.Address.IsNil() == true:
-			err = errors.New("subtopic address is nil")
-
-		case me.Callbacks == nil:
-			err = errors.New("subtopic callbacks is nil")
+			err = errors.New("channel argument is nil")
 
 		default:
-			// err = errors.New("subtopic not nil")
+			// err = errors.New("subscriber not nil")
 	}
 
 	return err
 }
 
-func (topics *SubTopics) List() {
 
-	fmt.Printf("# SubTopics: %v\n", topics)
+func (me *Subscriber) EnsureNotNil() error {
+
+	var err error
+
+	switch {
+		case me == nil:
+			err = errors.New("subscriber is nil")
+
+		case me.Address.IsNil() == true:
+			err = errors.New("subscriber address is nil")
+
+		case me.Callbacks == nil:
+			err = errors.New("subscriber callbacks is nil")
+
+		case me.Returns == nil:
+			err = errors.New("subscriber returns is nil")
+
+		default:
+			// err = errors.New("subscriber not nil")
+	}
+
+	return err
 }
 
-func (subs *Subscribers) List () {
+func (topics *Subscriber) List() {
+
+	fmt.Printf("# SubTopics created for this entity: %v\n", topics)
+}
+
+func (subs *Subscribers) List() {
 
 	fmt.Printf("# Subscribers: %v\n", subs)
 }
 
 var IsEmptySubScribers = Subscribers{}
 var IsEmptySubScriber = Subscriber{}
-var IsEmptySubTopics = SubTopics{}
+//var IsEmptySubTopics = SubTopics{}
 var IsEmptyCallbacks = Callbacks{}

@@ -5,8 +5,9 @@ import (
 	"gearbox/box"
 	"gearbox/global"
 	"gearbox/heartbeat/daemon"
+	"gearbox/heartbeat/external/unfsd"
 	"gearbox/heartbeat/gbevents"
-	"gearbox/heartbeat/monitor"
+	"gearbox/heartbeat/external"
 	"gearbox/help"
 	"gearbox/only"
 	"gearbox/os_support"
@@ -198,7 +199,7 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 
 		// Create a new VM Box instance.
 		fmt.Printf("Gearbox: Creating unfsd instance.\n")
-		me.NfsInstance, sts = monitor.NewUnfsd(me.OsSupport)
+		me.NfsInstance, sts = unfsd.NewUnfsd(me.OsSupport)
 
 		fmt.Printf("Gearbox: Starting systray.\n")
 		systray.Run(me.onReady, me.onExit)
@@ -614,23 +615,23 @@ func (me *Heartbeat) SetMenuState(menu menuStruct) (returnValue string) {
 		menu.unfsdStatusEntry.SetTooltip(me.State.Unfsd.LastSts.Message())
 	}
 	switch {
-		case me.State.Unfsd.CurrentState == monitor.StateUnknown:
+		case me.State.Unfsd.CurrentState == external.StateUnknown:
 			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconError))
 			menu.unfsdStatusEntry.SetTitle("FS: unknown error")
 
-		case (me.State.Unfsd.CurrentState == monitor.StateRunning) && (me.State.Unfsd.WantState == monitor.StatePowerOff):
+		case (me.State.Unfsd.CurrentState == external.StateRunning) && (me.State.Unfsd.WantState == external.StatePowerOff):
 			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconStopping))
 			menu.unfsdStatusEntry.SetTitle("FS: stopping")
 
-		case (me.State.Unfsd.CurrentState == monitor.StatePowerOff) && (me.State.Unfsd.WantState == monitor.StateRunning):
+		case (me.State.Unfsd.CurrentState == external.StatePowerOff) && (me.State.Unfsd.WantState == external.StateRunning):
 			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconStarting))
 			menu.unfsdStatusEntry.SetTitle("FS: starting")
 
-		case (me.State.Unfsd.CurrentState == monitor.StateRunning) && (me.State.Unfsd.WantState == monitor.StateRunning):
+		case (me.State.Unfsd.CurrentState == external.StateRunning) && (me.State.Unfsd.WantState == external.StateRunning):
 			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconUp))
 			menu.unfsdStatusEntry.SetTitle("FS: running")
 
-		case (me.State.Unfsd.CurrentState == monitor.StatePowerOff) && (me.State.Unfsd.WantState == monitor.StatePowerOff):
+		case (me.State.Unfsd.CurrentState == external.StatePowerOff) && (me.State.Unfsd.WantState == external.StatePowerOff):
 			menu.unfsdStatusEntry.SetIcon(me.getIcon(IconDown))
 			menu.unfsdStatusEntry.SetTitle("FS: halted")
 

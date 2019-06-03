@@ -1,6 +1,8 @@
 package tasks
 
 import (
+	"errors"
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -23,7 +25,7 @@ func StartTask(initFunc TaskFunc, startFunc TaskFunc, monitorFunc TaskFunc, stop
 		}
 		task.runLock = true
 		task.runState = TaskIdle
-		task.RetryCounter = 0
+		task.retryCounter = 0
 
 		defer func() {
 			if stopFunc != nil {
@@ -49,20 +51,20 @@ func StartTask(initFunc TaskFunc, startFunc TaskFunc, monitorFunc TaskFunc, stop
 				errorInside = monitorFunc(task, ref...)
 				if errorInside != nil {
 					// Keep track of the number of failed restarts.
-					task.RetryCounter++
+					task.retryCounter++
 
 					task.runState = TaskStarting
 					errorInside = startFunc(task, ref...)
 					if errorInside == nil {
 						task.runState = TaskStarted
-						task.RetryCounter = 0
+						task.retryCounter = 0
 					}
 				}
 
 				// Exit conditions.
-				if task.RetryLimit == 0 {
+				if task.retryLimit == 0 {
 					// No limit set, keep going forever.
-				} else if task.RetryCounter >= task.RetryLimit {
+				} else if task.retryCounter >= task.retryLimit {
 					// Reached the maximum number of retries, abort.
 					break
 				}
@@ -73,8 +75,8 @@ func StartTask(initFunc TaskFunc, startFunc TaskFunc, monitorFunc TaskFunc, stop
 				}
 
 				// Sleep if we want to.
-				if task.RetryDelay > 0 {
-					time.Sleep(task.RetryDelay)
+				if task.retryDelay > 0 {
+					time.Sleep(task.retryDelay)
 				}
 			}
 		}
@@ -85,10 +87,10 @@ func StartTask(initFunc TaskFunc, startFunc TaskFunc, monitorFunc TaskFunc, stop
 
 	if (err == nil) && (task != nil) {
 		tasks[task.id] = task
-		task.InitFunc = initFunc
-		task.StartFunc = startFunc
-		task.MonitorFunc = monitorFunc
-		task.StopFunc = stopFunc
+		task.initFunc = initFunc
+		task.startFunc = startFunc
+		task.monitorFunc = monitorFunc
+		task.stopFunc = stopFunc
 	}
 
 	return task, err
@@ -145,4 +147,92 @@ func (me *Task) IsRunning() bool {
 	}
 
 	return me.Running()
+}
+
+
+func (me *Task) GetRetryLimit() int {
+
+	if me == nil {
+		return 0
+	}
+
+	return me.retryLimit
+}
+
+
+func (me *Task) SetRetryLimit(v int) error {
+
+	if me == nil {
+		return errors.New("unexpected software error")
+	}
+
+	me.retryLimit = v
+
+	return nil
+}
+
+
+func (me *Task) GetRetryCounter() int {
+
+	if me == nil {
+		return 0
+	}
+
+	return me.retryCounter
+}
+
+
+func (me *Task) SetRetryCounter(v int) error {
+
+	if me == nil {
+		return errors.New("unexpected software error")
+	}
+
+	me.retryCounter = v
+
+	return nil
+}
+
+
+func (me *Task) GetRetryDelay() time.Duration {
+
+	if me == nil {
+		return 0
+	}
+
+	return me.retryDelay
+}
+
+
+func (me *Task) SetRetryDelay(v time.Duration) error {
+
+	if me == nil {
+		return errors.New("unexpected software error")
+	}
+
+	me.retryDelay = v
+
+	return nil
+}
+
+
+func (me *Task) GetState() State {
+
+	if me == nil {
+		return "unknown"
+	}
+
+	return me.runState
+}
+
+
+func (me *Task) GetId() Uuid {
+
+	empty := Uuid(uuid.UUID{})
+
+	if me == nil {
+		return empty
+	}
+
+	return me.id
 }

@@ -3,8 +3,8 @@ package heartbeat
 import (
 	"gearbox/box"
 	"gearbox/heartbeat/daemon"
+	"gearbox/heartbeat/external/unfsd"
 	"gearbox/heartbeat/gbevents"
-	"gearbox/heartbeat/monitor"
 	oss "gearbox/os_support"
 	"github.com/getlantern/systray"
 	"time"
@@ -16,7 +16,7 @@ type State struct {
 	Code    int
 	Overall string
 	Box     box.BoxState
-	Unfsd   monitor.UnfsdState
+	Unfsd   unfsd.UnfsdState
 }
 
 type Heartbeat struct {
@@ -24,7 +24,7 @@ type Heartbeat struct {
 	EventBroker		   *gbevents.EventBroker
 	BoxInstance    *box.Box
 	DaemonInstance *daemon.Daemon
-	NfsInstance    *monitor.Unfsd
+	NfsInstance    *unfsd.Unfsd
 	State          State
 	OvaFile        string
 	PidFile        string

@@ -4,51 +4,10 @@ package tasks
 // This package is intended to be moved into a standalone package with minimal dependencies.
 //
 
-
 import (
 	"github.com/google/uuid"
-	"sync"
 	"time"
 )
-
-
-// S is a function that will return true if the
-// goroutine should stop executing.
-type exitFunc func() bool
-
-type StateIndex int
-type State string
-type Uuid uuid.UUID
-
-const (
-	TaskIdle = State("idle")
-	TaskInitializing = State("initializing")
-	TaskInitialized = State("initialized")
-	TaskStopped = State("stopped")
-	TaskStarting = State("starting")
-	TaskStarted = State("started")
-	TaskStopping = State("stopping")
-)
-
-// Task represents an interruptable goroutine.
-type Task struct {
-	id           Uuid
-	runState     State
-	runLock      bool
-	RetryCounter int
-	RetryLimit   int
-	RetryDelay   time.Duration
-	InitFunc     TaskFunc
-	StartFunc    TaskFunc
-	MonitorFunc  TaskFunc
-	StopFunc     TaskFunc
-
-	lock          sync.RWMutex
-	stopChan      chan struct{}
-	shouldStop    bool
-	running       bool
-	err           error
-}
 
 
 // Go executes the function in a goroutine and returns a
@@ -65,13 +24,13 @@ func goRoutine(fn func(exitFunc, *Task) error) (*Task, error) {
 		id:           id,
 		runState:     TaskIdle,
 		runLock:      false,
-		RetryCounter: 0,
-		RetryLimit:   0,
-		RetryDelay:   time.Second,
-		InitFunc:     EmptyTask,
-		StartFunc:    EmptyTask,
-		MonitorFunc:  EmptyTask,
-		StopFunc:     EmptyTask,
+		retryCounter: 0,
+		retryLimit:   0,
+		retryDelay:   time.Second,
+		initFunc:     EmptyTask,
+		startFunc:    EmptyTask,
+		monitorFunc:  EmptyTask,
+		stopFunc:     EmptyTask,
 
 		stopChan:      make(chan struct{}),
 		running:       true,
@@ -97,16 +56,6 @@ func goRoutine(fn func(exitFunc, *Task) error) (*Task, error) {
 		t.lock.Unlock()
 	}()
 	return t, err
-}
-
-
-func (t *Task) GetState() State {
-	return t.runState
-}
-
-
-func (t *Task) GetId() Uuid {
-	return t.id
 }
 
 

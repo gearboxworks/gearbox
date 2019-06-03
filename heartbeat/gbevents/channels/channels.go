@@ -1,8 +1,8 @@
 package channels
 
 import (
-	"errors"
 	"fmt"
+	"gearbox/app/logger"
 	"gearbox/box"
 	"gearbox/heartbeat/gbevents/messages"
 	"gearbox/only"
@@ -23,180 +23,31 @@ func (me *Channels) New(OsSupport oss.OsSupporter, args ...Args) error {
 			_args = args[0]
 		}
 
-		_args.OsSupport = OsSupport
+		_args.osSupport = OsSupport
 		foo := box.Args{}
 		err = copier.Copy(&foo, &_args)
 		if err != nil {
 			break
 		}
 
-		if _args.EntityId == "" {
-			_args.EntityId = DefaultEntityId
+		if _args.entityId == "" {
+			_args.entityId = DefaultEntityId
 		}
 
 		_args.instance.emitter = emitter.Emitter{}
-		_args.Subscribers = make(Subscribers)
+		_args.subscribers = make(Subscribers)
 
 		*me = Channels(_args)
 
-		messages.Debug("New Channel instance (%s).", me.EntityId.String())
+		logger.Debug("New Channel instance (%s).", me.entityId.String())
 	}
 
 	if err != nil {
-		messages.Debug("Error: %v", err)
+		logger.Debug("Error: %v", err)
 	}
 
 	// Save last state.
 	me.Error = err
-	return err
-}
-
-
-func (me *Channels) Subscribe(topic messages.Topic, fn Callback, i interface{}) (SubTopics, error) {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		err = topic.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		if fn == nil {
-			err = errors.New("channel callback function is empty")
-			break
-		}
-
-		if me.Subscribers == nil {
-			me.Subscribers = make(Subscribers)
-		}
-
-		if _, ok := me.Subscribers[topic.Address]; !ok {
-			me.Subscribers[topic.Address] = SubTopics{
-				Address: topic.Address,
-				Callbacks: make(Callbacks),
-				Interfaces: make(Interfaces),
-				instance: &me.instance,
-			}
-		}
-
-		me.Subscribers[topic.Address].Callbacks[topic.SubTopic] = fn
-		me.Subscribers[topic.Address].Interfaces[topic.SubTopic] = i
-		foo := me.Subscribers[topic.Address]
-		foo.List()
-		me.Subscribers.List()
-
-		messages.Debug("New subscriber: %s\n", messages.SprintfTopic(topic.Address, topic.SubTopic))
-	}
-
-	if err != nil {
-		messages.Debug("Error: %v", err)
-	}
-	// Save last state.
-	me.Error = err
-
-	if _, ok := me.Subscribers[topic.Address]; ok {
-		return me.Subscribers[topic.Address], err
-	} else {
-		return SubTopics{}, err
-	}
-}
-
-
-func (me *Channels) UnSubscribe(topic messages.Topic) error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		err = topic.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		delete(me.Subscribers[topic.Address].Callbacks, topic.SubTopic)
-		delete(me.Subscribers[topic.Address].Interfaces, topic.SubTopic)
-		messages.Debug("Unsubscribed: %s\n", messages.SprintfTopic(topic.Address, topic.SubTopic))
-	}
-
-	if err != nil {
-		messages.Debug("Error: %v", err)
-	}
-
-	// Save last state.
-	me.Error = err
-	return err
-}
-
-
-func (me *SubTopics) Subscribe(topic messages.SubTopic, fn Callback, i interface{}) error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		err = topic.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		if fn == nil {
-			err = errors.New("channel callback function is empty")
-			break
-		}
-
-		me.Callbacks[topic] = fn
-		me.Interfaces[topic] = i
-		me.List()
-
-		messages.Debug("New subscriber: %s\n", messages.SprintfTopic(me.Address, topic))
-	}
-
-	if err != nil {
-		messages.Debug("Error: %v", err)
-	}
-
-	return err
-}
-
-
-func (me *SubTopics) UnSubscribe(topic messages.SubTopic) error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		err = topic.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		delete(me.Callbacks, topic)
-		delete(me.Interfaces, topic)
-		messages.Debug("Unsubscribed: %s\n", messages.SprintfTopic(me.Address, topic))
-	}
-
-	if err != nil {
-		messages.Debug("Error: %v", err)
-	}
-
 	return err
 }
 
@@ -205,76 +56,81 @@ func (me *Channels) StopHandler(client messages.MessageAddress)  {
 
 	topicStop := messages.Topic{
 		Address: client,
-		SubTopic: "exit",
+		SubTopic: DefaultExitString,
 	}
-	messages.Debug("StopHandler:'%s'\n", topicStop.String())
+	logger.Debug("StopHandler:'%s'", topicStop.String())
 	me.instance.emitter.Off(topicStop.String())
 
 	return
 }
 
 
-func (me *SubTopics) StopHandler()  {
+func (me *Subscriber) StopHandler() error {
 
 	topicStop := messages.Topic{
 		Address: me.Address,
-		SubTopic: "exit",
+		SubTopic: DefaultExitString,
 	}
-	messages.Debug("StopHandler:'%s'\n", topicStop.String())
+	logger.Debug("StopHandler:'%s'", topicStop.String())
 	me.instance.emitter.Off(topicStop.String())
 
-	return
+	return nil
 }
 
 
-func (me *Channels) StartHandler(client messages.MessageAddress) (SubTopics, error) {
+func (me *Channels) StartHandler(client messages.MessageAddress) (*Subscriber, error) {
 
 	var err error
 
+	fmt.Print("HELLO\n")
 	for range only.Once {
 		err = me.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		if me.Subscribers == nil {
-			me.Subscribers = make(Subscribers)
+		if me.subscribers == nil {
+			me.subscribers = make(Subscribers)
 		}
 
-		if _, ok := me.Subscribers[client]; !ok {
-			me.Subscribers[client] = SubTopics{
+		if _, ok := me.subscribers[client]; !ok {
+			sh := Subscriber{
 				Address: client,
 				Callbacks: make(Callbacks),
-				Interfaces: make(Interfaces),
+				Arguments: make(Arguments),
+				Returns: make(Returns),
+				Executed: make(Executed),
 				instance: &me.instance,
 			}
+			me.subscribers[client] = &sh
 		}
 
 		go func() {
-			err = me.handler(client)
+			err = me.rxHandler(client)
 			if err != nil {
-				messages.Debug("GBevents - handler errored '%v'.", err)
+				logger.Debug("GBevents - handler errored '%v'.", err)
 			}
 		}()
 
-		messages.Debug("started channel event handler for %s", client.String())
+		logger.Debug("started channel event handler for %s", client.String())
 	}
 
 	if err != nil {
-		messages.Debug("Error: %v", err)
+		logger.Debug("Error: %v", err)
 	}
 	// Save last state.
 	me.Error = err
 
-	if _, ok := me.Subscribers[client]; ok {
-		return me.Subscribers[client], err
+	if _, ok := me.subscribers[client]; ok {
+		return me.subscribers[client], err
 	} else {
-		return SubTopics{}, err
+		var empty Subscriber
+		return &empty, err
 	}
 }
 
 
-func (me *Channels) handler(client messages.MessageAddress) error {
+func (me *Channels) rxHandler(client messages.MessageAddress) error {
 
 	var err error
 
@@ -288,23 +144,22 @@ func (me *Channels) handler(client messages.MessageAddress) error {
 		//var wg sync.WaitGroup
 		child := 0
 
-		messages.Debug("GBevents - Poller started '%s'.", client.String())
+		logger.Debug("channels handler started '%s'.", client.String())
 		topicGlob := messages.CreateTopicGlob(client).String()
-		topicExit := messages.CreateTopic(client, "exit").String()
+		topicExit := messages.CreateTopic(client, DefaultExitString).String()
 
-		fmt.Printf("topicCheck:'%s'\n", topicGlob)
 		for me.instance.events = range me.instance.emitter.On(topicGlob) {
 			if me.instance.events.Args == nil {
-				fmt.Printf("ARGS:ZERO\n")
+				logger.Debug("channels handler saw zero args")
 				continue
 			}
 
 			// Only one message ever sent.
 			msg := me.instance.events.Args[0].(messages.Message)
 
-			fmt.Printf("Event(%s)	Time:%v	Src:%s	Text:%s\n", msg.Topic, msg.Time.Convert().Unix(), msg.Source, msg.Text)
-			if me.instance.events.OriginalTopic == topicExit { //} && (msg.Text.String() == me.EntityId.String()) {
-				fmt.Printf("EXIT TIME: %s => %s\n", me.instance.events.OriginalTopic, topicGlob)
+			logger.Debug("Event(%s) Time:%d Src:%s Text:%s", msg.Topic.String(), msg.Time.Convert().Unix(), msg.Source.String(), msg.Text.String())
+			if me.instance.events.OriginalTopic == topicExit { //} && (msg.Text.String() == me.entityId.String()) {
+				logger.Debug("EXIT TIME: %s => %s", me.instance.events.OriginalTopic, topicGlob)
 				me.instance.emitter.Off(topicGlob)
 			}
 
@@ -314,13 +169,109 @@ func (me *Channels) handler(client messages.MessageAddress) error {
 			// Split topic from the /address/topic format
 			topicAddress := msg.Topic.Address
 			topic := msg.Topic.SubTopic
-			//fmt.Printf(">>>>>> '%v' ==  d:%v => t:%v\n", msg.Topic, topicAddress, topic)
 
-			if sub, ok := me.Subscribers[topicAddress]; ok {
+			if sub, ok := me.subscribers[topicAddress]; ok {
+
+				// Now check topics the subscriber is subscribed to, else continue to next.
+				if _, ok := sub.Callbacks[topic]; !ok {
+					// No callback defined, ignore.
+					continue
+				}
+
+				if sub.Callbacks[topic] == nil {
+					continue
+				}
+
+				if _, ok := sub.Arguments[topic]; !ok {
+					sub.Arguments[topic] = nil
+				}
+
+				//logger.Debug("LOOP:[%d]", child)
+				// Execute callback in thread.
+				go func(c int) {
+					//defer wg.Done()
+					// logger.Debug("Callback(%s)	Time:%v	Src:%s	Text:%s", msg.Topic, msg.Time.Convert().Unix(), msg.Src, msg.Text)
+					sub.Executed[topic] = false
+
+					if _, ok := sub.Returns[topic]; ok {
+						sub.Returns[topic] = sub.Callbacks[topic](&msg, sub.Arguments[topic])
+						//logger.Debug("# Return1: %v", sub.Returns[topic])
+					} else {
+						_ = sub.Callbacks[topic](&msg, sub.Arguments[topic])
+						//logger.Debug("# Return2: %v", sub.Returns[topic])
+					}
+					sub.Executed[topic] = true
+
+					//wgChannel <- c
+				}(child)
+				//wg.Add(1)
+				child++
+			}
+		}
+
+		//logger.Debug("WAIT")
+		//debug.PrintStack()
+		//wg.Wait()
+
+		logger.Debug("channels handler stopped '%s'.", client.String())
+
+		// Remove client from map.
+		delete(me.subscribers, client)
+	}
+
+	if err != nil {
+		logger.Debug("Error: %v", err)
+	}
+
+	// Save last state.
+	me.Error = err
+	return err
+}
+
+
+/*
+func (me *Channels) txHandler(client messages.MessageAddress) error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		//wgChannel := make(chan int)
+		//var wg sync.WaitGroup
+		child := 0
+
+
+		for me.instance.events = range me.instance.emitter.On(topicGlob) {
+			if me.instance.events.Args == nil {
+				logger.Debug("channels handler saw zero args")
+				continue
+			}
+
+			// Only one message ever sent.
+			msg := me.instance.events.Args[0].(messages.Message)
+
+			logger.Debug("Event(%s)	Time:%v	Src:%s	Text:%s", msg.Topic.String(), msg.Time.Convert().Unix(), msg.Source, msg.Text)
+			if me.instance.events.OriginalTopic == topicExit { //} && (msg.Text.String() == me.entityId.String()) {
+				logger.Debug("EXIT TIME: %s => %s", me.instance.events.OriginalTopic, topicGlob)
+				me.instance.emitter.Off(topicGlob)
+			}
+
+			// Always replace topic with the correct one. Never trust calling entity.
+			msg.Topic = messages.StringToTopic(me.instance.events.OriginalTopic)
+
+			// Split topic from the /address/topic format
+			topicAddress := msg.Topic.Address
+			topic := msg.Topic.SubTopic
+
+			if sub, ok := me.subscribers[topicAddress]; ok {
 
 				// Now check topics the subscriber is subscribed to, else continue to next.
 				if _, ok := sub.Callbacks[topic]; ok {
-					//fmt.Printf("LOOP:[%d]\n", child)
+					//logger.Debug("LOOP:[%d]", child)
 
 					if sub.Callbacks[topic] == nil {
 						continue
@@ -333,11 +284,11 @@ func (me *Channels) handler(client messages.MessageAddress) error {
 					// Execute callback in thread.
 					go func(c int) {
 						//defer wg.Done()
-						// fmt.Printf("Callback(%s)	Time:%v	Src:%s	Text:%s\n", msg.Topic, msg.Time.Convert().Unix(), msg.Src, msg.Text)
-						err := sub.Callbacks[topic](&msg, sub.Interfaces[topic])
-						//fmt.Printf("Done:[%d]\n", c)
-						if err != nil {
-							messages.Debug("Error: ", err)
+						// logger.Debug("Callback(%s)	Time:%v	Src:%s	Text:%s", msg.Topic, msg.Time.Convert().Unix(), msg.Src, msg.Text)
+						sub.Errors[topic] = sub.Callbacks[topic](&msg, sub.Interfaces[topic])
+						//logger.Debug("Done:[%d]", c)
+						if sub.Errors[topic] != nil {
+							logger.Debug("Error: ", err)
 						}
 						//wgChannel <- c
 					}(child)
@@ -347,80 +298,25 @@ func (me *Channels) handler(client messages.MessageAddress) error {
 			}
 		}
 
-		//fmt.Printf("WAIT\n")
+		//logger.Debug("WAIT")
 		//debug.PrintStack()
 		//wg.Wait()
 
-		messages.Debug("GBevents - Poller stopped '%s'.", client.String())
+		logger.Debug("channels handler stopped '%s'.", client.String())
 
 		// Remove client from map.
-		delete(me.Subscribers, client)
+		delete(me.subscribers, client)
 	}
 
 	if err != nil {
-		messages.Debug("Error: ", err)
+		logger.Debug("Error: ", err)
 	}
 
 	// Save last state.
 	me.Error = err
 	return err
 }
-
-
-func (me *Channels) Publish(msg messages.Message) error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		err = msg.Topic.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		if msg.Time.IsNil() {
-			msg.Time = msg.Time.Now()
-		}
-
-		if msg.Source.IsNil() {
-			msg.Source = me.EntityId
-		}
-
-		if msg.Topic.Address.IsNil() {
-			err = errors.New("no destination for channel message")
-			break
-		}
-
-		// fmt.Printf("Publish(%s) =>\n\tmsg.CreateTopic():%v\n\tme.instance.emitter:%v\n\n", msg.Topic.String(), msg, me.instance.emitter)
-		me.instance.emits = me.instance.emitter.Emit(msg.Topic.String(), msg)
-		if me.instance.emits == nil {
-			err = errors.New("failed to send channel message")
-		}
-
-		/*
-			select {
-				case <-me.emits:
-					// err = errors.New("channel message sent OK")
-
-				case <-time.After(time.Second * 10):
-					err = errors.New("timeout sending channel message")
-					close(me.emits)
-			}
-		*/
-	}
-
-	if err != nil {
-		messages.Debug("Error: ", err)
-	}
-
-	// Save last state.
-	me.Error = err
-	return err
-}
+*/
 
 
 func (me *Channels) Listeners(topic messages.Topic)  {
@@ -428,7 +324,6 @@ func (me *Channels) Listeners(topic messages.Topic)  {
 
 	foo := me.instance.emitter.Listeners(topic.String())[0]
 
-	fmt.Printf("%v", foo)
 	for f := range foo {
 		fmt.Printf("[%s] - '%s' '%s' '%s'\n", f.Topic, f.OriginalTopic, f.Args, f.Flags)
 	}
@@ -437,37 +332,8 @@ func (me *Channels) Listeners(topic messages.Topic)  {
 }
 
 
-func (me *Channels) off(topic messages.Topic, channels ...<-chan emitter.Event)  {
-	fmt.Printf("Off\n")
-
-	me.instance.emitter.Off(topic.String(), channels...)
-
-	return
-}
-
-
-func (me *Channels) on(topic messages.Topic, middleware ...func(emitter *emitter.Event)) <-chan emitter.Event {
-	fmt.Printf("On\n")
-
-	// me.instance.events = <-me.instance.emitter.On(topic.String(), middleware...)
-	// me.group.Add(me.instance.emitter.On(topic.String()))
-
-	return me.instance.emitter.On(topic.String(), middleware...)
-}
-
-
-func (me *Channels) once(topic messages.Topic, middleware ...func(emitter *emitter.Event)) <-chan emitter.Event {
-	fmt.Printf("Once\n")
-
-	// me.instance.events = <-me.instance.emitter.Once(topic.String(), middleware...)
-	// me.instance.events.String(1)
-
-	return me.instance.emitter.Once(topic.String(), middleware...)
-}
-
-
 func (me *Channels) Topics() (topics messages.Topics) {
-	fmt.Printf("Topics\n")
+	logger.Debug("Topics")
 
 	for _, t := range me.instance.emitter.Topics() {
 		topics = append(topics, messages.StringToTopic(t))
@@ -477,110 +343,72 @@ func (me *Channels) Topics() (topics messages.Topics) {
 }
 
 
-func (me *Channels) Use(pattern string, middleware ...func(emitter *emitter.Event))  {
-	fmt.Printf("Use\n")
+func (me *Channels) GetId() messages.MessageAddress {
+
+	if me == nil {
+		return messages.MessageAddress("")
+	}
+
+	return me.entityId
+}
+
+
+func (me *Channels) GetSubscribers() *Subscribers {
+
+	empty := Subscribers{}
+
+	if me == nil {
+		return &empty
+	}
+
+	return &me.subscribers
+}
+
+
+func (me *Channels) ListSubscribers() {
+
+	if me == nil {
+		return
+	}
+
+	me.subscribers.List()
+}
+
+
+func (me *Channels) off(topic messages.Topic, channels ...<-chan emitter.Event)  {
+	logger.Debug("Off")
+
+	me.instance.emitter.Off(topic.String(), channels...)
+
+	return
+}
+
+
+func (me *Channels) on(topic messages.Topic, middleware ...func(emitter *emitter.Event)) <-chan emitter.Event {
+	logger.Debug("On")
+
+	// me.instance.events = <-me.instance.emitter.On(topic.String(), middleware...)
+	// me.group.Add(me.instance.emitter.On(topic.String()))
+
+	return me.instance.emitter.On(topic.String(), middleware...)
+}
+
+
+func (me *Channels) once(topic messages.Topic, middleware ...func(emitter *emitter.Event)) <-chan emitter.Event {
+	logger.Debug("Once")
+
+	// me.instance.events = <-me.instance.emitter.Once(topic.String(), middleware...)
+	// me.instance.events.String(1)
+
+	return me.instance.emitter.Once(topic.String(), middleware...)
+}
+
+
+func (me *Channels) use(pattern string, middleware ...func(emitter *emitter.Event))  {
+	logger.Debug("Use")
 
 	me.instance.emitter.Use(pattern, middleware...)
 
 	return
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-func (me *Channels) allHandler() error {
-
-	var err error
-
-	for range only.Once {
-		sts = me.EnsureNotNil()
-		if is.Error(sts) {
-			break
-		}
-
-		wgChannel := make(chan int)
-		var wg sync.WaitGroup
-		child := 0
-
-		messages.Debug("GBevents - Poller(STARTED)")
-		for me.instance.events = range me.instance.emitter.On("*") {
-			if me.instance.events.Args == nil {
-				fmt.Printf("ARGS:ZERO\n")
-				continue
-			}
-
-			// Only one message ever sent.
-			msg := me.instance.events.Args[0].(messages.Message)
-
-			fmt.Printf("Event(%s)	Time:%v	Src:%s	Text:%s\n", msg.Topic, msg.Time.Convert().Unix(), msg.Source, msg.Text)
-			if me.instance.events.OriginalTopic == "exit" {
-				fmt.Printf("EXIT TIME: %s\n", me.instance.events.OriginalTopic)
-				me.instance.emitter.Off("exit")
-			}
-
-			// Split topic from the /address/topic format
-			//topicAddress, topic := msg.Topic.Split()
-			//fmt.Printf(">>>>>> '%v' ==  d:%v => t:%v\n", msg.Topic, topicAddress, topic)
-
-			// Range through all subscribers
-			for _, subscriber := range me.Subscribers {
-				// If there's no subscriber, continue to the next.
-				if subscriber == IsEmptySubScriber {
-					continue
-				}
-				fmt.Printf(">>>>>> subscriber:%v\n", subscriber)
-
-				// If empty topic, continue to next.
-				if me.instance.events.OriginalTopic == "" {
-					continue
-				}
-
-				// Always replace topic with the correct one. Never trust calling entity.
-				msg.Topic = messages.StringToTopic(me.instance.events.OriginalTopic)
-				fmt.Printf(">>>>>> msg.Topic:%v\n", msg.Topic)
-
-				// Split topic from the /address/topic format
-				topicAddress := msg.Topic.Address
-				topic := msg.Topic.SubTopic
-				fmt.Printf(">>>>>> d:%v => t:%v\n", topicAddress, topic)
-
-				// Now check topics the subscriber is subscribed to, else continue to next.
-				callback := subscriber[topic]
-				if callback == nil {
-					continue
-				}
-				fmt.Printf(">>>>>> callback:%v\n", callback)
-
-				wg.Add(1)
-				child++
-				// Execute callback in thread.
-				go func() {
-					defer wg.Done()
-					// fmt.Printf("Callback(%s)	Time:%v	Src:%s	Text:%s\n", msg.Topic, msg.Time.Convert().Unix(), msg.Src, msg.Text)
-					sts := callback(&msg)
-					if is.Error(sts) {
-						sts.Log()
-					}
-					wgChannel <- child
-				}()
-				fmt.Printf(">>>>>> F4\n")
-			}
-		}
-
-		fmt.Printf("WAIT\n")
-		//debug.PrintStack()
-		wg.Wait()
-
-		err = errors.New("GBevents - Poller(FINISHED)")
-	}
-
-	if !is.Success(sts) {
-		sts.Log()
-	}
-
-	// Save last state.
-	me.Sts = sts
-
-	return sts
-}
-*/

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gearbox/heartbeat/gbevents/channels"
 	"gearbox/heartbeat/gbevents/gbMqttBroker"
+	"gearbox/heartbeat/gbevents/mqttClient"
 	"gearbox/heartbeat/gbevents/network"
 	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-status"
@@ -12,12 +13,14 @@ import (
 
 
 type EventBroker struct {
-	Identifier string
+	// EntityId messages.MessageAddress
+	EntityId   string
 	Boxname    string
 	PidFile    string
 
-	ZeroConf   network.Client
+	ZeroConf   network.ZeroConf
 	MqttBroker gbMqttBroker.Mqtt
+	MqttClient mqttClient.MqttClient
 	Channels   channels.Channels
 	StsEmitter status.Status
 
@@ -31,7 +34,7 @@ type ServiceData struct {
 	Action  ServiceAction
 }
 type RegisterServices []ServiceData
-type RegisterServicesMap map[string]ServiceData
+type RegisterServicesMap map[string]*ServiceData
 
 type ServiceState string
 
@@ -42,11 +45,11 @@ type ServiceAction struct {
 
 
 type Event emitter.Event
-var _ Service = (*EventBroker)(nil)
+var _ EventService = (*EventBroker)(nil)
 
-var Instance Service
+var Instance EventService
 
-type Service interface {
+type EventService interface {
 	Create() status.Status
 	Start() status.Status
 	Stop() status.Status

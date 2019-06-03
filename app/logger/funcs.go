@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"github.com/gearboxworks/go-status"
 	"github.com/sirupsen/logrus"
 	"strings"
 )
@@ -41,5 +42,11 @@ func (me *Logger) printLog(level logrus.Level, fileName string, lineNumber int, 
 	returnCode = false
 
 	return
+}
+
+func Debug(format string, a ...interface{}) {
+	//fn, ln := daemon.MyCaller(daemon.CallerParent)
+	//status.Success(fmt.Sprintf("DEBUG '%s':[%d] ", fn, ln) + format, a).Log()
+	status.Success("DEBUG: " + format, a...).Log()
 }
 

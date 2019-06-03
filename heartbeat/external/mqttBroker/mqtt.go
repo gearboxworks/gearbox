@@ -1,4 +1,4 @@
-package monitor
+package mqttBroker
 
 import (
 	"bufio"
@@ -24,7 +24,7 @@ import (
 )
 
 
-type Unfsd struct {
+type MqttBroker struct {
 	Boxname        string
 	ExportsBaseDir string
 	ExportsJson    string
@@ -34,7 +34,7 @@ type Unfsd struct {
 	NfsArgs        []string
 	Server         Server
 	Daemon         *daemon.Daemon
-	State          UnfsdState
+	State          State
 
 	// State polling delays.
 	NoWait      bool
@@ -43,28 +43,10 @@ type Unfsd struct {
 
 	OsSupport oss.OsSupporter
 }
-type Args Unfsd
+type Args MqttBroker
 
-type ExportData struct {
-	MountPoint string
-	Options    []string
-}
 
-// Server manages exporting an NFS mount.
-type Server struct {
-	sync.Mutex                           `json:"-"`
-	BasePath         string              `json:"basePath"`
-	ExportedName     string              `json:"exportedName"`
-	ExportedNamePath string              `json:"exportedNamePath"`
-	ExportOptions    string              `json:"exportOptions"`
-	Network          string              `json:"network"`
-	ClientIPs        map[string]struct{} `json:"clients"`
-	Volumes          map[string]int32    `json:"volumes"`
-	Exported         map[string]struct{} `json:"exported"`
-	ClientValidator  NfsClientValidator  `json:"clientValidator"`
-}
-
-type UnfsdState struct {
+type MqttBrokerState struct {
 	Name         string
 	LastSts      status.Status
 	CurrentState int
@@ -73,7 +55,7 @@ type UnfsdState struct {
 
 
 // Refine facade.DfsValidator to avoid circular dependencies
-type NfsClientValidator interface {
+type MqttBrokerClientValidator interface {
 	ValidateClient(string) bool
 }
 
@@ -110,11 +92,11 @@ const DefaultNfsBin			= "heartbeat/unfsd/bin/unfsd"
 const DefaultPidFile		= "heartbeat/unfsd/etc/unfsd.pid"
 
 
-func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
+func NewMqttBroker(OsSupport oss.OsSupporter, args ...Args) (*MqttBroker, status.Status) {
 
 	var sts status.Status
 	var _args Args
-	unfsd := &Unfsd{}
+	unfsd := &MqttBroker{}
 
 	for range only.Once {
 
@@ -202,7 +184,7 @@ func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 			},
 		})
 
-		*unfsd = Unfsd(_args)
+		*unfsd = MqttBroker(_args)
 
 		// Check exports file access.
 		sts = unfsd.ReadExport()
@@ -222,7 +204,7 @@ func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 }
 
 
-func (me *Unfsd) ReadExport() (status.Status) {
+func (me *MqttBroker) ReadExport() (status.Status) {
 
 	// Ensure we read the JSON export file and update the UNFSD exports file.
 	// UNFSD exports file will ALWAYS be updated to reflect the JSON file.
@@ -250,7 +232,7 @@ func (me *Unfsd) ReadExport() (status.Status) {
 }
 
 
-func (me *Unfsd) WriteExport() (status.Status) {
+func (me *MqttBroker) WriteExport() (status.Status) {
 
 	// Ensure we write the JSON export file and update the UNFSD exports file.
 	var sts status.Status
@@ -277,7 +259,7 @@ func (me *Unfsd) WriteExport() (status.Status) {
 }
 
 
-func (me *Unfsd) readJsonExport() (status.Status) {
+func (me *MqttBroker) readJsonExport() (status.Status) {
 
 	var sts status.Status
 	var content []byte
@@ -323,7 +305,7 @@ func (me *Unfsd) readJsonExport() (status.Status) {
 }
 
 
-func (me *Unfsd) writeJsonExport() (status.Status) {
+func (me *MqttBroker) writeJsonExport() (status.Status) {
 
 	var sts status.Status
 	var err error
@@ -357,7 +339,7 @@ func (me *Unfsd) writeJsonExport() (status.Status) {
 }
 
 
-func (me *Unfsd) writeNfsExport() (status.Status) {
+func (me *MqttBroker) writeNfsExport() (status.Status) {
 
 	var sts status.Status
 	var err error
@@ -459,7 +441,7 @@ func (me *Unfsd) writeNfsExport() (status.Status) {
 }
 
 
-func (me *Unfsd) readNfsExport() (status.Status) {
+func (me *MqttBroker) readNfsExport() (status.Status) {
 
 	// Stub method.
 	// We won't ever need to read the UNFSD exports file because it will ALWAYS
@@ -471,9 +453,9 @@ func (me *Unfsd) readNfsExport() (status.Status) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// NewServer returns a Unfsd.Server object that manages the given nfs mounts to
+// NewServer returns a MqttBroker.Server object that manages the given nfs mounts to
 // configured clients;  basePath is the path for volumes, exportedName is the container dir to hold exported volumes
-func (me *Unfsd) NewServer(basePath, exportedName, network string) (error) {
+func (me *MqttBroker) NewServer(basePath, exportedName, network string) (error) {
 
 	if len(exportedName) < 2 || strings.Contains(exportedName, "/") {
 		return ErrInvalidExportedName
@@ -513,7 +495,7 @@ func (me *Unfsd) NewServer(basePath, exportedName, network string) (error) {
 
 
 // Reload ensures that the nfs exports are visible to all clients
-func (me *Unfsd) Reload() (status.Status) {
+func (me *MqttBroker) Reload() (status.Status) {
 
 	var sts status.Status
 
@@ -527,7 +509,7 @@ func (me *Unfsd) Reload() (status.Status) {
 
 
 // Restart restarts the nfs subsystem
-func (me *Unfsd) Restart() (status.Status) {
+func (me *MqttBroker) Restart() (status.Status) {
 
 	var sts status.Status
 
@@ -554,7 +536,7 @@ func (me *Unfsd) Restart() (status.Status) {
 
 
 // Stop stops the nfs subsystem
-func (me *Unfsd) Stop() (status.Status) {
+func (me *MqttBroker) Stop() (status.Status) {
 
 	var sts status.Status
 
@@ -586,7 +568,7 @@ func (me *Unfsd) Stop() (status.Status) {
 
 
 // Stop stops the nfs subsystem
-func (me *Unfsd) Start() (status.Status) {
+func (me *MqttBroker) Start() (status.Status) {
 
 	var sts status.Status
 	var err error
@@ -623,7 +605,7 @@ func (me *Unfsd) Start() (status.Status) {
 }
 
 
-func (me *Unfsd) GetState() (state UnfsdState, sts status.Status) {
+func (me *MqttBroker) GetState() (state MqttBrokerState, sts status.Status) {
 
 	for range only.Once {
 		sts = EnsureNotNil(me)
@@ -655,7 +637,7 @@ func (me *Unfsd) GetState() (state UnfsdState, sts status.Status) {
 }
 
 
-func (me *Unfsd) getPid() (pid int) {
+func (me *MqttBroker) getPid() (pid int) {
 
 	var exists bool
 	var data []byte
@@ -784,7 +766,7 @@ func (me *Server) filterHostsWithoutPerms(clients []string) []string {
 ////////////////////////////////////////////////////////////////////////////////
 // Misc functions.
 
-func EnsureNotNil(bx *Unfsd) (sts status.Status) {
+func EnsureNotNil(bx *MqttBroker) (sts status.Status) {
 	if bx == nil {
 		sts = status.Fail(&status.Args{
 			Message: "unexpected error",

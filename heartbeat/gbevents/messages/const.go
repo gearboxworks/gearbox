@@ -31,7 +31,6 @@ func (me *MessageTime) Convert() time.Time {
 	return time.Time(*me)
 }
 
-
 type MessageAddress string
 func (me *MessageAddress) String() string {
 
@@ -58,6 +57,10 @@ type MessageText string
 func (me *MessageText) String() string {
 
 	return string(*me)
+}
+func (me *MessageText) ByteArray() []byte {
+
+	return []byte(*me)
 }
 
 var defaultNilTime = time.Time{}

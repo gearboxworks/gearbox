@@ -7,6 +7,7 @@ require (
 
 	github.com/clbanning/checkjson v0.0.0-20190418161636-abd3ee163e3e
 	github.com/cznic/golex v0.0.0-20181122101858-9c343928389c // indirect
+	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/fatih/color v1.7.0

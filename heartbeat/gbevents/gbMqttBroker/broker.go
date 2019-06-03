@@ -2,6 +2,7 @@ package gbMqttBroker
 
 import (
 	"fmt"
+	"gearbox/app/logger"
 	"gearbox/box"
 	"gearbox/heartbeat/daemon"
 	"gearbox/heartbeat/gbevents/messages"
@@ -103,7 +104,7 @@ func (me *Mqtt) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 		// _args.Server = fmt.Sprintf("tcp://%s:%s/", _args.Config.Host, _args.Config.Port)
 
 		*me = Mqtt(_args)
-		messages.Debug("MQTT init %s.", me.EntityId.String())
+		logger.Debug("MQTT init %s.", me.EntityId.String())
 	}
 
 	return sts
@@ -128,7 +129,7 @@ func (me *Mqtt) StartHandler() status.Status {
 		//	me.StartClientHandler().Log()
 		//}()
 
-		messages.Debug("MQTT started OK on %s.", me.EntityId.String())
+		logger.Debug("MQTT started OK on %s.", me.EntityId.String())
 		sts = status.Success("MQTT started OK on %s", me.EntityId.String())
 	}
 
@@ -167,23 +168,23 @@ func (me *Mqtt) StartBrokerHandler() status.Status {
 		for me.Broker.Task.RunCounter = 0; me.Broker.Task.RunCounter < me.Broker.RestartAttempts; me.Broker.Task.RunCounter++ {
 
 			if me.Broker.Task.RunCounter == 0 {
-				messages.Debug("MQTT broker %s started.", me.EntityId.String())
+				logger.Debug("MQTT broker %s started.", me.EntityId.String())
 			} else {
 				//me.Broker.State = false
-				messages.Debug("MQTT broker %s restart attempt %d.", me.EntityId.String(), me.Broker.Task.RunCounter)
+				logger.Debug("MQTT broker %s restart attempt %d.", me.EntityId.String(), me.Broker.Task.RunCounter)
 			}
 
 			// .			me.Broker.instance.Start()
 
 			if me.Broker.Task.RunCounter == 0 {
 				//me.Broker.State = true
-				messages.Debug("MQTT broker %s started.", me.EntityId.String())
+				logger.Debug("MQTT broker %s started.", me.EntityId.String())
 			} else {
 				//me.Broker.State = false
-				messages.Debug("MQTT broker %s restart attempt %d.", me.EntityId.String(), me.Broker.Task.RunCounter)
+				logger.Debug("MQTT broker %s restart attempt %d.", me.EntityId.String(), me.Broker.Task.RunCounter)
 			}
 
-			messages.Debug("MQTT broker stopped %s.", me.EntityId.String())
+			logger.Debug("MQTT broker stopped %s.", me.EntityId.String())
 			sts = status.Success("MQTT broker exited with signal %v.")
 		}
 		*/
@@ -214,8 +215,8 @@ func initMqttBroker(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-		task.RetryLimit = DefaultRetries
-		task.RetryDelay = time.Second * 5
+		//task.retryLimit = DefaultRetries
+		//task.retryDelay = time.Second * 5
 
 		me.Broker.Sts = status.Success("MQTT broker %s initialized OK", me.ServerURL.String())
 		me.Broker.Sts.Log()
@@ -240,10 +241,10 @@ func startMqttBroker(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-		if task.RetryCounter == 0 {
+		if task.GetRetryCounter() == 0 {
 			me.Broker.Sts = status.Success("MQTT broker %s started", me.ServerURL.String())
 		} else {
-			me.Broker.Sts = status.Success("MQTT broker %s restart attempt %d", me.ServerURL.String(), task.RetryCounter)
+			me.Broker.Sts = status.Success("MQTT broker %s restart attempt %d", me.ServerURL.String(), task.GetRetryCounter())
 		}
 		me.Broker.Sts.Log()
 
@@ -370,7 +371,7 @@ func (me *Mqtt) StartClientHandler() status.Status {
 		}
 
 		//me.Broker.State = true
-		messages.Debug("MQTT client started %s.", me.EntityId.String())
+		logger.Debug("MQTT client started %s.", me.EntityId.String())
 
 		sts = me.clientConnect()
 		if is.Error(sts) {
@@ -385,7 +386,7 @@ func (me *Mqtt) StartClientHandler() status.Status {
 		s := daemon.WaitForSignal()
 
 		//me.Broker.State = false
-		messages.Debug("MQTT client stopped %s.", me.EntityId.String())
+		logger.Debug("MQTT client stopped %s.", me.EntityId.String())
 		sts = status.Success("MQTT client exited with signal %v.", s)
 	}
 
