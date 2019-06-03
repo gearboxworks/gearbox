@@ -11,6 +11,7 @@
       class="notes-input"
       v-if="!isCollapsed"
       :readonly="isUpdating"
+      autocomplete="off"
     />
     <b-input-group-append>
       <b-button

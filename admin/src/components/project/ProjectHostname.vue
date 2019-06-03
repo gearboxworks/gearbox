@@ -14,6 +14,7 @@
       @click.prevent="onInputClicked"
       placeholder=""
       :readonly="isUpdating"
+      autocomplete="off"
     />
     <b-input-group-append v-if="isEditing">
       <b-button

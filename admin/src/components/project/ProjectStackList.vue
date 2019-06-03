@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="{'project-stack-list': true, 'cards-mode': cardsMode, 'is-loading': isLoading}"
+    :class="{'project-stack-list': true, 'start-collapsed': startCollapsed, 'is-loading': isLoading}"
     :id="`${projectBase}stack`" role="tablist"
   >
     <font-awesome-icon v-if="isLoading" icon="circle-notch" spin title="Loading project details..."/>
@@ -14,6 +14,7 @@
         :project="project"
         :projectIndex="projectIndex"
         :is-collapsible="cardsMode"
+        :start-collapsed="startCollapsed || (!startCollapsed && Object.entries(groupedStackItems).length > 1)"
       >
       </stack-card>
     </div>
@@ -38,10 +39,10 @@ export default {
       type: Number,
       required: true
     },
-    'cardsMode': {
+    'startCollapsed': {
       type: Boolean,
       required: false,
-      default: true
+      default: false
     }
   },
   data () {

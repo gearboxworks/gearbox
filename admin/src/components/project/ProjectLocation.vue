@@ -6,6 +6,7 @@
       :value="resolveDir(currentBasedir, path)"
       class="location-input"
       v-if="!isCollapsed"
+      autocomplete="off"
     />
     <b-input-group-append>
       <b-button

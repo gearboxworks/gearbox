@@ -6,6 +6,7 @@
       v-b-tooltip.hover
       href="#"
       class="btn--view-note"
+      v-if="Math.random() > 0.3"
     >
       <font-awesome-icon
         :icon="['fa', 'sticky-note']"
@@ -17,6 +18,7 @@
       v-b-tooltip.hover
       href="#"
       class="btn--view-note"
+      v-if="Math.random() > 0.5"
     >
       <font-awesome-icon
         :icon="['fa', 'sticky-note']"
@@ -28,6 +30,7 @@
       v-b-tooltip.hover
       href="#"
       class="btn--view-note"
+      v-if="Math.random() > 0.7"
     >
       <font-awesome-icon
         :icon="['fa', 'sticky-note']"

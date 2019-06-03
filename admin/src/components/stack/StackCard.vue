@@ -3,7 +3,7 @@
     <h2
       class="stack-title"
       @click="onTitleClicked"
-      title="Toggle stack details"
+      :title="isCollapsed ? 'Show services' : 'Hide services'"
       v-b-tooltip.hover
     >
       <font-awesome-icon
@@ -70,6 +70,11 @@ export default {
       type: Boolean,
       default: true,
       required: false
+    },
+    'startCollapsed': {
+      type: Boolean,
+      required: false,
+      default: true
     }
   },
   data () {
@@ -79,7 +84,7 @@ export default {
       alertContent: 'content',
       alertDismissible: true,
       alertVariant: 'info',
-      isCollapsed: true
+      isCollapsed: this.startCollapsed
     }
   },
   components: {
@@ -111,6 +116,14 @@ export default {
       this.alertShow = true
     }
   }
+  // ,
+  // watch: {
+  //   startCollapsed: function (val, oldVal) {
+  //     if (!val) {
+  //       this.isCollapsed = false
+  //     }
+  //   }
+  // }
 }
 </script>
 

@@ -147,12 +147,13 @@ export default {
   }
 
   .filtered-projects{
-    padding-left: 1rem;
+    padding-left: 0;
     padding-right: 1rem;
   }
 
   .projects-table {
-    width: 100%;
+    width: calc(100% - 1rem);
+    margin-left: 1rem;
   }
 
   .th--state {

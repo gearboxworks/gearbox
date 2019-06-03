@@ -13,7 +13,7 @@
     </td>
 
     <td class="td--stack">
-      <project-stack-list :project="project" :projectIndex="projectIndex" :cards-mode="true" v-if="project.attributes.stack.length"></project-stack-list>
+      <project-stack-list :project="project" :projectIndex="projectIndex" :start-collapsed="true"></project-stack-list>
       <project-stack-select :project="project" :projectIndex="projectIndex"></project-stack-select>
     </td>
 

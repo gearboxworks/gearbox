@@ -337,7 +337,7 @@ export default new Vuex.Store({
         setTimeout(() => {
           commit('ADD_PROJECT_STACK', payload)
           resolve()
-        }, 3000)
+        }, 2000)
       })
     },
     removeProjectStack ({ commit }, payload) {
@@ -352,7 +352,7 @@ export default new Vuex.Store({
         setTimeout(() => {
           commit('ADD_PROJECT_NOTE', payload)
           resolve()
-        }, 3000)
+        }, 2000)
       })
     },
     updateProjectHostname ({ commit }, payload) {
@@ -361,7 +361,7 @@ export default new Vuex.Store({
         setTimeout(() => {
           commit('UPDATE_PROJECT_HOSTNAME', payload)
           resolve()
-        }, 3000)
+        }, 2000)
       })
     },
     changeProjectService ({ commit }, payload) {
@@ -381,7 +381,7 @@ export default new Vuex.Store({
         setTimeout(() => {
           commit('CHANGE_PROJECT_STATE', payload)
           resolve()
-        }, 3000)
+        }, 2000)
       })
     },
     setProjectsFilter ({ commit }, payload) {
