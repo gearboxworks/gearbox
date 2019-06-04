@@ -60,7 +60,7 @@ func (me *MqttClient) UnsubscribeByUuid(u uuid.UUID) error {
 }
 
 // Unsubscribe a service via a channel defined by a UUID reference.
-func (me *MqttClient) UnsubscribeByChannel(u uuid.UUID) error {
+func (me *MqttClient) UnsubscribeByChannel(caller messages.MessageAddress, u uuid.UUID) error {
 
 	var err error
 
@@ -70,14 +70,12 @@ func (me *MqttClient) UnsubscribeByChannel(u uuid.UUID) error {
 			break
 		}
 
-		unreg := messages.Message{
-			Topic: messages.Topic{
-				Address: me.EntityId,
-				SubTopic: "unsubscribe",
-			},
-			Text: messages.MessageText(u.String()),
+		//unreg := me.EntityId.Construct(me.EntityId, messages.SubTopicUnsubscribe, messages.MessageText(u.String()))
+		unreg := caller.ConstructMessage(me.EntityId, messages.SubTopicSubscribe, messages.MessageText(u.String()))
+		err = me.Channels.Publish(unreg)
+		if err != nil {
+			break
 		}
-		_ = me.Channels.Publish(unreg)
 
 		logger.Debug("MqttClient %s unsubscribe via channel (%s).", me.EntityId.String(), u.String())
 	}

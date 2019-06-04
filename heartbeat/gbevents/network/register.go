@@ -111,15 +111,8 @@ func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s CreateEn
 			break
 		}
 
-		reg := messages.Message{
-			Source: caller,
-			Topic: messages.Topic{
-				Address: me.EntityId,
-				SubTopic: "register",
-			},
-			Text: messages.MessageText(j),
-		}
-
+		// reg := me.EntityId.Construct(caller, messages.SubTopicRegister, messages.MessageText(j))
+		reg := caller.ConstructMessage(me.EntityId, messages.SubTopicRegister, messages.MessageText(j))
 		err = me.Channels.Publish(reg)
 		if err != nil {
 			break

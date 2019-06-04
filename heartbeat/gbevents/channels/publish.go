@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+
 func (me *Channels) Publish(msg messages.Message) error {
 
 	var err error
@@ -27,11 +28,11 @@ func (me *Channels) Publish(msg messages.Message) error {
 			msg.Time = msg.Time.Now()
 		}
 
-		if msg.Source.IsNil() {
+		if msg.Source.EnsureNotNil() != nil {
 			msg.Source = me.entityId
 		}
 
-		if msg.Topic.Address.IsNil() {
+		if msg.Topic.Address.EnsureNotNil() != nil {
 			err = errors.New("no destination for channel message")
 			break
 		}
@@ -42,8 +43,12 @@ func (me *Channels) Publish(msg messages.Message) error {
 		me.instance.emits = me.instance.emitter.Emit(msg.Topic.String(), msg)
 		if me.instance.emits == nil {
 			err = errors.New("failed to send channel message")
+			break
 		}
 
+
+		logger.Debug("channel MSG:'%s' DATA:'%s'", msg.Topic.String(), msg.Text.String())
+		//fmt.Printf(">>> MSG: %s DATA: %s", msg.Topic.String(), msg.Text.String())
 		/*
 			select {
 				case <-me.emits:
@@ -60,8 +65,11 @@ func (me *Channels) Publish(msg messages.Message) error {
 		logger.Debug("Error: %v", err)
 	}
 
-	// Save last state.
-	me.Error = err
+	if me.EnsureNotNil() == nil {
+		// Save last state.
+		me.Error = err
+	}
+
 	return err
 }
 
@@ -132,3 +140,40 @@ func (me *Channels) SetCallbackReturnToNil(msg messages.Message) (error) {
 	return err
 }
 
+
+func (me *Channels) PublishCallerState(caller messages.MessageAddress, state messages.MessageText) error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		if caller.EnsureNotNil() != nil {
+			break
+		}
+
+		if state.EnsureNotNil() != nil {
+			break
+		}
+
+		reg := caller.ConstructMessage(caller, messages.SubTopicState, state)
+		err = me.Publish(reg)
+		if err != nil {
+			break
+		}
+	}
+
+	if err != nil {
+		logger.Debug("Error: %v", err)
+	}
+
+	if me.EnsureNotNil() == nil {
+		// Save last state.
+		me.Error = err
+	}
+
+	return err
+}

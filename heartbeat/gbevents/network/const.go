@@ -12,17 +12,6 @@ import (
 )
 
 
-const (
-	defaultEntityId = "gearbox-zeroconf"
-	defaultWaitTime = time.Millisecond * 2000
-	defaultDomain   = "local"
-	defaultRetries  = 12
-	DefaultRetryDelay = time.Second * 5
-)
-
-var defaultText		= []string{"txtv=0", "lo=1", "la=2"}
-var browseList		= []string{"_mqtt._udp", "_mqtt._tcp", "_nfs._udp", "_nfs._tcp"}
-
 type ZeroConf struct {
 	EntityId        messages.MessageAddress
 	osSupport       oss.OsSupporter
@@ -56,6 +45,19 @@ type CreateEntry struct {
 	Text   Text		`json:"text"`	// == Service.Entry.Text
 	TTL    uint32   `json:"ttl"`	// == Service.Entry.TTL
 }
+
+
+const (
+	defaultEntityId = "eventbroker-zeroconf"
+	defaultWaitTime = time.Millisecond * 2000
+	defaultDomain   = "local"
+	defaultRetries  = 12
+	DefaultRetryDelay = time.Second * 5
+)
+
+var defaultText		= []string{"txtv=0", "lo=1", "la=2"}
+var browseList		= []string{"_mqtt._udp", "_mqtt._tcp", "_nfs._udp", "_nfs._tcp"}
+
 
 /*
 func (me *Uuid) String() (string) {

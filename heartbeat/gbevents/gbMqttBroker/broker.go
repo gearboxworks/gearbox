@@ -1,5 +1,6 @@
 package gbMqttBroker
 
+
 import (
 	"fmt"
 	"gearbox/app/logger"
@@ -441,7 +442,7 @@ func (me *Mqtt) clientConnect() (status.Status) {
 }
 
 
-func (me *Mqtt) subscribe(topic messages.Topic, foo mqtt.MessageHandler) status.Status {
+func (me *Mqtt) subscribe(topic messages.MessageTopic, foo mqtt.MessageHandler) status.Status {
 
 	var sts status.Status
 
@@ -451,7 +452,7 @@ func (me *Mqtt) subscribe(topic messages.Topic, foo mqtt.MessageHandler) status.
 			break
 		}
 
-		cb := msgCallback{Topic: messages.Topic(topic), Function: foo2}
+		cb := msgCallback{Topic: messages.MessageTopic(topic), Function: foo2}
 		me.Client.instance.Subscribe(cb.Topic.String(), 0, cb.Function)
 
 		sts = status.Success("MQTT client subscribed OK")

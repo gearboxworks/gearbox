@@ -30,7 +30,7 @@ func (me *MqttClient) Subscribe(msg Topic) (*Service, error) {
 		}
 
 		cb := msgCallback{Topic: msg, Function: foo2}
-		sc.instance = me.client.Subscribe(cb.Topic.String(), 0, cb.Function)
+		sc.instance = me.instance.client.Subscribe(cb.Topic.String(), 0, cb.Function)
 		if sc.instance == nil {
 			err = errors.New("mqttClient unable to subscribe")
 			break
@@ -83,15 +83,7 @@ func (me *MqttClient) SubscribeByChannel(caller messages.MessageAddress, s Topic
 			break
 		}
 
-		reg := messages.Message{
-			Source: caller,
-			Topic: messages.Topic{
-				Address: me.EntityId,
-				SubTopic: "subscribe",
-			},
-			Text: messages.MessageText(s),
-		}
-
+		reg := caller.ConstructMessage(me.EntityId, messages.SubTopicSubscribe, messages.MessageText(s))
 		err = me.Channels.Publish(reg)
 		if err != nil {
 			break

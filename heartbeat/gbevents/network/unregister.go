@@ -62,7 +62,7 @@ func (me *ZeroConf) UnregisterByUuid(u uuid.UUID) error {
 }
 
 // Unregister a service via a channel defined by a UUID reference.
-func (me *ZeroConf) UnregisterByChannel(u uuid.UUID) error {
+func (me *ZeroConf) UnregisterByChannel(caller messages.MessageAddress, u uuid.UUID) error {
 
 	var err error
 
@@ -72,14 +72,12 @@ func (me *ZeroConf) UnregisterByChannel(u uuid.UUID) error {
 			break
 		}
 
-		unreg := messages.Message{
-			Topic: messages.Topic{
-				Address: me.EntityId,
-				SubTopic: "unregister",
-			},
-			Text: messages.MessageText(u.String()),
+		//unreg := me.EntityId.Construct(me.EntityId, messages.SubTopicUnregister, messages.MessageText(u.String()))
+		unreg := caller.ConstructMessage(me.EntityId, messages.SubTopicUnregister, messages.MessageText(u.String()))
+		err = me.Channels.Publish(unreg)
+		if err != nil {
+			break
 		}
-		_ = me.Channels.Publish(unreg)
 
 		logger.Debug("ZeroConf %s unregister via channel (%s).", me.EntityId.String(), u.String())
 	}

@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"gearbox/app/logger"
 	"gearbox/box"
-	"gearbox/heartbeat/gbevents/channels"
 	"gearbox/heartbeat/gbevents/messages"
 	"gearbox/heartbeat/gbevents/tasks"
 	"gearbox/only"
 	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gearboxworks/go-status"
+	"github.com/fhmq/hmq/lib/topics"
 	"github.com/jinzhu/copier"
 	"net/url"
-	"time"
 )
 
 
@@ -42,57 +40,45 @@ func (me *MqttClient) New(OsSupport oss.OsSupporter, args ...Args) error {
 		}
 
 		if _args.Server == nil {
-			err = errors.New("no MQTT server url defined")
+			_args.Server, err = url.Parse(DefaultServer)
+		}
+
+		if _args.waitTime == 0 {
+			_args.waitTime = defaultWaitTime
+		}
+
+		_args.instance.options = mqtt.NewClientOptions()
+		if _args.instance.options == nil {
+			err = errors.New("unable to create MQTT client options")
+			break
+		}
+		_args.instance.options.SetClientID(_args.EntityId.String())
+
+		_args.services = make(ServicesMap)
+
+		*me = MqttClient(_args)
+
+		err = me.ConnectToServer(DefaultServer)
+		if err != nil {
+			_ = me.Channels.PublishCallerState(me.EntityId, messages.MessageStateUnconfigured)
+
+			// If this fails, it'll be handled within the task.
+			// So, reset error to nil to avoid parent thinking everything has gone South.
+			err = nil
 			break
 		}
 
-		*me = MqttClient(_args)
-		status.Success("GBevents - MQTT client init (%s).", me.EntityId.String()).Log()
+		logger.Debug("MQTTclient init (%s).", me.EntityId.String())
+		_ = me.Channels.PublishCallerState(me.EntityId, messages.MessageStateIdle)
 	}
-
-	// We're going to throw away the config for now.
-	// This will be handled within the task.
-	_ = me.ConfigureHandler()
 
 	if err != nil {
 		logger.Debug("Error: %v", err)
 	}
 
-	// Save last state.
-	me.Error = err
-
-	return err
-}
-
-
-func (me *MqttClient) ConfigureHandler() error {
-
-	var err error
-
-	for range only.Once {
-
-		fmt.Printf("Server: %v\n", me.Server)
-		me.Server, err = url.Parse(me.Server.String())
-		if err != nil {
-			err = errors.New("unable to parse MQTT client config")
-			break
-		}
-
-		me.Config = mqtt.NewClientOptions()
-		me.Config.AddBroker(me.Server.String())
-		me.Config.SetUsername(me.Server.User.Username())
-		password, _ := me.Server.User.Password()
-		me.Config.SetPassword(password)
-		me.Config.SetClientID(me.EntityId.String())
-
-		//		topic := messages.CreateTopic(me.EntityId.String())
-		//		me.Config.SetWill(topic, "Last will and testament", topics.QosFailure, true)
-
-		me.client = mqtt.NewClient(me.Config)
-		if me.client == nil {
-			err = errors.New("unable to create MQTT client config")
-			break
-		}
+	if me.EnsureNotNil() == nil {
+		// Save last state.
+		me.Error = err
 	}
 
 	return err
@@ -115,17 +101,21 @@ func (me *MqttClient) StartHandler() error {
 			break
 		}
 
-		logger.Debug("started zeroconf handler for %s", me.EntityId.String())
+		logger.Debug("started MQTT client handler for %s", me.EntityId.String())
 	}
 
 	if err != nil {
 		logger.Debug("Error: %v", err)
 	}
 
-	// Save last state.
-	me.Error = err
+	if me.EnsureNotNil() == nil {
+		// Save last state.
+		me.Error = err
+	}
+
 	return err
 }
+
 
 // Stop the MQTT handler.
 func (me *MqttClient) StopHandler() error {
@@ -139,7 +129,7 @@ func (me *MqttClient) StopHandler() error {
 		}
 
 		for u, _ := range me.services {
-			logger.Debug("Unsubscribe zeroconf entry %s.", u.String())
+			logger.Debug("Unsubscribe MQTT client entry %s.", u.String())
 			err = me.services[u].Unsubscribe()
 			if err != nil {
 				break
@@ -151,275 +141,66 @@ func (me *MqttClient) StopHandler() error {
 			break
 		}
 
-		logger.Debug("stopped zeroconf handler for %s", me.EntityId.String())
+		logger.Debug("stopped MQTT client handler for %s", me.EntityId.String())
 	}
 
 	if err != nil {
 		logger.Debug("Error: %v", err)
 	}
 
-	// Save last state.
-	me.Error = err
-	return err
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Executed as a task.
-
-// Non-exposed task function - M-DNS initialization.
-func initMqttClient(task *tasks.Task, i ...interface{}) error {
-
-	var me *MqttClient
-	var err error
-
-	for range only.Once {
-		me, err = InterfaceToTypeMqttClient(i[0])
-		if err != nil {
-			break
-		}
-
-		_ = task.SetRetryLimit(DefaultRetries)
-		_ = task.SetRetryDelay(DefaultRetryDelay)
-
-		me.ChannelHandler, err = me.Channels.StartHandler(me.EntityId)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("subscribe"), subscribeTopic, me)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("unsubscribe"), unsubscribeTopic, me)
-		if err != nil {
-			break
-		}
-
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("start"), startHandler, me)
-		if err != nil {
-			break
-		}
-
-		logger.Debug("MqttClient %s initialized OK", me.EntityId.String())
-
-		err = nil
-	}
-
-	if err != nil {
-		logger.Debug("Error: %v", err)
-	}
-
-	return err
-}
-
-// Non-exposed task function - M-DNS start.
-func startMqttClient(task *tasks.Task, i ...interface{}) error {
-
-	var me *MqttClient
-	var err error
-
-	for range only.Once {
-		me, err = InterfaceToTypeMqttClient(i[0])
-		if err != nil {
-			break
-		}
-
-		// Already started as part of initMqttClient().
-
-		logger.Debug("MqttClient %s started OK", me.EntityId.String())
-
-		err = nil
-	}
-
-	if err != nil {
-		logger.Debug("Error: %v", err)
-	}
-
-	return err
-}
-
-// Non-exposed task function - M-DNS monitoring.
-func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
-
-	var me *MqttClient
-	var err error
-
-	for range only.Once {
-		me, err = InterfaceToTypeMqttClient(i[0])
-		if err != nil {
-			break
-		}
-
-		//me.scannedServices = make(ServicesMap)
-		//var found ServicesMap
-		//for _, s := range browseList {
-		//	found, err = me.Browse(s, me.domain)
-		//	fmt.Printf("Browse(%v, %v) => %v\n", s, me.domain, found)
-		//	if err != nil {
-		//		break
-		//	}
-		//
-		//	for k, v := range found {
-		//		me.scannedServices[k] = v
-		//	}
-		//}
-		//
-		//// Update services
-		//err = me.updateRegisteredServices()
-		//if err != nil {
-		//	break
-		//}
-
-		logger.Debug("MqttClient %s status", me.EntityId.String())
-
-		err = nil
-	}
-
-	if err != nil {
-		logger.Debug("Error: %v", err)
-	}
-
-	return err
-}
-
-// Non-exposed task function - M-DNS stop.
-func stopMqttClient(task *tasks.Task, i ...interface{}) error {
-
-	var me *MqttClient
-	var err error
-
-	for range only.Once {
-		me, err = InterfaceToTypeMqttClient(i[0])
-		if err != nil {
-			break
-		}
-
-		err = me.ChannelHandler.StopHandler()
-		if err != nil {
-			break
-		}
-
-		logger.Debug("MqttClient %s stopped", me.EntityId.String())
-
-		err = nil
-	}
-
-	if err != nil {
-		logger.Debug("Error: %v", err)
-	}
-
-	return err
-}
-////////////////////////////////////////////////////////////////////////////////
-// Executed from a channel
-
-// Non-exposed channel function that responds to a "status" channel request.
-// Produces the status of the M-DNS handler via a channel.
-func statusHandler(event *messages.Message, i channels.Argument) channels.Return {
-
-	var err error
-	var me *MqttClient
-
-	for range only.Once {
-		me, err = InterfaceToTypeMqttClient(i)
-		if err != nil {
-			break
-		}
-
-		logger.Debug("MqttClient %s handler status OK", me.EntityId.String())
-	}
-
-	if err != nil {
-		logger.Debug("Error: %v", err)
-	}
-
-	return err
-}
-
-// Non-exposed channel function that responds to an "stop" channel request.
-// Causes the M-DNS handler task to stop via a channel.
-func stopHandler(event *messages.Message, i channels.Argument) channels.Return {
-
-	var err error
-	var me *MqttClient
-
-	for range only.Once {
-		me, err = InterfaceToTypeMqttClient(i)
-		if err != nil {
-			break
-		}
-
-		err = me.StopHandler()
-		if err != nil {
-			break
-		}
-
-		logger.Debug("MqttClient %s handler stopped OK", me.EntityId.String())
-	}
-
-	if err != nil {
-		logger.Debug("Error: %v", err)
+	if me.EnsureNotNil() == nil {
+		// Save last state.
+		me.Error = err
 	}
 
 	return err
 }
 
 
-// Non-exposed channel function that responds to an "start" channel request.
-// Causes the M-DNS handler task to start via a channel.
-func startHandler(event *messages.Message, i channels.Argument) channels.Return {
-
-	var err error
-	var me *MqttClient
-
-	for range only.Once {
-		me, err = InterfaceToTypeMqttClient(i)
-		if err != nil {
-			break
-		}
-
-		err = me.StartHandler()
-		if err != nil {
-			break
-		}
-
-		logger.Debug("MqttClient %s handler started OK", me.EntityId.String())
-	}
-
-	if err != nil {
-		logger.Debug("Error: %v", err)
-	}
-
-	return err
-}
-
-
-
-func (me *MqttClient) initMqttClient() error {
+func (me *MqttClient) ConnectToServer(u string) error {
 
 	var err error
 
-	status.Success("GBevents - MQTT client started (%s).", me.EntityId.String()).Log()
-
 	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
+
+		if u == "" {
+			_ = me.Channels.PublishCallerState(me.EntityId, messages.MessageStateUnconfigured)
+			err = errors.New(string(messages.MessageStateUnconfigured))
 			break
 		}
 
-		topic := messages.Topic{
-			Address: me.EntityId,
-			SubTopic: "*",
+		fmt.Printf("Server: %v\n", me.Server)
+		me.Server, err = url.Parse(u)
+		if err != nil {
+			err = errors.New("unable to parse MQTT client config")
+			break
 		}
+
+		me.instance.options.AddBroker(me.Server.String())
+		if me.Server.User != nil {
+			me.instance.options.SetUsername(me.Server.User.Username())
+			p, ok := me.Server.User.Password()
+			if !ok {
+				_ = me.Channels.PublishCallerState(me.EntityId, messages.MessageStateUnconfigured)
+				err = errors.New(string(messages.MessageStateUnconfigured))
+				break
+			}
+			me.instance.options.SetPassword(p)
+		}
+
+		fmt.Printf("Options: %v\n", me.instance.options)
+
+		myWill := me.EntityId.CreateTopic(messages.SubTopicState).String()
+		me.instance.options.SetWill(myWill, "stopped", topics.QosFailure, false)
+		fmt.Printf("Will: %v\n", myWill)
+
+		me.instance.client = mqtt.NewClient(me.instance.options)
+		if me.instance.client == nil {
+			err = errors.New("unable to create MQTT client config")
+			break
+		}
+
+		topic := me.EntityId.ConstructTopic(me.EntityId, messages.SubTopicGlob)
 
 		// uri.Path[1:len(uri.Path)]
 		err = topic.EnsureNotNil()
@@ -427,41 +208,28 @@ func (me *MqttClient) initMqttClient() error {
 			break
 		}
 
-		err = me.connect()
-		if err != nil {
+		me.instance.token = me.instance.client.Connect()
+		if me.instance.token == nil {
+			err = errors.New(fmt.Sprintf("MQTT client %s unable to connect to %s", me.EntityId.String(), me.Server.String()))
 			break
 		}
 
-		status.Success("GBevents - MQTT client stopped (%s).", me.EntityId.String()).Log()
+		for !me.instance.token.WaitTimeout(me.waitTime) {
+		}
+
+		err := me.instance.token.Error()
+		if err != nil {
+			break
+		}
 	}
 
-	return err
-}
+	if err != nil {
+		logger.Debug("Error: %v", err)
+	}
 
-
-func (me *MqttClient) connect() error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		me.token = me.client.Connect()
-		if me.token == nil {
-			err = errors.New("unable to obtain an MQTT client token")
-			break
-		}
-
-		for !me.token.WaitTimeout(3 * time.Second) {
-		}
-
-		err := me.token.Error()
-		if err != nil {
-			break
-		}
+	if me.EnsureNotNil() == nil {
+		// Save last state.
+		me.Error = err
 	}
 
 	return err

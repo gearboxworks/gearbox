@@ -6,11 +6,11 @@ import (
 	"strings"
 )
 
-type Topic struct {
+type MessageTopic struct {
 	Address  MessageAddress
 	SubTopic
 }
-type Topics []Topic
+type Topics []MessageTopic
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -21,9 +21,9 @@ func (me *TopicString) String() string {
 	return string(*me)
 }
 
-func (me *TopicString) Split() Topic {
+func (me *TopicString) Split() MessageTopic {
 
-	var topic Topic
+	var topic MessageTopic
 
 	// Expecting a Topic like: "/address/topic/..."
 	// This means that [0] == "", [1] == address, [2:] == true topic.
@@ -43,31 +43,41 @@ func (me *TopicString) Split() Topic {
 	return topic
 }
 
-func StringToTopic(t string) Topic {
+func StringToTopic(t string) MessageTopic {
 
 	ts := TopicString(t)
 
 	return ts.Split()
 }
 
-func StringsToTopic(client string, topic string) Topic {
+func StringsToTopic(client string, topic string) MessageTopic {
 
 	ts := TopicString(fmt.Sprintf(TopicSeparator, client, topic))
 
 	return ts.Split()
 }
 
-func CreateTopicGlob(client MessageAddress) *Topic {
 
-	return &Topic{Address: client, SubTopic: "*"}
+func CreateTopicGlob(client MessageAddress) *MessageTopic {
+
+	return &MessageTopic{Address: client, SubTopic: SubTopicGlob}
+}
+func (client MessageAddress) CreateTopicGlob() *MessageTopic {
+
+	return &MessageTopic{Address: client, SubTopic: SubTopicGlob}
 }
 
-func CreateTopic(client MessageAddress, topic SubTopic) *Topic {
 
-	return &Topic{Address: client, SubTopic: topic}
+func CreateTopic(client MessageAddress, topic SubTopic) *MessageTopic {
+
+	return &MessageTopic{Address: client, SubTopic: topic}
+}
+func (client MessageAddress) CreateTopic(topic SubTopic) *MessageTopic {
+
+	return &MessageTopic{Address: client, SubTopic: topic}
 }
 
-const TopicSeparator = "/%s/%s"
+
 func SprintfTopic(address MessageAddress, topic SubTopic) string {
 
 	return fmt.Sprintf(TopicSeparator, address.String(), topic.String())
@@ -77,7 +87,7 @@ func SprintfTopic(address MessageAddress, topic SubTopic) string {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-func (me *Topic) EnsureNotNil() error {
+func (me *MessageTopic) EnsureNotNil() error {
 
 	var err error
 
@@ -85,7 +95,7 @@ func (me *Topic) EnsureNotNil() error {
 		case me == nil:
 			err = errors.New("topic is nil")
 
-		case me.Address.IsNil() == true:
+		case me.Address.EnsureNotNil() != nil:
 			err = errors.New("topic address is nil")
 
 		case me.SubTopic.EnsureNotNil() != nil:
@@ -98,7 +108,7 @@ func (me *Topic) EnsureNotNil() error {
 	return err
 }
 
-func (me *Topic) String() string {
+func (me *MessageTopic) String() string {
 
 	var err error
 	var s string
@@ -116,7 +126,6 @@ func (me *Topic) String() string {
 
 ////////////////////////////////////////////////////////////////////////////////
 type SubTopic string
-var IsEmptySubTopic SubTopic
 func (me *SubTopic) EnsureNotNil() error {
 
 	var err error

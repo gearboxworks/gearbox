@@ -7,6 +7,7 @@ import (
 	"gearbox/global"
 	"gearbox/heartbeat/gbevents/channels"
 	"gearbox/heartbeat/gbevents/messages"
+	"gearbox/heartbeat/gbevents/mqttClient"
 	"gearbox/heartbeat/gbevents/network"
 	"gearbox/help"
 	"gearbox/only"
@@ -77,16 +78,16 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*EventBroker, status.Status) 
 
 		//_, _, _ = _args.FindMqttBroker()
 		//
-		//// 3. MQTT allows inter-process communications.
-		//err = _args.MqttClient.New(OsSupport, mqttClient.Args{})
-		//if err != nil {
-		//	sts = status.Fail().
-		//		SetMessage("failed to init MQTT client handler").
-		//		SetAdditional("", ).
-		//		SetData(err).
-		//		SetHelp(status.AllHelp, help.ContactSupportHelp())
-		//	break
-		//}
+		// 3. MQTT allows inter-process communications.
+		err = _args.MqttClient.New(OsSupport, mqttClient.Args{Channels: &_args.Channels})
+		if err != nil {
+			sts = status.Fail().
+				SetMessage("failed to init MQTT client handler").
+				SetAdditional("", ).
+				SetData(err).
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			break
+		}
 
 		// _args.ZeroConf.Browse("_workstation._tcp")
 		// daemon.SimpleWaitLoop("ZeroConf", 2000, time.Second * 5)
@@ -350,7 +351,7 @@ func (me *EventBroker) CreateEntity(serviceName string) {
 
 	time.Sleep(time.Second * 700)
 
-	err = me.ZeroConf.UnregisterByChannel(s1ref.EntityId)
+	err = me.ZeroConf.UnregisterByChannel(me.EntityId, s1ref.EntityId)
 	fmt.Printf("Response(me.ZeroConf.UnregisterByChannel): %v\n", err)
 
 	err = me.ZeroConf.UnregisterByUuid(s1ref.EntityId)

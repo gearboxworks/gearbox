@@ -11,7 +11,18 @@ func (me *MqttClient) EnsureNotNil() error {
 	var err error
 
 	if me == nil {
-		err = errors.New("unexpected software error")
+		err = errors.New("MQTT client instance nil")
+	}
+
+	return err
+}
+
+func EnsureNotNil(me *MqttClient) error {
+
+	var err error
+
+	if me == nil {
+		err = errors.New("MQTT client instance nil")
 	}
 
 	return err

@@ -6,7 +6,7 @@ import (
 	"gearbox/only"
 )
 
-func (me *Channels) UnSubscribe(topic messages.Topic) error {
+func (me *Channels) UnSubscribe(topic messages.MessageTopic) error {
 
 	var err error
 
@@ -31,8 +31,11 @@ func (me *Channels) UnSubscribe(topic messages.Topic) error {
 		logger.Debug("Error: %v", err)
 	}
 
-	// Save last state.
-	me.Error = err
+	if me.EnsureNotNil() == nil {
+		// Save last state.
+		me.Error = err
+	}
+
 	return err
 }
 

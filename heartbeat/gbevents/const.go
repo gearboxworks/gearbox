@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gearbox/heartbeat/gbevents/channels"
 	"gearbox/heartbeat/gbevents/gbMqttBroker"
+	"gearbox/heartbeat/gbevents/messages"
 	"gearbox/heartbeat/gbevents/mqttClient"
 	"gearbox/heartbeat/gbevents/network"
 	oss "gearbox/os_support"
@@ -13,8 +14,8 @@ import (
 
 
 type EventBroker struct {
-	// EntityId messages.MessageAddress
-	EntityId   string
+	EntityId   messages.MessageAddress
+	//EntityId   string
 	Boxname    string
 	PidFile    string
 

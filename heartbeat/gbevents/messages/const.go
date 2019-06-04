@@ -1,66 +1,33 @@
 package messages
 
-import (
-	"time"
+import "time"
+
+const (
+	SubTopicState  = SubTopic("state")
+	SubTopicStart  = SubTopic("start")
+	SubTopicStop   = SubTopic("stop")
+	SubTopicStatus = SubTopic("state")
+	SubTopicError  = SubTopic("error")
+	SubTopicGlob   = SubTopic("*")
+
+	SubTopicUnregister = SubTopic("unregister")
+	SubTopicRegister = SubTopic("register")
+	SubTopicSubscribe = SubTopic("subscribe")
+	SubTopicUnsubscribe = SubTopic("unsubscribe")
+
+	MessageStateIdle = MessageText("idle")
+	MessageStateUnconfigured = MessageText("unconfigured")
+	MessageStateError = MessageText("error")
+	MessageStateUp = MessageText("up")
+	MessageStateDown = MessageText("down")
+	MessageStateStarting = MessageText("starting")
+	MessageStateStopping = MessageText("stopping")
+
+	TopicSeparator = "/%s/%s"
 )
 
+var DefaultNilTime = time.Time{}
+var IsEmptySubTopic SubTopic
 
-type Message struct {
-	Time MessageTime
-	Source  MessageAddress
-	// Destination  MessageAddress
-	Topic Topic
-	Text MessageText
-}
-
-type MessageTime time.Time
-func (me *MessageTime) IsNil() bool {
-
-	if *me == MessageTime(defaultNilTime) {
-		return true
-	}
-
-	return false
-}
-func (me *MessageTime) Now() MessageTime {
-
-	return MessageTime(time.Now())
-}
-func (me *MessageTime) Convert() time.Time {
-
-	return time.Time(*me)
-}
-
-type MessageAddress string
-func (me *MessageAddress) String() string {
-
-	return string(*me)
-}
-func (me *MessageAddress) IsNil() bool {
-
-	// 	var emptyMA MessageAddress
-	//sts = status.Warn("").
-	//	SetMessage("client src address is empty").
-	//	SetAdditional("", ).
-	//	SetData("").
-	//	SetHelp(status.AllHelp, help.ContactSupportHelp())
-
-	if me == nil {
-		return true
-	}
-
-	return false
-}
-
-
-type MessageText string
-func (me *MessageText) String() string {
-
-	return string(*me)
-}
-func (me *MessageText) ByteArray() []byte {
-
-	return []byte(*me)
-}
-
-var defaultNilTime = time.Time{}
+// 	DefaultExitString = "exit"
+//	SubTopicState     = messages.SubTopic("state")

@@ -8,6 +8,12 @@ import (
 	"github.com/olebedev/emitter"
 )
 
+
+const (
+	DefaultEntityId   = "eventbroker-channels"
+)
+
+
 type Channels struct {
 	entityId    messages.MessageAddress
 	osSupport   oss.OsSupporter
@@ -17,14 +23,11 @@ type Channels struct {
 }
 type Args Channels
 
-const DefaultEntityId = "gearbox-channels"
-const DefaultExitString = "exit"
-
 type channelsInstance struct {
-	emitter   emitter.Emitter
-	events    emitter.Event
-	emits     chan struct{}
-	group     emitter.Group
+	emitter emitter.Emitter
+	events  emitter.Event
+	emits   chan struct{}
+	group   emitter.Group
 }
 
 type Event emitter.Event
@@ -32,13 +35,13 @@ type Event emitter.Event
 type Subscribers map[messages.MessageAddress]*Subscriber
 
 type Subscriber struct {
-	Address   messages.MessageAddress
+	Address messages.MessageAddress
 	// References
-	Callbacks Callbacks
-	Arguments Arguments
-	Returns   Returns
-	Executed  Executed
-	instance  *channelsInstance
+	Callbacks      Callbacks
+	Arguments      Arguments
+	Returns        Returns
+	Executed       Executed
+	parentInstance *channelsInstance
 }
 type Callback func(event *messages.Message, you Argument) Return
 type Callbacks map[messages.SubTopic]Callback
@@ -56,42 +59,40 @@ type Reference struct {
 }
 type References map[messages.SubTopic]Reference
 
-
 func EnsureArgumentNotNil(me Argument) error {
 
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("channel argument is nil")
+	case me == nil:
+		err = errors.New("channel argument is nil")
 
-		default:
-			// err = errors.New("subscriber not nil")
+	default:
+		// err = errors.New("subscriber not nil")
 	}
 
 	return err
 }
-
 
 func (me *Subscriber) EnsureNotNil() error {
 
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("subscriber is nil")
+	case me == nil:
+		err = errors.New("subscriber is nil")
 
-		case me.Address.IsNil() == true:
-			err = errors.New("subscriber address is nil")
+	case me.Address.EnsureNotNil() != nil:
+		err = errors.New("subscriber address is nil")
 
-		case me.Callbacks == nil:
-			err = errors.New("subscriber callbacks is nil")
+	case me.Callbacks == nil:
+		err = errors.New("subscriber callbacks is nil")
 
-		case me.Returns == nil:
-			err = errors.New("subscriber returns is nil")
+	case me.Returns == nil:
+		err = errors.New("subscriber returns is nil")
 
-		default:
-			// err = errors.New("subscriber not nil")
+	default:
+		// err = errors.New("subscriber not nil")
 	}
 
 	return err

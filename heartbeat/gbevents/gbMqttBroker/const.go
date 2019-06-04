@@ -40,12 +40,12 @@ type Client struct {
 }
 
 type msgCallback struct {
-	Topic    messages.Topic
+	Topic    messages.MessageTopic
 	Function mqtt.MessageHandler
 }
 
 const (
-	DefaultEntityId  = "gearbox-mqtt"
+	DefaultEntityId  = "eventbroker-mqttbroker"
 	DefaultBrokerEntityId  = DefaultEntityId + "-broker"
 	DefaultClientEntityId  = DefaultEntityId + "-client"
 	DefaultServerUrl = "tcp://0.0.0.0:1883"

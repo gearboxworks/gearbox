@@ -12,6 +12,27 @@ import (
 	"time"
 )
 
+
+const (
+	DefaultEntityId = "eventbroker-mqttclient"
+	defaultWaitTime = time.Millisecond * 2000
+	defaultDomain   = "local"
+	DefaultRetries  = 12
+	DefaultRetryDelay = time.Second * 3
+	DefaultServer = "tcp://127.0.0.1:1883"
+)
+
+
+var msgTemplate = messages.Message{
+	Source: DefaultEntityId,
+	Topic: messages.MessageTopic{
+		Address: "",
+		SubTopic: "",
+	},
+	Text: "",
+}
+
+
 type MqttClient struct {
 	EntityId        messages.MessageAddress
 	osSupport       oss.OsSupporter
@@ -20,24 +41,20 @@ type MqttClient struct {
 	Channels        *channels.Channels
 	ChannelHandler  *channels.Subscriber
 	Server          *url.URL
-	Config          *mqtt.ClientOptions
 
+	instance        clientInstance
 	restartAttempts int
 	waitTime        time.Duration
 	domain          string
-	client          mqtt.Client
-	token           mqtt.Token
 	services        ServicesMap
 }
 type Args MqttClient
 
-const (
-	DefaultEntityId = "gearbox-mqtt-client"
-	defaultWaitTime = time.Millisecond * 2000
-	defaultDomain   = "local"
-	DefaultRetries  = 12
-	DefaultRetryDelay = time.Second * 5
-)
+type clientInstance struct {
+	options *mqtt.ClientOptions
+	client  mqtt.Client
+	token   mqtt.Token
+}
 
 type msgCallback struct {
 	Topic    Topic

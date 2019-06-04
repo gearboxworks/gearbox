@@ -28,7 +28,7 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 			break
 		}
 
-		logger.Debug("GBevents - ZeroConf scan started (%s).", me.EntityId.String())
+		logger.Debug("ZeroConf scan started (%s).", me.EntityId.String())
 		resolver, err := zeroconf.NewResolver(nil)
 		if err != nil {
 			err = errors.New("failed to initialize zeroconf resolver")
@@ -59,7 +59,7 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 
 		<-ctx.Done()
 
-		logger.Debug("GBevents - ZeroConf scan finished (%s).", me.EntityId.String())
+		logger.Debug("ZeroConf scan finished (%s).", me.EntityId.String())
 	}
 
 	if err != nil {
@@ -100,7 +100,7 @@ func (me *ZeroConf) FindService(e CreateEntry) (*Service, error) {
 			break
 		}
 		if sc != nil {
-			logger.Debug("ZeroConf %s found network service %s OK", me.EntityId.String(), u.String())
+			logger.Debug("ZeroConf %s found network service OK", me.EntityId.String())
 			break
 		}
 
