@@ -7,7 +7,7 @@ import (
 	"gearbox/global"
 	"gearbox/help"
 	"gearbox/only"
-	"gearbox/os_support"
+	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"regexp"
@@ -20,7 +20,7 @@ import (
 	"text/template"
 )
 
-// @TODO Mick - Any reason we can't move all OS-specific logic to os_support?
+// @TODO Mick - Any reason we can't move all OS-specific logic to osbridge?
 
 // @TODO Consider using https://github.com/kardianos/service
 // 	Daemon "github.com/kardianos/service"
@@ -30,7 +30,7 @@ type Daemon struct {
 	ServiceFile string
 	ServiceData PlistData
 
-	OsSupport oss.OsSupporter
+	OsBridge osbridge.OsBridger
 }
 type Args Daemon
 
@@ -56,13 +56,13 @@ var PlistTemplate = `
 </plist>
 `
 
-func NewDaemon(OsSupport oss.OsSupporter, args ...Args) *Daemon {
+func NewDaemon(OsBridge osbridge.OsBridger, args ...Args) *Daemon {
 	var _args Args
 	if len(args) > 0 {
 		_args = args[0]
 	}
 
-	_args.OsSupport = OsSupport
+	_args.OsBridge = OsBridge
 
 	if _args.Boxname == "" {
 		_args.Boxname = global.Brandname
@@ -80,7 +80,7 @@ func NewDaemon(OsSupport oss.OsSupporter, args ...Args) *Daemon {
 	if _args.ServiceData.Path == "" {
 		execCwd, _ := os.Getwd()
 		if execCwd == "/" {
-			execCwd = string(OsSupport.GetAdminRootDir())
+			execCwd = string(OsBridge.GetAdminRootDir())
 		}
 		_args.ServiceData.Path = execCwd
 	}
@@ -252,7 +252,7 @@ func (me *Daemon) Unload() (sts status.Status) {
 
 func (me *Daemon) getFile(s string) []byte {
 
-	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), s))
+	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), s))
 	if fp == "" {
 		return nil
 	}
@@ -305,7 +305,7 @@ func (me *Daemon) GetState() (sts status.Status) {
 	*/
 
 	/*
-		fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), s))
+		fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), s))
 		if fp == "" {
 			return nil
 		}

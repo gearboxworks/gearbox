@@ -8,8 +8,8 @@ import (
 	"gearbox/heartbeat/monitor"
 	"gearbox/help"
 	"gearbox/only"
-	"gearbox/os_support"
 	"gearbox/ssh"
+	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/getlantern/systray"
@@ -58,7 +58,7 @@ type Heartbeat struct {
 	ConsoleReadWait time.Duration
 	ShowConsole     bool
 
-	OsSupport oss.OsSupporter
+	OsBridge osbridge.OsBridger
 }
 type Args Heartbeat
 
@@ -79,7 +79,7 @@ type menuStruct struct {
 	createEntry  *systray.MenuItem
 }
 
-func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
+func New(OsBridge osbridge.OsBridger, args ...Args) (*Heartbeat, status.Status) {
 
 	var _args Args
 	var sts status.Status
@@ -91,12 +91,12 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 			_args = args[0]
 		}
 
-		_args.OsSupport = OsSupport
+		_args.OsBridge = OsBridge
 		foo := box.Args{}
 		copier.Copy(&foo, &_args)
 
 		// Start a new VM Box instance.
-		_args.BoxInstance = box.NewBox(OsSupport, foo)
+		_args.BoxInstance = box.NewBox(OsBridge, foo)
 
 		if _args.Boxname == "" {
 			_args.BoxInstance.Boxname = global.Brandname
@@ -160,12 +160,12 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 		}
 
 		execPath, _ := os.Executable()
-		execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/heartbeat" // os.Getwd()
+		execCwd := string(_args.OsBridge.GetAdminRootDir()) + "/heartbeat" // os.Getwd()
 
-		_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetAdminRootDir(), DefaultPidFile))
+		_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsBridge.GetAdminRootDir(), DefaultPidFile))
 
 		// Start a new Daemon instance.
-		_args.DaemonInstance = daemon.NewDaemon(_args.OsSupport, daemon.Args{
+		_args.DaemonInstance = daemon.NewDaemon(_args.OsBridge, daemon.Args{
 			Boxname: _args.Boxname,
 			ServiceData: daemon.PlistData{
 				Label:       "com.gearbox.heartbeat",
@@ -221,7 +221,7 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 
 		// Create a new VM Box instance.
 		fmt.Printf("Gearbox: Creating unfsd instance.\n")
-		me.NfsInstance, sts = monitor.NewUnfsd(me.OsSupport)
+		me.NfsInstance, sts = monitor.NewUnfsd(me.OsBridge)
 
 		fmt.Printf("Gearbox: Starting systray.\n")
 		systray.Run(me.onReady, me.onExit)
@@ -505,7 +505,7 @@ func getClockTime(tz string) string {
 
 func (me *Heartbeat) getIcon(s string) []byte {
 
-	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), s))
+	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), s))
 	if fp == "" {
 		return nil
 	}

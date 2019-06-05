@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gearbox/cache"
 	"gearbox/only"
-	"gearbox/test/mock"
 	"gearbox/types"
 	"gearbox/util"
 	"gearbox/validate"
@@ -24,7 +23,7 @@ const cacheKeyExpired = "cache key expired"
 
 func TestCache(t *testing.T) {
 
-	oss := mock.NewOsSupport(t)
+	oss := mock.NewOsBridge(t)
 	c := cache.NewCache(oss.GetCacheDir())
 
 	//t.Run("SetGet", func(t *testing.T) {

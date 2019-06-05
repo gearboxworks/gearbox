@@ -8,7 +8,7 @@ import (
 	"gearbox/heartbeat/daemon"
 	"gearbox/help"
 	"gearbox/only"
-	oss "gearbox/os_support"
+	oss "github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"io/ioutil"
@@ -39,7 +39,7 @@ type Unfsd struct {
 	WaitDelay   time.Duration
 	WaitRetries int
 
-	OsSupport oss.OsSupporter
+	OsBridge oss.OsBridger
 }
 type Args Unfsd
 
@@ -106,7 +106,7 @@ const DefaultExportsJson = DefaultBaseDir + "/etc/exports.json"
 const DefaultNfsBin = DefaultBaseDir + "/bin/unfsd"
 const DefaultPidFile = DefaultBaseDir + "/etc/unfsd.pid"
 
-func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
+func NewUnfsd(OsBridge oss.OsBridger, args ...Args) (*Unfsd, status.Status) {
 
 	var sts status.Status
 	var _args Args
@@ -118,26 +118,26 @@ func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 			_args = args[0]
 		}
 
-		_args.OsSupport = OsSupport
+		_args.OsBridge = OsBridge
 
 		if _args.Boxname == "" {
 			_args.Boxname = global.Brandname
 		}
 
 		if _args.ExportsBaseDir == "" {
-			_args.ExportsBaseDir = string(OsSupport.GetUserHomeDir())
+			_args.ExportsBaseDir = string(OsBridge.GetUserHomeDir())
 		}
 
 		if _args.ExportsFile == "" {
-			_args.ExportsFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetAdminRootDir(), DefaultExportsFile))
+			_args.ExportsFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsBridge.GetAdminRootDir(), DefaultExportsFile))
 		}
 
 		if _args.ExportsJson == "" {
-			_args.ExportsJson = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetAdminRootDir(), DefaultExportsJson))
+			_args.ExportsJson = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsBridge.GetAdminRootDir(), DefaultExportsJson))
 		}
 
-		_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetAdminRootDir(), DefaultPidFile))
-		_args.NfsCmd = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetAdminRootDir(), DefaultNfsBin))
+		_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsBridge.GetAdminRootDir(), DefaultPidFile))
+		_args.NfsCmd = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsBridge.GetAdminRootDir(), DefaultNfsBin))
 
 		// Need to check for existance of UNFSD pid.
 
@@ -182,10 +182,10 @@ func NewUnfsd(OsSupport oss.OsSupporter, args ...Args) (*Unfsd, status.Status) {
 		fmt.Printf("ExportsFile:%s\n", _args.ExportsFile)
 		fmt.Printf("NfsCmd:%s\n", _args.NfsCmd)
 
-		execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/" + DefaultBaseDir // os.Getwd()
+		execCwd := string(_args.OsBridge.GetAdminRootDir()) + "/" + DefaultBaseDir // os.Getwd()
 
 		// Start a new UNFSD instance.
-		_args.Daemon = daemon.NewDaemon(_args.OsSupport, daemon.Args{
+		_args.Daemon = daemon.NewDaemon(_args.OsBridge, daemon.Args{
 			Boxname: _args.Boxname,
 			ServiceData: daemon.PlistData{
 				Label:       "com.gearbox.unfsd",
@@ -289,7 +289,7 @@ func (me *Unfsd) readJsonExport() status.Status {
 		}
 
 		if is.Warn(sts) {
-			// Or use me.OsSupport.GetSuggestedBasedir()
+			// Or use me.OsBridge.GetProjectDir()
 			err = me.NewServer(me.ExportsBaseDir, "Sites", "0.0.0.0/0")
 			if err != nil {
 				sts = status.Wrap(err).SetMessage("unable to instantiate server for 'Sites")

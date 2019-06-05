@@ -6,9 +6,9 @@ import (
 	"gearbox/global"
 	"gearbox/help"
 	"gearbox/only"
-	"gearbox/os_support"
 	"gearbox/ssh"
 	"gearbox/util"
+	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	// dmvb "github.com/docker/machine/drivers/virtualbox"
@@ -47,11 +47,11 @@ type Box struct {
 	ConsoleReadWait time.Duration
 	ShowConsole     bool
 
-	OsSupport oss.OsSupporter
+	OsBridge osbridge.OsBridger
 }
 type Args Box
 
-func NewBox(OsSupport oss.OsSupporter, args ...Args) *Box {
+func NewBox(OsBridge osbridge.OsBridger, args ...Args) *Box {
 
 	var _args Args
 	var sts status.Status
@@ -63,7 +63,7 @@ func NewBox(OsSupport oss.OsSupporter, args ...Args) *Box {
 			_args = args[0]
 		}
 
-		_args.OsSupport = OsSupport
+		_args.OsBridge = OsBridge
 
 		if _args.Boxname == "" {
 			_args.Boxname = global.Brandname
@@ -106,11 +106,11 @@ func NewBox(OsSupport oss.OsSupporter, args ...Args) *Box {
 		}
 
 		if _args.VmBaseDir == "" {
-			_args.VmBaseDir = string(OsSupport.GetUserConfigDir() + "/box/vm")
+			_args.VmBaseDir = string(OsBridge.GetUserConfigDir() + "/box/vm")
 		}
 
 		if _args.VmIsoDir == "" {
-			_args.VmIsoDir = string(OsSupport.GetUserConfigDir() + "/box/iso")
+			_args.VmIsoDir = string(OsBridge.GetUserConfigDir() + "/box/iso")
 		}
 
 		_args.VmIsoDlIndex = 100

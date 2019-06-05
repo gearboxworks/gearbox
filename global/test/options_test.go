@@ -29,7 +29,7 @@ func TestGlobalOptions(t *testing.T) {
 
 func testGlobalOption(t *testing.T, glopt *gopt.Options) {
 	gb := gearbox.NewGearbox(&gearbox.Args{
-		OsSupport:     mock.NewOsSupport(t),
+		OsBridge:      mock.NewOsSupport(t),
 		GlobalOptions: glopt,
 	})
 	gb.SetConfig(includes.NewTestConfig(gb))

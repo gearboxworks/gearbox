@@ -6,7 +6,7 @@ import (
 	"gearbox/apimvc"
 	"gearbox/app/cmd"
 	"gearbox/gearbox"
-	"gearbox/os_support"
+	"gearbox/global"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"os"
@@ -16,7 +16,7 @@ import (
 
 func main() {
 	gb := gearbox.NewGearbox(&gearbox.Args{
-		OsSupport:     oss.Get(),
+		OsBridge:      gearbox.GetOsBridge(global.Brandname, global.UserDataPath),
 		GlobalOptions: cmd.GlobalOptions,
 	})
 	gearbox.Instance = gb

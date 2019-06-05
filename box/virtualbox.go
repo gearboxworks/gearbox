@@ -337,9 +337,9 @@ func (me *Box) cmdModifyVmBasic() (KeyValueMap, status.Status) {
 			break
 		}
 
-		// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsSupport.GetAdminRootDir()) + "/" + IconLogo)
+		// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsBridge.GetAdminRootDir()) + "/" + IconLogo)
 		_, _, sts = me.Run("modifyvm", me.Boxname,
-			"--description", me.Boxname+" OS VM", "--iconfile", string(me.OsSupport.GetAdminRootDir())+"/"+IconLogoPng)
+			"--description", me.Boxname+" OS VM", "--iconfile", string(me.OsBridge.GetAdminRootDir())+"/"+IconLogoPng)
 		if is.Error(sts) {
 			break
 		}

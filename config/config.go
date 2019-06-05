@@ -6,7 +6,6 @@ import (
 	"gearbox/box"
 	"gearbox/help"
 	"gearbox/only"
-	"gearbox/os_support"
 	"gearbox/types"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
@@ -62,7 +61,7 @@ var ProjectRootAddCmd *cobra.Command
 type Config struct {
 	About         string            `json:"about"`
 	LearnMore     string            `json:"learn_more"`
-	OsSupport     oss.OsSupporter   `json:"-"`
+	OsBridge      OsBridger         `json:"-"`
 	SchemaVersion string            `json:"schema_version"`
 	BasedirMap    BasedirMap        `json:"basedirs"`
 	ProjectMap    ProjectMap        `json:"projects"`
@@ -77,11 +76,11 @@ func UnmarshalConfig(b []byte) Configer {
 	return &c
 }
 
-func NewConfig(OsSupport oss.OsSupporter) Configer {
+func NewConfig(OsBridge OsBridger) Configer {
 	c := &Config{
 		About:         "This is a Gearbox user configuration file.",
 		LearnMore:     "To learn about Gearbox visit https://gearbox.works",
-		OsSupport:     OsSupport,
+		OsBridge:      OsBridge,
 		SchemaVersion: SchemaVersion,
 		BasedirMap:    make(BasedirMap, 1),
 		ProjectMap:    make(ProjectMap, 0),
@@ -90,7 +89,7 @@ func NewConfig(OsSupport oss.OsSupporter) Configer {
 	}
 	c.BasedirMap[DefaultBasedirNickname] = NewBasedir(
 		DefaultBasedirNickname,
-		c.OsSupport.GetSuggestedBasedir(),
+		c.OsBridge.GetProjectDir(),
 	)
 	return c
 }
@@ -270,11 +269,11 @@ func (me *Config) Bytes() []byte {
 }
 
 func (me *Config) GetDir() types.AbsoluteDir {
-	return me.OsSupport.GetUserConfigDir()
+	return me.OsBridge.GetUserConfigDir()
 }
 
 func (me *Config) GetFilepath() types.AbsoluteFilepath {
-	fp := filepath.FromSlash(fmt.Sprintf("%s/config.json", me.OsSupport.GetUserConfigDir()))
+	fp := filepath.FromSlash(fmt.Sprintf("%s/config.json", me.OsBridge.GetUserConfigDir()))
 	return types.AbsoluteFilepath(fp)
 }
 
@@ -283,7 +282,7 @@ func (me *Config) WriteFile() (sts Status) {
 		j, err := json.MarshalIndent(me, "", "    ")
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("unable to marhsal config"),
+				Message: fmt.Sprintf("unable to marshal config"),
 				Help:    help.ContactSupportHelp(),
 			})
 			break

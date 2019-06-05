@@ -9,7 +9,7 @@ import (
 
 func newHeartbeat(me Gearboxer, args heartbeat.Args) (bx *heartbeat.Heartbeat, sts status.Status) {
 
-	bx, _ = heartbeat.New(me.GetOsSupport(), args)
+	bx, _ = heartbeat.New(me.GetOsBridge(), args)
 	sts = bx.Initialize()
 
 	return bx, sts
@@ -105,14 +105,14 @@ func (me *Gearbox) PrintHeartbeatStatus(args heartbeat.Args) (sts status.Status)
 			break
 		}
 
-//		var state string
-//		state, sts = sts.GetString()
-//		meaning := heartbeat.GetStateMeaning(heartbeat.State(state))
-//		if meaning == "" {
-//			fmt.Println(heartbeat.GetStateMeaning(heartbeat.UnknownState))
-//			break
-//		}
-//		fmt.Println(meaning)
+		//		var state string
+		//		state, sts = sts.GetString()
+		//		meaning := heartbeat.GetStateMeaning(heartbeat.State(state))
+		//		if meaning == "" {
+		//			fmt.Println(heartbeat.GetStateMeaning(heartbeat.UnknownState))
+		//			break
+		//		}
+		//		fmt.Println(meaning)
 	}
 
 	return sts

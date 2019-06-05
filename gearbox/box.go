@@ -11,7 +11,7 @@ import (
 
 func newBox(me Gearboxer, args box.Args) (bx *box.Box, sts status.Status) {
 
-	bx = box.NewBox(me.GetOsSupport(), args)
+	bx = box.NewBox(me.GetOsBridge(), args)
 	sts = bx.Initialize()
 
 	return bx, sts
@@ -92,14 +92,14 @@ func (me *Gearbox) PrintBoxStatus(args box.Args) (sts status.Status) {
 			break
 		}
 
-//		// var state string
-//		state, sts = sts.GetString()
-//		meaning := box.GetStateMeaning(box.State(state))
-//		if meaning == "" {
-//			fmt.Println(box.GetStateMeaning(box.UnknownState))
-//			break
-//		}
-//		fmt.Println(meaning)
+		//		// var state string
+		//		state, sts = sts.GetString()
+		//		meaning := box.GetStateMeaning(box.State(state))
+		//		if meaning == "" {
+		//			fmt.Println(box.GetStateMeaning(box.UnknownState))
+		//			break
+		//		}
+		//		fmt.Println(meaning)
 		fmt.Printf(">%s\n", state)
 	}
 
