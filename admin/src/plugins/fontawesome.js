@@ -19,7 +19,7 @@ import {
   faFolderOpen,
   faTrashAlt,
   faCheckCircle,
-  faPlusCircle,
+  faPlus,
   faColumns,
   faThList,
   faSortAlphaUp,
@@ -51,7 +51,7 @@ library.add(faFolder)
 library.add(faFolderOpen)
 library.add(faTrashAlt)
 library.add(faCheckCircle)
-library.add(faPlusCircle)
+library.add(faPlus)
 library.add(faColumns)
 library.add(faThList)
 library.add(faSortAlphaUp)
