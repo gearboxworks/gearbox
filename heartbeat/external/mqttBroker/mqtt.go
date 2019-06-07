@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/global"
-	"gearbox/heartbeat/daemon"
+	"gearbox/heartbeat/eventbroker/daemon"
 	"gearbox/help"
 	"gearbox/only"
 	oss "gearbox/os_support"
@@ -17,7 +17,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -173,7 +172,7 @@ func NewMqttBroker(OsSupport oss.OsSupporter, args ...Args) (*MqttBroker, status
 		// Start a new UNFSD instance.
 		_args.Daemon = daemon.NewDaemon(_args.OsSupport, daemon.Args{
 			Boxname: _args.Boxname,
-			ServiceData: daemon.PlistData {
+			ServiceData: daemon.PlistData{
 				Label: "com.gearbox.unfsd",
 				Program:   _args.NfsCmd,
 				ProgramArgs: _args.NfsArgs,

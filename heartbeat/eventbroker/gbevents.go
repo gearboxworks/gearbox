@@ -1,0 +1,264 @@
+package eventbroker
+
+import (
+	"errors"
+	"fmt"
+	"gearbox/box"
+	"gearbox/global"
+	"gearbox/heartbeat/eventbroker/channels"
+	"gearbox/heartbeat/eventbroker/daemon"
+	"gearbox/heartbeat/eventbroker/eblog"
+	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/mqttClient"
+	"gearbox/heartbeat/eventbroker/network"
+	"gearbox/heartbeat/eventbroker/states"
+	"gearbox/only"
+	oss "gearbox/os_support"
+	"github.com/jinzhu/copier"
+	"net/url"
+	"path/filepath"
+	"time"
+)
+
+
+func New(OsSupport oss.OsSupporter, args ...Args) (*EventBroker, error) {
+
+	var _args Args
+	var err error
+
+	me := &EventBroker{}
+
+	for range only.Once {
+
+		if len(args) > 0 {
+			_args = args[0]
+		}
+
+		if _args.Boxname == "" {
+			_args.Boxname = global.Brandname
+		}
+
+		if _args.EntityId == "" {
+			_args.EntityId = DefaultEntityName
+		}
+
+		_args.osSupport = OsSupport
+		foo := box.Args{}
+		err = copier.Copy(&foo, &_args)
+		if err != nil {
+			err = me.EntityId.ProduceError("unable to copy config args")
+			break
+		}
+
+		_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.osSupport.GetAdminRootDir(), defaultPidFile))
+
+		// 1. Channel - provides inter-thread communications.
+		err = _args.Channels.New(OsSupport, channels.Args{})
+		if err != nil {
+			break
+		}
+
+		// 2. ZeroConf - provides discovery and management of network services.
+		err = _args.ZeroConf.New(OsSupport, network.Args{Channels: &_args.Channels})
+		if err != nil {
+			break
+		}
+
+		// 3. Daemon - provides control over arbitrary services.
+		err = _args.Daemon.New(OsSupport, daemon.Args{Channels: &_args.Channels})
+		if err != nil {
+			break
+		}
+
+		// 4. MQTT - provides inter-process communications.
+		err = _args.MqttClient.New(OsSupport, mqttClient.Args{Channels: &_args.Channels})
+		if err != nil {
+			break
+		}
+
+		*me = EventBroker(_args)
+
+		_ = me.Channels.PublishCallerState(me.EntityId, states.StateIdle)
+		eblog.Debug("event broker created OK")
+	}
+
+	if eblog.LogIfError(me, err) {
+		// Save last state.
+		me.State.Error = err
+		_ = me.Channels.PublishCallerState(me.EntityId, states.StateError)
+	}
+
+	return me, err
+}
+
+
+func (me *EventBroker) Start() error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		// 1. Channel - provides inter-thread communications.
+		// Start the inter-thread service.
+		// Note: These will be started dynamically as clients are registered.
+
+		// 2. ZeroConf - start discovery and management of network services.
+		err = me.ZeroConf.StartHandler()
+		if err != nil {
+			break
+		}
+
+		// 3. Daemon - starts any daemons.
+		err = me.Daemon.StartHandler()
+		if err != nil {
+			break
+		}
+
+		// 4. MQTT - start the inter-process communications.
+		err = me.MqttClient.StartHandler()
+		if err != nil {
+			break
+		}
+
+		// Start the inter-process service.
+		//go func() {
+		//	err = me.MqttBroker.StartHandler()
+		//	if err != nil {
+		//		sts = status.Fail().
+		//			SetMessage("failed to start MQTT handler").
+		//			SetAdditional("", ).
+		//			SetData(err).
+		//			SetHelp(status.AllHelp, help.ContactSupportHelp())
+		//		break
+		//	}
+		//}()
+
+		eblog.Debug("event broker started OK")
+	}
+
+
+	if eblog.LogIfError(me, err) {
+		// Save last state.
+		me.State.Error = err
+	}
+
+	return err
+}
+
+
+func (me *EventBroker) TempLoop() error {
+
+	var err error
+
+	fmt.Printf("(me *EventBroker) TempLoop()\n")
+
+	time.Sleep(time.Second * 6)
+
+	//me.CreateEntity("HELO")
+	var u *url.URL
+	u, err = me.FindMqttBroker()
+	if err == nil {
+		err = me.MqttClient.ConnectToServer(u.String())
+	}
+	if err != nil {
+		eblog.Debug("Aaaaargh! => %v", err)
+	}
+
+	_ = me.MqttClient.GlobSubscribe(me.MqttClient.EntityId)
+
+	time.Sleep(time.Second * 200)
+
+	err = me.Stop()
+
+	fmt.Printf("Exiting...\n")
+
+	return err
+}
+
+
+func (me *EventBroker) Stop() error {
+	var err error
+
+	err = me.MqttClient.StopHandler()
+	if err != nil {
+		eblog.Debug("MqttClient shutdown error %v", err)
+	}
+
+	err = me.Daemon.StopHandler()
+	if err != nil {
+		eblog.Debug("Daemon shutdown error %v", err)
+	}
+
+	err = me.ZeroConf.StopHandler()
+	if err != nil {
+		eblog.Debug("ZeroConf shutdown error %v", err)
+	}
+
+	err = me.Channels.StopHandler()
+	if err != nil {
+		eblog.Debug("Channels shutdown error %v", err)
+	}
+
+	return err
+}
+
+
+func (me *EventBroker) Restart() error {
+	fmt.Printf("(me *EventBroker) RestartService() error\n")
+
+	return nil
+}
+
+
+func (me *EventBroker) Status() error {
+	fmt.Printf("(me *EventBroker) ServiceStatus() error\n")
+
+	return nil
+}
+
+
+func (me *EventBroker) Create() error {
+	fmt.Printf("(me *EventBroker) CreateService() error\n")
+
+	return nil
+}
+
+
+// Executed from a channel
+func manageService(event *messages.Message, i interface{}) error {
+
+	var err error
+	var sc *network.Service
+
+	for range only.Once {
+		sc, err = network.InterfaceToTypeService(i)	// sc = rs.(*Service)
+		if err != nil {
+			break
+		}
+		fmt.Printf("DEBUG: %v\n", sc.EntityId)
+
+		switch {
+			case event.Topic.SubTopic.String() == "start":
+				fmt.Printf("Start a physical process.\n")
+
+			case event.Topic.SubTopic.String() == "stop":
+				fmt.Printf("Stop a physical process.\n")
+
+			case event.Topic.SubTopic.String() == "status":
+				fmt.Printf("Determine status of service.\n")
+		}
+
+
+		err = nil
+	}
+
+	if err != nil {
+		eblog.Debug("Error: %v", err)
+	}
+
+	return err
+}

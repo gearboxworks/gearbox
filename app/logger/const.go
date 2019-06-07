@@ -9,6 +9,19 @@ import (
 	"log/syslog"
 )
 
+
+const (
+	PanicLevel = logrus.PanicLevel
+	FatalLevel = logrus.FatalLevel
+	ErrorLevel = logrus.ErrorLevel
+	WarnLevel  = logrus.WarnLevel
+	InfoLevel  = logrus.InfoLevel
+	DebugLevel = logrus.DebugLevel
+)
+
+const defaultLogFile = "logs/gearbox.log"
+
+
 var _ status.MsgLogger = (*Logger)(nil)
 
 type Logger struct {
@@ -49,14 +62,3 @@ type LogFile struct {
 	Permissions string `json:"permissions"`
 	Name        string `json:"name"`
 }
-
-const (
-	PanicLevel = logrus.PanicLevel
-	FatalLevel = logrus.FatalLevel
-	ErrorLevel = logrus.ErrorLevel
-	WarnLevel  = logrus.WarnLevel
-	InfoLevel  = logrus.InfoLevel
-	DebugLevel = logrus.DebugLevel
-)
-
-const defaultLogFile = "logs/gearbox.log"

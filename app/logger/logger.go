@@ -3,7 +3,6 @@ package logger
 import (
 	"fmt"
 	"gearbox/box"
-	"gearbox/heartbeat/daemon"
 	"gearbox/help"
 	"gearbox/only"
 	oss "gearbox/os_support"
@@ -176,7 +175,7 @@ func (me *Logger) Log(err error) {
 	}
 
 	// Find the calling function.
-	filename, linenumber := daemon.MyCaller(daemon.CallerGrandParent)
+	filename, linenumber := MyCaller(CallerGrandParent)
 
 	me.printLog(InfoLevel, filename, linenumber, "%v", err)
 }
@@ -189,7 +188,7 @@ func (me *Logger) Debug(msg status.Msg) {
 	}
 
 	// Find the calling function.
-	filename, linenumber := daemon.MyCaller(daemon.CallerGrandParent)
+	filename, linenumber := MyCaller(CallerGrandParent)
 
 	me.printLog(DebugLevel, filename, linenumber, msg)
 }
@@ -202,7 +201,7 @@ func (me *Logger) Warn(msg status.Msg) {
 	}
 
 	// Find the calling function.
-	filename, linenumber := daemon.MyCaller(daemon.CallerGrandParent)
+	filename, linenumber := MyCaller(CallerGrandParent)
 
 	me.printLog(DebugLevel, filename, linenumber, msg)
 }
@@ -214,7 +213,7 @@ func (me *Logger) Error(msg status.Msg) {
 	}
 
 	// Find the calling function.
-	filename, linenumber := daemon.MyCaller(daemon.CallerGrandParent)
+	filename, linenumber := MyCaller(CallerGrandParent)
 
 	me.printLog(DebugLevel, filename, linenumber, msg)
 }
@@ -226,7 +225,7 @@ func (me *Logger) Fatal(msg status.Msg) {
 	}
 
 	// Find the calling function.
-	filename, linenumber := daemon.MyCaller(daemon.CallerGrandParent)
+	filename, linenumber := MyCaller(CallerGrandParent)
 
 	me.printLog(DebugLevel, filename, linenumber, msg)
 }

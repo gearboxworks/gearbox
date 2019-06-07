@@ -2,12 +2,12 @@ package heartbeat
 
 import (
 	"fmt"
+	"gearbox/app/logger"
 	"gearbox/box"
 	"gearbox/global"
-	"gearbox/heartbeat/daemon"
-	"gearbox/heartbeat/external/unfsd"
-	"gearbox/heartbeat/gbevents"
 	"gearbox/heartbeat/external"
+	"gearbox/heartbeat/eventbroker"
+	"gearbox/heartbeat/eventbroker/daemon"
 	"gearbox/help"
 	"gearbox/only"
 	"gearbox/os_support"
@@ -116,27 +116,26 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 			_args.BoxInstance.SshPublicKey = _args.SshPublicKey
 		}
 
-		execPath, _ := os.Executable()
-		execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/heartbeat" // os.Getwd()
-
 		_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetAdminRootDir(), DefaultPidFile))
 
-		// Start a new Daemon instance.
-		_args.DaemonInstance = daemon.NewDaemon(_args.OsSupport, daemon.Args{
-			Boxname: _args.Boxname,
-			ServiceData: daemon.PlistData{
-				Label:       "com.gearbox.heartbeat",
-				Program:     execPath,
-				ProgramArgs: []string{"heartbeat", "daemon"},
-				Path:        execCwd,
-				PidFile:     _args.PidFile,
-				KeepAlive:   true,
-				RunAtLoad:   true,
-			},
-		})
+		//execPath, _ := os.Executable()
+		//execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/heartbeat" // os.Getwd()
+		//// Start a new Daemon instance.
+		//_args.DaemonInstance = daemon.NewDaemon(_args.OsSupport, daemon.Args{
+		//	Boxname: _args.Boxname,
+		//	ServiceData: daemon.PlistData{
+		//		Label:       "com.gearbox.heartbeat",
+		//		Program:     execPath,
+		//		ProgramArgs: []string{"heartbeat", "daemon"},
+		//		Path:        execCwd,
+		//		PidFile:     _args.PidFile,
+		//		KeepAlive:   true,
+		//		RunAtLoad:   true,
+		//	},
+		//})
 
-		_args.EventBroker, sts = gbevents.New(_args.OsSupport, gbevents.Args{Boxname: _args.Boxname, PidFile: _args.PidFile})
-		if is.Error(sts) {
+		_args.EventBroker, err = eventbroker.New(_args.OsSupport, eventbroker.Args{Boxname: _args.Boxname, PidFile: _args.PidFile})
+		if err != nil {
 			break
 		}
 
@@ -149,6 +148,8 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 
 func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 
+	var err error
+
 	for range only.Once {
 
 		sts = me.GetState()
@@ -156,22 +157,8 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 			break
 		}
 
-		sts = me.EventBroker.EnsureNotNil()
-		if is.Error(sts) {
-			break
-		}
-
-		sts = me.EventBroker.Start()
-		if is.Error(sts) {
-			break
-		}
-
-		sts = status.Success("DEBUG - exit early")
-		// break
-		time.Sleep(time.Hour * 200)
-
-		if !daemon.IsParentInit() {
-		//if daemon.IsParentInit() {
+		if daemon.IsParentInit() {
+		//if !daemon.IsParentInit() {
 			fmt.Printf("Gearbox: Sub-command not available for user.\n")
 			sts = status.Fail().
 				SetMessage("daemon mode cannot be run by user specifically").
@@ -188,21 +175,40 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 		//			//break
 		//		}
 
+		err = me.EventBroker.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		err = me.EventBroker.Start()
+		if err != nil {
+			sts = status.Wrap(err).
+				SetMessage("EventBroker was not able to start").
+				SetAdditional("").
+				SetData("").
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			break
+		}
 
 		// Handle exit signals.
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		go func() {
 			<-sigs
+			_ = me.EventBroker.Stop()
+			logger.Debug("Goodbye!")
+
 			os.Exit(0)
 		}()
 
-		// Create a new VM Box instance.
-		fmt.Printf("Gearbox: Creating unfsd instance.\n")
-		me.NfsInstance, sts = unfsd.NewUnfsd(me.OsSupport)
+		_ = me.EventBroker.TempLoop()
 
-		fmt.Printf("Gearbox: Starting systray.\n")
-		systray.Run(me.onReady, me.onExit)
+		//// Create a new VM Box instance.
+		//fmt.Printf("Gearbox: Creating unfsd instance.\n")
+		//me.NfsInstance, sts = unfsd.NewUnfsd(me.OsSupport)
+		//
+		//fmt.Printf("Gearbox: Starting systray.\n")
+		//systray.Run(me.onReady, me.onExit)
 		// Should never exit, unless we get a signal to do so.
 	}
 	status.Log(sts)
@@ -247,11 +253,11 @@ func (me *Heartbeat) onReady() {
 	menu.restartEntry = systray.AddMenuItem("Restart Heartbeat", fmt.Sprintf("Restart this app [pid:%v]", pid))
 	menu.quitEntry = systray.AddMenuItem("Quit",fmt.Sprintf("Terminate this app [pid:%v]", pid))
 
-	sts := me.NfsInstance.Daemon.Load()
-	if is.Error(sts) {
-		fmt.Printf("%s\n", sts.Message())
-		return
-	}
+	//sts := me.NfsInstance.Daemon.Load()
+	//if is.Error(sts) {
+	//	fmt.Printf("%s\n", sts.Message())
+	//	return
+	//}
 
 
 	// Concurrent process: Provide status updates on systray.
@@ -274,7 +280,7 @@ func (me *Heartbeat) onReady() {
 				}
 
 				// Check state of UNFSD.
-				me.State.Unfsd, sts = me.NfsInstance.GetState()
+				//me.State.Unfsd, sts = me.NfsInstance.GetState()
 				if is.Error(sts) || is.Error(state.Unfsd.LastSts) {
 					// .
 				}
@@ -294,7 +300,7 @@ func (me *Heartbeat) onReady() {
 				}
 
 				// Check state of UNFSD.
-				me.State.Unfsd, sts = me.NfsInstance.GetState()
+				//me.State.Unfsd, sts = me.NfsInstance.GetState()
 				if is.Error(sts) || is.Error(state.Unfsd.LastSts) {
 					// .
 				}
@@ -392,7 +398,7 @@ func (me *Heartbeat) onReady() {
 					if me.confirmDialog("Shutdown Gearbox", "This will shutdown Gearbox and all Gearbox related services.\nAre you sure?") {
 						intentDelay = true
 						me.BoxInstance.Stop()
-						me.NfsInstance.Stop()
+						//me.NfsInstance.Stop()
 						intentDelay = false
 
 						me.StopHeartbeat()
@@ -742,7 +748,7 @@ func (me *Heartbeat) StartHeartbeat() (sts status.Status) {
 //			}
 //		}
 
-		sts = me.DaemonInstance.Load()
+		//sts = me.DaemonInstance.Load()
 		if is.Error(sts) {
 			break
 		}
@@ -763,7 +769,7 @@ func (me *Heartbeat) StopHeartbeat() (sts status.Status) {
 			break
 		}
 
-		sts = me.DaemonInstance.Unload()
+		//sts = me.DaemonInstance.Unload()
 		if is.Error(sts) {
 			break
 		}
@@ -814,7 +820,7 @@ func (me *Heartbeat) GetState() (sts status.Status) {
 			break
 		}
 
-		sts = me.DaemonInstance.GetState()
+		//sts = me.DaemonInstance.GetState()
 		if is.Error(sts) {
 			break
 		}
