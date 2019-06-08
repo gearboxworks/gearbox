@@ -11,53 +11,53 @@ func (me *MqttClient) EnsureNotNil() error {
 	var err error
 
 	switch {
-		case me.instance.client == nil:
-			err = me.EntityId.ProduceError("client instance nil")
+		case me == nil:
+			err = errors.New("MqttClient instance is nil")
+		//case me.instance.client == nil:
+		//	err = me.EntityId.ProduceError("client instance nil")
+		//case me.instance.token == nil:
+		//	err = me.EntityId.ProduceError("client token nil")
 		case me.instance.options == nil:
 			err = me.EntityId.ProduceError("client options nil")
-		case me.instance.token == nil:
-			err = me.EntityId.ProduceError("client token nil")
 	}
 
 	return err
 }
-
 func EnsureNotNil(me *MqttClient) error {
-
-	var err error
-
-	if me == nil {
-		err = errors.New("MQTT client instance nil")
-	}
-
-	return err
+	return me.EnsureNotNil()
 }
-
 
 
 func (me *ServicesMap) EnsureNotNil() error {
+
 	var err error
 
-	if me == nil {
-		err = errors.New("unexpected software error")
+	switch {
+		case me == nil:
+			err = errors.New("MqttClient ServicesMap instance is nil")
 	}
 
 	return err
+}
+func EnsureServicesMapNotNil(me *ServicesMap) error {
+	return me.EnsureNotNil()
 }
 
 
 func (me *Service) EnsureNotNil() error {
 	var err error
 
-	if me == nil {
-		err = errors.New("no zeroconf service defined")
-	}
-
-	if (me.instance == nil) && (me.IsManaged == true) {
-		err = errors.New("no zeroconf service instance defined")
+	switch {
+		case me == nil:
+			err = errors.New("MqttClient Service instance is nil")
+		case (me.IsManaged == true) && me.instance == nil:
+			err = me.EntityId.ProduceError("service cmd instance nil")
 	}
 
 	return err
+}
+func EnsureServiceNotNil(me *Service) error {
+	return me.EnsureNotNil()
 }
 
 

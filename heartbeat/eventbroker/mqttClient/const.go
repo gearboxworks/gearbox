@@ -28,7 +28,7 @@ type MqttClient struct {
 	State           states.Status
 	Task            *tasks.Task
 	Server          *url.URL
-	channels        *channels.Channels
+	Channels        *channels.Channels
 	channelHandler  *channels.Subscriber
 
 	instance        clientInstance

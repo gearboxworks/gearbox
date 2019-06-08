@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gearbox/global"
 	"gearbox/heartbeat/eventbroker/channels"
+	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/network"
 	"gearbox/only"
 	"github.com/kardianos/service"
@@ -14,6 +15,59 @@ import (
 	"syscall"
 	"time"
 )
+
+
+func (me *Daemon) EnsureNotNil() error {
+
+	var err error
+
+	switch {
+		case me == nil:
+			err = errors.New("Daemon instance is nil")
+	}
+
+	return err
+}
+func EnsureNotNil(me *Daemon) error {
+	return me.EnsureNotNil()
+}
+
+
+func (me *ServicesMap) EnsureNotNil() error {
+
+	var err error
+
+	switch {
+		case me == nil:
+			err = errors.New("Daemon ServicesMap instance is nil")
+	}
+
+	return err
+}
+func EnsureServicesMapNotNil(me *ServicesMap) error {
+	return me.EnsureNotNil()
+}
+
+
+func (me *Service) EnsureNotNil() error {
+	var err error
+
+	switch {
+		case me == nil:
+			err = errors.New("Daemon Service instance is nil")
+		case (me.IsManaged == true) && me.instance.cmd == nil:
+			err = me.EntityId.ProduceError("service cmd instance nil")
+		case (me.IsManaged == true) && me.instance.exit == nil:
+			err = me.EntityId.ProduceError("service exit func is nil")
+		case (me.IsManaged == true) && me.instance.service == nil:
+			err = me.EntityId.ProduceError("service instance is nil")
+	}
+
+	return err
+}
+func EnsureServiceNotNil(me *Service) error {
+	return me.EnsureNotNil()
+}
 
 
 func IsParentInit() (bool) {
@@ -98,111 +152,31 @@ func SimpleWaitLoop(t string, i int, d time.Duration) {
 }
 
 
-func EnsureNotNil(me *Daemon) error {
+func (me *Daemon) GetId() messages.MessageAddress {
 
-	var err error
-
-	switch {
-		case me == nil:
-			err = errors.New("daemon is nil")
-	}
-
-	return err
-}
-
-
-func EnsureProgramNotNil(me *programInstance) error {
-
-	var err error
-
-	switch {
-		case me == nil:
-			err = errors.New("daemon program instance is nil")
-	}
-
-	return err
-}
-
-
-func (me *Daemon) EnsureNotNil() error {
-
-	var err error
-
-	switch {
-		case me == nil:
-			err = errors.New("daemon is nil")
-	}
-
-	return err
-}
-
-
-func (me *ServicesMap) EnsureNotNil() error {
-	var err error
-
-	if me == nil {
-		err = errors.New("unexpected software error")
-	}
-
-	return err
-}
-
-
-func (me *Service) EnsureNotNil() error {
-	var err error
-
-	if me == nil {
-		err = errors.New("no Daemon service defined")
-	}
-
-	if (me.instance.cmd == nil) && (me.IsManaged == true) {
-		err = errors.New("no Daemon service instance defined")
-	}
-
-	return err
-}
-
-
-func (me *programInstance) EnsureNotNil() error {
-
-	var err error
-	//var emptyChannelInstance channelsInstance
-
-	switch {
-	case me == nil:
-		err = errors.New("daemon program instance is nil")
-		fmt.Printf("FO\n")
-
-		//case me.instance == emptyChannelInstance:
-		//	err = errors.New("Funexpected software error")
-		//	fmt.Printf("FO\n")
-	}
-
-	return err
+	return me.EntityId
 }
 
 
 func InterfaceToTypeDaemon(i interface{}) (*Daemon, error) {
 
 	var err error
-	var zc *Daemon
+	var me *Daemon
 
 	for range only.Once {
 		err = channels.EnsureArgumentNotNil(i)
 		if err != nil {
-			break
+			//break
 		}
-		zc = i.(*Daemon)
-		// zc = (i[0]).(*Daemon)
-		// zc = i[0].(*Daemon)
+		me = i.(*Daemon)
 
-		err = zc.EnsureNotNil()
+		err = me.EnsureNotNil()
 		if err != nil {
 			break
 		}
 	}
 
-	return zc, err
+	return me, err
 }
 
 

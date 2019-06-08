@@ -2,7 +2,6 @@ package daemon
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
@@ -25,7 +24,6 @@ func (me *Daemon) Register(c CreateEntry) (*Service, error) {
 
 	var err error
 	var sc Service
-	var state states.Status
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -40,12 +38,12 @@ func (me *Daemon) Register(c CreateEntry) (*Service, error) {
 
 		// Create new daemon entry.
 		for range only.Once {
+			sc.State.SetNewAction(states.ActionRegister)
 			sc.EntityId = messages.GenerateAddress()
 			sc.IsManaged = true
 			sc.channels = me.Channels
-			sc.State.SetNewWantState(states.StateRegistered)
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
-			// Create a new service entry.
 			sc.Entry, err = me.createEntry(c)
 			if err != nil {
 				break
@@ -67,7 +65,6 @@ func (me *Daemon) Register(c CreateEntry) (*Service, error) {
 				break
 			}
 
-			// Attempt to install new service on O/S.
 			//state, err = sc.Status()
 			//switch {
 			//	case state.Current == states.StateUnknown:
@@ -90,23 +87,25 @@ func (me *Daemon) Register(c CreateEntry) (*Service, error) {
 			//		}
 			//}
 
+			// Attempt to install new service on O/S.
 			err = sc.instance.service.Install()
 			if err != nil {
 				break
 			}
 
-			state, err = sc.Status()
+			sc.State, err = sc.Status()
 
-			// Everything created, store new instance.
 			me.daemons[sc.EntityId] = &sc
 
-			eblog.Debug("Daemon %s registered service %s OK", me.EntityId.String(), sc.Entry.Url)
+			eblog.Debug(me.EntityId, "registered service %s OK", sc.Entry.Url)
 		}
 
 		sc.State.SetNewState(states.StateRegistered, err)
-		sc.channels.PublishCallerState(&sc.EntityId, &sc.State)
+		me.Channels.PublishCallerState(&sc.EntityId, &sc.State)
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return &sc, err
 }
@@ -147,9 +146,11 @@ func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s CreateEntr
 			break
 		}
 
-		eblog.Debug("Daemon %s registered service %s via channel", me.EntityId.String())
+		eblog.Debug(me.EntityId, "registered service by channel %s OK", sc.EntityId.String())
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return sc, err
 }
@@ -180,9 +181,11 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 
 		s.JsonFile = f
 
-		eblog.Debug("Daemon %s registered service %s by file OK", me.EntityId.String(), s.Entry.Url)
+		eblog.Debug(me.EntityId, "registered service by file %s OK", f)
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return s, err
 }
@@ -348,8 +351,12 @@ func registerService(event *messages.Message, i channels.Argument) channels.Retu
 		if err != nil {
 			break
 		}
+
+		eblog.Debug(me.EntityId, "registered service by channel %s OK", sc.EntityId.String())
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return sc
 }
@@ -505,7 +512,7 @@ func registerService(event *messages.Message, i channels.Argument) channels.Retu
 //
 //		me.daemons[sc.EntityId] = &sc
 //
-//		eblog.Debug("Daemon %s registered service %s OK", me.EntityId.String(), u.String())
+//		eblog.Debug(me.EntityId, "Daemon %s registered service %s OK", me.EntityId.String(), u.String())
 //	}
 //
 //	return &sc, err

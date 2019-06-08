@@ -32,8 +32,23 @@ func (me *MqttClient) Subscribe(ce CreateEntry) (*Service, error) {
 			break
 		}
 
+		// Create new client entry.
 		for range only.Once {
-			sc.State.SetNewWantState(states.StateSubscribed)
+			me.State.SetNewAction(states.ActionSubscribe)
+			sc.EntityId = messages.GenerateAddress()
+			sc.IsManaged = true
+			sc.channels = me.Channels
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+
+			if ce.callback == nil {
+				ce.callback = defaultCallback
+			}
+
+			if ce.Topic.String() == "" {
+				// Nope, not gonna do it.
+				err = me.EntityId.ProduceError("empty topic")
+				break
+			}
 
 			sc.instance = me.instance.client.Subscribe(ce.Topic.String(), ce.Qos, ce.callback)
 			if sc.instance == nil {
@@ -41,23 +56,17 @@ func (me *MqttClient) Subscribe(ce CreateEntry) (*Service, error) {
 				break
 			}
 
-			sc.EntityId = messages.GenerateAddress()
-			sc.IsManaged = true
-			sc.channels = me.channels
-
 			me.services[sc.EntityId] = &sc
 
-			me.services[sc.EntityId].State.SetNewState(states.StateSubscribed)
-			eblog.Debug("MqttClient %s registered service %s OK", me.EntityId.String(), sc.EntityId.String())
+			eblog.Debug(me.EntityId, "registered service %s OK", sc.EntityId.String())
 		}
 
-		// Save last state.
-		sc.State.Error = err
-		channels.PublishCallerState(me.services[sc.EntityId].channels, &me.services[sc.EntityId].EntityId, &me.services[sc.EntityId].State)
+		sc.State.SetNewState(states.StateSubscribed, err)
+		sc.channels.PublishCallerState(&sc.EntityId, &sc.State)
 	}
-	// Save last state.
-	me.State.Error = err
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return &sc, err
 }
@@ -97,9 +106,11 @@ func (me *MqttClient) SubscribeByChannel(caller messages.MessageAddress, s Topic
 			break
 		}
 
-		eblog.Debug("MqttClient %s registered service %s via channel", me.EntityId.String(), sc.EntityId.String())
+		eblog.Debug(me.EntityId, "subscribed by channel %s OK", sc.EntityId.String())
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return sc, err
 }
@@ -123,7 +134,7 @@ func subscribeTopic(event *messages.Message, i channels.Argument) channels.Retur
 
 		//fmt.Printf("Rx: %v\n", event)
 
-		ce := Topic(event.Text)
+		var ce CreateEntry
 		err = json.Unmarshal(event.Text.ByteArray(), &ce)
 
 		sc, err = me.Subscribe(ce)
@@ -131,9 +142,11 @@ func subscribeTopic(event *messages.Message, i channels.Argument) channels.Retur
 			break
 		}
 
-		eblog.Debug("MqttClient %s registered service %s via channel", me.EntityId.String(), sc.EntityId.String())
+		eblog.Debug(me.EntityId, "subscribed by channel %s OK", sc.EntityId.String())
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return sc
 }
@@ -145,7 +158,7 @@ func foo2(client mqtt.Client, msg mqtt.Message) {
 }
 
 
-func callbackFunc(client mqtt.Client, msg mqtt.Message) {
+func defaultCallback(client mqtt.Client, msg mqtt.Message) {
 
 	fmt.Printf("* [%s] %s\n", msg.Topic(), string(msg.Payload()))
 }

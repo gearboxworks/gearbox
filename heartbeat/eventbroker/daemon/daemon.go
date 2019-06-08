@@ -54,14 +54,14 @@ func (me *Daemon) New(OsSupport oss.OsSupporter, args ...Args) error {
 		*me = Daemon(_args)
 
 
-		me.State.SetNewWantState(states.StateIdle)
-		if me.State.SetNewState(states.StateIdle, err) {
-			eblog.Debug(me.EntityId, "init complete")
-		}
+		me.State.SetWant(states.StateIdle)
+		me.State.SetNewState(states.StateIdle, err)
+		eblog.Debug(me.EntityId, "init complete")
 	}
 
 	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
-	eblog.LogIfError(me, err)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -72,10 +72,39 @@ func (me *Daemon) StartHandler() error {
 
 	var err error
 
-	fmt.Printf("DEBUG STARTED\n")
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
 
-	var s *Service
-	s, err = me.RegisterByFile("/Users/mick/.gearbox/admin/dist/eventbroker/unfsd/unfsd.json")
+		me.State.SetNewState(states.StateStarting, err)
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.State.SetWant(states.StateStarted)
+
+		for range only.Once {
+			me.Task, err = tasks.StartTask(initDaemon, startDaemon, monitorDaemon, stopDaemon, me)
+			if err != nil {
+				break
+			}
+		}
+
+		me.State.SetNewState(states.StateStarted, err)
+		eblog.Debug(me.EntityId, "started task handler")
+	}
+
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return err
+}
+
+
+// Stop the daemon handler.
+func (me *Daemon) StopHandler() error {
+
+	var err error
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -83,13 +112,81 @@ func (me *Daemon) StartHandler() error {
 			break
 		}
 
-		me.Task, err = tasks.StartTask(initDaemon, startDaemon, monitorDaemon, stopDaemon, me)
+		me.State.SetNewState(states.StateStopping, err)
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.State.SetWant(states.StateStopped)
+
+		for range only.Once {
+			_ = me.StopServices()
+			// Ignore error, will clean up when program exits.
+
+			err = me.Task.Stop()
+		}
+
+		me.State.SetNewState(states.StateStopped, err)
+		eblog.Debug(me.EntityId, "stopped task handler")
+	}
+
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return err
+}
+
+
+func (me *Daemon) StopServices() error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		eblog.Debug("started zeroconf handler for %s", me.EntityId.String())
+		for u, _ := range me.daemons {
+			if me.daemons[u].IsManaged {
+				_ = me.daemons[u].Stop()
+				// Ignore error, will clean up when program exits.
+			}
+		}
 	}
+
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return err
+}
+
+
+// Print all services registered under daemon that I manage.
+func (me *Daemon) PrintServices() error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		_ = me.daemons.Print()
+	}
+
+	return err
+}
+
+
+func (me *Daemon) TestMe() error {
+
+	var err error
+
+	fmt.Printf("DEBUG STARTED\n")
+
+	var s *Service
+	s, err = me.RegisterByFile("/Users/mick/.gearbox/admin/dist/eventbroker/unfsd/unfsd.json")
 
 	time.Sleep(time.Second * 10)
 	if err == nil {
@@ -126,91 +223,8 @@ func (me *Daemon) StartHandler() error {
 	fmt.Printf("DEBUG SLEEPING")
 	time.Sleep(time.Hour * 4200)
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
-
-	return err
-}
-
-
-// Stop the daemon handler.
-func (me *Daemon) StopHandler() error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		_ = me.StopServices()
-
-		err = me.Task.Stop()
-		if err != nil {
-			break
-		}
-
-		eblog.Debug("Daemon service handler stopped")
-	}
-
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
-
-	return err
-}
-
-
-// Print all services registered under daemon that I manage.
-func (me *Daemon) PrintServices() error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		_ = me.daemons.Print()
-	}
-
-	return err
-}
-
-
-func (me *Daemon) StopServices() error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		for u, _ := range me.daemons {
-			if me.daemons[u].IsManaged {
-				err = me.daemons[u].Stop()
-				if err != nil {
-					eblog.Debug("Daemon service %s could not be stopped", me.daemons[u].Entry.Name)
-				} else {
-					eblog.Debug("Daemon service %s stopped", me.daemons[u].Entry.Name)
-				}
-			}
-		}
-
-		eblog.Debug("Daemon services stopped")
-	}
-
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"log/syslog"
 	"path/filepath"
+	"strconv"
 )
 
 
@@ -168,20 +169,24 @@ func (me *Logger) GetLevel(getLevel string) (returnLevel logrus.Level) {
 }
 
 
+const howMany = 2
 func (me *Logger) Log(err error) {
 
 	if err == nil {
 		return
 	}
 
-	// Find the calling function.
-	filename, linenumber := MyCaller(CallerGrandParent)
+	// Find the calling functions.
+	fields := logrus.Fields{}
+	for i, d := range *MyCallers(CallerGreatGrandParent, howMany) {
+		fields[strconv.Itoa(i)] = d.Function + ":" + strconv.Itoa(d.LineNumber)
+	}
 
-	me.printLog(InfoLevel, filename, linenumber, "%v", err)
+	me.logrusInstance.WithFields(fields).Infof("%s", err)
 }
 
 
-func (me *Logger) Debug(msg status.Msg) {
+func (me *Logger) Debug(msg status.Msg) {		// , opt ...interface{}) {
 
 	if msg == "" {
 		return
@@ -203,7 +208,7 @@ func (me *Logger) Warn(msg status.Msg) {
 	// Find the calling function.
 	filename, linenumber := MyCaller(CallerGrandParent)
 
-	me.printLog(DebugLevel, filename, linenumber, msg)
+	me.printLog(WarnLevel, filename, linenumber, msg)
 }
 
 func (me *Logger) Error(msg status.Msg) {
@@ -215,7 +220,7 @@ func (me *Logger) Error(msg status.Msg) {
 	// Find the calling function.
 	filename, linenumber := MyCaller(CallerGrandParent)
 
-	me.printLog(DebugLevel, filename, linenumber, msg)
+	me.printLog(ErrorLevel, filename, linenumber, msg)
 }
 
 func (me *Logger) Fatal(msg status.Msg) {
@@ -227,7 +232,7 @@ func (me *Logger) Fatal(msg status.Msg) {
 	// Find the calling function.
 	filename, linenumber := MyCaller(CallerGrandParent)
 
-	me.printLog(DebugLevel, filename, linenumber, msg)
+	me.printLog(FatalLevel, filename, linenumber, msg)
 }
 
 

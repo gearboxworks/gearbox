@@ -57,17 +57,18 @@ func (me *ZeroConf) New(OsSupport oss.OsSupporter, args ...Args) error {
 		*me = ZeroConf(_args)
 
 
-		me.State.SetNewWantState(states.StateIdle)
-		if me.State.SetNewState(states.StateIdle, err) {
-			eblog.Debug(me.EntityId, "init complete")
-		}
+		me.State.SetWant(states.StateIdle)
+		me.State.SetNewState(states.StateIdle, err)
+		eblog.Debug(me.EntityId, "init complete")
 	}
 
 	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
-	eblog.LogIfError(me, err)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
+
 
 // Start the M-DNS network handler.
 func (me *ZeroConf) StartHandler() error {
@@ -80,21 +81,28 @@ func (me *ZeroConf) StartHandler() error {
 			break
 		}
 
-		me.Task, err = tasks.StartTask(initZeroConf, startZeroConf, monitorZeroConf, stopZeroConf, me)
-		if err != nil {
-			break
+		me.State.SetNewState(states.StateStarting, err)
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.State.SetWant(states.StateStarted)
+
+		for range only.Once {
+			me.Task, err = tasks.StartTask(initZeroConf, startZeroConf, monitorZeroConf, stopZeroConf, me)
+			if err != nil {
+				break
+			}
 		}
 
-		eblog.Debug("started zeroconf handler for %s", me.EntityId.String())
+		me.State.SetNewState(states.StateStarted, err)
+		eblog.Debug(me.EntityId, "started task handler")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
+
 
 // Stop the M-DNS network handler.
 func (me *ZeroConf) StopHandler() error {
@@ -107,29 +115,54 @@ func (me *ZeroConf) StopHandler() error {
 			break
 		}
 
-		for u, _ := range me.services {
-			eblog.Debug("Unregister zeroconf entry %s.", u.String())
-			err = me.services[u].Unregister()
-			if err != nil {
-				break
-			}
+		me.State.SetNewState(states.StateStopping, err)
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.State.SetWant(states.StateStopped)
+
+		for range only.Once {
+			_ = me.StopServices()
+			// Ignore error, will clean up when program exits.
+
+			err = me.Task.Stop()
 		}
 
-		err = me.Task.Stop()
+		me.State.SetNewState(states.StateStopped, err)
+		eblog.Debug(me.EntityId, "stopped task handler")
+	}
+
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return err
+}
+
+
+func (me *ZeroConf) StopServices() error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		eblog.Debug("stopped zeroconf handler for %s", me.EntityId.String())
+		for u, _ := range me.services {
+			if me.services[u].IsManaged {
+				_ = me.UnregisterByUuid(u)
+				// Ignore error, will clean up when program exits.
+			}
+		}
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
+
 
 // Print all services registered under M-DNS that I manage.
 func (me *ZeroConf) PrintServices() error {
@@ -147,3 +180,4 @@ func (me *ZeroConf) PrintServices() error {
 
 	return err
 }
+

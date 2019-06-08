@@ -99,13 +99,6 @@ func MyCallers(whichCaller int, howMany int) (*Callers) {
 }
 
 
-func Debug(client messages.MessageAddress, format string, a ...interface{}) {
-	//fn, ln := daemon.MyCaller(daemon.CallerParent)
-	//status.Success(fmt.Sprintf("DEBUG '%s':[%d] ", fn, ln) + format, a).Log()
-	status.Success(string(client) + ": " + format, a...).Log()
-}
-
-
 // Check for a nil type.
 func IsNil(i interface{}) bool {
 	defer func() { recover() }()
@@ -132,10 +125,8 @@ func IsNotNil(i interface{}) bool {
 }
 
 
-const SkipNilCheck = ""
-const howMany = 2
 // Check for a nil type.
-func LogIfError(i interface{}, err error, format ...interface{}) bool {
+func LogIfNil(i interface{}, format ...interface{}) bool {
 
 	rn := true
 
@@ -147,31 +138,48 @@ func LogIfError(i interface{}, err error, format ...interface{}) bool {
 		case reflect.ValueOf(i).IsNil():
 			rn = false
 
-			callers := " [ "
+			callers := " NIL:["
 			// Fetch last two callers.
 			for _, d := range *MyCallers(CallerParent, howMany) {
-				callers += d.Function + ":" + strconv.Itoa(d.LineNumber) + " <- "
+				callers += " <- " + d.Function + ":" + strconv.Itoa(d.LineNumber)
 			}
 			callers += "] "
 
 			status.Success("nil interface" + callers).Log()
-	}
+		}
 
-	//if i == nil || reflect.ValueOf(i).IsNil() {
-	//}
+	return rn
+}
 
+
+func Debug(client messages.MessageAddress, format string, a ...interface{}) {
+	//fn, ln := daemon.MyCaller(daemon.CallerParent)
+	//status.Success(fmt.Sprintf("DEBUG '%s':[%d] ", fn, ln) + format, a).Log()
+	status.Success(string(client) + ": " + format, a...).Log()
+}
+
+
+const SkipNilCheck = ""
+const howMany = 2
+// Check for a nil type or err and log.
+func LogIfError(address messages.MessageAddress, err error, format ...interface{}) bool {
+
+	rn := true
 	if err != nil {
-		callers := " [ "
+		callers := "%s ERROR:["
+		// callers := address.String() + " ERROR:%s ["
 		// Fetch last two callers.
 		for _, d := range *MyCallers(CallerParent, howMany) {
-			callers += d.Function + ":" + strconv.Itoa(d.LineNumber) + " <- "
+			callers += " <- " + d.Function + ":" + strconv.Itoa(d.LineNumber)
 		}
 		callers += "] "
 
 		if len(format) == 0 {
 			status.Success(callers, err).Log()
+			//fmt.Printf(callers + "\n", err)
 		} else {
 			status.Success(format[0].(string) + callers, format[1:]...).Log()
+			//fmt.Printf(format[0].(string) + callers + "\n", format[1:]...)
 		}
 	}
 

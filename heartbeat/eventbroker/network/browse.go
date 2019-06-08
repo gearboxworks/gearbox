@@ -6,7 +6,6 @@ import (
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/only"
-	"github.com/google/uuid"
 	"github.com/grandcat/zeroconf"
 )
 
@@ -26,10 +25,10 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 			break
 		}
 
-		eblog.Debug("ZeroConf scan started (%s).", me.EntityId.String())
+		eblog.Debug(me.EntityId, "service scan started")
 		resolver, err := zeroconf.NewResolver(nil)
 		if err != nil {
-			err = me.EntityId.ProduceError("failed to initialize resolver")
+			err = me.EntityId.ProduceError("failed to initialize scan resolver")
 			break
 		}
 
@@ -51,19 +50,17 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 		defer cancel()
 		err = resolver.Browse(ctx, s, d, entries)
 		if err != nil {
-			err = me.EntityId.ProduceError("failed to browse network")
+			err = me.EntityId.ProduceError("failed to scan network")
 			break
 		}
 
 		<-ctx.Done()
 
-		eblog.Debug("ZeroConf scan finished (%s).", me.EntityId.String())
+		eblog.Debug(me.EntityId, "service scan completed")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return found, err
 }
@@ -72,7 +69,6 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 func (me *ZeroConf) FindService(e CreateEntry) (*Service, error) {
 
 	var err error
-	var u uuid.UUID
 	var sc *Service
 
 	for range only.Once {
@@ -87,7 +83,7 @@ func (me *ZeroConf) FindService(e CreateEntry) (*Service, error) {
 			break
 		}
 		if sc != nil {
-			eblog.Debug("ZeroConf %s found managed service %s OK", me.EntityId.String(), u.String())
+			eblog.Debug(me.EntityId, "found managed service %s", sc.EntityId.String())
 			break
 		}
 
@@ -97,17 +93,15 @@ func (me *ZeroConf) FindService(e CreateEntry) (*Service, error) {
 			break
 		}
 		if sc != nil {
-			eblog.Debug("ZeroConf %s found network service OK", me.EntityId.String())
+			eblog.Debug(me.EntityId, "found network service %s", sc.EntityId.String())
 			break
 		}
 
-		eblog.Debug("ZeroConf no service found")
+		eblog.Debug(me.EntityId, "no services found on network")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return sc, err
 }
@@ -172,7 +166,7 @@ func (me *Service) compareService(e CreateEntry) (bool, error) {
 				break
 		}
 
-		eblog.Debug("ZeroConf matched service %s OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "matched service %s to %s", me.EntityId.String(), e.EntityId.String())
 	}
 
 	return found, err
@@ -195,7 +189,7 @@ func (me *ZeroConf) updateRegisteredServices() error {
 		for u, _ := range me.services {
 			if _, ok = me.services[u]; !ok {
 				// Shouldn't ever see this, but hey, might as well be anal about it.
-				eblog.Debug("Deleting zeroconf entry %v.", u)
+				eblog.Debug(me.EntityId, "deleting entry %s", u.String())
 				delete(me.services, u)
 				deleted++
 				continue
@@ -203,7 +197,7 @@ func (me *ZeroConf) updateRegisteredServices() error {
 			if (me.services[u].instance == nil) && (me.services[u].IsManaged == true) {
 				// If we are managing this service locally and the instance has been removed,
 				// then delete.
-				eblog.Debug("Deleting zeroconf entry %v.", u)
+				eblog.Debug(me.EntityId, "deleting entry %s", u.String())
 				delete(me.services, u)
 				deleted++
 				continue
@@ -223,13 +217,11 @@ func (me *ZeroConf) updateRegisteredServices() error {
 			}
 		}
 
-		eblog.Debug("ZeroConf updated registered services - added:%d, deleted:%d.", added, deleted)
+		eblog.Debug(me.EntityId, "updated registered services - added:%d, deleted:%d.", added, deleted)
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -255,13 +247,11 @@ func scanServices(event *messages.Message, i channels.Argument) channels.Return 
 			break
 		}
 
-		eblog.Debug("ZeroConf %s service scan OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "service scan completed")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

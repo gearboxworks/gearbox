@@ -12,30 +12,6 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
 
-// Unregister a service by *Service method reference.
-func (me *Service) Unregister() error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		me.instance.Shutdown()
-		eblog.Debug("ZeroConf unregister service (%s).", me.EntityId)
-		me.instance = nil
-	}
-
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
-
-	return err
-}
-
 // Unregister a service by method defined by a UUID reference.
 func (me *ZeroConf) UnregisterByUuid(u messages.MessageAddress) error {
 
@@ -57,15 +33,21 @@ func (me *ZeroConf) UnregisterByUuid(u messages.MessageAddress) error {
 			break
 		}
 
-		me.services[u].instance.Shutdown()
-		eblog.Debug("ZeroConf %s unregister via UUID (%s).", me.EntityId.String(), u.String())
-		delete(me.services, u)
+		for range only.Once {
+			me.services[u].State.SetNewAction(states.ActionUnregister)
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+
+			me.services[u].instance.Shutdown()
+			delete(me.services, u)
+
+			eblog.Debug(me.EntityId, "unregistered service %s OK", u.String())
+		}
+
+		me.Channels.PublishCallerState(&u, &states.Status{Current: states.StateUnregistered})
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -88,13 +70,11 @@ func (me *ZeroConf) UnregisterByChannel(caller messages.MessageAddress, u messag
 			break
 		}
 
-		eblog.Debug("ZeroConf %s unregister via channel (%s).", me.EntityId.String(), u.String())
+		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", u.String())
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -123,13 +103,11 @@ func unregisterService(event *messages.Message, i channels.Argument) channels.Re
 			break
 		}
 
-		eblog.Debug("ZeroConf %s unregistered service OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", event.Text.ToUuid())
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

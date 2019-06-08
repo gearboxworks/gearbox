@@ -11,7 +11,6 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 // Executed from a channel
 
-
 // Non-exposed channel function that responds to a "status" channel request.
 // Produces the status of the M-DNS handler via a channel.
 func statusHandler(event *messages.Message, i channels.Argument) channels.Return {
@@ -25,13 +24,11 @@ func statusHandler(event *messages.Message, i channels.Argument) channels.Return
 			break
 		}
 
-		eblog.Debug("MqttClient %s handler status OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "requested service status via channel")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -55,13 +52,11 @@ func stopHandler(event *messages.Message, i channels.Argument) channels.Return {
 			break
 		}
 
-		eblog.Debug("MqttClient %s handler stopped OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "requested service stop via channel")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -85,13 +80,11 @@ func startHandler(event *messages.Message, i channels.Argument) channels.Return 
 			break
 		}
 
-		eblog.Debug("MqttClient %s handler started OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "requested service start via channel")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

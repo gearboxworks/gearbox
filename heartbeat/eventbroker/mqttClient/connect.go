@@ -49,11 +49,11 @@ func (me *MqttClient) ConnectToServer(u string) error {
 		ok, _ = me.IsConnected()
 		if ok {
 			if me.Server.String() == u {
-				eblog.Debug("MqttClient already connected to broker %s", me.Server.String())
+				eblog.Debug(me.EntityId, "MqttClient already connected to broker %s", me.Server.String())
 				break
 			}
 
-			eblog.Debug("MqttClient disconnecting from broker %s", me.Server.String())
+			eblog.Debug(me.EntityId, "MqttClient disconnecting from broker %s", me.Server.String())
 			me.instance.client.Disconnect(500)
 		}
 
@@ -78,7 +78,7 @@ func (me *MqttClient) ConnectToServer(u string) error {
 
 		myWill := me.EntityId.CreateTopic(states.ActionStatus).String()
 		me.instance.options.SetWill(myWill, "stopped", topics.QosFailure, false)
-		eblog.Debug("MqttClient setting LWaT as '%s' on %s", myWill, me.Server.String())
+		eblog.Debug(me.EntityId, "MqttClient setting LWaT as '%s' on %s", myWill, me.Server.String())
 
 		me.instance.client = mqtt.NewClient(me.instance.options)
 		if me.instance.client == nil {
@@ -108,15 +108,13 @@ func (me *MqttClient) ConnectToServer(u string) error {
 			break
 		}
 
-		eblog.Debug("MqttClient connected to broker %s", me.Server)
-		_ = me.Channels.PublishCallerState(me.EntityId, states.StateStarted)
+		eblog.Debug(me.EntityId, "MqttClient connected to broker %s", me.Server)
+		me.Channels.PublishSpecificCallerState(&me.EntityId, states.StateStarted)
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-		_ = me.Channels.PublishCallerState(me.EntityId, states.StateUnregistered)
-	}
+	me.Channels.PublishSpecificCallerState(&me.EntityId, states.StateUnregistered)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

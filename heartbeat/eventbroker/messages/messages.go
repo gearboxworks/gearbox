@@ -110,6 +110,13 @@ func (me *Uuid) IsNil() bool {
 
 	return false
 }
+func (me *Uuid) String() string {
+	return uuid.UUID(*me).String()
+}
+func (me *Uuid) ToMessageType() MessageText {
+	// return uuid.UUID(*me).String()
+	return MessageText(me.String())
+}
 func (me *Uuid) EnsureNotNil() error {
 
 	var err error

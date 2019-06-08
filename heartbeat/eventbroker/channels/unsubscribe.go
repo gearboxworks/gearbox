@@ -21,15 +21,14 @@ func (me *Channels) UnSubscribe(topic messages.MessageTopic) error {
 			break
 		}
 
-		delete(me.subscribers[topic.Address].Callbacks, topic.SubTopic)
-		delete(me.subscribers[topic.Address].Arguments, topic.SubTopic)
-		delete(me.subscribers[topic.Address].Returns, topic.SubTopic)
+		// MUTEX
+		me.subscribers[topic.Address].DeleteSubTopic(topic.SubTopic)
 
-		eblog.Debug("Unsubscribed: %s", messages.SprintfTopic(topic.Address, topic.SubTopic))
+		eblog.Debug(me.EntityId, "Unsubscribed: %s", messages.SprintfTopic(topic.Address, topic.SubTopic))
 	}
-	// Save last state.
-	me.State.Error = err
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -50,15 +49,14 @@ func (me *Subscriber) UnSubscribe(subtopic messages.SubTopic) error {
 			break
 		}
 
-		delete(me.Callbacks, subtopic)
-		delete(me.Arguments, subtopic)
-		delete(me.Returns, subtopic)
+		// MUTEX
+		me.DeleteSubTopic(subtopic)
 
-		eblog.Debug("Unsubscribed: %s", messages.SprintfTopic(me.EntityId, subtopic))
+		eblog.Debug(me.EntityId, "Unsubscribed: %s", messages.SprintfTopic(me.EntityId, subtopic))
 	}
-	// Save last state.
-	me.State.Error = err
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

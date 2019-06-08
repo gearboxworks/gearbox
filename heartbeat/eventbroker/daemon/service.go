@@ -25,10 +25,7 @@ func (me *Service) Start() error {
 		}
 
 		// Notify channels
-		err = me.channels.PublishCallerState(me.EntityId, states.StateStarted)
-		if err != nil {
-			break
-		}
+		me.channels.PublishSpecificCallerState(&me.EntityId, states.StateStarted)
 
 		//// Now register the service with zeroconf.
 		//zc := network.CreateEntry{
@@ -44,13 +41,11 @@ func (me *Service) Start() error {
 
 		me.IsManaged = true
 
-		eblog.Debug("Daemon stopped %s", me.Entry.Name)
+		eblog.Debug(me.EntityId, "Daemon stopped %s", me.Entry.Name)
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return nil
 }
@@ -66,41 +61,39 @@ func (me *Service) Stop() error {
 			break
 		}
 
-		err = me.instance.service.Stop()
-		if err != nil {
-			break
+		me.State.SetWant(states.StateStopped)
+
+		for range only.Once {
+			err = me.instance.service.Stop()
+			if err != nil {
+				break
+			}
 		}
 
-		// Notify channels
-		err = me.channels.PublishCallerState(me.EntityId, states.StateStarted)
-		if err != nil {
-			break
+		if me.State.SetNewState(states.StateStopped, err) {
+			eblog.Debug(me.EntityId, "stopped service")
 		}
-
-		//// Now unregister the service with zeroconf.
-		//zc := network.CreateEntry{
-		//	Name: network.Name("gearbox_" + me.Entry.Name),
-		//	Type: network.Type(fmt.Sprintf("_%s._tcp", me.Entry.MdnsType)),
-		//	Domain: "local",
-		//	Port: network.Port(me.port),
-		//}
-		//me.mdns, err = me.RegisterByChannel(me.EntityId, zc)
-		//if err != nil {
-		//	break
-		//}
-
-		me.IsManaged = false
-
-		eblog.Debug("Daemon stopped %s", me.Entry.Name)
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
+
+
+//// Now unregister the service with zeroconf.
+//zc := network.CreateEntry{
+//	Name: network.Name("gearbox_" + me.Entry.Name),
+//	Type: network.Type(fmt.Sprintf("_%s._tcp", me.Entry.MdnsType)),
+//	Domain: "local",
+//	Port: network.Port(me.port),
+//}
+//me.mdns, err = me.RegisterByChannel(me.EntityId, zc)
+//if err != nil {
+//	break
+//}
 
 
 func (me *Service) Status() (states.Status, error) {
@@ -150,16 +143,14 @@ func (me *Service) Status() (states.Status, error) {
 		}
 		me.State.SetNewState(newState, err)
 
-		if me.State.Last != me.State.Current {
-			eblog.Debug("Daemon %s status current:%s last:%s", me.EntityId.String(), me.State.Current.String(), me.State.Last.String())
+		if me.State.HasChangedState() {
+			eblog.Debug(me.EntityId, "Daemon %s status current:%s last:%s", me.EntityId.String(), me.State.GetCurrent().String(), me.State.GetLast().String())
 			channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
 		}
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return me.State, err
 }

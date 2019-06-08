@@ -105,7 +105,7 @@ func (me *Mqtt) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 		// _args.Server = fmt.Sprintf("tcp://%s:%s/", _args.Config.Host, _args.Config.Port)
 
 		*me = Mqtt(_args)
-		eblog.Debug("MQTT init %s.", me.EntityId.String())
+		eblog.Debug(me.EntityId, "MQTT init %s.", me.EntityId.String())
 	}
 
 	return sts
@@ -130,7 +130,7 @@ func (me *Mqtt) StartHandler() status.Status {
 		//	me.StartClientHandler().Log()
 		//}()
 
-		eblog.Debug("MQTT started OK on %s.", me.EntityId.String())
+		eblog.Debug(me.EntityId, "MQTT started OK on %s.", me.EntityId.String())
 		sts = status.Success("MQTT started OK on %s", me.EntityId.String())
 	}
 
@@ -169,23 +169,23 @@ func (me *Mqtt) StartBrokerHandler() status.Status {
 		for me.Broker.Task.RunCounter = 0; me.Broker.Task.RunCounter < me.Broker.RestartAttempts; me.Broker.Task.RunCounter++ {
 
 			if me.Broker.Task.RunCounter == 0 {
-				eblog.Debug("MQTT broker %s started.", me.EntityId.String())
+				eblog.Debug(me.EntityId, "MQTT broker %s started.", me.EntityId.String())
 			} else {
 				//me.Broker.State = false
-				eblog.Debug("MQTT broker %s restart attempt %d.", me.EntityId.String(), me.Broker.Task.RunCounter)
+				eblog.Debug(me.EntityId, "MQTT broker %s restart attempt %d.", me.EntityId.String(), me.Broker.Task.RunCounter)
 			}
 
 			// .			me.Broker.instance.Start()
 
 			if me.Broker.Task.RunCounter == 0 {
 				//me.Broker.State = true
-				eblog.Debug("MQTT broker %s started.", me.EntityId.String())
+				eblog.Debug(me.EntityId, "MQTT broker %s started.", me.EntityId.String())
 			} else {
 				//me.Broker.State = false
-				eblog.Debug("MQTT broker %s restart attempt %d.", me.EntityId.String(), me.Broker.Task.RunCounter)
+				eblog.Debug(me.EntityId, "MQTT broker %s restart attempt %d.", me.EntityId.String(), me.Broker.Task.RunCounter)
 			}
 
-			eblog.Debug("MQTT broker stopped %s.", me.EntityId.String())
+			eblog.Debug(me.EntityId, "MQTT broker stopped %s.", me.EntityId.String())
 			sts = status.Success("MQTT broker exited with signal %v.")
 		}
 		*/
@@ -372,7 +372,7 @@ func (me *Mqtt) StartClientHandler() status.Status {
 		}
 
 		//me.Broker.State = true
-		eblog.Debug("MQTT client started %s.", me.EntityId.String())
+		eblog.Debug(me.EntityId, "MQTT client started %s.", me.EntityId.String())
 
 		sts = me.clientConnect()
 		if is.Error(sts) {
@@ -387,7 +387,7 @@ func (me *Mqtt) StartClientHandler() status.Status {
 		s := daemon.WaitForSignal()
 
 		//me.Broker.State = false
-		eblog.Debug("MQTT client stopped %s.", me.EntityId.String())
+		eblog.Debug(me.EntityId, "MQTT client stopped %s.", me.EntityId.String())
 		sts = status.Success("MQTT client exited with signal %v.", s)
 	}
 

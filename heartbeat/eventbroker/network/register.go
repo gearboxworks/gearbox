@@ -6,7 +6,6 @@ import (
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/only"
-	"github.com/google/uuid"
 	"github.com/grandcat/zeroconf"
 )
 
@@ -18,7 +17,6 @@ import (
 func (me *ZeroConf) Register(s CreateEntry) (*Service, error) {
 
 	var err error
-	var u uuid.UUID
 	var sc Service
 
 	for range only.Once {
@@ -27,10 +25,18 @@ func (me *ZeroConf) Register(s CreateEntry) (*Service, error) {
 			break
 		}
 
-		for range only.Once {
-			// @TODO - Need to check to see if this service has already been registered.
+		err = me.services.IsExisting(s)
+		if err != nil {
+			break
+		}
 
-			sc.State.SetNewWantState(states.StateRegistered)
+		// Create new service entry.
+		for range only.Once {
+			sc.State.SetNewAction(states.ActionRegister)
+			sc.EntityId = messages.GenerateAddress()
+			sc.IsManaged = true
+			sc.channels = me.Channels
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
 			if s.Port == 0 {
 				s.Port, err = GetFreePort()
@@ -59,25 +65,23 @@ func (me *ZeroConf) Register(s CreateEntry) (*Service, error) {
 				break
 			}
 
-			sc.EntityId = messages.GenerateAddress()
 			sc.Entry.Instance = s.Name.String()
 			sc.Entry.Service = s.Type.String()
 			sc.Entry.Domain = s.Domain.String()
 			sc.Entry.Port = int(s.Port)
 			sc.Entry.Text = s.Text
-			sc.IsManaged = true
-			sc.channels = me.Channels
-			sc.State.SetNewState(states.StateRegistered)
 
 			me.services[sc.EntityId] = &sc
-			eblog.Debug("ZeroConf %s registered service %s OK", me.EntityId.String(), u.String())
+
+			eblog.Debug(me.EntityId, "registered service %s OK", sc.EntityId.String())
 		}
 
-		// Save last state.
-		sc.State.Error = err
-		channels.PublishCallerState(me.services[sc.EntityId].channels, &me.services[sc.EntityId].EntityId, &me.services[sc.EntityId].State)
+		sc.State.SetNewState(states.StateRegistered, err)
+		sc.channels.PublishCallerState(&sc.EntityId, &sc.State)
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return &sc, err
 }
@@ -126,9 +130,11 @@ func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s CreateEn
 			break
 		}
 
-		eblog.Debug("ZeroConf %s registered service %s via channel", me.EntityId.String(), sc.EntityId.String())
+		eblog.Debug(me.EntityId, "registered service by channel %s OK", sc.EntityId.String())
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return sc, err
 }
@@ -164,9 +170,11 @@ func registerService(event *messages.Message, i channels.Argument) channels.Retu
 			break
 		}
 
-		eblog.Debug("ZeroConf %s registered service %s via channel", me.EntityId.String(), sc.EntityId.String())
+		eblog.Debug(me.EntityId, "registered service by channel %s OK", sc.EntityId.String())
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return sc
 }

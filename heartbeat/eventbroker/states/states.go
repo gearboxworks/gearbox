@@ -2,6 +2,7 @@ package states
 
 import (
 	"gearbox/only"
+	"sync"
 	"time"
 )
 
@@ -9,6 +10,8 @@ const (
 	StateIdle          = "idle"
 	StateUnknown       = "unknown"
 	StateError         = "error"
+	StateInitializing  = "initializing"
+	StateInitialized   = "initialized"
 	StateRegistering   = "registering"
 	StateRegistered    = "registered"
 	StateUnregistering = "unregistering"
@@ -29,6 +32,8 @@ const (
 	StateIndexIdle          = 0
 	StateIndexUnknown       = iota
 	StateIndexError         = iota
+	StateIndexInitializing  = iota
+	StateIndexInitialized   = iota
 	StateIndexRegistering   = iota
 	StateIndexRegistered    = iota
 	StateIndexUnregistering = iota
@@ -50,6 +55,8 @@ var StateName = map[int]Action{
 	StateIndexIdle:          StateIdle,
 	StateIndexUnknown:       StateUnknown,
 	StateIndexError:         StateError,
+	StateIndexInitializing:  StateInitializing,
+	StateIndexInitialized:   StateInitialized,
 	StateIndexRegistering:   StateRegistering,
 	StateIndexRegistered:    StateRegistered,
 	StateIndexUnregistering: StateUnregistering,
@@ -72,6 +79,7 @@ var StateName = map[int]Action{
 const (
 	ActionIdle        = "idle"
 	ActionUnknown     = "unknown"
+	ActionInitialize  = "init"
 	ActionRegister    = "register"
 	ActionUnregister  = "unregister"
 	ActionPublish     = "publish"
@@ -86,6 +94,7 @@ const (
 
 	ActionIndexIdle        = 0
 	ActionIndexUnknown     = iota
+	ActionIndexInitialize  = iota
 	ActionIndexRegister    = iota
 	ActionIndexUnregister  = iota
 	ActionIndexPublish     = iota
@@ -101,6 +110,7 @@ const (
 var ActionName = map[int]Action{
 	ActionIndexIdle:        ActionIdle,
 	ActionIndexUnknown:     ActionUnknown,
+	ActionIndexInitialize:  ActionInitialize,
 	ActionIndexRegister:    ActionRegister,
 	ActionIndexUnregister:  ActionUnregister,
 	ActionIndexPublish:     ActionPublish,
@@ -122,7 +132,9 @@ type Status struct {
 	LastWhen time.Time
 	Attempts int
 	Error    error
-	Action
+	Action   Action
+
+	mutex    sync.RWMutex
 }
 
 
@@ -152,9 +164,9 @@ func (me *Status) NextAction() Action {
 		//	break
 		//}
 
-		switch me.Want {
+		switch me.GetWant() {
 			case ActionUnregister:
-				switch me.Current {
+				switch me.GetCurrent() {
 					case StateStarted:
 						intended = ActionStop
 					case StateStopped:
@@ -162,7 +174,7 @@ func (me *Status) NextAction() Action {
 				}
 
 			case ActionRegister:
-				switch me.Current {
+				switch me.GetCurrent() {
 					case StateStarted:
 						intended = ActionStop
 					case StateStopped:

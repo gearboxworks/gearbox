@@ -1,12 +1,11 @@
 package mqttClient
 
 import (
-	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/channels"
+	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/only"
-	"github.com/google/uuid"
 )
 
 
@@ -34,18 +33,28 @@ func (me *MqttClient) UnsubscribeByUuid(u messages.MessageAddress) error {
 			break
 		}
 
-		me.instance.client.Unsubscribe(me.services[u].Entry.Topic.String())
+		for range only.Once {
+			me.services[u].State.SetNewAction(states.ActionUnsubscribe)
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
-		eblog.Debug("MqttClient %s unsubscribe via UUID (%s).", me.EntityId.String(), u.String())
-		delete(me.services, u)
+			me.instance.client.Unsubscribe(me.services[u].Entry.Topic.String())
+
+			delete(me.services, u)
+
+			eblog.Debug(me.EntityId, "unregistered service %s OK", u.String())
+		}
+
+		me.Channels.PublishCallerState(&u, &states.Status{Current: states.StateUnsubscribed})
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
 
 // Unsubscribe a service via a channel defined by a UUID reference.
-func (me *MqttClient) UnsubscribeByChannel(caller messages.MessageAddress, u uuid.UUID) error {
+func (me *MqttClient) UnsubscribeByChannel(caller messages.MessageAddress, u messages.MessageAddress) error {
 
 	var err error
 
@@ -62,9 +71,11 @@ func (me *MqttClient) UnsubscribeByChannel(caller messages.MessageAddress, u uui
 			break
 		}
 
-		eblog.Debug("MqttClient %s unsubscribe via channel (%s).", me.EntityId.String(), u.String())
+		eblog.Debug(me.EntityId, "unsubscribed service by channel %s OK", u.String())
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -93,9 +104,11 @@ func unsubscribeTopic(event *messages.Message, i channels.Argument) channels.Ret
 			break
 		}
 
-		eblog.Debug("MqttClient %s unsubscribeed service OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "unsubscribed service by channel %s OK", event.Text.ToUuid())
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

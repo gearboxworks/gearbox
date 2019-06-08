@@ -19,7 +19,7 @@ func ReadJsonConfig(f string) (*CreateEntry, error) {
 
 	for range only.Once {
 		if f == "" {
-			err = messages.ProduceError(defaultEntityId, "Daemon service JSON file not defined")
+			err = messages.ProduceError(DefaultEntityId, "Daemon service JSON file not defined")
 			break
 		}
 

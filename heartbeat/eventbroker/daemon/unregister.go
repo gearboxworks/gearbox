@@ -6,7 +6,6 @@ import (
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/only"
-	"github.com/google/uuid"
 )
 
 
@@ -14,7 +13,7 @@ import (
 // Executed as a method.
 
 // Unregister a service by method defined by a UUID reference.
-func (me *Daemon) Unregister(u messages.MessageAddress) error {
+func (me *Daemon) UnregisterByUuid(u messages.MessageAddress) error {
 
 	var err error
 	var state states.Status
@@ -35,42 +34,48 @@ func (me *Daemon) Unregister(u messages.MessageAddress) error {
 			break
 		}
 
-		state, err = me.daemons[u].Status()
-		switch state.Current {
-			case states.StateUnknown:
-		}
+		for range only.Once {
+			me.daemons[u].State.SetNewAction(states.ActionUnregister)
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
-		if state.Current == states.StateUnknown {
-			// Reset err, because it's not an error.
-			err = nil
-			break
+			state, err = me.daemons[u].Status()
+			s := state.GetCurrent()
+			switch s {
+				case states.StateUnknown:
+					//
 
-		} else if state.Current == states.StateStarted {
-			err = me.daemons[u].instance.service.Stop()
+				case states.StateStarted:
+					err = me.daemons[u].instance.service.Stop()
+					if err != nil {
+						break
+					}
+
+				case states.StateStopped:
+					//
+			}
+
+			err = me.daemons[u].instance.service.Uninstall()
 			if err != nil {
 				break
 			}
 
-		} else if state.Current == states.StateStopped {
-			//
+			delete(me.daemons, u)
+
+			eblog.Debug(me.EntityId, "unregistered service %s OK", u.String())
 		}
 
-		err = me.daemons[u].instance.service.Uninstall()
-		if err != nil {
-			break
-		}
-
-		delete(me.daemons, u)
-
-		eblog.Debug("Daemon %s unregister via UUID (%s).", me.EntityId.String(), u.String())
+		me.Channels.PublishSpecificCallerState(&u, states.StateUnregistered)
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
 
+
 // Unregister a service via a channel defined by a UUID reference.
-func (me *Daemon) UnregisterByChannel(caller messages.MessageAddress, u uuid.UUID) error {
+func (me *Daemon) UnregisterByChannel(caller messages.MessageAddress, u messages.MessageAddress) error {
 
 	var err error
 
@@ -87,9 +92,11 @@ func (me *Daemon) UnregisterByChannel(caller messages.MessageAddress, u uuid.UUI
 			break
 		}
 
-		eblog.Debug("Daemon %s unregister via channel (%s).", me.EntityId.String(), u.String())
+		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", u.String())
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -113,14 +120,16 @@ func unregisterService(event *messages.Message, i channels.Argument) channels.Re
 		//fmt.Printf("MESSAGE Rx:\n[%v]\n", event.Text.String())
 
 		// Use message element as the UUID.
-		err = me.Unregister(event.Text.ToUuid())
+		err = me.UnregisterByUuid(event.Text.ToUuid())
 		if err != nil {
 			break
 		}
 
-		eblog.Debug("Daemon %s unregistered service OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", event.Text.ToUuid())
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

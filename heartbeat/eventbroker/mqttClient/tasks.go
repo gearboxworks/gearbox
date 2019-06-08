@@ -1,6 +1,7 @@
 package mqttClient
 
 import (
+	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
@@ -24,43 +25,47 @@ func initMqttClient(task *tasks.Task, i ...interface{}) error {
 		if err != nil {
 			break
 		}
-		_ = me.Channels.PublishCallerState(me.EntityId, states.StateStarting)
 
-		_ = task.SetRetryLimit(DefaultRetries)
-		_ = task.SetRetryDelay(DefaultRetryDelay)
+		for range only.Once {
+			me.State.SetNewAction(states.ActionInitialize)
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
-		me.ChannelHandler, err = me.Channels.StartClientHandler(me.EntityId)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("subscribe"), subscribeTopic, me)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("unsubscribe"), unsubscribeTopic, me)
-		if err != nil {
-			break
+			_ = task.SetRetryLimit(DefaultRetries)
+			_ = task.SetRetryDelay(DefaultRetryDelay)
+
+			me.channelHandler, err = me.Channels.StartClientHandler(me.EntityId)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("subscribe"), subscribeTopic, me)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("unsubscribe"), unsubscribeTopic, me)
+			if err != nil {
+				break
+			}
+
+			err = me.channelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("start"), startHandler, me)
+			if err != nil {
+				break
+			}
+
+			me.State.SetNewState(states.StateInitialized, err)
+			eblog.Debug(me.EntityId, "task handler init completed OK")
 		}
 
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("start"), startHandler, me)
-		if err != nil {
-			break
-		}
-
-		eblog.Debug("MqttClient %s initialized OK", me.EntityId.String())
-	}
-
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		eblog.LogIfNil(me, err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err
@@ -79,15 +84,19 @@ func startMqttClient(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-		// Already started as part of initMqttClient().
+		for range only.Once {
+			me.State.SetNewAction(states.ActionStart)
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
-		eblog.Debug("MqttClient %s started OK", me.EntityId.String())
-		_ = me.Channels.PublishCallerState(me.EntityId, states.StateStarted)
-	}
+			// Already started as part of initDaemon().
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
+			me.State.SetNewState(states.StateStarted, err)
+			eblog.Debug(me.EntityId, "task handler init completed OK")
+		}
+
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		eblog.LogIfNil(me, err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err
@@ -107,52 +116,56 @@ func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-		err = me.ConnectToServer(DefaultServer)
-		if err != nil {
-			me.Channels.PublishSpecificCallerState(&me.EntityId, states.StateUnregistered)
-
-			// If this fails, it'll be handled within the task.
-			// So, reset error to nil to avoid parent thinking everything has gone South.
-			err = nil
-			break
-		}
-
-
-		ok, _ = me.IsConnected()
-		if !ok {
-			// We're not connected. Try and connect to whatever is defined in me.Server
-			err = me.ConnectToServer("")
+		for range only.Once {
+			err = me.ConnectToServer(DefaultServer)
 			if err != nil {
-				_ = me.Channels.PublishCallerState(me.EntityId, states.StateError)
+				me.State.SetNewState(states.StateUnregistered, err)
+				me.State.SetWant(states.StateStarted)
+				channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+
+				// If this fails, it'll be handled within the task.
+				// So, reset error to nil to avoid parent thinking everything has gone South.
+				err = nil
+				break
 			}
+
+			ok, _ = me.IsConnected()
+			if !ok {
+				// We're not connected. Try and connect to whatever is defined in me.Server
+				err = me.ConnectToServer("")
+				if err != nil {
+					me.State.SetNewState(states.StateStarted, err)
+					me.Channels.PublishSpecificCallerState(&me.EntityId, states.StateError)
+				} else {
+					me.State.SetNewState(states.StateStarted, err)
+				}
+			}
+
+			//me.scannedServices = make(ServicesMap)
+			//var found ServicesMap
+			//for _, s := range browseList {
+			//	found, err = me.Browse(s, me.domain)
+			//	fmt.Printf("Browse(%v, %v) => %v\n", s, me.domain, found)
+			//	if err != nil {
+			//		break
+			//	}
+			//
+			//	for k, v := range found {
+			//		me.scannedServices[k] = v
+			//	}
+			//}
+			//
+			//// Update services
+			//err = me.updateRegisteredServices()
+			//if err != nil {
+			//	break
+			//}
+
+			eblog.Debug(me.EntityId, "task handler status OK")
 		}
 
-		//me.scannedServices = make(ServicesMap)
-		//var found ServicesMap
-		//for _, s := range browseList {
-		//	found, err = me.Browse(s, me.domain)
-		//	fmt.Printf("Browse(%v, %v) => %v\n", s, me.domain, found)
-		//	if err != nil {
-		//		break
-		//	}
-		//
-		//	for k, v := range found {
-		//		me.scannedServices[k] = v
-		//	}
-		//}
-		//
-		//// Update services
-		//err = me.updateRegisteredServices()
-		//if err != nil {
-		//	break
-		//}
-
-		eblog.Debug("MqttClient %s status", me.EntityId.String())
-	}
-
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
+		eblog.LogIfNil(me, err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err
@@ -170,20 +183,23 @@ func stopMqttClient(task *tasks.Task, i ...interface{}) error {
 		if err != nil {
 			break
 		}
-		_ = me.Channels.PublishCallerState(me.EntityId, states.StateStopping)
 
-		err = me.ChannelHandler.StopHandler()
-		if err != nil {
-			_ = me.Channels.PublishCallerState(me.EntityId, states.StateError)
-			break
+		for range only.Once {
+			me.State.SetNewAction(states.ActionStop)
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+
+			err = me.channelHandler.StopHandler()
+			if err != nil {
+				break
+			}
+
+			me.State.SetNewState(states.StateStopped, err)
+			eblog.Debug(me.EntityId, "task handler stopped OK")
 		}
 
-		eblog.Debug("MqttClient %s stopped", me.EntityId.String())
-	}
-
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		eblog.LogIfNil(me, err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err

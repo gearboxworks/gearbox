@@ -1,10 +1,14 @@
 package daemon
 
 import (
+	"fmt"
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/only"
+	"github.com/getlantern/errors"
+	"time"
 )
 
 
@@ -13,10 +17,11 @@ import (
 
 // Non-exposed channel function that responds to a "status" channel request.
 // Produces the status of the M-DNS handler via a channel.
-func statusHandler(event *messages.Message, i channels.Argument) channels.Return {
+func getHandler(event *messages.Message, i channels.Argument) channels.Return {
 
 	var err error
 	var me *Daemon
+	var response *states.Status
 
 	for range only.Once {
 		me, err = InterfaceToTypeDaemon(i)
@@ -24,16 +29,29 @@ func statusHandler(event *messages.Message, i channels.Argument) channels.Return
 			break
 		}
 
-		eblog.Debug("Daemon %s handler status OK", me.EntityId.String())
+		//foo := reflect.ValueOf(me)
+		//fmt.Printf("Reflect %s, %s	", foo.Type(), foo.String())
+		//fmt.Printf("getHandler(%s)\n", me.Fluff)
+		fmt.Printf("%d getHandler records: %v\n", time.Now().Unix(), me.State.GetError())
+		me.Fluff = fmt.Sprintf("%d", time.Now().Unix())
+
+		switch event.Text.String() {
+			case "status":
+				//response = event.Text.String()
+		}
+
+		me.State.SetError(errors.New("YES - " + me.Fluff))
+		response = me.State.GetFullState()
+
+		eblog.Debug(me.EntityId, "requested service status via channel")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return response
 }
+
 
 // Non-exposed channel function that responds to an "stop" channel request.
 // Causes the M-DNS handler task to stop via a channel.
@@ -53,13 +71,11 @@ func stopHandler(event *messages.Message, i channels.Argument) channels.Return {
 			break
 		}
 
-		eblog.Debug("Daemon %s handler stopped OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "requested service stop via channel")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -83,13 +99,11 @@ func startHandler(event *messages.Message, i channels.Argument) channels.Return 
 			break
 		}
 
-		eblog.Debug("Daemon %s handler started OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "requested service start via channel")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

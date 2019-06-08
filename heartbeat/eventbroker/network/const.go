@@ -21,7 +21,7 @@ type ZeroConf struct {
 	State           states.Status
 	Task            *tasks.Task
 	Channels        *channels.Channels
-	ChannelHandler	*channels.Subscriber
+	channelHandler	*channels.Subscriber
 
 	restartAttempts int
 	waitTime        time.Duration
@@ -129,6 +129,40 @@ type Text []string
 func (me *Text) String() ([]string) {
 
 	return []string(*me)
+}
+
+
+// Ensure we don't duplicate services.
+func (me *Service) IsExisting(him CreateEntry) error {
+
+	var err error
+
+	// @TODO - Need to check to see if this service has already been registered.
+	//switch {
+	//	case strconv.Itoa(me.Entry.Port) == him.Port.String():
+	//		err = me.EntityId.ProduceError("service HostName:%s already exists", me.Entry.HostName)
+	//
+	//	case me.Entry.HostName == him:
+	//		err = me.EntityId.ProduceError("service Name:%s already exists", me.Entry.Name)
+	//}
+
+	return err
+}
+
+
+// Ensure we don't duplicate services.
+func (me *ServicesMap) IsExisting(him CreateEntry) error {
+
+	var err error
+
+	for _, ce := range *me {
+		err = ce.IsExisting(him)
+		if err != nil {
+			break
+		}
+	}
+
+	return err
 }
 
 

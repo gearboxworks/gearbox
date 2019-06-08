@@ -78,15 +78,16 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*EventBroker, error) {
 
 		*me = EventBroker(_args)
 
-		_ = me.Channels.PublishCallerState(me.EntityId, states.StateIdle)
-		eblog.Debug("event broker created OK")
+
+		me.State.SetWant(states.StateIdle)
+		if me.State.SetNewState(states.StateIdle, err) {
+			eblog.Debug(me.EntityId, "init complete")
+		}
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-		_ = me.Channels.PublishCallerState(me.EntityId, states.StateError)
-	}
+	channels.PublishCallerState(&me.Channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return me, err
 }
@@ -107,10 +108,10 @@ func (me *EventBroker) Start() error {
 		// Note: These will be started dynamically as clients are registered.
 
 		// 2. ZeroConf - start discovery and management of network services.
-		err = me.ZeroConf.StartHandler()
-		if err != nil {
-			break
-		}
+		//err = me.ZeroConf.StartHandler()
+		//if err != nil {
+		//	break
+		//}
 
 		// 3. Daemon - starts any daemons.
 		err = me.Daemon.StartHandler()
@@ -119,32 +120,19 @@ func (me *EventBroker) Start() error {
 		}
 
 		// 4. MQTT - start the inter-process communications.
-		err = me.MqttClient.StartHandler()
-		if err != nil {
-			break
-		}
+		//err = me.MqttClient.StartHandler()
+		//if err != nil {
+		//	break
+		//}
 
-		// Start the inter-process service.
-		//go func() {
-		//	err = me.MqttBroker.StartHandler()
-		//	if err != nil {
-		//		sts = status.Fail().
-		//			SetMessage("failed to start MQTT handler").
-		//			SetAdditional("", ).
-		//			SetData(err).
-		//			SetHelp(status.AllHelp, help.ContactSupportHelp())
-		//		break
-		//	}
-		//}()
+		me.TempLoop()
 
-		eblog.Debug("event broker started OK")
+		eblog.Debug(me.EntityId, "event broker started OK")
 	}
 
-
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	channels.PublishCallerState(&me.Channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -156,6 +144,42 @@ func (me *EventBroker) TempLoop() error {
 
 	fmt.Printf("(me *EventBroker) TempLoop()\n")
 
+	msg := messages.Message{
+		Source: me.EntityId,
+		Topic: messages.MessageTopic{
+			Address: "eventbrokerdaemon",
+			SubTopic: "get",
+		},
+		Text: "status",
+	}
+	time.Sleep(time.Second * 8)
+
+	//me.CreateEntity("BEEP")
+	me.Daemon.ChannelHandler.List()
+
+	index := 0
+	for {
+		//fmt.Printf("PING\n")
+
+
+		//fmt.Printf("Error1: %v\n", me.Daemon.State.Error)
+		me.Daemon.State.SetError(errors.New(fmt.Sprintf("Loop #%d (%s)", index, me.Daemon.Fluff)))
+		//fmt.Printf("Error2: %v\n", me.Daemon.State.Error)
+
+		fmt.Printf("\n\n%d gbevents before: %v\n", time.Now().Unix(), me.Daemon.State.GetError())
+		i, _ := me.Channels.PublishAndWaitForReturn(msg, 400)
+		//foo := reflect.ValueOf(i)
+		//fmt.Printf("ERROR: %v\t\tRESPONSE: %v\n", err, i)
+		//fmt.Printf("Reflect %s, %s\n", foo.Type(), foo.String())
+		f := i.(*states.Status)
+		fmt.Printf("%d gbevents after: %v (%v)\n", time.Now().Unix(), f.GetError(), me.Daemon.Fluff)
+
+		index++
+		//me.Daemon.State.Error = nil
+
+		time.Sleep(time.Second * 5)
+	}
+
 	time.Sleep(time.Second * 6)
 
 	//me.CreateEntity("HELO")
@@ -165,7 +189,7 @@ func (me *EventBroker) TempLoop() error {
 		err = me.MqttClient.ConnectToServer(u.String())
 	}
 	if err != nil {
-		eblog.Debug("Aaaaargh! => %v", err)
+		eblog.Debug(me.EntityId, "Aaaaargh! => %v", err)
 	}
 
 	_ = me.MqttClient.GlobSubscribe(me.MqttClient.EntityId)
@@ -185,22 +209,22 @@ func (me *EventBroker) Stop() error {
 
 	err = me.MqttClient.StopHandler()
 	if err != nil {
-		eblog.Debug("MqttClient shutdown error %v", err)
+		eblog.Debug(me.EntityId, "MqttClient shutdown error %v", err)
 	}
 
 	err = me.Daemon.StopHandler()
 	if err != nil {
-		eblog.Debug("Daemon shutdown error %v", err)
+		eblog.Debug(me.EntityId, "Daemon shutdown error %v", err)
 	}
 
 	err = me.ZeroConf.StopHandler()
 	if err != nil {
-		eblog.Debug("ZeroConf shutdown error %v", err)
+		eblog.Debug(me.EntityId, "ZeroConf shutdown error %v", err)
 	}
 
 	err = me.Channels.StopHandler()
 	if err != nil {
-		eblog.Debug("Channels shutdown error %v", err)
+		eblog.Debug(me.EntityId, "Channels shutdown error %v", err)
 	}
 
 	return err
@@ -257,7 +281,7 @@ func manageService(event *messages.Message, i interface{}) error {
 	}
 
 	if err != nil {
-		eblog.Debug("Error: %v", err)
+		//eblog.Debug(me.EntityId, "Error: %v", err)
 	}
 
 	return err

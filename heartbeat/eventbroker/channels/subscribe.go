@@ -3,7 +3,9 @@ package channels
 import (
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/only"
+	"sync"
 )
 
 
@@ -13,13 +15,12 @@ func (me *Channels) Subscribe(topic messages.MessageTopic, callback Callback, ar
 	var sub Subscriber
 
 	for range only.Once {
-		err = EnsureNotNil(me)
+		err = me.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
 		for range only.Once {
-
 			err = topic.EnsureNotNil()
 			if err != nil {
 				break
@@ -40,25 +41,33 @@ func (me *Channels) Subscribe(topic messages.MessageTopic, callback Callback, ar
 					Callbacks: make(Callbacks),
 					Arguments: make(Arguments),
 					Returns:   make(Returns),
-					//References: make(References),
+					Executed:   make(Executed),
+
+					mutexArguments: sync.RWMutex{},
+					mutexReturns: sync.RWMutex{},
+					mutexExecuted: sync.RWMutex{},
+
 					parentInstance: &me.instance,
 				}
 				*me.subscribers[topic.Address] = sub
 			}
 
 			me.subscribers[topic.Address].Callbacks[topic.SubTopic] = callback
-			me.subscribers[topic.Address].Arguments[topic.SubTopic] = argInterface
-			me.subscribers[topic.Address].Returns[topic.SubTopic] = nil
+			// MUTEX me.subscribers[topic.Address].Arguments[topic.SubTopic] = argInterface
+			me.subscribers[topic.Address].SetArguments(topic.SubTopic, argInterface)
+			// MUTEX me.subscribers[topic.Address].Returns[topic.SubTopic] = nil
+			me.subscribers[topic.Address].SetReturns(topic.SubTopic, nil)
 
 			// me.subscribers[topic.Address].List()
 			// me.subscribers.List()
 
-			// Save last state.
-			me.subscribers[topic.Address].State.Error = err
-			eblog.Debug("channel new subscriber: %s", messages.SprintfTopic(topic.Address, topic.SubTopic))
+			me.subscribers[topic.Address].State.SetNewState(states.StateSubscribed, err)
+			eblog.Debug(me.EntityId, "channel new subscriber: %s", messages.SprintfTopic(topic.Address, topic.SubTopic))
 		}
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return &sub, err
 }
@@ -86,16 +95,20 @@ func (me *Subscriber) Subscribe(topic messages.SubTopic, callback Callback, argI
 			}
 
 			me.Callbacks[topic] = callback
-			me.Arguments[topic] = argInterface
-			me.Returns[topic] = nil
+			// MUTEX me.Arguments[topic] = argInterface
+			me.SetArguments(topic, argInterface)
+			// MUTEX me.Returns[topic] = nil
+			me.SetReturns(topic, nil)
+
 			// me.List()
 
-			// Save last state.
-			me.State.Error = err
-			eblog.Debug("channel new subscriber: %s", messages.SprintfTopic(me.EntityId, topic))
+			me.State.SetNewState(states.StateSubscribed, err)
+			eblog.Debug(me.EntityId, "channel new subscriber: %s", messages.SprintfTopic(me.EntityId, topic))
 		}
 	}
-	eblog.LogIfError(&me, err)
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

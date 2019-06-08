@@ -1,6 +1,7 @@
 package network
 
 import (
+	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
@@ -11,6 +12,7 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a task.
+
 
 // Non-exposed task function - M-DNS initialization.
 func initZeroConf(task *tasks.Task, i ...interface{}) error {
@@ -23,51 +25,56 @@ func initZeroConf(task *tasks.Task, i ...interface{}) error {
 		if err != nil {
 			break
 		}
-		me.Channels.PublishCallerState(me.EntityId, states.StateStarting)
 
-		_ = task.SetRetryLimit(DefaultRetries)
-		_ = task.SetRetryDelay(DefaultRetryDelay)
+		for range only.Once {
+			me.State.SetNewAction(states.ActionInitialize)
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
-		me.ChannelHandler, err = me.Channels.StartClientHandler(me.EntityId)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("register"), registerService, me)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("unregister"), unregisterService, me)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("scan"), scanServices, me)
-		if err != nil {
-			break
+			_ = task.SetRetryLimit(DefaultRetries)
+			_ = task.SetRetryDelay(DefaultRetryDelay)
+
+			me.channelHandler, err = me.Channels.StartClientHandler(me.EntityId)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("register"), registerService, me)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("unregister"), unregisterService, me)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("scan"), scanServices, me)
+			if err != nil {
+				break
+			}
+
+			err = me.channelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("start"), startHandler, me)
+			if err != nil {
+				break
+			}
+
+			me.State.SetNewState(states.StateInitialized, err)
+			eblog.Debug(me.EntityId, "task handler init completed OK")
 		}
 
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me)
-		if err != nil {
-			break
-		}
-		err = me.ChannelHandler.Subscribe(messages.SubTopic("start"), startHandler, me)
-		if err != nil {
-			break
-		}
-
-		eblog.Debug("ZeroConf %s initialized OK", me.EntityId.String())
-	}
-
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		eblog.LogIfNil(me, err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err
 }
+
 
 // Non-exposed task function - M-DNS start.
 func startZeroConf(task *tasks.Task, i ...interface{}) error {
@@ -81,19 +88,24 @@ func startZeroConf(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-		// Already started as part of initZeroConf().
+		for range only.Once {
+			me.State.SetNewAction(states.ActionStart)
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
-		eblog.Debug("ZeroConf %s started OK", me.EntityId.String())
-		me.Channels.PublishCallerState(me.EntityId, states.StateStarted)
-	}
+			// Already started as part of initDaemon().
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
+			me.State.SetNewState(states.StateStarted, err)
+			eblog.Debug(me.EntityId, "task handler init completed OK")
+		}
+
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		eblog.LogIfNil(me, err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err
 }
+
 
 // Non-exposed task function - M-DNS monitoring.
 func monitorZeroConf(task *tasks.Task, i ...interface{}) error {
@@ -107,38 +119,41 @@ func monitorZeroConf(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-		me.scannedServices = make(ServicesMap)
-		var found ServicesMap
-		for _, s := range browseList {
-			found, err = me.Browse(s, me.domain)
-			eblog.Debug("ZeroConf browse results(%v, %v)\n", s, me.domain)
+		for range only.Once {
+			me.scannedServices = make(ServicesMap)
+
+			var found ServicesMap
+
+			for _, s := range browseList {
+				found, err = me.Browse(s, me.domain)
+				eblog.Debug(me.EntityId, "task handler status completed OK (%v, %v)", s, me.domain)
+				if err != nil {
+					me.Channels.PublishSpecificCallerState(&me.EntityId, states.StateError)
+					break
+				}
+
+				for k, v := range found {
+					me.scannedServices[k] = v
+				}
+			}
+
+			// Update services
+			err = me.updateRegisteredServices()
 			if err != nil {
-				me.Channels.PublishCallerState(me.EntityId, states.StateError)
+				me.Channels.PublishSpecificCallerState(&me.EntityId, states.StateError)
 				break
 			}
 
-			for k, v := range found {
-				me.scannedServices[k] = v
-			}
+			eblog.Debug(me.EntityId, "task handler scanning completed OK")
 		}
 
-		// Update services
-		err = me.updateRegisteredServices()
-		if err != nil {
-			me.Channels.PublishCallerState(me.EntityId, states.StateError)
-			break
-		}
-
-		eblog.Debug("ZeroConf %s status", me.EntityId.String())
-	}
-
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
+		eblog.LogIfNil(me, err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err
 }
+
 
 // Non-exposed task function - M-DNS stop.
 func stopZeroConf(task *tasks.Task, i ...interface{}) error {
@@ -151,21 +166,25 @@ func stopZeroConf(task *tasks.Task, i ...interface{}) error {
 		if err != nil {
 			break
 		}
-		me.Channels.PublishCallerState(me.EntityId, states.StateStopping)
 
-		err = me.ChannelHandler.StopHandler()
-		if err != nil {
-			me.Channels.PublishCallerState(me.EntityId, states.StateError)
-			break
+		for range only.Once {
+			me.State.SetNewAction(states.ActionStop)
+			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+
+			err = me.channelHandler.StopHandler()
+			if err != nil {
+				break
+			}
+
+			me.State.SetNewState(states.StateStopped, err)
+			eblog.Debug(me.EntityId, "task handler stopped OK")
 		}
 
-		eblog.Debug("ZeroConf %s stopped", me.EntityId.String())
-	}
-
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		eblog.LogIfNil(me, err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err
 }
+

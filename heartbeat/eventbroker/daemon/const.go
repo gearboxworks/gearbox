@@ -16,7 +16,7 @@ import (
 
 
 const (
-	DefaultEntityId = "eventbroker-daemon"
+	DefaultEntityId = "eventbrokerdaemon"
 
 	defaultBaseDir = "eventbroker"
 	defaultLogBaseDir = defaultBaseDir + "/logs"
@@ -29,7 +29,7 @@ const (
     defaultWaitTime = time.Millisecond * 2000
 	defaultDomain   = "local"
 	defaultRetries  = 12
-	DefaultRetryDelay = time.Second * 5
+	DefaultRetryDelay = time.Second * 50
 )
 
 
@@ -39,6 +39,7 @@ type Daemon struct {
 	Task           *tasks.Task
 	Channels       *channels.Channels
 	ChannelHandler *channels.Subscriber
+	Fluff          string
 
 	daemons        ServicesMap
 	osSupport      oss.OsSupporter

@@ -13,37 +13,48 @@ import (
 func (me *ZeroConf) EnsureNotNil() error {
 	var err error
 
-	if me == nil {
-		err = errors.New("unexpected software error")
+	switch {
+		case me == nil:
+			err = errors.New("ZeroConf instance is nil")
 	}
 
 	return err
 }
+func EnsureNotNil(me *ZeroConf) error {
+	return me.EnsureNotNil()
+}
 
 
 func (me *ServicesMap) EnsureNotNil() error {
+
 	var err error
 
-	if me == nil {
-		err = errors.New("unexpected software error")
+	switch {
+		case me == nil:
+			err = errors.New("ZeroConf ServicesMap instance is nil")
 	}
 
 	return err
+}
+func EnsureServicesMapNotNil(me *ServicesMap) error {
+	return me.EnsureNotNil()
 }
 
 
 func (me *Service) EnsureNotNil() error {
 	var err error
 
-	if me == nil {
-		err = errors.New("no zeroconf service defined")
-	}
-
-	if (me.instance == nil) && (me.IsManaged == true) {
-		err = errors.New("no zeroconf service instance defined")
+	switch {
+		case me == nil:
+			err = errors.New("ZeroConf Service instance is nil")
+		case (me.instance == nil) && (me.IsManaged == true):
+			err = me.EntityId.ProduceError("service instance is nil")
 	}
 
 	return err
+}
+func EnsureServicesNotNil(me *Service) error {
+	return me.EnsureNotNil()
 }
 
 
@@ -308,7 +319,7 @@ func GetFreePort() (Port, error) {
 	defer l.Close()
 
 	port = l.Addr().(*net.TCPAddr).Port
-	eblog.Debug("Foung a free port on == %d", port)
+	eblog.Debug(DefaultEntityId, "Foung a free port on == %d", port)
 
 	return Port(port), nil
 }

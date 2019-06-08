@@ -24,16 +24,15 @@ func statusHandler(event *messages.Message, i channels.Argument) channels.Return
 			break
 		}
 
-		eblog.Debug("ZeroConf %s handler status OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "requested service status via channel")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
+
 
 // Non-exposed channel function that responds to an "stop" channel request.
 // Causes the M-DNS handler task to stop via a channel.
@@ -53,13 +52,11 @@ func stopHandler(event *messages.Message, i channels.Argument) channels.Return {
 			break
 		}
 
-		eblog.Debug("ZeroConf %s handler stopped OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "requested service stop via channel")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -83,13 +80,11 @@ func startHandler(event *messages.Message, i channels.Argument) channels.Return 
 			break
 		}
 
-		eblog.Debug("ZeroConf %s handler started OK", me.EntityId.String())
+		eblog.Debug(me.EntityId, "requested service start via channel")
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

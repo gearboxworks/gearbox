@@ -61,14 +61,14 @@ func (me *MqttClient) New(OsSupport oss.OsSupporter, args ...Args) error {
 		*me = MqttClient(_args)
 
 
-		me.State.SetNewWantState(states.StateIdle)
-		if me.State.SetNewState(states.StateIdle, err) {
-			eblog.Debug(me.EntityId, "init complete")
-		}
+		me.State.SetWant(states.StateIdle)
+		me.State.SetNewState(states.StateIdle, err)
+		eblog.Debug(me.EntityId, "init complete")
 	}
 
 	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
-	eblog.LogIfError(me, err)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -85,16 +85,25 @@ func (me *MqttClient) StartHandler() error {
 			break
 		}
 
-		me.Task, me.State.Error = tasks.StartTask(initMqttClient, startMqttClient, monitorMqttClient, stopMqttClient, me)
-		if me.State.Error != nil {
-			break
+		me.State.SetNewState(states.StateStarting, err)
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.State.SetWant(states.StateStarted)
+
+		for range only.Once {
+			me.Task, err = tasks.StartTask(initMqttClient, startMqttClient, monitorMqttClient, stopMqttClient, me)
+			me.State.SetError(err)
+			if err != nil {
+				break
+			}
 		}
 
+		me.State.SetNewState(states.StateStarted, err)
 		eblog.Debug(me.EntityId, "started task handler")
 	}
 
-	channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
-	eblog.LogIfError(me, err)
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -111,25 +120,50 @@ func (me *MqttClient) StopHandler() error {
 			break
 		}
 
-		for u, _ := range me.services {
-			eblog.Debug(me.EntityId, "unsubscribing %s", u.String())
-			err = me.UnsubscribeByUuid(u)
-			if err != nil {
-				eblog.Debug(me.EntityId, "ERROR failed to unsubscribe %s", u.String())
-				break
-			}
+		me.State.SetNewState(states.StateStopping, err)
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.State.SetWant(states.StateStopped)
+
+		for range only.Once {
+			_ = me.StopServices()
+			// Ignore error, will clean up when program exits.
+
+			err = me.Task.Stop()
 		}
 
-		err = me.Task.Stop()
+		me.State.SetNewState(states.StateStopped, err)
+		eblog.Debug(me.EntityId, "stopped task handler")
+	}
+
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return err
+}
+
+
+func (me *MqttClient) StopServices() error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		eblog.Debug(me.EntityId, "stopped task handler")
+		for u, _ := range me.services {
+			if me.services[u].IsManaged {
+				_ = me.UnsubscribeByUuid(u)
+				// Ignore error, will clean up when program exits.
+			}
+		}
 	}
 
-	channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
-	eblog.LogIfError(me, err)
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }

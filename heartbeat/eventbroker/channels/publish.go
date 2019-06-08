@@ -37,19 +37,14 @@ func (me *Channels) Publish(msg messages.Message) error {
 			break
 		}
 
-		me.State.Want = states.StatePublished
-
-		//fmt.Printf("MESSAGE Tx:[%v]\n", msg)
-
-		// eblog.Debug("Publish(%s) =>\tmsg.CreateTopic():%v\tme.instance.emitter:%v", msg.Topic.String(), msg, me.instance.emitter)
+		// eblog.Debug(me.EntityId, "Publish(%s) =>\tmsg.CreateTopic():%v\tme.instance.emitter:%v", msg.Topic.String(), msg, me.instance.emitter)
 		me.instance.emits = me.instance.emitter.Emit(msg.Topic.String(), msg)
 		if me.instance.emits == nil {
 			err = me.EntityId.ProduceError("failed to send channel message")
 			break
 		}
 
-
-		eblog.Debug("channel MSG:'%s' DATA:'%s'", msg.Topic.String(), msg.Text.String())
+		eblog.Debug(me.EntityId, "channel MSG:'%s' DATA:'%s'", msg.Topic.String(), msg.Text.String())
 		//fmt.Printf(">>> MSG: %s DATA: %s", msg.Topic.String(), msg.Text.String())
 		/*
 			select {
@@ -63,10 +58,8 @@ func (me *Channels) Publish(msg messages.Message) error {
 		*/
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -74,7 +67,7 @@ func (me *Channels) Publish(msg messages.Message) error {
 
 func (me *Channels) GetCallbackReturn(msg messages.Message, waitForExecute int) (Return, error) {
 
-	var r Return
+	var ret Return
 	var err error
 
 	for range only.Once {
@@ -90,31 +83,32 @@ func (me *Channels) GetCallbackReturn(msg messages.Message, waitForExecute int) 
 		}
 
 		subtopic := msg.Topic.SubTopic
-		if _, ok := me.subscribers[client].Returns[subtopic]; !ok {
+		// MUTEX if _, ok := me.subscribers[client].Returns[subtopic]; !ok {
+		if !me.subscribers[client].ValidateReturns(subtopic) {
 			err = me.EntityId.ProduceError("channel subscriber return not defined")
 			break
 		}
 
-		for loop := 0; (me.subscribers[client].Executed[subtopic] == false) && (loop < waitForExecute); loop++ {
+		// MUTEX for loop := 0; (me.subscribers[client].Executed[subtopic] == false) && (loop < waitForExecute); loop++ {
+		for loop := 0; (me.subscribers[client].GetExecuted(subtopic) == false) && (loop < waitForExecute); loop++ {
 			// Wait if we are asked to.
 			time.Sleep(time.Millisecond * 10)
 		}
 
-		if me.subscribers[client].Executed[subtopic] == false {
+		// MUTEX if me.subscribers[client].Executed[subtopic] == false {
+		if me.subscribers[client].GetExecuted(subtopic) == false {
 			err = me.EntityId.ProduceError("no response from channel")
 			break
 		}
 
-		r = me.subscribers[client].Returns[subtopic]
-		me.subscribers[client].Executed[subtopic] = false
+		// MUTEX ret = me.subscribers[client].Returns[subtopic]
+		ret = me.subscribers[client].GetReturns(subtopic)
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
-	return r, err
+	return ret, err
 }
 
 
@@ -129,23 +123,58 @@ func (me *Channels) SetCallbackReturnToNil(msg messages.Message) (error) {
 		}
 
 		client := msg.Topic.Address
+		subtopic := msg.Topic.SubTopic
+
 		if _, ok := me.subscribers[client]; !ok {
 			err = me.EntityId.ProduceError("unknown channel subscriber")
 			break
 		}
 
-		subtopic := msg.Topic.SubTopic
-		if _, ok := me.subscribers[client].Returns[subtopic]; ok {
-			me.subscribers[client].Returns[subtopic] = nil
+		// MUTEX if _, ok := me.subscribers[client].Returns[subtopic]; !ok {
+		if !me.subscribers[client].ValidateReturns(subtopic) {
+			err = me.EntityId.ProduceError("channel subscriber return not defined")
+			break
 		}
+
+		// MUTEX me.subscribers[client].Returns[subtopic] = nil
+		me.subscribers[client].SetReturns(subtopic, nil)
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
+}
+
+
+func (me *Channels) PublishAndWaitForReturn(msg messages.Message, waitForExecute int) (Return, error) {
+
+	var err error
+	var ret Return
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		err = me.Publish(msg)
+		if err != nil {
+			break
+		}
+
+		ret, err = me.GetCallbackReturn(msg, waitForExecute)
+		if err != nil {
+			break
+		}
+
+		eblog.Debug(me.EntityId, "message returned by channel OK")
+	}
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return ret, err
 }
 
 
@@ -159,13 +188,13 @@ func PublishCallerState(me *Channels, caller *messages.MessageAddress, state *st
 
 		case state == nil:
 
-		case state.Error != nil:
-			_ = me.Publish(caller.ConstructMessage(*caller, states.ActionError, messages.MessageText(state.Error.Error())))
+		case state.GetError() != nil:
+			_ = me.Publish(caller.ConstructMessage(*caller, states.ActionError, messages.MessageText(state.GetError().Error())))
 
-		case state.Current != state.Want:
+		case state.ExpectingNewState():
 			fallthrough
-		case state.Current != state.Last:
-			_ = me.Publish(caller.ConstructMessage(*caller, states.ActionStatus, messages.MessageText(state.Current)))
+		case state.HasChangedState():
+			_ = me.Publish(caller.ConstructMessage(*caller, states.ActionStatus, messages.MessageText(state.GetCurrent())))
 	}
 
 	return
@@ -182,15 +211,13 @@ func (me *Channels) PublishCallerState(caller *messages.MessageAddress, state *s
 
 func (me *Channels) PublishSpecificCallerState(caller *messages.MessageAddress, state states.State) {
 
-	for range only.Once {
-		switch {
-			case me == nil:
-			case state == "":
-			case caller == nil:
-		}
-
-		PublishCallerState(me, caller, &states.Status{Current: state})
+	switch {
+		case me == nil:
+		case state == "":
+		case caller == nil:
 	}
+
+	PublishCallerState(me, caller, &states.Status{Current: state})
 
 	return
 }

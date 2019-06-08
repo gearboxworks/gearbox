@@ -54,7 +54,7 @@ func (me *EventBroker) FindMqttBroker() (*url.URL, error) {
 			break
 		}
 
-		eblog.Debug("Found MQTT broker %s", u.String())
+		eblog.Debug(me.EntityId, "Found MQTT broker %s", u.String())
 	}
 
 	return u, err
@@ -148,8 +148,8 @@ func (me *EventBroker) CreateEntity(serviceName string) {
 	err = me.ZeroConf.UnregisterByUuid(s1ref.EntityId)
 	fmt.Printf("Response(me.ZeroConf.UnregisterByUuid): %v\n", err)
 
-	err = s3ref.Unregister()
-	fmt.Printf("Response(s3ref.Unregister): %v\n", err)
+	//err = s3ref.Unregister()
+	//fmt.Printf("Response(s3ref.Unregister): %v\n", err)
 
 
 	//fmt.Printf("Start channel...\n")

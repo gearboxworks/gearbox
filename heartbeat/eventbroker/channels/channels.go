@@ -10,6 +10,9 @@ import (
 	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
 	"github.com/olebedev/emitter"
+	"reflect"
+	"sync"
+	"time"
 )
 
 
@@ -36,20 +39,53 @@ func (me *Channels) New(OsSupport oss.OsSupporter, args ...Args) error {
 			_args.EntityId = DefaultEntityId
 		}
 
-		_args.instance.emitter = emitter.Emitter{}
+		_args.instance.emitter = &emitter.Emitter{}
 		_args.subscribers = make(Subscribers)
 
 		*me = Channels(_args)
 
 
-		me.State.SetNewWantState(states.StateIdle)
+		me.State.SetWant(states.StateIdle)
 		if me.State.SetNewState(states.StateIdle, err) {
 			eblog.Debug(me.EntityId, "init complete")
 		}
 	}
 
 	PublishCallerState(me, &me.EntityId, &me.State)
-	eblog.LogIfError(me, err)
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return err
+}
+
+
+func (me *Channels) StartHandler() error {
+
+	// Just a stub function.
+	var err error
+
+	//for range only.Once {
+	//	err = me.EnsureNotNil()
+	//	if err != nil {
+	//		break
+	//	}
+	//
+	//	me.State.SetWant(states.StateStarted)
+	//
+	//	for range only.Once {
+	//		me.Task, err = tasks.StartTask(initDaemon, startDaemon, monitorDaemon, stopDaemon, me)
+	//		if err != nil {
+	//			break
+	//		}
+	//	}
+	//
+	//	if me.State.SetNewState(states.StateStarted, err) {
+	//		eblog.Debug(me.EntityId, "started task handler")
+	//	}
+	//}
+	//
+	//channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	//eblog.LogIfError(me, err)
 
 	return err
 }
@@ -62,16 +98,14 @@ func (me *Channels) StopHandler() error {
 	for n, s := range me.subscribers {
 		err = s.StopHandler()
 		if err != nil {
-			eblog.Debug("channel '%s' stopped OK", n)
+			eblog.Debug(me.EntityId, "channel '%s' stopped OK", n)
 		} else {
-			eblog.Debug("channel '%s' didn't stop", n)
+			eblog.Debug(me.EntityId, "channel '%s' didn't stop", n)
 		}
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -94,14 +128,12 @@ func (me *Channels) StopClientHandler(client messages.MessageAddress)  {
 		//	SubTopic: messages.SubTopicStop,
 		//}
 
-		eblog.Debug("StopHandler:'%s'", topicStop.String())
+		eblog.Debug(me.EntityId, "StopHandler:'%s'", topicStop.String())
 		me.instance.emitter.Off(topicStop.String())
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return
 }
@@ -119,14 +151,12 @@ func (me *Subscriber) StopHandler() error {
 
 		topicStop := me.EntityId.CreateTopic(states.ActionStop)
 
-		eblog.Debug("StopHandler:'%s'", topicStop.String())
+		eblog.Debug(me.EntityId, "StopHandler:'%s'", topicStop.String())
 		me.parentInstance.emitter.Off(topicStop.String())
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return nil
 }
@@ -159,6 +189,11 @@ func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscri
 				Arguments: make(Arguments),
 				Returns: make(Returns),
 				Executed: make(Executed),
+
+				mutexArguments: sync.RWMutex{},
+				mutexReturns: sync.RWMutex{},
+				mutexExecuted: sync.RWMutex{},
+
 				parentInstance: &me.instance,
 			}
 			me.subscribers[client] = &sub
@@ -167,17 +202,15 @@ func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscri
 		go func() {
 			err = me.rxHandler(client)
 			if err != nil {
-				eblog.Debug("GBevents - handler errored '%v'.", err)
+				eblog.Debug(me.EntityId, "GBevents - handler errored '%v'.", err)
 			}
 		}()
 
-		eblog.Debug("started channel event handler for %s", client.String())
+		eblog.Debug(me.EntityId, "started channel event handler for %s", client.String())
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return &sub, err
 }
@@ -197,22 +230,22 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 		//var wg sync.WaitGroup
 		child := 0
 
-		eblog.Debug("channels handler started '%s'.", client.String())
-		topicGlob := me.EntityId.CreateTopicGlob().String()
-		topicExit := me.EntityId.CreateTopic(states.ActionStop).String()
+		eblog.Debug(me.EntityId, "channels handler started '%s'.", client.String())
+		topicGlob := client.CreateTopicGlob().String()
+		topicExit := client.CreateTopic(states.ActionStop).String()
 
 		for me.instance.events = range me.instance.emitter.On(topicGlob) {
 			if me.instance.events.Args == nil {
-				eblog.Debug("channels handler saw zero args")
+				eblog.Debug(me.EntityId, "channels handler saw zero args")
 				continue
 			}
 
 			// Only one message ever sent.
 			msg := me.instance.events.Args[0].(messages.Message)
 
-			eblog.Debug("Event(%s) Time:%d Src:%s Text:%s", msg.Topic.String(), msg.Time.Convert().Unix(), msg.Source.String(), msg.Text.String())
+			eblog.Debug(me.EntityId, "Event(%s) Time:%d Src:%s Text:%s", msg.Topic.String(), msg.Time.Convert().Unix(), msg.Source.String(), msg.Text.String())
 			if me.instance.events.OriginalTopic == topicExit { //} && (msg.Text.String() == me.EntityId.String()) {
-				eblog.Debug("EXIT TIME: %s => %s", me.instance.events.OriginalTopic, topicGlob)
+				eblog.Debug(me.EntityId, "EXIT TIME: %s => %s", me.instance.events.OriginalTopic, topicGlob)
 				me.instance.emitter.Off(topicGlob)
 			}
 
@@ -235,25 +268,37 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 					continue
 				}
 
-				if _, ok := sub.Arguments[topic]; !ok {
-					sub.Arguments[topic] = nil
-				}
-
-				//eblog.Debug("LOOP:[%d]", child)
+				//eblog.Debug(me.EntityId, "LOOP:[%d]", child)
 				// Execute callback in thread.
 				go func(c int) {
 					//defer wg.Done()
-					// eblog.Debug("Callback(%s)	Time:%v	Src:%s	Text:%s", msg.Topic, msg.Time.Convert().Unix(), msg.Src, msg.Text)
-					sub.Executed[topic] = false
+					// eblog.Debug(me.EntityId, "Callback(%s)	Time:%v	Src:%s	Text:%s", msg.Topic, msg.Time.Convert().Unix(), msg.Src, msg.Text)
+					sub.SetExecuted(topic, false)
 
-					if _, ok := sub.Returns[topic]; ok {
-						sub.Returns[topic] = sub.Callbacks[topic](&msg, sub.Arguments[topic])
-						//eblog.Debug("# Return1: %v", sub.Returns[topic])
+					var args Argument
+					if sub.ValidateArguments(topic) {
+						args = sub.GetArguments(topic)
 					} else {
-						_ = sub.Callbacks[topic](&msg, sub.Arguments[topic])
-						//eblog.Debug("# Return2: %v", sub.Returns[topic])
+						args = nil
 					}
-					sub.Executed[topic] = true
+
+					// MUTEX if _, ok := sub.Returns[topic]; ok {
+					if sub.ValidateReturns(topic) {
+						// MUTEX sub.Returns[topic] = sub.Callbacks[topic](&msg, sub.Arguments[topic])
+						// ret := sub.Callbacks[topic](&msg, sub.Arguments[topic])
+						ret := sub.Callbacks[topic](&msg, args)
+						sub.SetReturns(topic, ret)
+						foo := reflect.ValueOf(ret)
+						if foo.Type().String() == "*states.Status" {
+							f := ret.(*states.Status)
+							fmt.Printf("%d rxHandler records: %v\n", time.Now().Unix(), f.GetError())
+						}
+					} else {
+						// MUTEX _ = sub.Callbacks[topic](&msg, sub.Arguments[topic])
+						 _ = sub.Callbacks[topic](&msg, args)
+					}
+
+					sub.SetExecuted(topic, true)
 
 					//wgChannel <- c
 				}(child)
@@ -262,20 +307,18 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 			}
 		}
 
-		//eblog.Debug("WAIT")
+		//eblog.Debug(me.EntityId, "WAIT")
 		//debug.PrintStack()
 		//wg.Wait()
 
-		eblog.Debug("channels handler stopped '%s'.", client.String())
+		eblog.Debug(me.EntityId, "channels handler stopped '%s'.", client.String())
 
 		// Remove client from map.
 		delete(me.subscribers, client)
 	}
 
-	if eblog.LogIfError(me, err) {
-		// Save last state.
-		me.State.Error = err
-	}
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
@@ -295,7 +338,7 @@ func (me *Channels) Listeners(topic messages.MessageTopic)  {
 
 
 func (me *Channels) Topics() (topics messages.Topics) {
-	eblog.Debug("Topics")
+	eblog.Debug(me.EntityId, "Topics")
 
 	for _, t := range me.instance.emitter.Topics() {
 		topics = append(topics, messages.StringToTopic(t))
