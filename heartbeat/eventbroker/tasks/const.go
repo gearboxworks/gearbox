@@ -6,13 +6,6 @@ import (
 	"time"
 )
 
-// S is a function that will return true if the
-// goroutine should stop executing.
-type exitFunc func() bool
-
-type StateIndex int
-type State string
-type Uuid uuid.UUID
 
 const (
 	TaskIdle = State("idle")
@@ -23,6 +16,15 @@ const (
 	TaskStarted = State("started")
 	TaskStopping = State("stopping")
 )
+
+
+// S is a function that will return true if the
+// goroutine should stop executing.
+type exitFunc func() bool
+type StateIndex int
+type State string
+type Uuid uuid.UUID
+
 
 // Task represents an interruptable goroutine.
 type Task struct {
@@ -43,3 +45,4 @@ type Task struct {
 	running       bool
 	err           error
 }
+

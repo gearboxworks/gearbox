@@ -46,9 +46,8 @@ func (me *Channels) New(OsSupport oss.OsSupporter, args ...Args) error {
 
 
 		me.State.SetWant(states.StateIdle)
-		if me.State.SetNewState(states.StateIdle, err) {
-			eblog.Debug(me.EntityId, "init complete")
-		}
+		me.State.SetNewState(states.StateIdle, err)
+		eblog.Debug(me.EntityId, "init complete")
 	}
 
 	PublishCallerState(me, &me.EntityId, &me.State)
@@ -70,7 +69,8 @@ func (me *Channels) StartHandler() error {
 	//		break
 	//	}
 	//
-	//	me.State.SetWant(states.StateStarted)
+	//me.State.SetNewState(states.StateStarting, err)
+	//PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	//
 	//	for range only.Once {
 	//		me.Task, err = tasks.StartTask(initDaemon, startDaemon, monitorDaemon, stopDaemon, me)

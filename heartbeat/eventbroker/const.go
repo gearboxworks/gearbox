@@ -6,6 +6,7 @@ import (
 	"gearbox/heartbeat/eventbroker/daemon"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/mqttClient"
+	mqttBroker "gearbox/heartbeat/eventbroker/mqttbroker"
 	"gearbox/heartbeat/eventbroker/network"
 	"gearbox/heartbeat/eventbroker/states"
 	oss "gearbox/os_support"
@@ -37,6 +38,7 @@ type EventBroker struct {
 	ZeroConf   network.ZeroConf
 	Daemon     daemon.Daemon
 	MqttClient mqttClient.MqttClient
+	MqttBroker mqttBroker.MqttBroker
 	StsEmitter status.Status
 
 	osSupport  oss.OsSupporter

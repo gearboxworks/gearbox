@@ -80,7 +80,6 @@ func (me *Daemon) StartHandler() error {
 
 		me.State.SetNewState(states.StateStarting, err)
 		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
-		me.State.SetWant(states.StateStarted)
 
 		for range only.Once {
 			me.Task, err = tasks.StartTask(initDaemon, startDaemon, monitorDaemon, stopDaemon, me)
@@ -114,7 +113,6 @@ func (me *Daemon) StopHandler() error {
 
 		me.State.SetNewState(states.StateStopping, err)
 		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
-		me.State.SetWant(states.StateStopped)
 
 		for range only.Once {
 			_ = me.StopServices()
@@ -156,24 +154,6 @@ func (me *Daemon) StopServices() error {
 	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
-
-	return err
-}
-
-
-// Print all services registered under daemon that I manage.
-func (me *Daemon) PrintServices() error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		_ = me.daemons.Print()
-	}
 
 	return err
 }

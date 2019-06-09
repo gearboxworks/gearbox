@@ -1,16 +1,15 @@
 package daemon
 
 import (
+	"errors"
 	"fmt"
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/only"
-	"github.com/getlantern/errors"
 	"time"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed from a channel

@@ -61,12 +61,12 @@ func (me *Daemon) UnregisterByUuid(u messages.MessageAddress) error {
 
 			delete(me.daemons, u)
 
+			me.State.SetNewState(states.StateUnregistered, err)
 			eblog.Debug(me.EntityId, "unregistered service %s OK", u.String())
 		}
-
-		me.Channels.PublishSpecificCallerState(&u, states.StateUnregistered)
 	}
 
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

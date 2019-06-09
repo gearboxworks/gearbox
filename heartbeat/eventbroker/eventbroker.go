@@ -108,22 +108,28 @@ func (me *EventBroker) Start() error {
 		// Note: These will be started dynamically as clients are registered.
 
 		// 2. ZeroConf - start discovery and management of network services.
-		//err = me.ZeroConf.StartHandler()
-		//if err != nil {
-		//	break
-		//}
+		err = me.ZeroConf.StartHandler()
+		if err != nil {
+			break
+		}
 
-		// 3. Daemon - starts any daemons.
+		// 3. Daemon - starts the daemon handler.
 		err = me.Daemon.StartHandler()
 		if err != nil {
 			break
 		}
 
-		// 4. MQTT - start the inter-process communications.
-		//err = me.MqttClient.StartHandler()
-		//if err != nil {
-		//	break
-		//}
+		// 4. MQTT broker - start the inter-process communications.
+		err = me.MqttBroker.StartHandler()
+		if err != nil {
+			break
+		}
+
+		// 5. MQTT client - start the inter-process communications.
+		err = me.MqttClient.StartHandler()
+		if err != nil {
+			break
+		}
 
 		me.TempLoop()
 
@@ -160,7 +166,6 @@ func (me *EventBroker) TempLoop() error {
 	index := 0
 	for {
 		//fmt.Printf("PING\n")
-
 
 		//fmt.Printf("Error1: %v\n", me.Daemon.State.Error)
 		me.Daemon.State.SetError(errors.New(fmt.Sprintf("Loop #%d (%s)", index, me.Daemon.Fluff)))

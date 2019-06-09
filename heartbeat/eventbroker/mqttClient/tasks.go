@@ -84,15 +84,15 @@ func startMqttClient(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-		for range only.Once {
-			me.State.SetNewAction(states.ActionStart)
-			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
-
-			// Already started as part of initDaemon().
-
-			me.State.SetNewState(states.StateStarted, err)
-			eblog.Debug(me.EntityId, "task handler init completed OK")
-		}
+		//for range only.Once {
+		//	me.State.SetNewAction(states.ActionStart)
+		//	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		//
+		//	// Already started as part of initDaemon().
+		//
+		//	me.State.SetNewState(states.StateStarted, err)
+		//	eblog.Debug(me.EntityId, "task handler init completed OK")
+		//}
 
 		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 		eblog.LogIfNil(me, err)
@@ -117,27 +117,14 @@ func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
 		}
 
 		for range only.Once {
-			err = me.ConnectToServer(DefaultServer)
-			if err != nil {
-				me.State.SetNewState(states.StateUnregistered, err)
-				me.State.SetWant(states.StateStarted)
-				channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
-
-				// If this fails, it'll be handled within the task.
-				// So, reset error to nil to avoid parent thinking everything has gone South.
-				err = nil
-				break
-			}
-
 			ok, _ = me.IsConnected()
 			if !ok {
 				// We're not connected. Try and connect to whatever is defined in me.Server
+
 				err = me.ConnectToServer("")
 				if err != nil {
-					me.State.SetNewState(states.StateStarted, err)
-					me.Channels.PublishSpecificCallerState(&me.EntityId, states.StateError)
-				} else {
-					me.State.SetNewState(states.StateStarted, err)
+					// If this fails, try again in the next loop.
+					break
 				}
 			}
 
@@ -164,6 +151,7 @@ func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
 			eblog.Debug(me.EntityId, "task handler status OK")
 		}
 
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 		eblog.LogIfNil(me, err)
 		eblog.LogIfError(me.EntityId, err)
 	}

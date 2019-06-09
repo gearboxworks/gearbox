@@ -87,7 +87,6 @@ func (me *MqttClient) StartHandler() error {
 
 		me.State.SetNewState(states.StateStarting, err)
 		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
-		me.State.SetWant(states.StateStarted)
 
 		for range only.Once {
 			me.Task, err = tasks.StartTask(initMqttClient, startMqttClient, monitorMqttClient, stopMqttClient, me)
@@ -122,7 +121,6 @@ func (me *MqttClient) StopHandler() error {
 
 		me.State.SetNewState(states.StateStopping, err)
 		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
-		me.State.SetWant(states.StateStopped)
 
 		for range only.Once {
 			_ = me.StopServices()

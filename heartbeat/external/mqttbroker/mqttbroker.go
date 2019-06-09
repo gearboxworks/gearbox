@@ -1,4 +1,4 @@
-package network
+package mqttBroker
 
 import (
 	"gearbox/box"
@@ -12,7 +12,7 @@ import (
 )
 
 
-func (me *ZeroConf) New(OsSupport oss.OsSupporter, args ...Args) error {
+func (me *mqttBroker) New(OsSupport oss.OsSupporter, args ...Args) error {
 
 	var _args Args
 	var err error
@@ -31,38 +31,24 @@ func (me *ZeroConf) New(OsSupport oss.OsSupporter, args ...Args) error {
 			break
 		}
 
-		if _args.Channels == nil {
-			err = me.EntityId.ProduceError("channel pointer is nil")
-			break
-		}
-
 		if _args.EntityId == "" {
 			_args.EntityId = DefaultEntityId
 		}
 
-		if _args.domain == "" {
-			_args.domain = DefaultDomain
-		}
+		//if _args.Servers == nil {
+		//	_args.Servers, err = url.Parse(DefaultServer)
+		//}
 
 		if _args.waitTime == 0 {
-			_args.waitTime = DefaultWaitTime
+			_args.waitTime = defaultWaitTime
 		}
 
-		if _args.restartAttempts == 0 {
-			_args.restartAttempts = DefaultRetries
-		}
-
-		_args.services = make(ServicesMap)
-
-		*me = ZeroConf(_args)
+		*me = mqttBroker(_args)
 
 
-		me.State.SetWant(states.StateIdle)
-		me.State.SetNewState(states.StateIdle, err)
 		eblog.Debug(me.EntityId, "init complete")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -70,8 +56,8 @@ func (me *ZeroConf) New(OsSupport oss.OsSupporter, args ...Args) error {
 }
 
 
-// Start the M-DNS network handler.
-func (me *ZeroConf) StartHandler() error {
+// Start the MQTT handler.
+func (me *mqttBroker) StartHandler() error {
 
 	var err error
 
@@ -81,11 +67,12 @@ func (me *ZeroConf) StartHandler() error {
 			break
 		}
 
-		me.State.SetNewAction(states.ActionStart)
+		me.State.SetNewState(states.StateStarting, err)
 		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
 		for range only.Once {
-			me.Task, err = tasks.StartTask(initZeroConf, startZeroConf, monitorZeroConf, stopZeroConf, me)
+			me.Task, err = tasks.StartTask(initMqttClient, startMqttClient, monitorMqttClient, stopMqttClient, me)
+			me.State.SetError(err)
 			if err != nil {
 				break
 			}
@@ -103,8 +90,8 @@ func (me *ZeroConf) StartHandler() error {
 }
 
 
-// Stop the M-DNS network handler.
-func (me *ZeroConf) StopHandler() error {
+// Stop the MQTT handler.
+func (me *mqttBroker) StopHandler() error {
 
 	var err error
 
@@ -114,7 +101,7 @@ func (me *ZeroConf) StopHandler() error {
 			break
 		}
 
-		me.State.SetNewAction(states.ActionStop)
+		me.State.SetNewState(states.StateStopping, err)
 		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
 		for range only.Once {
@@ -136,7 +123,7 @@ func (me *ZeroConf) StopHandler() error {
 }
 
 
-func (me *ZeroConf) StopServices() error {
+func (me *mqttBroker) StopServices() error {
 
 	var err error
 
@@ -148,7 +135,7 @@ func (me *ZeroConf) StopServices() error {
 
 		for u, _ := range me.services {
 			if me.services[u].IsManaged {
-				_ = me.UnregisterByUuid(u)
+				_ = me.UnsubscribeByUuid(u)
 				// Ignore error, will clean up when program exits.
 			}
 		}
@@ -157,24 +144,6 @@ func (me *ZeroConf) StopServices() error {
 	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
-
-	return err
-}
-
-
-// Print all services registered under M-DNS that I manage.
-func (me *ZeroConf) PrintServices() error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		_ = me.services.Print()
-	}
 
 	return err
 }

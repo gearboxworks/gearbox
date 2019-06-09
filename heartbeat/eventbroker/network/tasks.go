@@ -128,7 +128,6 @@ func monitorZeroConf(task *tasks.Task, i ...interface{}) error {
 				found, err = me.Browse(s, me.domain)
 				eblog.Debug(me.EntityId, "task handler status completed OK (%v, %v)", s, me.domain)
 				if err != nil {
-					me.Channels.PublishSpecificCallerState(&me.EntityId, states.StateError)
 					break
 				}
 
@@ -140,13 +139,13 @@ func monitorZeroConf(task *tasks.Task, i ...interface{}) error {
 			// Update services
 			err = me.updateRegisteredServices()
 			if err != nil {
-				me.Channels.PublishSpecificCallerState(&me.EntityId, states.StateError)
 				break
 			}
 
 			eblog.Debug(me.EntityId, "task handler scanning completed OK")
 		}
 
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 		eblog.LogIfNil(me, err)
 		eblog.LogIfError(me.EntityId, err)
 	}

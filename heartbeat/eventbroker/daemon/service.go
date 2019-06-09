@@ -19,31 +19,19 @@ func (me *Service) Start() error {
 			break
 		}
 
+		me.State.SetNewAction(states.ActionStart)
+		channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
+
 		err = me.instance.service.Start()
 		if err != nil {
 			break
 		}
 
-		// Notify channels
-		me.channels.PublishSpecificCallerState(&me.EntityId, states.StateStarted)
-
-		//// Now register the service with zeroconf.
-		//zc := network.CreateEntry{
-		//	Name: network.Name("gearbox_" + me.Entry.Name),
-		//	Type: network.Type(fmt.Sprintf("_%s._tcp", me.Entry.MdnsType)),
-		//	Domain: "local",
-		//	Port: network.Port(me.port),
-		//}
-		//me.mdns, err = me.RegisterByChannel(me.EntityId, zc)
-		//if err != nil {
-		//	break
-		//}
-
-		me.IsManaged = true
-
-		eblog.Debug(me.EntityId, "Daemon stopped %s", me.Entry.Name)
+		me.State.SetNewState(states.StateStarted, err)
+		eblog.Debug(me.EntityId, "handler started OK")
 	}
 
+	channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -61,18 +49,16 @@ func (me *Service) Stop() error {
 			break
 		}
 
-		me.State.SetWant(states.StateStopped)
+		me.State.SetNewAction(states.ActionStop)
+		channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
 
-		for range only.Once {
-			err = me.instance.service.Stop()
-			if err != nil {
-				break
-			}
+		err = me.instance.service.Stop()
+		if err != nil {
+			break
 		}
 
-		if me.State.SetNewState(states.StateStopped, err) {
-			eblog.Debug(me.EntityId, "stopped service")
-		}
+		me.State.SetNewState(states.StateStopped, err)
+		eblog.Debug(me.EntityId, "handler stopped OK")
 	}
 
 	channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
@@ -144,11 +130,11 @@ func (me *Service) Status() (states.Status, error) {
 		me.State.SetNewState(newState, err)
 
 		if me.State.HasChangedState() {
-			eblog.Debug(me.EntityId, "Daemon %s status current:%s last:%s", me.EntityId.String(), me.State.GetCurrent().String(), me.State.GetLast().String())
-			channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
+			eblog.Debug(me.EntityId, "status current:%s last:%s", me.State.GetCurrent().String(), me.State.GetLast().String())
 		}
 	}
 
+	channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

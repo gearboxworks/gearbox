@@ -3,7 +3,7 @@ package channels
 import (
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
-	"github.com/getlantern/errors"
+	"errors"
 	"github.com/olebedev/emitter"
 )
 

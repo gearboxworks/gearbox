@@ -47,26 +47,37 @@ func ReadJsonConfig(f string) (*CreateEntry, error) {
 
 func (me *Daemon) ParsePaths(sc CreateEntry, i string) string {
 
-	var o string
+	strReplace := map[string]string {
+		"{{.GetLocalDir}}":			"/usr/local",
+		"{{.GetUserHomeDir}}":		string(me.osSupport.GetUserHomeDir()),
+		"{{.GetAdminRootDir}}":		string(me.osSupport.GetAdminRootDir()),
+		"{{.GetCacheDir}}":			string(me.osSupport.GetCacheDir()),
+		"{{.GetSuggestedBasedir}}":	string(me.osSupport.GetSuggestedBasedir()),
+		"{{.GetUserConfigDir}}":	string(me.osSupport.GetUserConfigDir()),
+		"{{.GetPort}}":				sc.Port.String(),
+		"{{.GetHost}}":				sc.Host.String(),
+	}
 
-	i1 := strings.ReplaceAll(i, "{{.GetUserHomeDir}}", string(me.osSupport.GetUserHomeDir()))
-	i2 := strings.ReplaceAll(i1, "{{.GetAdminRootDir}}", string(me.osSupport.GetAdminRootDir()))
-	i3 := strings.ReplaceAll(i2, "{{.GetCacheDir}}", string(me.osSupport.GetCacheDir()))
-	i4 := strings.ReplaceAll(i3, "{{.GetSuggestedBasedir}}", string(me.osSupport.GetSuggestedBasedir()))
-	o = strings.ReplaceAll(i4, "{{.GetUserConfigDir}}", string(me.osSupport.GetUserConfigDir()))
+	for k, v := range strReplace {
+		i = strings.ReplaceAll(i, k, v)
+	}
 
-	return o
+	return i
 }
 
 
 func (me *Daemon) ParseNetwork(sc CreateEntry, i string) string {
 
-	var o string
+	strReplace := map[string]string {
+		"{{.Port}}":	sc.Port.String(),
+		"{{.Host}}":	sc.Host.String(),
+	}
 
-	i1 := strings.ReplaceAll(i, "{{.Port}}", sc.Port.String())
-	o   = strings.ReplaceAll(i1, "{{.Host}}", sc.Host.String())
+	for k, v := range strReplace {
+		i = strings.ReplaceAll(i, k, v)
+	}
 
-	return o
+	return i
 }
 
 

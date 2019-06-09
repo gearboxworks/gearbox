@@ -2,6 +2,7 @@ package mqttClient
 
 import (
 	"fmt"
+	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
@@ -57,6 +58,9 @@ func (me *MqttClient) ConnectToServer(u string) error {
 			me.instance.client.Disconnect(500)
 		}
 
+		me.State.SetNewAction(states.ActionInitialize)
+		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+
 		me.Server, err = url.Parse(u)
 		if err != nil {
 			err = me.EntityId.ProduceError("unable to parse config")
@@ -70,7 +74,7 @@ func (me *MqttClient) ConnectToServer(u string) error {
 			p, ok := me.Server.User.Password()
 			if !ok {
 				// err = errors.New(string(states.StateUnregistered))
-				err = me.EntityId.ProduceError(string(states.StateUnregistered))
+				err = me.EntityId.ProduceError(string(states.StateError))
 				break
 			}
 			me.instance.options.SetPassword(p)
@@ -108,11 +112,11 @@ func (me *MqttClient) ConnectToServer(u string) error {
 			break
 		}
 
-		eblog.Debug(me.EntityId, "MqttClient connected to broker %s", me.Server)
-		me.Channels.PublishSpecificCallerState(&me.EntityId, states.StateStarted)
+		me.State.SetNewState(states.StateStarted, err)
+		eblog.Debug(me.EntityId, "connected to broker %s", me.Server)
 	}
 
-	me.Channels.PublishSpecificCallerState(&me.EntityId, states.StateUnregistered)
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

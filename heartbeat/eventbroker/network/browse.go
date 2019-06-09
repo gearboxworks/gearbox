@@ -59,6 +59,7 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 		eblog.Debug(me.EntityId, "service scan completed")
 	}
 
+	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
