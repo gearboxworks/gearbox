@@ -9,6 +9,7 @@ import (
 	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"net/url"
+	"sync"
 	"time"
 )
 
@@ -57,6 +58,7 @@ type Service struct {
 	IsManaged bool
 	Entry     *CreateEntry
 
+	mutex     sync.RWMutex	// Mutex control for this struct.
 	channels  *channels.Channels
 	instance  mqtt.Token
 }

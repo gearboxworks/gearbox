@@ -10,6 +10,7 @@ import (
 	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/jinzhu/copier"
+	"net/url"
 )
 
 
@@ -41,9 +42,9 @@ func (me *MqttClient) New(OsSupport oss.OsSupporter, args ...Args) error {
 			_args.EntityId = DefaultEntityId
 		}
 
-		//if _args.Servers == nil {
-		//	_args.Servers, err = url.Parse(DefaultServer)
-		//}
+		if _args.Server == nil {
+			_args.Server, err = url.Parse(DefaultServer)
+		}
 
 		if _args.waitTime == 0 {
 			_args.waitTime = defaultWaitTime

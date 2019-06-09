@@ -1,214 +1,60 @@
 package states
 
 import (
-	"time"
+	"errors"
+	"gearbox/only"
 )
 
 
-func (me *Status) SetNewState(new State, err error) bool {
+func InterfaceToTypeStatus(i interface{}) (*Status, error) {
 
-	var ok bool
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	var err error
+	var zc *Status
 
-	if err == nil {
-		if me.Current != new {
-			me.Last = me.Current
-			me.LastWhen = time.Now()
-			me.Current = new
-
-			ok = true
+	for range only.Once {
+		if i == nil {
+			err = errors.New("status.Status is nil")
+			break
 		}
-	}
-	me.Error = err
-
-	return ok
-}
-
-
-func (me *Status) SetNewAction(a Action) bool {
-
-	var ok bool
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
-
-	me.Action = a
-	switch me.Action {
-		case ActionRegister:
-			me.Current = StateRegistering
-			me.Want = StateRegistered
-		case ActionUnregister:
-			me.Current = StateUnregistering
-			me.Want = StateUnregistered
-		case ActionPublish:
-			me.Current = StatePublishing
-			me.Want = StatePublished
-		case ActionUnpublish:
-			me.Current = StateUnpublishing
-			me.Want = StateUnpublished
-		case ActionSubscribe:
-			me.Current = StateSubscribing
-			me.Want = StateSubscribed
-		case ActionUnsubscribe:
-			me.Current = StateUnsubscribing
-			me.Want = StateUnsubscribed
-
-
-		case ActionInitialize:
-			me.Current = StateInitializing
-			me.Want = StateInitialized
-		case ActionStop:
-			me.Current = StateStopping
-			me.Want = StateStopped
-		case ActionStart:
-			me.Current = StateStarting
-			me.Want = StateStarted
+		zc = i.(*Status)
+		// zc = (i[0]).(*ZeroConf)
+		// zc = i[0].(*ZeroConf)
 	}
 
-	return ok
+	return zc, err
 }
 
 
-func (me *Status) GetFullState() *Status {
+func InterfaceToTypeError(i interface{}) (*error, error) {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+	var err error
+	var zc *error
 
-	return me
-}
-
-func (me *Status) HasChangedState() bool {
-
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
-
-	if me.Last != me.Current {
-		return true
-	} else {
-		return false
+	for range only.Once {
+		if i == nil {
+			err = errors.New("error is nil")
+			break
+		}
+		zc = i.(*error)
+		// zc = (i[0]).(*ZeroConf)
+		// zc = i[0].(*ZeroConf)
 	}
+
+	return zc, err
 }
 
-func (me *Status) ExpectingNewState() bool {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+func EnsureArgumentNotNil(me *Status) error {
 
-	if me.Want != me.Current {
-		return true
-	} else {
-		return false
+	var err error
+
+	switch {
+		case me == nil:
+			err = errors.New("status.Status is nil")
+
+		default:
+			// err = errors.New("subscriber not nil")
 	}
-}
 
-func (me *Status) GetCurrent() State {
-
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
-	return me.Current
-}
-
-func (me *Status) GetWant() State {
-
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
-	return me.Want
-}
-
-func (me *Status) GetLast() State {
-
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
-	return me.Last
-}
-
-func (me *Status) GetLastWhen() time.Time {
-
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
-	return me.LastWhen
-}
-
-func (me *Status) GetAttempts() int {
-
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
-	return me.Attempts
-}
-
-func (me *Status) GetError() error {
-
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
-	return me.Error
-}
-
-func (me *Status) GetAction() Action {
-
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
-	return me.Action
-}
-
-func (me *Status) SetCurrent(s State) {
-
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
-	me.Current = s
-}
-
-func (me *Status) SetWant(s State) {
-
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
-	me.Want = s
-}
-
-func (me *Status) SetLast(s State) {
-
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
-	me.Last = s
-}
-
-func (me *Status) SetLastWhen(t time.Time) {
-
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
-	me.LastWhen = t
-}
-
-func (me *Status) SetAttempts(a int) {
-
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
-	me.Attempts = a
-}
-
-func (me *Status) AddAttempts() {
-
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
-	me.Attempts++
-}
-
-func (me *Status) ZeroAttempts() {
-
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
-	me.Attempts = 0
-}
-
-func (me *Status) SetError(e error) {
-
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
-	me.Error = e
-}
-
-func (me *Status) SetaAction(a Action) {
-
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
-	me.Action = a
+	return err
 }

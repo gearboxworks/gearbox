@@ -17,12 +17,13 @@ const (
 
 
 type Channels struct {
-	EntityId    messages.MessageAddress
-	State       states.Status
+	EntityId messages.MessageAddress
+	State    states.Status
 
-	subscribers Subscribers
-	instance    channelsInstance
-	osSupport   oss.OsSupporter
+	mutex            sync.RWMutex	// Mutex control for this struct.
+	subscribers      Subscribers
+	instance         channelsInstance
+	osSupport        oss.OsSupporter
 }
 type Args Channels
 
@@ -40,13 +41,17 @@ type Subscribers map[messages.MessageAddress]*Subscriber
 type Subscriber struct {
 	EntityId       messages.MessageAddress
 	State          states.Status
-	Callbacks      Callbacks
-	Arguments      Arguments
-	Returns        Returns
-	Executed       Executed
-	mutexExecuted  sync.RWMutex
-	mutexArguments sync.RWMutex
-	mutexReturns   sync.RWMutex
+	mutex          sync.RWMutex	// Mutex control for this struct.
+
+	//Callbacks      Callbacks
+	//Arguments      Arguments
+	//Returns        Returns
+	//Executed       Executed
+	//mutexExecuted  sync.RWMutex	// Mutex control for map.
+	//mutexArguments sync.RWMutex	// Mutex control for map.
+	//mutexReturns   sync.RWMutex	// Mutex control for map.
+
+	topics       References
 
 	parentInstance *channelsInstance
 }
@@ -58,145 +63,15 @@ type Return interface{}
 type Returns map[messages.SubTopic]Return
 type Executed map[messages.SubTopic]bool
 
-
-// Mutex handling.
-func (me *Subscriber) DeleteSubTopic(sub messages.SubTopic) {
-
-	me.mutexExecuted.Lock()
-	delete(me.Executed, sub)
-	me.mutexExecuted.Unlock()
-
-	me.mutexArguments.Lock()
-	delete(me.Arguments, sub)
-	me.mutexArguments.Unlock()
-
-	me.mutexReturns.Lock()
-	delete(me.Returns, sub)
-	me.mutexReturns.Unlock()
-
-	return
-}
-
-
-// Mutex handling.
-func (me *Subscriber) GetExecuted(sub messages.SubTopic) bool {
-	var r bool
-
-	me.mutexExecuted.RLock()
-
-	r = me.Executed[sub]
-
-	me.mutexExecuted.RUnlock()
-
-	return r
-}
-
-func (me *Subscriber) SetExecuted(sub messages.SubTopic, v bool) {
-	me.mutexExecuted.Lock()
-
-	me.Executed[sub] = v
-
-	me.mutexExecuted.Unlock()
-
-	return
-}
-
-func (me *Subscriber) ValidateExecuted(sub messages.SubTopic) bool {
-	var r bool
-
-	me.mutexExecuted.RLock()
-
-	if _, ok := me.Executed[sub]; ok {
-		r = true
-	} else {
-		r = false
-	}
-
-	me.mutexExecuted.RUnlock()
-
-	return r
-}
-
-
-// Mutex handling.
-func (me *Subscriber) GetArguments(sub messages.SubTopic) Argument {
-
-	me.mutexArguments.RLock()
-	v := me.Arguments[sub]
-	me.mutexArguments.RUnlock()
-
-	return v
-}
-
-func (me *Subscriber) SetArguments(sub messages.SubTopic, v Argument) {
-
-	me.mutexArguments.Lock()
-	me.Arguments[sub] = v
-	me.mutexArguments.Unlock()
-
-	return
-}
-
-func (me *Subscriber) ValidateArguments(sub messages.SubTopic) bool {
-	var r bool
-
-	me.mutexArguments.RLock()
-
-	if _, ok := me.Arguments[sub]; ok {
-		r = true
-	} else {
-		r = false
-	}
-
-	me.mutexArguments.RUnlock()
-
-	return r
-}
-
-
-// Mutex handling.
-func (me *Subscriber) GetReturns(sub messages.SubTopic) Return {
-
-	me.mutexReturns.RLock()
-	r := me.Returns[sub]
-	me.mutexReturns.RUnlock()
-
-	return r
-}
-
-func (me *Subscriber) SetReturns(sub messages.SubTopic, v Return) {
-
-	me.mutexReturns.Lock()
-	me.Returns[sub] = v
-	me.mutexReturns.Unlock()
-
-	return
-}
-
-func (me *Subscriber) ValidateReturns(sub messages.SubTopic) bool {
-	var r bool
-
-	me.mutexReturns.RLock()
-
-	if _, ok := me.Returns[sub]; ok {
-		r = true
-	} else {
-		r = false
-	}
-
-	me.mutexReturns.RUnlock()
-
-	return r
-}
-
-
 type Reference struct {
-	Callback
-	Argument
-	Return
+	Callback Callback
+	Argument Argument
+	Return Return
 	Executed bool
+
+	mutex          sync.RWMutex	// Mutex control for this struct.
 }
-type References map[messages.SubTopic]Reference
+type References map[messages.SubTopic]*Reference
 
 func EnsureArgumentNotNil(me Argument) error {
 
@@ -213,6 +88,20 @@ func EnsureArgumentNotNil(me Argument) error {
 	return err
 }
 
+
+func (me *Channels) EnsureSubscriberNotNil(u messages.MessageAddress) error {
+
+	me.mutex.RLock()
+	defer me.mutex.RUnlock()
+
+	if _, ok := me.subscribers[u]; !ok {	// Managed by Mutex
+		return me.EntityId.ProduceError("subscriber doesn't exist")
+	} else {
+		return me.subscribers[u].EnsureNotNil()      // Managed by Mutex
+	}
+}
+
+
 func (me *Subscriber) EnsureNotNil() error {
 
 	var err error
@@ -223,12 +112,12 @@ func (me *Subscriber) EnsureNotNil() error {
 
 		case me.EntityId.EnsureNotNil() != nil:
 			err = errors.New("subscriber address is nil")
-
-		case me.Callbacks == nil:
-			err = errors.New("subscriber callbacks is nil")
-
-		case me.Returns == nil:
-			err = errors.New("subscriber returns is nil")
+		//
+		//case me.Callbacks == nil:
+		//	err = errors.New("subscriber callbacks is nil")
+		//
+		//case me.Returns == nil:
+		//	err = errors.New("subscriber returns is nil")
 
 		default:
 			// err = errors.New("subscriber not nil")

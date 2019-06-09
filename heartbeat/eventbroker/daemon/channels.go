@@ -51,6 +51,32 @@ func getHandler(event *messages.Message, i channels.Argument) channels.Return {
 	return response
 }
 
+// Non-exposed channel function that responds to a "status" channel request.
+// Produces the status of the M-DNS handler via a channel.
+func loadConfigHandler(event *messages.Message, i channels.Argument) channels.Return {
+
+	var err error
+	var me *Daemon
+
+	for range only.Once {
+		me, err = InterfaceToTypeDaemon(i)
+		if err != nil {
+			break
+		}
+
+		err = me.LoadFiles()
+
+		//me.State.SetError(errors.New("YES - " + me.Fluff))
+
+		eblog.Debug(me.EntityId, "loaded new file configs via channel")
+	}
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return &err
+}
+
 
 // Non-exposed channel function that responds to an "stop" channel request.
 // Causes the M-DNS handler task to stop via a channel.

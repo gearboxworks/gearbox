@@ -11,12 +11,13 @@ import (
 	"github.com/kardianos/service"
 	"net/url"
 	"os/exec"
+	"sync"
 	"time"
 )
 
 
 const (
-	DefaultEntityId = "eventbrokerdaemon"
+	DefaultEntityId = "eventbroker-daemon"
 
 	defaultBaseDir = "eventbroker"
 	defaultLogBaseDir = defaultBaseDir + "/logs"
@@ -25,6 +26,7 @@ const (
 	defaultJsonFile  = defaultEtcBaseDir + "/" + DefaultEntityId + ".json"
 	defaultLogFile  = defaultLogBaseDir + "/"  + DefaultEntityId + ".log"
 	defaultErrorLogFile  = defaultLogBaseDir + DefaultEntityId + "-error.log"
+	DefaultJsonFiles  = defaultEtcBaseDir + "/daemons"
 
     defaultWaitTime = time.Millisecond * 2000
 	defaultDomain   = "local"
@@ -41,6 +43,7 @@ type Daemon struct {
 	ChannelHandler *channels.Subscriber
 	Fluff          string
 
+	mutex          sync.RWMutex	// Mutex control for this struct.
 	daemons        ServicesMap
 	osSupport      oss.OsSupporter
 }
@@ -54,10 +57,15 @@ type Service struct {
 	JsonFile  string
 	Entry     *CreateEntry
 
+	mutex     sync.RWMutex	// Mutex control for map.
 	channels  *channels.Channels
 	instance  programInstance
 }
-type ServicesMap map[messages.MessageAddress]*Service
+//type ServicesMap struct {
+//	instance map[messages.MessageAddress]*Service
+//	mutex sync.RWMutex	// Mutex control for map.
+//}
+type ServicesMap  map[messages.MessageAddress]*Service
 
 type CreateEntry struct {
 	service.Config
@@ -110,11 +118,14 @@ func (me *Service) IsExisting(him CreateEntry) error {
 }
 
 // Ensure we don't duplicate services.
-func (me *ServicesMap) IsExisting(him CreateEntry) error {
+func (me *Daemon) IsExisting(him CreateEntry) error {
 
 	var err error
 
-	for _, ce := range *me {
+	me.mutex.RLock()
+	defer me.mutex.RUnlock()
+
+	for _, ce := range me.daemons {	// Managed by Mutex
 		err = ce.IsExisting(him)
 		if err != nil {
 			break
@@ -144,3 +155,4 @@ func (j *ServiceUrl) UnmarshalJSON(b []byte) error {
 
 	return err
 }
+

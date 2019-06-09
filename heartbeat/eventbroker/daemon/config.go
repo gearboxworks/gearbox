@@ -69,8 +69,8 @@ func (me *Daemon) ParsePaths(sc CreateEntry, i string) string {
 func (me *Daemon) ParseNetwork(sc CreateEntry, i string) string {
 
 	strReplace := map[string]string {
-		"{{.Port}}":	sc.Port.String(),
-		"{{.Host}}":	sc.Host.String(),
+		"{{.GetPort}}":	sc.Port.String(),
+		"{{.GetHost}}":	sc.Host.String(),
 	}
 
 	for k, v := range strReplace {

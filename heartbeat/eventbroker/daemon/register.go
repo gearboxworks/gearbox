@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os/exec"
 	"path/filepath"
+	"time"
 )
 
 
@@ -31,8 +32,9 @@ func (me *Daemon) Register(c CreateEntry) (*Service, error) {
 			break
 		}
 
-		err = me.daemons.IsExisting(c)
+		err = me.IsExisting(c)
 		if err != nil {
+			fmt.Printf("PIP! %v\n", time.Now().Unix())
 			break
 		}
 
@@ -87,6 +89,28 @@ func (me *Daemon) Register(c CreateEntry) (*Service, error) {
 			//		}
 			//}
 
+			// Make sure it's not already present.
+			sc.State, err = sc.Status()
+
+			//me.Channels.PublishCallerState(&u, &state)
+			//s := sc.State.GetCurrent()
+
+			// Already started. Stop it.
+			if sc.State.Current == states.StateStarted {
+				err = sc.instance.service.Uninstall()
+				if err != nil {
+					break
+				}
+			}
+
+			// Already registered. Remove it.
+			if sc.State.Current == states.StateStopped {
+				err = sc.instance.service.Uninstall()
+				if err != nil {
+					break
+				}
+			}
+
 			// Attempt to install new service on O/S.
 			err = sc.instance.service.Install()
 			if err != nil {
@@ -94,8 +118,13 @@ func (me *Daemon) Register(c CreateEntry) (*Service, error) {
 			}
 
 			sc.State, err = sc.Status()
+			if err != nil {
+				break
+			}
 
-			me.daemons[sc.EntityId] = &sc
+			me.mutex.Lock()
+			me.daemons[sc.EntityId] = &sc	// Managed by Mutex
+			me.mutex.Unlock()
 
 			eblog.Debug(me.EntityId, "registered service %s OK", sc.Entry.Url)
 		}

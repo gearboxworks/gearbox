@@ -10,9 +10,7 @@ import (
 	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
 	"github.com/olebedev/emitter"
-	"reflect"
 	"sync"
-	"time"
 )
 
 
@@ -185,14 +183,17 @@ func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscri
 		if _, ok := me.subscribers[client]; !ok {
 			sub = Subscriber{
 				EntityId: client,
-				Callbacks: make(Callbacks),
-				Arguments: make(Arguments),
-				Returns: make(Returns),
-				Executed: make(Executed),
+				topics: make(References),
+				//Callbacks: make(Callbacks),
+				//Arguments: make(Arguments),
+				//Returns: make(Returns),
+				//Executed: make(Executed),
+				//
+				//mutexArguments: sync.RWMutex{},	// Mutex control for map.
+				//mutexReturns: sync.RWMutex{},	// Mutex control for map.
+				//mutexExecuted: sync.RWMutex{},	// Mutex control for map.
 
-				mutexArguments: sync.RWMutex{},
-				mutexReturns: sync.RWMutex{},
-				mutexExecuted: sync.RWMutex{},
+				mutex: sync.RWMutex{},	// Mutex control for map.
 
 				parentInstance: &me.instance,
 			}
@@ -253,20 +254,25 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 			msg.Topic = messages.StringToTopic(me.instance.events.OriginalTopic)
 
 			// Split topic from the /address/topic format
-			topicAddress := msg.Topic.Address
+			client := msg.Topic.Address
 			topic := msg.Topic.SubTopic
 
-			if sub, ok := me.subscribers[topicAddress]; ok {
+			if sub, ok := me.subscribers[client]; ok {
 
 				// Now check topics the subscriber is subscribed to, else continue to next.
-				if _, ok := sub.Callbacks[topic]; !ok {
-					// No callback defined, ignore.
+				err, callback, args, ret := me.subscribers[client].GetTopic(topic)
+				if err != nil {
 					continue
 				}
 
-				if sub.Callbacks[topic] == nil {
-					continue
-				}
+				//if _, ok := sub.topics[topic]; !ok {
+				//	// No callback defined, ignore.
+				//	continue
+				//}
+				//
+				//if sub.topics[topic].Callback == nil {
+				//	continue
+				//}
 
 				//eblog.Debug(me.EntityId, "LOOP:[%d]", child)
 				// Execute callback in thread.
@@ -274,31 +280,40 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 					//defer wg.Done()
 					// eblog.Debug(me.EntityId, "Callback(%s)	Time:%v	Src:%s	Text:%s", msg.Topic, msg.Time.Convert().Unix(), msg.Src, msg.Text)
 					sub.SetExecuted(topic, false)
-
-					var args Argument
-					if sub.ValidateArguments(topic) {
-						args = sub.GetArguments(topic)
+					if ret != nil {
+						r := callback(&msg, args)
+						sub.SetReturns(topic, r)
 					} else {
-						args = nil
+						 _ = callback(&msg, args)
 					}
-
-					// MUTEX if _, ok := sub.Returns[topic]; ok {
-					if sub.ValidateReturns(topic) {
-						// MUTEX sub.Returns[topic] = sub.Callbacks[topic](&msg, sub.Arguments[topic])
-						// ret := sub.Callbacks[topic](&msg, sub.Arguments[topic])
-						ret := sub.Callbacks[topic](&msg, args)
-						sub.SetReturns(topic, ret)
-						foo := reflect.ValueOf(ret)
-						if foo.Type().String() == "*states.Status" {
-							f := ret.(*states.Status)
-							fmt.Printf("%d rxHandler records: %v\n", time.Now().Unix(), f.GetError())
-						}
-					} else {
-						// MUTEX _ = sub.Callbacks[topic](&msg, sub.Arguments[topic])
-						 _ = sub.Callbacks[topic](&msg, args)
-					}
-
 					sub.SetExecuted(topic, true)
+
+					////var args Argument
+					////if sub.ValidateArguments(topic) {
+					////	args = sub.GetArguments(topic)
+					////} else {
+					////	args = nil
+					////}
+					//
+					//// MUTEX if _, ok := sub.Returns[topic]; ok {
+					//if sub.ValidateReturns(topic) {
+					//	// MUTEX sub.Returns[topic] = sub.Callbacks[topic](&msg, sub.Arguments[topic])
+					//	// ret := sub.Callbacks[topic](&msg, sub.Arguments[topic])
+					//	// ret := sub.topics[topic].Callback(&msg, args)
+					//	ret := callback(&msg, args)
+					//	sub.SetReturns(topic, ret)
+					//
+					//	//foo := reflect.ValueOf(ret)
+					//	//if foo.Type().String() == "*states.Status" {
+					//	//	f := ret.(*states.Status)
+					//	//	fmt.Printf("%d rxHandler records: %v\n", time.Now().Unix(), f.GetError())
+					//	//}
+					//} else {
+					//	// MUTEX _ = sub.Callbacks[topic](&msg, sub.Arguments[topic])
+					//	 _ = sub.topics[topic].Callback(&msg, args)
+					//}
+					//
+					//sub.SetExecuted(topic, true)
 
 					//wgChannel <- c
 				}(child)

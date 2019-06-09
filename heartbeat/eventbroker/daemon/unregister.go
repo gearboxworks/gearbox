@@ -24,28 +24,23 @@ func (me *Daemon) UnregisterByUuid(u messages.MessageAddress) error {
 			break
 		}
 
-		if _, ok := me.daemons[u]; !ok {
-			err = me.EntityId.ProduceError("no service defined")
-			break
-		}
-
-		err = me.daemons[u].EnsureNotNil()
+		err = me.EnsureDaemonNotNil(u)
 		if err != nil {
 			break
 		}
 
 		for range only.Once {
-			me.daemons[u].State.SetNewAction(states.ActionUnregister)
+			me.daemons[u].State.SetNewAction(states.ActionUnregister)	// Managed by Mutex
 			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
-			state, err = me.daemons[u].Status()
+			state, err = me.daemons[u].Status()	// Mutex not required
 			s := state.GetCurrent()
 			switch s {
 				case states.StateUnknown:
 					//
 
 				case states.StateStarted:
-					err = me.daemons[u].instance.service.Stop()
+					err = me.daemons[u].instance.service.Stop()	// Mutex not required
 					if err != nil {
 						break
 					}
@@ -54,12 +49,12 @@ func (me *Daemon) UnregisterByUuid(u messages.MessageAddress) error {
 					//
 			}
 
-			err = me.daemons[u].instance.service.Uninstall()
+			err = me.daemons[u].instance.service.Uninstall()	// Mutex not required
 			if err != nil {
 				break
 			}
 
-			delete(me.daemons, u)
+			me.DeleteDaemon(u)
 
 			me.State.SetNewState(states.StateUnregistered, err)
 			eblog.Debug(me.EntityId, "unregistered service %s OK", u.String())

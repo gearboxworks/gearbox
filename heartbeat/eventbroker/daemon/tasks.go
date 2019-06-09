@@ -46,6 +46,10 @@ func initDaemon(task *tasks.Task, i ...interface{}) error {
 			if err != nil {
 				break
 			}
+			err = me.ChannelHandler.Subscribe(messages.SubTopic("scan"), loadConfigHandler, me)
+			if err != nil {
+				break
+			}
 
 			err = me.ChannelHandler.Subscribe(messages.SubTopic("get"), getHandler, me)
 			if err != nil {
@@ -89,7 +93,8 @@ func startDaemon(task *tasks.Task, i ...interface{}) error {
 			me.State.SetNewAction(states.ActionStart)
 			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
-			// Already started as part of initDaemon().
+			// Read in any new files and load them up.
+			err = me.LoadFiles()
 
 			me.State.SetNewState(states.StateStarted, err)
 			eblog.Debug(me.EntityId, "task handler init completed OK")
@@ -117,40 +122,38 @@ func monitorDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		for range only.Once {
-			for u, _ := range me.daemons {
-				if me.daemons[u].IsManaged {
-					var state states.Status
+			for _, u := range me.GetManagedDaemonUuids() {
+				var state states.Status
 
-					me.daemons[u].State, err = me.daemons[u].Status()
-					me.Channels.PublishCallerState(&me.daemons[u].EntityId, &me.daemons[u].State)
-					s := state.GetCurrent()
-					switch {
-						case s == states.StateUnregistered:
-							err = me.daemons[u].instance.service.Install()
-							if err != nil {
-								continue
-							}
+				state, err = me.daemons[u].Status()	// Managed by Mutex
+				me.Channels.PublishCallerState(&u, &state)
+				s := state.GetCurrent()
+				switch {
+					case s == states.StateUnregistered:
+						err = me.daemons[u].instance.service.Install()	// Mutex not required
+						if err != nil {
+							continue
+						}
 
-						case s == states.StateUnknown:
-							fallthrough
-						case s == states.StateStopped:
-							err = me.daemons[u].Start()
-							if err != nil {
-								continue
-							}
+					case s == states.StateUnknown:
+						fallthrough
+					case s == states.StateStopped:
+						err = me.daemons[u].Start()	// Managed by Mutex
+						if err != nil {
+							continue
+						}
 
-						case s == states.StateStarted:
-					}
-					//if (state.Current == states.StateUnknown) || (state.Current == states.StateStopped) {
-					//	err = me.daemons[u].Start()
-					//	if err != nil {
-					//		continue
-					//	}
-					//
-					//} else if state.Current == states.StateStarted {
-					//	//
-					//}
+					case s == states.StateStarted:
 				}
+				//if (state.Current == states.StateUnknown) || (state.Current == states.StateStopped) {
+				//	err = me.daemons[u].Start()
+				//	if err != nil {
+				//		continue
+				//	}
+				//
+				//} else if state.Current == states.StateStarted {
+				//	//
+				//}
 			}
 
 			eblog.Debug(me.EntityId, "task handler status OK")

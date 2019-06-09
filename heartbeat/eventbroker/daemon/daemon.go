@@ -5,11 +5,15 @@ import (
 	"gearbox/box"
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
+	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/tasks"
 	"gearbox/only"
 	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -49,7 +53,7 @@ func (me *Daemon) New(OsSupport oss.OsSupporter, args ...Args) error {
 		//	_args.restartAttempts = defaultRetries
 		//}
 
-		_args.daemons = make(ServicesMap)
+		_args.daemons = make(ServicesMap)	// Mutex not required
 
 		*me = Daemon(_args)
 
@@ -143,9 +147,12 @@ func (me *Daemon) StopServices() error {
 			break
 		}
 
-		for u, _ := range me.daemons {
-			if me.daemons[u].IsManaged {
-				_ = me.daemons[u].Stop()
+		for u, _ := range me.daemons {		// Ignore Mutex
+			if me.GetIsManaged(u) {
+				err = me.daemons[u].Stop()		// Ignore Mutex
+				if err == nil {
+					me.DeleteDaemon(u)
+				}
 				// Ignore error, will clean up when program exits.
 			}
 		}
@@ -154,6 +161,95 @@ func (me *Daemon) StopServices() error {
 	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
+
+	return err
+}
+
+
+// Print all services registered under daemon that I manage.
+func (me *Daemon) PrintServices() error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		_ = me.daemons.Print()
+	}
+
+	return err
+}
+
+
+// Print all services registered under daemon that I manage.
+func (me *Daemon) ListStarted() ([]messages.MessageAddress, error) {
+
+	var err error
+	var sc []messages.MessageAddress
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		for _, u := range me.GetManagedDaemonUuids() {
+			fmt.Printf("# Entry: %s\n", u)
+			sc = append(sc, u)
+		}
+
+		_ = me.daemons.Print()
+	}
+
+	return sc, err
+}
+
+
+func (me *Daemon) LoadFiles() error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		for range only.Once {
+			checkIn := string(me.osSupport.GetAdminRootDir() + "/" + DefaultJsonFiles)
+			fmt.Printf("%d Loading files... from %s\n", time.Now().Unix(), checkIn)
+
+			var files []string
+			err = filepath.Walk(checkIn, func(path string, info os.FileInfo, err error) error {
+				files = append(files, path)
+				return nil
+			})
+			if err != nil {
+				break
+			}
+
+			for _, file := range files {
+				if strings.HasSuffix(file, ".json") {
+					var sc *Service
+					fmt.Printf("Loading file: %s\n", file)
+					sc, err = me.RegisterByFile(file)
+					if (err != nil) || (sc == nil) {
+						fmt.Printf("Loading file: %s - FAILED: %v\n", file, err)
+						continue
+					}
+
+					fmt.Printf("Starting service: %s\n", file)
+					err = sc.Start()
+					if err != nil {
+						fmt.Printf("Loading file: %s - FAILED\n", file)
+					}
+				}
+			}
+		}
+	}
 
 	return err
 }

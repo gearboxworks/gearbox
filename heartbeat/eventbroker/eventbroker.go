@@ -70,7 +70,9 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*EventBroker, error) {
 			break
 		}
 
-		// 4. MQTT - provides inter-process communications.
+		// 4. MQTT broker - provides inter-process communications.
+
+		// 5. MQTT client - provides inter-process communications.
 		err = _args.MqttClient.New(OsSupport, mqttClient.Args{Channels: &_args.Channels})
 		if err != nil {
 			break
@@ -120,10 +122,7 @@ func (me *EventBroker) Start() error {
 		}
 
 		// 4. MQTT broker - start the inter-process communications.
-		err = me.MqttBroker.StartHandler()
-		if err != nil {
-			break
-		}
+		// This will be started via the daemons process.
 
 		// 5. MQTT client - start the inter-process communications.
 		err = me.MqttClient.StartHandler()
@@ -150,18 +149,31 @@ func (me *EventBroker) TempLoop() error {
 
 	fmt.Printf("(me *EventBroker) TempLoop()\n")
 
+	//msg := messages.Message{
+	//	Source: me.EntityId,
+	//	Topic: messages.MessageTopic{
+	//		Address: "eventbrokerdaemon",
+	//		SubTopic: "get",
+	//	},
+	//	Text: "status",
+	//}
 	msg := messages.Message{
 		Source: me.EntityId,
 		Topic: messages.MessageTopic{
-			Address: "eventbrokerdaemon",
-			SubTopic: "get",
+			Address: "eventbroker-daemon",
+			SubTopic: "scan",
 		},
-		Text: "status",
+		Text: "now",
 	}
 	time.Sleep(time.Second * 8)
 
 	//me.CreateEntity("BEEP")
 	me.Daemon.ChannelHandler.List()
+
+	err = me.Daemon.LoadFiles()
+	fmt.Printf("Error: %v\n", err)
+
+	time.Sleep(time.Second * 800)
 
 	index := 0
 	for {
@@ -176,8 +188,12 @@ func (me *EventBroker) TempLoop() error {
 		//foo := reflect.ValueOf(i)
 		//fmt.Printf("ERROR: %v\t\tRESPONSE: %v\n", err, i)
 		//fmt.Printf("Reflect %s, %s\n", foo.Type(), foo.String())
-		f := i.(*states.Status)
-		fmt.Printf("%d gbevents after: %v (%v)\n", time.Now().Unix(), f.GetError(), me.Daemon.Fluff)
+		f, err := states.InterfaceToTypeStatus(i)
+		if err == nil {
+			fmt.Printf("%d gbevents after: %v (%v)\n", time.Now().Unix(), f.GetError(), me.Daemon.Fluff)
+		} else {
+			fmt.Printf("%d gbevents after: is nil!\n", time.Now().Unix())
+		}
 
 		index++
 		//me.Daemon.State.Error = nil

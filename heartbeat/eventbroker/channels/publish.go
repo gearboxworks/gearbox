@@ -84,8 +84,8 @@ func (me *Channels) GetCallbackReturn(msg messages.Message, waitForExecute int) 
 
 		subtopic := msg.Topic.SubTopic
 		// MUTEX if _, ok := me.subscribers[client].Returns[subtopic]; !ok {
-		if !me.subscribers[client].ValidateReturns(subtopic) {
-			err = me.EntityId.ProduceError("channel subscriber return not defined")
+		err, _, _, _ := me.subscribers[client].GetTopic(subtopic)
+		if err != nil {
 			break
 		}
 
@@ -122,22 +122,18 @@ func (me *Channels) SetCallbackReturnToNil(msg messages.Message) (error) {
 			break
 		}
 
-		client := msg.Topic.Address
-		subtopic := msg.Topic.SubTopic
-
-		if _, ok := me.subscribers[client]; !ok {
-			err = me.EntityId.ProduceError("unknown channel subscriber")
+		err = me.EnsureSubscriberNotNil(msg.Topic.Address)
+		if err != nil {
 			break
 		}
 
-		// MUTEX if _, ok := me.subscribers[client].Returns[subtopic]; !ok {
-		if !me.subscribers[client].ValidateReturns(subtopic) {
-			err = me.EntityId.ProduceError("channel subscriber return not defined")
+		err, _, _, _ := me.subscribers[msg.Topic.Address].GetTopic(msg.Topic.SubTopic)
+		if err != nil {
 			break
 		}
 
 		// MUTEX me.subscribers[client].Returns[subtopic] = nil
-		me.subscribers[client].SetReturns(subtopic, nil)
+		me.subscribers[msg.Topic.Address].SetReturns(msg.Topic.SubTopic, nil)
 	}
 
 	eblog.LogIfNil(me, err)

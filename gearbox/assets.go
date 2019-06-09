@@ -5,11 +5,14 @@
 // admin/dist/css/preferences.d429a91a.css
 // admin/dist/css/projects.8e1f3ed8.css
 // admin/dist/css/projectstack.1dea8567.css
+// admin/dist/eventbroker/etc/daemons/mqttbroker.json
+// admin/dist/eventbroker/etc/daemons/unfsd.json
 // admin/dist/eventbroker/logs/README.md
+// admin/dist/eventbroker/mqttbroker/bin/hmq
+// admin/dist/eventbroker/mqttbroker/etc/mqttbroker.cfg
 // admin/dist/eventbroker/unfsd/bin/unfsd
 // admin/dist/eventbroker/unfsd/etc/exports
 // admin/dist/eventbroker/unfsd/etc/exports.json
-// admin/dist/eventbroker/unfsd/unfsd.json
 // admin/dist/favicon.ico
 // admin/dist/gears.json
 // admin/dist/heartbeat/img/DownArrow.ico
@@ -198,10 +201,82 @@ func adminDistCssProjectstack1dea8567Css() (*asset, error) {
 	return a, err
 }
 
+// adminDistEventbrokerEtcDaemonsMqttbrokerJson reads file data from disk. It returns an error on failure.
+func adminDistEventbrokerEtcDaemonsMqttbrokerJson() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/eventbroker/etc/daemons/mqttbroker.json")
+	name := "admin/dist/eventbroker/etc/daemons/mqttbroker.json"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// adminDistEventbrokerEtcDaemonsUnfsdJson reads file data from disk. It returns an error on failure.
+func adminDistEventbrokerEtcDaemonsUnfsdJson() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/eventbroker/etc/daemons/unfsd.json")
+	name := "admin/dist/eventbroker/etc/daemons/unfsd.json"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
 // adminDistEventbrokerLogsReadmeMd reads file data from disk. It returns an error on failure.
 func adminDistEventbrokerLogsReadmeMd() (*asset, error) {
 	path := filepath.Join(rootDir, "admin/dist/eventbroker/logs/README.md")
 	name := "admin/dist/eventbroker/logs/README.md"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// adminDistEventbrokerMqttbrokerBinHmq reads file data from disk. It returns an error on failure.
+func adminDistEventbrokerMqttbrokerBinHmq() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/eventbroker/mqttbroker/bin/hmq")
+	name := "admin/dist/eventbroker/mqttbroker/bin/hmq"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// adminDistEventbrokerMqttbrokerEtcMqttbrokerCfg reads file data from disk. It returns an error on failure.
+func adminDistEventbrokerMqttbrokerEtcMqttbrokerCfg() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/eventbroker/mqttbroker/etc/mqttbroker.cfg")
+	name := "admin/dist/eventbroker/mqttbroker/etc/mqttbroker.cfg"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -256,24 +331,6 @@ func adminDistEventbrokerUnfsdEtcExports() (*asset, error) {
 func adminDistEventbrokerUnfsdEtcExportsJson() (*asset, error) {
 	path := filepath.Join(rootDir, "admin/dist/eventbroker/unfsd/etc/exports.json")
 	name := "admin/dist/eventbroker/unfsd/etc/exports.json"
-	bytes, err := bindataRead(path, name)
-	if err != nil {
-		return nil, err
-	}
-
-	fi, err := os.Stat(path)
-	if err != nil {
-		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
-	}
-
-	a := &asset{bytes: bytes, info: fi}
-	return a, err
-}
-
-// adminDistEventbrokerUnfsdUnfsdJson reads file data from disk. It returns an error on failure.
-func adminDistEventbrokerUnfsdUnfsdJson() (*asset, error) {
-	path := filepath.Join(rootDir, "admin/dist/eventbroker/unfsd/unfsd.json")
-	name := "admin/dist/eventbroker/unfsd/unfsd.json"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -1641,11 +1698,14 @@ var _bindata = map[string]func() (*asset, error){
 	"admin/dist/css/preferences.d429a91a.css": adminDistCssPreferencesD429a91aCss,
 	"admin/dist/css/projects.8e1f3ed8.css": adminDistCssProjects8e1f3ed8Css,
 	"admin/dist/css/projectstack.1dea8567.css": adminDistCssProjectstack1dea8567Css,
+	"admin/dist/eventbroker/etc/daemons/mqttbroker.json": adminDistEventbrokerEtcDaemonsMqttbrokerJson,
+	"admin/dist/eventbroker/etc/daemons/unfsd.json": adminDistEventbrokerEtcDaemonsUnfsdJson,
 	"admin/dist/eventbroker/logs/README.md": adminDistEventbrokerLogsReadmeMd,
+	"admin/dist/eventbroker/mqttbroker/bin/hmq": adminDistEventbrokerMqttbrokerBinHmq,
+	"admin/dist/eventbroker/mqttbroker/etc/mqttbroker.cfg": adminDistEventbrokerMqttbrokerEtcMqttbrokerCfg,
 	"admin/dist/eventbroker/unfsd/bin/unfsd": adminDistEventbrokerUnfsdBinUnfsd,
 	"admin/dist/eventbroker/unfsd/etc/exports": adminDistEventbrokerUnfsdEtcExports,
 	"admin/dist/eventbroker/unfsd/etc/exports.json": adminDistEventbrokerUnfsdEtcExportsJson,
-	"admin/dist/eventbroker/unfsd/unfsd.json": adminDistEventbrokerUnfsdUnfsdJson,
 	"admin/dist/favicon.ico": adminDistFaviconIco,
 	"admin/dist/gears.json": adminDistGearsJson,
 	"admin/dist/heartbeat/img/DownArrow.ico": adminDistHeartbeatImgDownarrowIco,
@@ -1770,8 +1830,22 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"projectstack.1dea8567.css": &bintree{adminDistCssProjectstack1dea8567Css, map[string]*bintree{}},
 			}},
 			"eventbroker": &bintree{nil, map[string]*bintree{
+				"etc": &bintree{nil, map[string]*bintree{
+					"daemons": &bintree{nil, map[string]*bintree{
+						"mqttbroker.json": &bintree{adminDistEventbrokerEtcDaemonsMqttbrokerJson, map[string]*bintree{}},
+						"unfsd.json": &bintree{adminDistEventbrokerEtcDaemonsUnfsdJson, map[string]*bintree{}},
+					}},
+				}},
 				"logs": &bintree{nil, map[string]*bintree{
 					"README.md": &bintree{adminDistEventbrokerLogsReadmeMd, map[string]*bintree{}},
+				}},
+				"mqttbroker": &bintree{nil, map[string]*bintree{
+					"bin": &bintree{nil, map[string]*bintree{
+						"hmq": &bintree{adminDistEventbrokerMqttbrokerBinHmq, map[string]*bintree{}},
+					}},
+					"etc": &bintree{nil, map[string]*bintree{
+						"mqttbroker.cfg": &bintree{adminDistEventbrokerMqttbrokerEtcMqttbrokerCfg, map[string]*bintree{}},
+					}},
 				}},
 				"unfsd": &bintree{nil, map[string]*bintree{
 					"bin": &bintree{nil, map[string]*bintree{
@@ -1781,7 +1855,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 						"exports": &bintree{adminDistEventbrokerUnfsdEtcExports, map[string]*bintree{}},
 						"exports.json": &bintree{adminDistEventbrokerUnfsdEtcExportsJson, map[string]*bintree{}},
 					}},
-					"unfsd.json": &bintree{adminDistEventbrokerUnfsdUnfsdJson, map[string]*bintree{}},
 				}},
 			}},
 			"favicon.ico": &bintree{adminDistFaviconIco, map[string]*bintree{}},

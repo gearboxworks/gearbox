@@ -1,7 +1,6 @@
 package states
 
 import (
-	"gearbox/only"
 	"sync"
 	"time"
 )
@@ -134,7 +133,7 @@ type Status struct {
 	Error    error
 	Action   Action
 
-	mutex    sync.RWMutex
+	mutex    sync.RWMutex	// Mutex control for map.
 }
 
 
@@ -154,70 +153,70 @@ func (me State) String() string {
 
 
 // An FSM of sorts.
-func (me *Status) NextAction() Action {
-
-	var intended Action
-
-	for range only.Once {
-		//err = me.EnsureNotNil()
-		//if err != nil {
-		//	break
-		//}
-
-		switch me.GetWant() {
-			case ActionUnregister:
-				switch me.GetCurrent() {
-					case StateStarted:
-						intended = ActionStop
-					case StateStopped:
-						intended = ActionUnregister
-				}
-
-			case ActionRegister:
-				switch me.GetCurrent() {
-					case StateStarted:
-						intended = ActionStop
-					case StateStopped:
-						intended = ActionUnregister
-				}
-
-
-		}
-	}
-
-	return intended
-}
-
-type NextStates []State
-
-var TakeAction = map[State]NextStates{
-	// [Action][State] = dosomething
-	// [ActionUnregister][
-	//ActionIndexIdle:		{Current: StateIdle,			Want: StateError, Action: ActionPublish},
-	//ActionIndexUnknown:		{Current: StateUnknown,			Want: StateError, Action: ActionPublish},
-	//ActionIndexRegister:	{Current: StateRegistered,		Want: StateError, Action: ActionPublish},
-	//ActionIndexUnregister:	{Current: StateUnregistered,	Want: StateError, Action: ActionPublish},
-	//ActionIndexPublish:		{Current: StatePublished,		Want: StateError, Action: ActionPublish},
-	//ActionIndexUnpublish:	{Current: StateUnpublished,		Want: StateError, Action: ActionPublish},
-	//ActionIndexSubscribe:	{Current: StateSubscribed,		Want: StateError, Action: ActionPublish},
-	//ActionIndexUnsubscribe:	{Current: StateUnsubscribed,	Want: StateError, Action: ActionPublish},
-	//ActionIndexStop:		{Current: StateStopped,			Want: StateError, Action: ActionPublish},
-	//ActionIndexStart:		{Current: StateStarted,			Want: StateError, Action: ActionPublish},
-	//ActionIndexError:		{Current: StateError,			Want: StateError, Action: ActionPublish},
-}
-
-
-//var TakeAction = map[int]Status{
-//	ActionIndexIdle:		{Current: StateIdle,			Want: StateError, Action: ActionPublish},
-//	ActionIndexUnknown:		{Current: StateUnknown,			Want: StateError, Action: ActionPublish},
-//	ActionIndexRegister:	{Current: StateRegistered,		Want: StateError, Action: ActionPublish},
-//	ActionIndexUnregister:	{Current: StateUnregistered,	Want: StateError, Action: ActionPublish},
-//	ActionIndexPublish:		{Current: StatePublished,		Want: StateError, Action: ActionPublish},
-//	ActionIndexUnpublish:	{Current: StateUnpublished,		Want: StateError, Action: ActionPublish},
-//	ActionIndexSubscribe:	{Current: StateSubscribed,		Want: StateError, Action: ActionPublish},
-//	ActionIndexUnsubscribe:	{Current: StateUnsubscribed,	Want: StateError, Action: ActionPublish},
-//	ActionIndexStop:		{Current: StateStopped,			Want: StateError, Action: ActionPublish},
-//	ActionIndexStart:		{Current: StateStarted,			Want: StateError, Action: ActionPublish},
-//	ActionIndexError:		{Current: StateError,			Want: StateError, Action: ActionPublish},
+//func (me *Status) NextAction() Action {
+//
+//	var intended Action
+//
+//	for range only.Once {
+//		//err = me.EnsureNotNil()
+//		//if err != nil {
+//		//	break
+//		//}
+//
+//		switch me.GetWant() {
+//			case ActionUnregister:
+//				switch me.GetCurrent() {
+//					case StateStarted:
+//						intended = ActionStop
+//					case StateStopped:
+//						intended = ActionUnregister
+//				}
+//
+//			case ActionRegister:
+//				switch me.GetCurrent() {
+//					case StateStarted:
+//						intended = ActionStop
+//					case StateStopped:
+//						intended = ActionUnregister
+//				}
+//
+//
+//		}
+//	}
+//
+//	return intended
 //}
+//
+//type NextStates []State
+//
+//var TakeAction = map[State]NextStates{
+//	// [Action][State] = dosomething
+//	// [ActionUnregister][
+//	//ActionIndexIdle:		{Current: StateIdle,			Want: StateError, Action: ActionPublish},
+//	//ActionIndexUnknown:		{Current: StateUnknown,			Want: StateError, Action: ActionPublish},
+//	//ActionIndexRegister:	{Current: StateRegistered,		Want: StateError, Action: ActionPublish},
+//	//ActionIndexUnregister:	{Current: StateUnregistered,	Want: StateError, Action: ActionPublish},
+//	//ActionIndexPublish:		{Current: StatePublished,		Want: StateError, Action: ActionPublish},
+//	//ActionIndexUnpublish:	{Current: StateUnpublished,		Want: StateError, Action: ActionPublish},
+//	//ActionIndexSubscribe:	{Current: StateSubscribed,		Want: StateError, Action: ActionPublish},
+//	//ActionIndexUnsubscribe:	{Current: StateUnsubscribed,	Want: StateError, Action: ActionPublish},
+//	//ActionIndexStop:		{Current: StateStopped,			Want: StateError, Action: ActionPublish},
+//	//ActionIndexStart:		{Current: StateStarted,			Want: StateError, Action: ActionPublish},
+//	//ActionIndexError:		{Current: StateError,			Want: StateError, Action: ActionPublish},
+//}
+//
+//
+////var TakeAction = map[int]Status{
+////	ActionIndexIdle:		{Current: StateIdle,			Want: StateError, Action: ActionPublish},
+////	ActionIndexUnknown:		{Current: StateUnknown,			Want: StateError, Action: ActionPublish},
+////	ActionIndexRegister:	{Current: StateRegistered,		Want: StateError, Action: ActionPublish},
+////	ActionIndexUnregister:	{Current: StateUnregistered,	Want: StateError, Action: ActionPublish},
+////	ActionIndexPublish:		{Current: StatePublished,		Want: StateError, Action: ActionPublish},
+////	ActionIndexUnpublish:	{Current: StateUnpublished,		Want: StateError, Action: ActionPublish},
+////	ActionIndexSubscribe:	{Current: StateSubscribed,		Want: StateError, Action: ActionPublish},
+////	ActionIndexUnsubscribe:	{Current: StateUnsubscribed,	Want: StateError, Action: ActionPublish},
+////	ActionIndexStop:		{Current: StateStopped,			Want: StateError, Action: ActionPublish},
+////	ActionIndexStart:		{Current: StateStarted,			Want: StateError, Action: ActionPublish},
+////	ActionIndexError:		{Current: StateError,			Want: StateError, Action: ActionPublish},
+////}
 

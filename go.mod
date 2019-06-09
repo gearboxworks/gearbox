@@ -43,6 +43,7 @@ require (
 	github.com/nsf/jsondiff v0.0.0-20190302080047-dbf513526b7f
 	github.com/olebedev/emitter v0.0.0-20190110104742-e8d1457e6aee
 	github.com/oxtoacart/bpool v0.0.0-20190227141107-8c4636f812cc // indirect
+	github.com/radovskyb/watcher v1.0.6
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/sebest/logrusly v0.0.0-20180315190218-3235eccb8edc
 	github.com/segmentio/go-loggly v0.5.0 // indirect

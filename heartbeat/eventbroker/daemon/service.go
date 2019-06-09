@@ -27,6 +27,11 @@ func (me *Service) Start() error {
 			break
 		}
 
+		_, err = me.Status()
+		if err != nil {
+			break
+		}
+
 		me.State.SetNewState(states.StateStarted, err)
 		eblog.Debug(me.EntityId, "handler started OK")
 	}
