@@ -37,24 +37,29 @@ func initMqttClient(task *tasks.Task, i ...interface{}) error {
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("subscribe"), subscribeTopic, me)
+
+			err = me.channelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me, InterfaceTypeError)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("unsubscribe"), unsubscribeTopic, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("start"), startHandler, me, InterfaceTypeError)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me, states.InterfaceTypeStatus)
 			if err != nil {
 				break
 			}
 
-			err = me.channelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("subscribe"), subscribeTopic, me, InterfaceTypeService)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("unsubscribe"), unsubscribeTopic, me, InterfaceTypeError)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("start"), startHandler, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("get"), getHandler, me, messages.InterfaceTypeSubTopics)
 			if err != nil {
 				break
 			}

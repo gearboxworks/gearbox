@@ -87,7 +87,7 @@ func EnsureServicesNotNil(me *Service) error {
 
 
 // Ensure we don't duplicate services.
-func (me *Service) IsExisting(him CreateEntry) error {
+func (me *Service) IsExisting(him ServiceConfig) error {
 
 	var err error
 
@@ -105,7 +105,7 @@ func (me *Service) IsExisting(him CreateEntry) error {
 
 
 // Ensure we don't duplicate services.
-func (me *ServicesMap) IsExisting(him CreateEntry) error {
+func (me *ServicesMap) IsExisting(him ServiceConfig) error {
 
 	var err error
 
@@ -120,7 +120,7 @@ func (me *ServicesMap) IsExisting(him CreateEntry) error {
 }
 
 
-func ConstructMdnsRegisterMessage(me messages.MessageAddress, to messages.MessageAddress, s CreateEntry) messages.Message {
+func ConstructMdnsRegisterMessage(me messages.MessageAddress, to messages.MessageAddress, s ServiceConfig) messages.Message {
 
 	var err error
 	var msgTemplate messages.Message
@@ -151,10 +151,10 @@ func ConstructMdnsRegisterMessage(me messages.MessageAddress, to messages.Messag
 }
 
 
-func DeconstructMdnsRegisterMessage(event *messages.Message) (CreateEntry, error) {
+func DeconstructMdnsRegisterMessage(event *messages.Message) (ServiceConfig, error) {
 
 	var err error
-	var ce CreateEntry
+	var ce ServiceConfig
 
 	for range only.Once {
 		//err = ce.EnsureNotNil()
@@ -173,7 +173,7 @@ func DeconstructMdnsRegisterMessage(event *messages.Message) (CreateEntry, error
 }
 
 
-func ConstructMdnsUnregisterMessage(me messages.MessageAddress, to messages.MessageAddress, s CreateEntry) messages.Message {
+func ConstructMdnsUnregisterMessage(me messages.MessageAddress, to messages.MessageAddress, s ServiceConfig) messages.Message {
 
 	var err error
 	var msgTemplate messages.Message
@@ -216,8 +216,9 @@ func InterfaceToTypeZeroConf(i interface{}) (*ZeroConf, error) {
 		}
 
 		checkType := reflect.ValueOf(i)
-		if checkType.Type().String() != "*network.ZeroConf" {
-			err = errors.New("interface type not *network.ZeroConf")
+		//fmt.Printf("InterfaceToTypeZeroConf = %v\n", checkType.Type().String())
+		if checkType.Type().String() != InterfaceTypeZeroConf {
+			err = errors.New("interface type not " + InterfaceTypeZeroConf)
 			break
 		}
 
@@ -247,8 +248,9 @@ func InterfaceToTypeService(i interface{}) (*Service, error) {
 		}
 
 		checkType := reflect.ValueOf(i)
-		if checkType.Type().String() != "*network.Service" {
-			err = errors.New("interface type not *network.Service")
+		//fmt.Printf("InterfaceToTypeService = %v\n", checkType.Type().String())
+		if checkType.Type().String() != InterfaceTypeService {
+			err = errors.New("interface type not " + InterfaceTypeService)
 			break
 		}
 

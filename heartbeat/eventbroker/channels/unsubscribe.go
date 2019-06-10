@@ -26,7 +26,7 @@ func (me *Channels) UnSubscribe(client messages.MessageTopic) error {
 			break
 		}
 
-		err, _, _, _ := me.subscribers[client.Address].GetTopic(client.SubTopic)
+		err, _, _, _, _ = me.subscribers[client.Address].GetTopic(client.SubTopic)
 		if err != nil {
 			break
 		}

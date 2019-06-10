@@ -1,8 +1,8 @@
 package daemon
 
 import (
-	"fmt"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/states"
 	"time"
 )
 
@@ -67,7 +67,7 @@ func (me *Daemon) EnsureDaemonNotNil(entity messages.MessageAddress) error {
 
 
 // Ensure we don't duplicate services.
-func (me *Daemon) IsExisting(him ServiceConfig) (*Service, error) {
+func (me *Daemon) FindExistingConfig(him ServiceConfig) (*Service, error) {
 
 	var err error
 	var sc *Service
@@ -84,6 +84,24 @@ func (me *Daemon) IsExisting(him ServiceConfig) (*Service, error) {
 	}
 
 	return sc, err
+}
+
+
+// Ensure we don't duplicate services.
+func (me *Daemon) IsExisting(s messages.MessageAddress) *Service {
+
+	var sc *Service
+
+	me.mutex.RLock()
+	defer me.mutex.RUnlock()
+
+	for _, sc = range me.daemons {	// Managed by Mutex
+		if sc.EntityId == s {
+			break
+		}
+	}
+
+	return sc
 }
 
 
@@ -131,6 +149,22 @@ func (me *Service) GetConfig() (ServiceConfig, error) {
 }
 
 
+func (me *Service) GetStatus() (*states.Status, error) {
+
+	var sc *states.Status
+
+	me.mutex.RLock()
+	defer me.mutex.RUnlock()
+
+	err := me.EnsureNotNil()
+	if err == nil {
+		sc = &me.State		// Managed by Mutex
+	}
+
+	return sc, err
+}
+
+
 func (me *Daemon) GetServiceFiles() map[string]time.Time {
 
 	jc := make(map[string]time.Time)
@@ -143,51 +177,6 @@ func (me *Daemon) GetServiceFiles() map[string]time.Time {
 	}
 
 	return jc
-}
-
-
-func (me *Daemon) Foo() {
-
-	var st messages.SubTopics
-	var t messages.Topics
-	var ma messages.MessageAddresses
-
-	fmt.Printf("\nme.GetTopics\n")
-	st = me.GetTopics()
-	for _, f := range st {
-		fmt.Printf("me.GetTopics => %s\n", f.String())
-	}
-
-	fmt.Printf("\nme.GetManagedEntities\n")
-	ma = me.GetManagedEntities()
-	for _, f := range ma {
-		fmt.Printf("me.GetManagedEntities => %s\n", f.String())
-	}
-
-	fmt.Printf("\nme.GetEntities\n")
-	ma = me.GetEntities()
-	for _, f := range ma {
-		fmt.Printf("me.GetEntities => %s\n", f.String())
-	}
-
-	fmt.Printf("\nme.Channels.GetManagedEntities\n")
-	ma = me.Channels.GetManagedEntities()
-	for _, f := range ma {
-		fmt.Printf("me.Channels.GetManagedEntities => %s\n", f.String())
-	}
-
-	fmt.Printf("\nme.Channels.GetEntities\n")
-	ma = me.Channels.GetEntities()
-	for _, f := range ma {
-		fmt.Printf("me.Channels.GetEntities => %s\n", f.String())
-	}
-
-	fmt.Printf("\nme.Channels.GetListenerTopics\n")
-	t = me.Channels.GetListenerTopics()
-	for _, f := range t {
-		fmt.Printf("me.Channels.GetListenerTopics => %s\n", f.String())
-	}
-
 }
 
 

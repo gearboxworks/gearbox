@@ -11,9 +11,6 @@ import (
 	"gearbox/only"
 	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
-	"os"
-	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -203,57 +200,6 @@ func (me *Daemon) ListStarted() (messages.MessageAddresses, error) {
 	}
 
 	return sc, err
-}
-
-
-func (me *Daemon) LoadFiles() error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		for range only.Once {
-			checkIn := string(me.osSupport.GetAdminRootDir() + "/" + DefaultJsonFiles)
-			fmt.Printf("%d Loading files... from %s\n", time.Now().Unix(), checkIn)
-
-			var files []string
-			err = filepath.Walk(checkIn, func(path string, info os.FileInfo, err error) error {
-				files = append(files, path)
-				return nil
-			})
-			if err != nil {
-				break
-			}
-
-			for _, file := range files {
-				if strings.HasSuffix(file, ".json") {
-					var sc *Service
-					fmt.Printf("Loading file: %s\n", file)
-					sc, err = me.RegisterByFile(file)
-					if sc == nil {
-						fmt.Printf("Loading file: %s - already loaded\n", file)
-						continue
-					}
-					if err != nil {
-						fmt.Printf("Loading file: %s - FAILED: %v\n", file, err)
-						continue
-					}
-
-					fmt.Printf("Starting service: %s\n", file)
-					err = sc.Start()
-					if err != nil {
-						fmt.Printf("Loading file: %s - FAILED\n", file)
-					}
-				}
-			}
-		}
-	}
-
-	return err
 }
 
 

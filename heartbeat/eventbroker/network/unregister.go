@@ -13,7 +13,7 @@ import (
 // Executed as a method.
 
 // Unregister a service by method defined by a UUID reference.
-func (me *ZeroConf) UnregisterByUuid(u messages.MessageAddress) error {
+func (me *ZeroConf) UnregisterByEntityId(u messages.MessageAddress) error {
 
 	var err error
 
@@ -71,39 +71,6 @@ func (me *ZeroConf) UnregisterByChannel(caller messages.MessageAddress, u messag
 		}
 
 		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", u.String())
-	}
-
-	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
-
-	return err
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Executed from a channel.
-
-// Non-exposed channel function that responds to an "unregister" channel request.
-func unregisterService(event *messages.Message, i channels.Argument) channels.Return {
-
-	var me *ZeroConf
-	var err error
-
-	for range only.Once {
-		me, err = InterfaceToTypeZeroConf(i)
-		if err != nil {
-			break
-		}
-
-		//fmt.Printf("MESSAGE Rx:\n[%v]\n", event.Text.String())
-
-		// Use message element as the UUID.
-		err = me.UnregisterByUuid(event.Text.ToUuid())
-		if err != nil {
-			break
-		}
-
-		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", event.Text.ToUuid())
 	}
 
 	eblog.LogIfNil(me, err)

@@ -24,7 +24,16 @@ type PayLoad struct {
 }
 
 
-func (me MessageText) ToUuid() MessageAddress {
+const (
+	Package                = "messages"
+	InterfaceTypeMessage   = "*" + Package + ".Message"
+	InterfaceTypeSubTopic  = "*" + Package + ".SubTopic"
+	InterfaceTypeSubTopics = "*" + Package + ".SubTopics"
+	InterfaceTypeError     = "error"
+)
+
+
+func (me MessageText) ToMessageAddress() MessageAddress {
 
 	return MessageAddress(me.String())
 }
@@ -98,6 +107,10 @@ func (me *MessageTime) Now() MessageTime {
 func (me *MessageTime) Convert() time.Time {
 
 	return time.Time(*me)
+}
+func (me *MessageTime) Unix() int64 {
+
+	return time.Time(*me).Unix()
 }
 
 

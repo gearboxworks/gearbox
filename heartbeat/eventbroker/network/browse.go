@@ -67,7 +67,7 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 }
 
 // Returns a *Service reference based on a given CreateEntry structure.
-func (me *ZeroConf) FindService(e CreateEntry) (*Service, error) {
+func (me *ZeroConf) FindService(e ServiceConfig) (*Service, error) {
 
 	var err error
 	var sc *Service
@@ -108,7 +108,7 @@ func (me *ZeroConf) FindService(e CreateEntry) (*Service, error) {
 }
 
 // Returns a *Service reference based on a given CreateEntry structure.
-func (me ServicesMap) findServiceInMap(e CreateEntry) (*Service, error) {
+func (me ServicesMap) findServiceInMap(e ServiceConfig) (*Service, error) {
 
 	var err error
 	var ok bool
@@ -139,7 +139,7 @@ func (me ServicesMap) findServiceInMap(e CreateEntry) (*Service, error) {
 }
 
 // Returns a *Service reference based on a given CreateEntry structure.
-func (me *Service) compareService(e CreateEntry) (bool, error) {
+func (me *Service) compareService(e ServiceConfig) (bool, error) {
 
 	var err error
 	var found bool
@@ -227,32 +227,3 @@ func (me *ZeroConf) updateRegisteredServices() error {
 	return err
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-// Executed from a channel
-
-// Non-exposed channel function that responds to a "scan" channel request.
-func scanServices(event *messages.Message, i channels.Argument) channels.Return {
-
-	var me *ZeroConf
-	var err error
-
-	for range only.Once {
-		me, err = InterfaceToTypeZeroConf(i)
-		if err != nil {
-			break
-		}
-
-		_, err = me.Browse(event.Text.String(), me.domain)
-		if err != nil {
-			break
-		}
-
-		eblog.Debug(me.EntityId, "service scan completed")
-	}
-
-	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
-
-	return err
-}

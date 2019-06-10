@@ -44,7 +44,7 @@ func (me *Channels) Publish(msg messages.Message) error {
 			break
 		}
 
-		eblog.Debug(me.EntityId, "channel MSG:'%s' DATA:'%s'", msg.Topic.String(), msg.Text.String())
+		eblog.Debug(me.EntityId, "Channel time:%d src:%s topic:%s msg:%s", msg.Time.Unix(), msg.Source.String(), msg.Topic.String(), msg.Text.String())
 		//fmt.Printf(">>> MSG: %s DATA: %s", msg.Topic.String(), msg.Text.String())
 		/*
 			select {
@@ -84,7 +84,7 @@ func (me *Channels) GetCallbackReturn(msg messages.Message, waitForExecute int) 
 
 		subtopic := msg.Topic.SubTopic
 		// MUTEX if _, ok := me.subscribers[client].Returns[subtopic]; !ok {
-		err, _, _, _ := me.subscribers[client].GetTopic(subtopic)
+		err, _, _, _, _ = me.subscribers[client].GetTopic(subtopic)
 		if err != nil {
 			break
 		}
@@ -127,7 +127,7 @@ func (me *Channels) SetCallbackReturnToNil(msg messages.Message) (error) {
 			break
 		}
 
-		err, _, _, _ := me.subscribers[msg.Topic.Address].GetTopic(msg.Topic.SubTopic)
+		err, _, _, _, _ = me.subscribers[msg.Topic.Address].GetTopic(msg.Topic.SubTopic)
 		if err != nil {
 			break
 		}
@@ -185,12 +185,14 @@ func PublishCallerState(me *Channels, caller *messages.MessageAddress, state *st
 		case state == nil:
 
 		case state.GetError() != nil:
-			_ = me.Publish(caller.ConstructMessage(*caller, states.ActionError, messages.MessageText(state.GetError().Error())))
+			// _ = me.Publish(caller.ConstructMessage(*caller, states.ActionError, messages.MessageText(state.GetError().Error())))
+			_ = me.Publish(caller.ConstructMessage(messages.BroadcastAddress, states.ActionError, messages.MessageText(state.GetError().Error())))
 
 		case state.ExpectingNewState():
 			fallthrough
 		case state.HasChangedState():
-			_ = me.Publish(caller.ConstructMessage(*caller, states.ActionStatus, messages.MessageText(state.GetCurrent())))
+			// _ = me.Publish(caller.ConstructMessage(*caller, states.ActionStatus, messages.MessageText(state.GetCurrent())))
+			_ = me.Publish(caller.ConstructMessage(messages.BroadcastAddress, states.ActionStatus, messages.MessageText(state.GetCurrent())))
 	}
 
 	return

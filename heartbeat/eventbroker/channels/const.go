@@ -56,7 +56,7 @@ type Reference struct {
 }
 type References map[messages.SubTopic]*Reference
 
-type Callback func(event *messages.Message, you Argument) Return
+type Callback func(event *messages.Message, you Argument, ret ReturnType) Return
 
 type Argument interface{}
 

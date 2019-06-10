@@ -14,7 +14,7 @@ import (
 // Executed as a method.
 
 // Register a service by method defined by a *CreateEntry structure.
-func (me *ZeroConf) Register(s CreateEntry) (*Service, error) {
+func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 
 	var err error
 	var sc Service
@@ -88,7 +88,7 @@ func (me *ZeroConf) Register(s CreateEntry) (*Service, error) {
 
 // Register a service via a channel defined by a *CreateEntry structure and
 // returns a *Service structure if successful.
-func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s CreateEntry) (*Service, error) {
+func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s ServiceConfig) (*Service, error) {
 
 	var err error
 	var sc *Service
@@ -137,43 +137,5 @@ func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s CreateEn
 	eblog.LogIfError(me.EntityId, err)
 
 	return sc, err
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Executed from a channel.
-
-// Non-exposed channel function that responds to a "register" channel request.
-func registerService(event *messages.Message, i channels.Argument) channels.Return {
-
-	var me *ZeroConf
-	var sc *Service
-	var err error
-
-	for range only.Once {
-		me, err = InterfaceToTypeZeroConf(i)
-		if err != nil {
-			break
-		}
-
-		var ce CreateEntry
-		ce, err = DeconstructMdnsRegisterMessage(event)
-		//err = json.Unmarshal(event.Text.ByteArray(), &ce)
-		if err != nil {
-			break
-		}
-
-		sc, err = me.Register(ce)
-		if err != nil {
-			break
-		}
-
-		eblog.Debug(me.EntityId, "registered service by channel %s OK", sc.EntityId.String())
-	}
-
-	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
-
-	return sc
 }
 

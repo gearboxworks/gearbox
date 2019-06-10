@@ -109,7 +109,7 @@ package mqttBroker
 //// Executed from a channel.
 //
 //// Non-exposed channel function that responds to a "register" channel request.
-//func subscribeTopic(event *messages.Message, i channels.Argument) channels.Return {
+//func subscribeTopic(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 //
 //	var me *MqttBroker
 //	var sc *Service

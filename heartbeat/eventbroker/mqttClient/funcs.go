@@ -64,7 +64,7 @@ func EnsureServiceNotNil(me *Service) error {
 
 
 // Ensure we don't duplicate services.
-func (me *Service) IsExisting(him CreateEntry) error {
+func (me *Service) IsExisting(him ServiceConfig) error {
 
 	var err error
 
@@ -81,7 +81,7 @@ func (me *Service) IsExisting(him CreateEntry) error {
 
 
 // Ensure we don't duplicate services.
-func (me *ServicesMap) IsExisting(him CreateEntry) error {
+func (me *ServicesMap) IsExisting(him ServiceConfig) error {
 
 	var err error
 
@@ -108,8 +108,9 @@ func InterfaceToTypeMqttClient(i interface{}) (*MqttClient, error) {
 		}
 
 		checkType := reflect.ValueOf(i)
-		if checkType.Type().String() != "*mqttClient.MqttClient" {
-			err = errors.New("interface type not *mqttClient.MqttClient")
+		//fmt.Printf("InterfaceToTypeMqttClient = %v\n", checkType.Type().String())
+		if checkType.Type().String() != InterfaceTypeMqttClient {
+			err = errors.New("interface type not " + InterfaceTypeMqttClient)
 			break
 		}
 
@@ -139,8 +140,9 @@ func InterfaceToTypeService(i interface{}) (*Service, error) {
 		}
 
 		checkType := reflect.ValueOf(i)
-		if checkType.Type().String() != "*mqttClient.Service" {
-			err = errors.New("interface type not *mqttClient.MqttClient")
+		//fmt.Printf("InterfaceToTypeService = %v\n", checkType.Type().String())
+		if checkType.Type().String() != InterfaceTypeService {
+			err = errors.New("interface type not " + InterfaceTypeService)
 			break
 		}
 

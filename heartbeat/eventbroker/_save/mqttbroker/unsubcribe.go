@@ -77,7 +77,7 @@ package mqttBroker
 //// Executed from a channel.
 //
 //// Non-exposed channel function that responds to an "unsubscribe" channel request.
-//func unsubscribeTopic(event *messages.Message, i channels.Argument) channels.Return {
+//func unsubscribeTopic(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 //
 //	var me *MqttBroker
 //	var err error

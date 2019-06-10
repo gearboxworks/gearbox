@@ -3,11 +3,13 @@ package eventbroker
 import (
 	"errors"
 	"fmt"
+	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/network"
 	"gearbox/only"
 	"net/url"
+	"reflect"
 	"time"
 )
 
@@ -29,6 +31,43 @@ func (me *EventBroker) RegisterService(topic string, args ...ServiceData) {
 	// .
 
 	return
+}
+
+
+var ServiceMqtt = network.ServiceConfig{
+	Name:   "_gearbox-mqtt",
+	Type:   "_mqtt._tcp",
+	Domain: "local",
+}
+
+
+func InterfaceToTypeEventBroker(i interface{}) (*EventBroker, error) {
+
+	var err error
+	var me *EventBroker
+
+	for range only.Once {
+		err = channels.EnsureArgumentNotNil(i)
+		if err != nil {
+			break
+		}
+
+		checkType := reflect.ValueOf(i)
+		//fmt.Printf("InterfaceToTypeEventBroker = %v\n", checkType.Type().String())
+		if checkType.Type().String() != InterfaceTypeEventBroker {
+			err = errors.New("interface type not " + InterfaceTypeEventBroker)
+			break
+		}
+
+		me = i.(*EventBroker)
+
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+	}
+
+	return me, err
 }
 
 
@@ -61,7 +100,7 @@ func (me *EventBroker) FindMqttBroker() (*url.URL, error) {
 }
 
 
-func (me *EventBroker) zcByChannel(s network.CreateEntry) (*network.Service, error) {
+func (me *EventBroker) zcByChannel(s network.ServiceConfig) (*network.Service, error) {
 
 	var err error
 	var sc *network.Service
@@ -73,7 +112,7 @@ func (me *EventBroker) zcByChannel(s network.CreateEntry) (*network.Service, err
 }
 
 
-func (me *EventBroker) zcByMethod(s network.CreateEntry) (*network.Service, error) {
+func (me *EventBroker) zcByMethod(s network.ServiceConfig) (*network.Service, error) {
 
 	var err error
 	var sc *network.Service
@@ -92,21 +131,21 @@ func (me *EventBroker) CreateEntity(serviceName string) {
 	fmt.Printf("\n\n################################################################################\n")
 	_ = me.ZeroConf.PrintServices()
 
-	s1 := network.CreateEntry{
+	s1 := network.ServiceConfig{
 		Name: network.Name(serviceName + "1"),
 		Type: "_gearbox._tcp",
 		Domain: "local",
 		Port: 0,
 	}
 
-	s2 := network.CreateEntry{
+	s2 := network.ServiceConfig{
 		Name: network.Name(serviceName + "2"),
 		Type: "_gearbox._tcp",
 		Domain: "local",
 		Port: 0,
 	}
 
-	s3 := network.CreateEntry{
+	s3 := network.ServiceConfig{
 		Name: network.Name(serviceName + "3"),
 		Type: "_gearbox._tcp",
 		Domain: "local",
@@ -145,8 +184,8 @@ func (me *EventBroker) CreateEntity(serviceName string) {
 	err = me.ZeroConf.UnregisterByChannel(me.EntityId, s1ref.EntityId)
 	fmt.Printf("Response(me.ZeroConf.UnregisterByChannel): %v\n", err)
 
-	err = me.ZeroConf.UnregisterByUuid(s1ref.EntityId)
-	fmt.Printf("Response(me.ZeroConf.UnregisterByUuid): %v\n", err)
+	err = me.ZeroConf.UnregisterByEntityId(s1ref.EntityId)
+	fmt.Printf("Response(me.ZeroConf.UnregisterByEntityId): %v\n", err)
 
 	//err = s3ref.Unregister()
 	//fmt.Printf("Response(s3ref.Unregister): %v\n", err)

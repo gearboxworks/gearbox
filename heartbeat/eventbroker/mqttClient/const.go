@@ -15,10 +15,10 @@ import (
 
 const (
 	DefaultEntityId = "eventbroker-mqttclient"
-	defaultWaitTime = time.Millisecond * 2000
+	defaultWaitTime = time.Millisecond * 1000
 	defaultDomain   = "local"
 	DefaultRetries  = 12
-	DefaultRetryDelay = time.Second * 3
+	DefaultRetryDelay = time.Second * 10
 	DefaultServer = "tcp://127.0.0.1:1883"
 )
 
@@ -40,43 +40,51 @@ type MqttClient struct {
 	osSupport       oss.OsSupporter
 }
 type Args MqttClient
-
 type clientInstance struct {
 	options *mqtt.ClientOptions
 	client  mqtt.Client
 	token   mqtt.Token
 }
 
-//type msgCallback struct {
-//	Topic    Topic
-//	Function mqtt.MessageHandler
-//}
-
 type Service struct {
 	EntityId       messages.MessageAddress
 	State          states.Status
 	IsManaged      bool
-	Entry          *CreateEntry
+	Entry          *ServiceConfig
 
 	mutex          sync.RWMutex // Mutex control for this struct.
 	channels       *channels.Channels
 	channelHandler *channels.Subscriber
 	instance       mqtt.Token
 }
-type ServicesArray []mqtt.Client
 type ServicesMap map[messages.MessageAddress]*Service
+//type ServicesArray []mqtt.Client
 
-type CreateEntry struct {
+type ServiceConfig struct {
 	Name   string	`json:"name"`	// == Service.Entry.Instance
 	Topic  Topic	`json:"topic"`
 	TTL    uint32   `json:"ttl"`	// == Service.Entry.TTL
 	Qos    byte		`json:"qos"`
+
 	callback mqtt.MessageHandler
 }
+
+const (
+	Package                    = "mqttClient"
+	InterfaceTypeMqttClient    = "*" + Package + ".MqttClient"
+	InterfaceTypeService       = "*" + Package + ".Service"
+	InterfaceTypeServiceConfig = "*" + Package + ".ServiceConfig"
+	InterfaceTypeError         = "error"
+)
 
 type Topic string
 func (me *Topic) String() (string) {
 
 	return string(*me)
 }
+
+//type msgCallback struct {
+//	Topic    Topic
+//	Function mqtt.MessageHandler
+//}
 

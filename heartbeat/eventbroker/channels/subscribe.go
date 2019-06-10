@@ -50,7 +50,7 @@ func (me *Channels) Subscribe(topic messages.MessageTopic, callback Callback, ar
 					mutex: sync.RWMutex{},
 					parentInstance: &me.instance,
 				}
-				*me.subscribers[topic.Address] = sub
+				me.subscribers[topic.Address] = &sub
 			}
 			me.subscribers[topic.Address].AddTopic(topic.SubTopic, callback, argInterface, retType)
 

@@ -6,7 +6,7 @@ package mqttBroker
 //
 //// Non-exposed channel function that responds to a "status" channel request.
 //// Produces the status of the M-DNS handler via a channel.
-//func statusHandler(event *messages.Message, i channels.Argument) channels.Return {
+//func statusHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 //
 //	var err error
 //	var me *MqttBroker
@@ -29,7 +29,7 @@ package mqttBroker
 //
 //// Non-exposed channel function that responds to an "stop" channel request.
 //// Causes the M-DNS handler task to stop via a channel.
-//func stopHandler(event *messages.Message, i channels.Argument) channels.Return {
+//func stopHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 //
 //	var err error
 //	var me *MqttBroker
@@ -57,7 +57,7 @@ package mqttBroker
 //
 //// Non-exposed channel function that responds to an "start" channel request.
 //// Causes the M-DNS handler task to start via a channel.
-//func startHandler(event *messages.Message, i channels.Argument) channels.Return {
+//func startHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 //
 //	var err error
 //	var me *MqttBroker

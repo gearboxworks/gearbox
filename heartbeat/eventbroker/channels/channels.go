@@ -182,19 +182,12 @@ func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscri
 
 		if _, ok := me.subscribers[client]; !ok {
 			sub = Subscriber{
-				EntityId: client,
+				EntityId:  client,
+				State: states.Status{},
+				IsManaged: true,
+
 				topics: make(References),
-				//Callbacks: make(Callbacks),
-				//Arguments: make(Arguments),
-				//Returns: make(Returns),
-				//Executed: make(Executed),
-				//
-				//mutexArguments: sync.RWMutex{},	// Mutex control for map.
-				//mutexReturns: sync.RWMutex{},	// Mutex control for map.
-				//mutexExecuted: sync.RWMutex{},	// Mutex control for map.
-
-				mutex: sync.RWMutex{},	// Mutex control for map.
-
+				mutex: sync.RWMutex{},
 				parentInstance: &me.instance,
 			}
 			me.subscribers[client] = &sub
@@ -260,7 +253,7 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 			if sub, ok := me.subscribers[client]; ok {
 
 				// Now check topics the subscriber is subscribed to, else continue to next.
-				err, callback, args, ret := me.subscribers[client].GetTopic(topic)
+				err, callback, args, ret, retType := me.subscribers[client].GetTopic(topic)
 				if err != nil {
 					continue
 				}
@@ -281,10 +274,10 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 					// eblog.Debug(me.EntityId, "Callback(%s)	Time:%v	Src:%s	Text:%s", msg.Topic, msg.Time.Convert().Unix(), msg.Src, msg.Text)
 					sub.SetExecuted(topic, false)
 					if ret != nil {
-						r := callback(&msg, args)
+						r := callback(&msg, args, retType)
 						sub.SetReturns(topic, r)
 					} else {
-						 _ = callback(&msg, args)
+						 _ = callback(&msg, args, retType)
 					}
 					sub.SetExecuted(topic, true)
 

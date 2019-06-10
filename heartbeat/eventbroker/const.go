@@ -20,26 +20,22 @@ const (
 )
 
 
-var ServiceMqtt = network.CreateEntry{
-	Name:   "_gearbox-mqtt",
-	Type:   "_mqtt._tcp",
-	Domain: "local",
-}
-
-
 type EventBroker struct {
-	EntityId   messages.MessageAddress
-	Boxname    string
-	PidFile    string
-	State      states.Status
+	EntityId       messages.MessageAddress
+	Boxname        string
+	PidFile        string
+	State          states.Status
+	StsEmitter     status.Status
 
-	Channels   channels.Channels
-	ZeroConf   network.ZeroConf
-	Daemon     daemon.Daemon
-	MqttClient mqttClient.MqttClient
-	StsEmitter status.Status
+	Channels       channels.Channels
+	ZeroConf       network.ZeroConf
+	Daemon         daemon.Daemon
+	MqttClient     mqttClient.MqttClient
 
-	osSupport  oss.OsSupporter
+	Entities       Entities
+
+	channelHandler *channels.Subscriber
+	osSupport      oss.OsSupporter
 }
 type Args EventBroker
 
@@ -57,6 +53,20 @@ type ServiceAction struct {
 	State	 ServiceState
 	CallBack interface{}
 }
+
+type Entity struct {
+	Src   messages.MessageAddress
+	State *states.Status
+	StateString  states.State
+}
+type Entities map[messages.MessageAddress]*Entity
+
+
+const (
+	Package                  = "eventbroker"
+	InterfaceTypeEventBroker = "*" + Package + ".EventBroker"
+	InterfaceTypeError       = "error"
+)
 
 
 type Event emitter.Event

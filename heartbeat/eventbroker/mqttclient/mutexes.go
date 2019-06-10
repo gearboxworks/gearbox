@@ -1,6 +1,9 @@
 package mqttClient
 
-import "gearbox/heartbeat/eventbroker/messages"
+import (
+	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/states"
+)
 
 
 func (me *MqttClient) GetEntities() messages.MessageAddresses {
@@ -63,7 +66,7 @@ func (me *MqttClient) EnsureDaemonNotNil(entity messages.MessageAddress) error {
 
 
 // Ensure we don't duplicate services.
-func (me *MqttClient) IsExisting(him CreateEntry) (*Service, error) {
+func (me *MqttClient) FindExistingConfig(him ServiceConfig) (*Service, error) {
 
 	var err error
 	var sc *Service
@@ -80,6 +83,24 @@ func (me *MqttClient) IsExisting(him CreateEntry) (*Service, error) {
 	}
 
 	return sc, err
+}
+
+
+// Ensure we don't duplicate services.
+func (me *MqttClient) IsExisting(s messages.MessageAddress) *Service {
+
+	var sc *Service
+
+	me.mutex.RLock()
+	defer me.mutex.RUnlock()
+
+	for _, sc = range me.services {	// Managed by Mutex
+		if sc.EntityId == s {
+			break
+		}
+	}
+
+	return sc
 }
 
 
@@ -108,6 +129,38 @@ func (me *Service) GetEntityId() (messages.MessageAddress, error) {
 	}
 
 	return me.EntityId, err		// Managed by Mutex
+}
+
+
+func (me *Service) GetConfig() (ServiceConfig, error) {
+
+	var sc ServiceConfig
+
+	me.mutex.RLock()
+	defer me.mutex.RUnlock()
+
+	err := me.EnsureNotNil()
+	if err != nil {
+		return sc, err
+	}
+
+	return sc, err		// Managed by Mutex
+}
+
+
+func (me *Service) GetStatus() (*states.Status, error) {
+
+	var sc *states.Status
+
+	me.mutex.RLock()
+	defer me.mutex.RUnlock()
+
+	err := me.EnsureNotNil()
+	if err == nil {
+		sc = &me.State		// Managed by Mutex
+	}
+
+	return sc, err
 }
 
 

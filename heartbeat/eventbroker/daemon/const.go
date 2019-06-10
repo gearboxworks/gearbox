@@ -30,7 +30,7 @@ const (
     defaultWaitTime = time.Millisecond * 2000
 	defaultDomain   = "local"
 	defaultRetries  = 12
-	DefaultRetryDelay = time.Second * 50
+	DefaultRetryDelay = time.Second * 20
 )
 
 
@@ -60,10 +60,6 @@ type Service struct {
 	channelHandler  *channels.Subscriber
 	instance        programInstance
 }
-//type ServicesMap struct {
-//	instance map[messages.MessageAddress]*Service
-//	mutex sync.RWMutex	// Mutex control for map.
-//}
 type ServicesMap  map[messages.MessageAddress]*Service
 
 type JsonConfig struct {
@@ -83,6 +79,14 @@ type ServiceConfig struct {
 	Port     network.Port
 	MdnsType string
 }
+
+const (
+	Package                    = "daemon"
+	InterfaceTypeService       = "*" + Package + ".Service"
+	InterfaceTypeServiceConfig = "*" + Package + ".ServiceConfig"
+	InterfaceTypeDaemon        = "*" + Package + ".Daemon"
+	InterfaceTypeError         = "error"
+)
 
 type programInstance struct {
 	exit    chan struct{}

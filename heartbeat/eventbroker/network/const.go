@@ -14,6 +14,15 @@ import (
 )
 
 
+const (
+	DefaultEntityId = "eventbroker-zeroconf"
+	DefaultWaitTime = time.Millisecond * 2000
+	DefaultDomain   = "local"
+	DefaultRetries  = 12
+	DefaultRetryDelay = time.Second * 10
+)
+
+
 type ZeroConf struct {
 	EntityId        messages.MessageAddress
 	State           states.Status
@@ -31,6 +40,7 @@ type ZeroConf struct {
 }
 type Args ZeroConf
 
+
 type Service struct {
 	EntityId       messages.MessageAddress
 	State          states.Status
@@ -42,23 +52,14 @@ type Service struct {
 	channelHandler *channels.Subscriber
 	instance       *zeroconf.Server
 }
-type Entry zeroconf.ServiceEntry
 type ServicesMap map[messages.MessageAddress]*Service
-
-
-const (
-	DefaultEntityId = "eventbroker-zeroconf"
-	DefaultWaitTime = time.Millisecond * 2000
-	DefaultDomain   = "local"
-	DefaultRetries  = 12
-	DefaultRetryDelay = time.Second * 5
-)
+type Entry zeroconf.ServiceEntry
 
 var DefaultText		= []string{"txtv=0", "lo=1", "la=2"}
 var browseList		= []string{"_mqtt._udp", "_mqtt._tcp", "_nfs._udp", "_nfs._tcp"}
 
 
-type CreateEntry struct {
+type ServiceConfig struct {
 	EntityId messages.MessageAddress `json:"entity_id"` //
 	Url      string         `json:"url"`       //
 
@@ -70,6 +71,13 @@ type CreateEntry struct {
 	TTL      uint32         `json:"ttl"`       // == Service.Entry.TTL
 }
 
+const (
+	Package                    = "network"
+	InterfaceTypeZeroConf      = "*" + Package + ".ZeroConf"
+	InterfaceTypeService       = "*" + Package + ".Service"
+	InterfaceTypeServiceConfig = "*" + Package + ".ServiceConfig"
+	InterfaceTypeError         = "error"
+)
 
 var msgTemplate = messages.Message{
 	Source: "",

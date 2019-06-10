@@ -173,8 +173,9 @@ func InterfaceToTypeDaemon(i interface{}) (*Daemon, error) {
 		}
 
 		checkType := reflect.ValueOf(i)
-		if checkType.Type().String() != "*daemon.Daemon" {
-			err = errors.New("interface type not *daemon.Daemon")
+		//fmt.Printf("InterfaceToTypeDaemon = %v\n", checkType.Type().String())
+		if checkType.Type().String() != InterfaceTypeDaemon {
+			err = errors.New("interface type not " + InterfaceTypeDaemon)
 			break
 		}
 
@@ -202,8 +203,9 @@ func InterfaceToTypeService(i interface{}) (*Service, error) {
 		}
 
 		checkType := reflect.ValueOf(i)
-		if checkType.Type().String() != "*daemon.Service" {
-			err = errors.New("interface type not *daemon.Service")
+		//fmt.Printf("InterfaceToTypeService = %v\n", checkType.Type().String())
+		if checkType.Type().String() != InterfaceTypeService {
+			err = errors.New("interface type not " + InterfaceTypeService)
 			break
 		}
 
@@ -317,28 +319,28 @@ func (me *Service) Print() error {
 }
 
 
-func (me *ServiceConfig) IsTheSame(e ServiceConfig) (bool, error) {
-
-	var same bool
-	var err error
-
-	for range only.Once {
-		if me == nil {
-			err = errors.New("software error")
-			same = false
-			break
-		}
-
-		//if (me.Instance == e.Instance) &&
-		//	(trimDot(me.Service) == trimDot(e.Service)) &&
-		//	(trimDot(me.Domain) == trimDot(e.Domain)) &&
-		//	(me.Port == e.Port) {
-		//	same = true
-		//}
-	}
-
-	return same, err
-}
+//func (me *ServiceConfig) IsTheSame(e ServiceConfig) (bool, error) {
+//
+//	var same bool
+//	var err error
+//
+//	for range only.Once {
+//		if me == nil {
+//			err = errors.New("software error")
+//			same = false
+//			break
+//		}
+//
+//		//if (me.Instance == e.Instance) &&
+//		//	(trimDot(me.Service) == trimDot(e.Service)) &&
+//		//	(trimDot(me.Domain) == trimDot(e.Domain)) &&
+//		//	(me.Port == e.Port) {
+//		//	same = true
+//		//}
+//	}
+//
+//	return same, err
+//}
 
 
 func (me *programInstance) Start(s service.Service) error {
@@ -360,20 +362,20 @@ func (me *Service) IsExisting(him ServiceConfig) error {
 	var err error
 
 	switch {
-	case me.Entry.Config.Name == him.Config.Name:
-		err = me.EntityId.ProduceError("Daemon service Name:%s already exists", me.Entry.Config.Name)
+		case me.Entry.Config.Name == him.Config.Name:
+			err = me.EntityId.ProduceError("Daemon service Name:%s already exists", me.Entry.Config.Name)
 
-	case me.Entry.Config.DisplayName == him.Config.DisplayName:
-		err = me.EntityId.ProduceError("Daemon service DisplayName:%s already exists", me.Entry.DisplayName)
+		case me.Entry.Config.DisplayName == him.Config.DisplayName:
+			err = me.EntityId.ProduceError("Daemon service DisplayName:%s already exists", me.Entry.DisplayName)
 
-	case me.Entry.Config.Executable == him.Config.Executable:
-		err = me.EntityId.ProduceError("Daemon service Executable:%s already exists", me.Entry.Config.Executable)
+		case me.Entry.Config.Executable == him.Config.Executable:
+			err = me.EntityId.ProduceError("Daemon service Executable:%s already exists", me.Entry.Config.Executable)
 
-	case me.Entry.Url == him.Url:
-		err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.Url)
+		case me.Entry.Url == him.Url:
+			err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.Url)
 
-	case (me.Entry.Host == him.Host) && (me.Entry.Port == him.Port):
-		err = me.EntityId.ProduceError("Daemon service Host:%s:%s already exists", me.Entry.Host.String(), me.Entry.Port.String())
+		case (me.Entry.Host == him.Host) && (me.Entry.Port == him.Port):
+			err = me.EntityId.ProduceError("Daemon service Host:%s:%s already exists", me.Entry.Host.String(), me.Entry.Port.String())
 	}
 
 	return err
@@ -410,21 +412,21 @@ func (me *Service) IsRegistered() bool {
 
 	state, _ := me.Status()
 	switch state.Current {
-	case states.StateIdle:
-		fallthrough
-	case states.StateUnknown:
-		fallthrough
-	case states.StateError:
-		fallthrough
-	case states.StateInitializing:
-		fallthrough
-	case states.StateInitialized:
-		fallthrough
-	case states.StateUnregistered:
-		ret = false
+		case states.StateIdle:
+			fallthrough
+		case states.StateUnknown:
+			fallthrough
+		case states.StateError:
+			fallthrough
+		case states.StateInitializing:
+			fallthrough
+		case states.StateInitialized:
+			fallthrough
+		case states.StateUnregistered:
+			ret = false
 
-	default:
-		ret = true
+		default:
+			ret = true
 	}
 
 	return ret
@@ -450,10 +452,10 @@ func (j *ServiceUrl) UnmarshalJSON(b []byte) error {
 
 
 // Yup
-func (me *Service) CreateMdnsEntry() (*network.CreateEntry, error) {
+func (me *Service) CreateMdnsEntry() (*network.ServiceConfig, error) {
 
 	var err error
-	var zc network.CreateEntry
+	var zc network.ServiceConfig
 
 	for range only.Once {
 
@@ -462,7 +464,7 @@ func (me *Service) CreateMdnsEntry() (*network.CreateEntry, error) {
 			break
 		}
 
-		zc = network.CreateEntry{
+		zc = network.ServiceConfig{
 			Name:   network.Name(strings.ToLower("_" + global.Brandname + "-" + me.Entry.Name)),
 			Type:   network.Type(fmt.Sprintf("_%s._tcp", me.Entry.MdnsType)),
 			Domain: network.DefaultDomain,

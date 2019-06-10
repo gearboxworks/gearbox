@@ -38,32 +38,33 @@ func initDaemon(task *tasks.Task, i ...interface{}) error {
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("register"), registerService, me)
+
+			err = me.channelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me, InterfaceTypeError)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("unregister"), unregisterService, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("start"), startHandler, me, InterfaceTypeError)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("scan"), loadConfigHandler, me)
-			if err != nil {
-				break
-			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("get"), getHandler, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me, states.InterfaceTypeStatus)
 			if err != nil {
 				break
 			}
 
-			err = me.channelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("register"), registerService, me, InterfaceTypeService)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("unregister"), unregisterService, me, InterfaceTypeError)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("start"), startHandler, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("get"), getHandler, me, messages.InterfaceTypeSubTopics)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("load"), loadConfigHandler, me, InterfaceTypeError)
 			if err != nil {
 				break
 			}
@@ -126,6 +127,8 @@ func monitorDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		for range only.Once {
+			_ = me.LoadFiles()
+
 			for _, u := range me.GetManagedEntities() {
 				var state states.Status
 

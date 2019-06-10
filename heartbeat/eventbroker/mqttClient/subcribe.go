@@ -1,14 +1,11 @@
 package mqttClient
 
 import (
-	"encoding/json"
-	"fmt"
-	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/channels"
+	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/only"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 
@@ -16,7 +13,7 @@ import (
 // Executed as a method.
 
 // Register a service by method defined by a *CreateTopic structure.
-func (me *MqttClient) Subscribe(ce CreateEntry) (*Service, error) {
+func (me *MqttClient) Subscribe(ce ServiceConfig) (*Service, error) {
 
 	var err error
 	var sc Service
@@ -113,53 +110,5 @@ func (me *MqttClient) SubscribeByChannel(caller messages.MessageAddress, s Topic
 	eblog.LogIfError(me.EntityId, err)
 
 	return sc, err
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Executed from a channel.
-
-// Non-exposed channel function that responds to a "register" channel request.
-func subscribeTopic(event *messages.Message, i channels.Argument) channels.Return {
-
-	var me *MqttClient
-	var sc *Service
-	var err error
-
-	for range only.Once {
-		me, err = InterfaceToTypeMqttClient(i)
-		if err != nil {
-			break
-		}
-
-		//fmt.Printf("Rx: %v\n", event)
-
-		var ce CreateEntry
-		err = json.Unmarshal(event.Text.ByteArray(), &ce)
-
-		sc, err = me.Subscribe(ce)
-		if err != nil {
-			break
-		}
-
-		eblog.Debug(me.EntityId, "subscribed by channel %s OK", sc.EntityId.String())
-	}
-
-	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
-
-	return sc
-}
-
-
-
-func foo2(client mqtt.Client, msg mqtt.Message) {
-	fmt.Printf("* [%s] %s\n", msg.Topic(), string(msg.Payload()))
-}
-
-
-func defaultCallback(client mqtt.Client, msg mqtt.Message) {
-
-	fmt.Printf("* [%s] %s\n", msg.Topic(), string(msg.Payload()))
 }
 

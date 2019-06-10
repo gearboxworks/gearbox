@@ -148,7 +148,7 @@ func (me *ZeroConf) StopServices() error {
 
 		for u, _ := range me.services {
 			if me.services[u].IsManaged {
-				_ = me.UnregisterByUuid(u)
+				_ = me.UnregisterByEntityId(u)
 				// Ignore error, will clean up when program exits.
 			}
 		}

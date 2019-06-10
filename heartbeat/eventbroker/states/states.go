@@ -136,6 +136,12 @@ type Status struct {
 	mutex    sync.RWMutex	// Mutex control for map.
 }
 
+const (
+	Package					= "states"
+	InterfaceTypeStatus		= "*" + Package + ".Status"
+	InterfaceTypeError		= "error"
+)
+
 
 type Action string
 func (me Action) String() string {

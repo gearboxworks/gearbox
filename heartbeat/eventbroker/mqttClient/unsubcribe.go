@@ -80,36 +80,3 @@ func (me *MqttClient) UnsubscribeByChannel(caller messages.MessageAddress, u mes
 	return err
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-// Executed from a channel.
-
-// Non-exposed channel function that responds to an "unsubscribe" channel request.
-func unsubscribeTopic(event *messages.Message, i channels.Argument) channels.Return {
-
-	var me *MqttClient
-	var err error
-
-	for range only.Once {
-		me, err = InterfaceToTypeMqttClient(i)
-		if err != nil {
-			break
-		}
-
-		//fmt.Printf("MESSAGE Rx:\n[%v]\n", event.Text.String())
-
-		// Use message element as the UUID.
-		err = me.UnsubscribeByUuid(event.Text.ToUuid())
-		if err != nil {
-			break
-		}
-
-		eblog.Debug(me.EntityId, "unsubscribed service by channel %s OK", event.Text.ToUuid())
-	}
-
-	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
-
-	return err
-}
-
