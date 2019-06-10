@@ -34,32 +34,36 @@ func initDaemon(task *tasks.Task, i ...interface{}) error {
 			_ = task.SetRetryLimit(defaultRetries)
 			_ = task.SetRetryDelay(DefaultRetryDelay)
 
-			me.ChannelHandler, err = me.Channels.StartClientHandler(me.EntityId)
+			me.channelHandler, err = me.Channels.StartClientHandler(me.EntityId)
 			if err != nil {
 				break
 			}
-			err = me.ChannelHandler.Subscribe(messages.SubTopic("register"), registerService, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("register"), registerService, me)
 			if err != nil {
 				break
 			}
-			err = me.ChannelHandler.Subscribe(messages.SubTopic("unregister"), unregisterService, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("unregister"), unregisterService, me)
 			if err != nil {
 				break
 			}
-			err = me.ChannelHandler.Subscribe(messages.SubTopic("scan"), loadConfigHandler, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("scan"), loadConfigHandler, me)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(messages.SubTopic("get"), getHandler, me)
 			if err != nil {
 				break
 			}
 
-			err = me.ChannelHandler.Subscribe(messages.SubTopic("get"), getHandler, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me)
 			if err != nil {
 				break
 			}
-			err = me.ChannelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me)
 			if err != nil {
 				break
 			}
-			err = me.ChannelHandler.Subscribe(messages.SubTopic("start"), startHandler, me)
+			err = me.channelHandler.Subscribe(messages.SubTopic("start"), startHandler, me)
 			if err != nil {
 				break
 			}
@@ -122,28 +126,29 @@ func monitorDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		for range only.Once {
-			for _, u := range me.GetManagedDaemonUuids() {
+			for _, u := range me.GetManagedEntities() {
 				var state states.Status
 
 				state, err = me.daemons[u].Status()	// Managed by Mutex
-				me.Channels.PublishCallerState(&u, &state)
-				s := state.GetCurrent()
-				switch {
-					case s == states.StateUnregistered:
+				if err != nil {
+					continue
+				}
+				switch state.Current {
+					case states.StateUnregistered:
 						err = me.daemons[u].instance.service.Install()	// Mutex not required
 						if err != nil {
 							continue
 						}
 
-					case s == states.StateUnknown:
+					case states.StateUnknown:
 						fallthrough
-					case s == states.StateStopped:
+					case states.StateStopped:
 						err = me.daemons[u].Start()	// Managed by Mutex
 						if err != nil {
 							continue
 						}
 
-					case s == states.StateStarted:
+					case states.StateStarted:
 				}
 				//if (state.Current == states.StateUnknown) || (state.Current == states.StateStopped) {
 				//	err = me.daemons[u].Start()
@@ -183,7 +188,7 @@ func stopDaemon(task *tasks.Task, i ...interface{}) error {
 			me.State.SetNewAction(states.ActionStop)
 			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
-			err = me.ChannelHandler.StopHandler()
+			err = me.channelHandler.StopHandler()
 			if err != nil {
 				break
 			}

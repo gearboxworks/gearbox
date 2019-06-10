@@ -5,7 +5,6 @@ import (
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/tasks"
-	"gearbox/only"
 	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"net/url"
@@ -28,10 +27,11 @@ type MqttClient struct {
 	EntityId        messages.MessageAddress
 	State           states.Status
 	Task            *tasks.Task
-	Server          *url.URL
 	Channels        *channels.Channels
-	channelHandler  *channels.Subscriber
+	Server          *url.URL
 
+	mutex           sync.RWMutex // Mutex control for map.
+	channelHandler  *channels.Subscriber
 	instance        clientInstance
 	restartAttempts int
 	waitTime        time.Duration
@@ -53,14 +53,15 @@ type clientInstance struct {
 //}
 
 type Service struct {
-	EntityId  messages.MessageAddress
-	State     states.Status
-	IsManaged bool
-	Entry     *CreateEntry
+	EntityId       messages.MessageAddress
+	State          states.Status
+	IsManaged      bool
+	Entry          *CreateEntry
 
-	mutex     sync.RWMutex	// Mutex control for this struct.
-	channels  *channels.Channels
-	instance  mqtt.Token
+	mutex          sync.RWMutex // Mutex control for this struct.
+	channels       *channels.Channels
+	channelHandler *channels.Subscriber
+	instance       mqtt.Token
 }
 type ServicesArray []mqtt.Client
 type ServicesMap map[messages.MessageAddress]*Service
@@ -79,82 +80,3 @@ func (me *Topic) String() (string) {
 	return string(*me)
 }
 
-
-// Ensure we don't duplicate services.
-func (me *Service) IsExisting(him CreateEntry) error {
-
-	var err error
-
-	switch {
-		case me.Entry.Topic == him.Topic:
-			err = me.EntityId.ProduceError("MqttClient service Topic:%s already exists", me.Entry.Topic)
-
-		case me.Entry.Name == him.Name:
-			err = me.EntityId.ProduceError("MqttClient service Name:%s already exists", me.Entry.Name)
-	}
-
-	return err
-}
-
-// Ensure we don't duplicate services.
-func (me *ServicesMap) IsExisting(him CreateEntry) error {
-
-	var err error
-
-	for _, ce := range *me {
-		err = ce.IsExisting(him)
-		if err != nil {
-			break
-		}
-	}
-
-	return err
-}
-
-
-func InterfaceToTypeMqttClient(i interface{}) (*MqttClient, error) {
-
-	var err error
-	var zc *MqttClient
-
-	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
-			break
-		}
-		zc = i.(*MqttClient)
-		// zc = (i[0]).(*ZeroConf)
-		// zc = i[0].(*ZeroConf)
-
-		err = zc.EnsureNotNil()
-		if err != nil {
-			break
-		}
-	}
-
-	return zc, err
-}
-
-
-func InterfaceToTypeService(i interface{}) (*Service, error) {
-
-	var err error
-	var s *Service
-
-	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
-			break
-		}
-		s = i.(*Service)
-		// zc = (i[0]).(*Service)
-		// zc = i[0].(*Service)
-
-		err = s.EnsureNotNil()
-		if err != nil {
-			break
-		}
-	}
-
-	return s, err
-}

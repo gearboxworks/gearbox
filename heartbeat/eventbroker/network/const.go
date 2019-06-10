@@ -1,17 +1,15 @@
 package network
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/tasks"
-	"gearbox/only"
 	oss "gearbox/os_support"
 	"github.com/grandcat/zeroconf"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -21,8 +19,9 @@ type ZeroConf struct {
 	State           states.Status
 	Task            *tasks.Task
 	Channels        *channels.Channels
-	channelHandler	*channels.Subscriber
 
+	mutex           sync.RWMutex // Mutex control for map.
+	channelHandler	*channels.Subscriber
 	restartAttempts int
 	waitTime        time.Duration
 	domain          string
@@ -33,13 +32,15 @@ type ZeroConf struct {
 type Args ZeroConf
 
 type Service struct {
-	EntityId  messages.MessageAddress
-	State     states.Status
-	IsManaged bool
-	Entry     Entry
+	EntityId       messages.MessageAddress
+	State          states.Status
+	IsManaged      bool
+	Entry          Entry
 
-	channels  *channels.Channels
-	instance  *zeroconf.Server
+	mutex          sync.RWMutex // Mutex control for map.
+	channels       *channels.Channels
+	channelHandler *channels.Subscriber
+	instance       *zeroconf.Server
 }
 type Entry zeroconf.ServiceEntry
 type ServicesMap map[messages.MessageAddress]*Service
@@ -131,168 +132,3 @@ func (me *Text) String() ([]string) {
 	return []string(*me)
 }
 
-
-// Ensure we don't duplicate services.
-func (me *Service) IsExisting(him CreateEntry) error {
-
-	var err error
-
-	// @TODO - Need to check to see if this service has already been registered.
-	//switch {
-	//	case strconv.Itoa(me.Entry.Port) == him.Port.String():
-	//		err = me.EntityId.ProduceError("service HostName:%s already exists", me.Entry.HostName)
-	//
-	//	case me.Entry.HostName == him:
-	//		err = me.EntityId.ProduceError("service Name:%s already exists", me.Entry.Name)
-	//}
-
-	return err
-}
-
-
-// Ensure we don't duplicate services.
-func (me *ServicesMap) IsExisting(him CreateEntry) error {
-
-	var err error
-
-	for _, ce := range *me {
-		err = ce.IsExisting(him)
-		if err != nil {
-			break
-		}
-	}
-
-	return err
-}
-
-
-func ConstructMdnsRegisterMessage(me messages.MessageAddress, to messages.MessageAddress, s CreateEntry) messages.Message {
-
-	var err error
-	var msgTemplate messages.Message
-	var j []byte
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		j, err = json.Marshal(s)
-		if err != nil {
-			break
-		}
-
-		msgTemplate = messages.Message{
-			Source: me,
-			Topic: messages.MessageTopic{
-				Address:  to,
-				SubTopic: states.ActionRegister,
-			},
-			Text: messages.MessageText(j),
-		}
-	}
-
-	return msgTemplate
-}
-
-
-func DeconstructMdnsRegisterMessage(event *messages.Message) (CreateEntry, error) {
-
-	var err error
-	var ce CreateEntry
-
-	for range only.Once {
-		//err = ce.EnsureNotNil()
-		if event == nil {
-			err = errors.New("message is nil")
-			break
-		}
-
-		err = json.Unmarshal(event.Text.ByteArray(), &ce)
-		if err != nil {
-			break
-		}
-	}
-
-	return ce, err
-}
-
-
-func ConstructMdnsUnregisterMessage(me messages.MessageAddress, to messages.MessageAddress, s CreateEntry) messages.Message {
-
-	var err error
-	var msgTemplate messages.Message
-	var j []byte
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		j, err = json.Marshal(s)
-		if err != nil {
-			break
-		}
-
-		msgTemplate = messages.Message{
-			Source: me,
-			Topic: messages.MessageTopic{
-				Address:  to,
-				SubTopic: states.ActionUnregister,
-			},
-			Text: messages.MessageText(j),
-		}
-	}
-
-	return msgTemplate
-}
-
-
-func InterfaceToTypeZeroConf(i interface{}) (*ZeroConf, error) {
-
-	var err error
-	var zc *ZeroConf
-
-	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
-			break
-		}
-		zc = i.(*ZeroConf)
-		// zc = (i[0]).(*ZeroConf)
-		// zc = i[0].(*ZeroConf)
-
-		err = zc.EnsureNotNil()
-		if err != nil {
-			break
-		}
-	}
-
-	return zc, err
-}
-
-
-func InterfaceToTypeService(i interface{}) (*Service, error) {
-
-	var err error
-	var s *Service
-
-	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
-			break
-		}
-		s = i.(*Service)
-		// zc = (i[0]).(*Service)
-		// zc = i[0].(*Service)
-
-		err = s.EnsureNotNil()
-		if err != nil {
-			break
-		}
-	}
-
-	return s, err
-}

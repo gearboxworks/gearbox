@@ -142,6 +142,7 @@ func EnsureUuidNotNil(me *Uuid) error {
 
 
 type MessageAddress string
+type MessageAddresses []MessageAddress
 func GenerateAddress() MessageAddress {
 
 	return MessageAddress(uuid.New().String())

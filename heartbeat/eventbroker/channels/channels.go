@@ -339,57 +339,11 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 }
 
 
-func (me *Channels) Listeners(topic messages.MessageTopic)  {
-	fmt.Printf("Listeners\n")
-
-	foo := me.instance.emitter.Listeners(topic.String())[0]
-
-	for f := range foo {
-		fmt.Printf("[%s] - '%s' '%s' '%s'\n", f.Topic, f.OriginalTopic, f.Args, f.Flags)
-	}
-
-	return
-}
-
-
-func (me *Channels) Topics() (topics messages.Topics) {
-	eblog.Debug(me.EntityId, "Topics")
-
-	for _, t := range me.instance.emitter.Topics() {
-		topics = append(topics, messages.StringToTopic(t))
-	}
-
-	return
-}
-
-
-func (me *Channels) GetId() messages.MessageAddress {
+func (me *Channels) GetEntityId() messages.MessageAddress {
 
 	if me == nil {
 		return messages.MessageAddress("")
 	}
 
 	return me.EntityId
-}
-
-
-func (me *Channels) GetSubscribers() *Subscribers {
-
-	empty := Subscribers{}
-
-	if me == nil {
-		return &empty
-	}
-
-	return &me.subscribers
-}
-
-
-func (me *Channels) ListSubscribers() {
-
-	if me == nil {
-		return
-	}
-
-	me.subscribers.List()
 }

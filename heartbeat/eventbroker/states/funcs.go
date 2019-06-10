@@ -3,6 +3,7 @@ package states
 import (
 	"errors"
 	"gearbox/only"
+	"reflect"
 )
 
 
@@ -16,6 +17,14 @@ func InterfaceToTypeStatus(i interface{}) (*Status, error) {
 			err = errors.New("status.Status is nil")
 			break
 		}
+
+		checkType := reflect.ValueOf(i)
+		if checkType.Type().String() != "*states.Status" {
+			err = errors.New("interface type not *status.Status")
+			// fmt.Printf("%v\n", f.GetError())
+			break
+		}
+
 		zc = i.(*Status)
 		// zc = (i[0]).(*ZeroConf)
 		// zc = i[0].(*ZeroConf)
@@ -35,6 +44,13 @@ func InterfaceToTypeError(i interface{}) (*error, error) {
 			err = errors.New("error is nil")
 			break
 		}
+
+		checkType := reflect.ValueOf(i)
+		if checkType.Type().String() != "*error" {
+			err = errors.New("interface type not *error")
+			break
+		}
+
 		zc = i.(*error)
 		// zc = (i[0]).(*ZeroConf)
 		// zc = i[0].(*ZeroConf)

@@ -5,6 +5,7 @@ package tasks
 //
 
 import (
+	"github.com/getlantern/errors"
 	"github.com/google/uuid"
 	"time"
 )
@@ -55,12 +56,18 @@ func goRoutine(fn func(exitFunc, *Task) error) (*Task, error) {
 		close(t.stopChan)
 		t.lock.Unlock()
 	}()
+
 	return t, err
 }
 
 
 // Stop tells the goroutine to stop.
 func (t *Task) stop() {
+
+	if t == nil {
+		return
+	}
+
 	// When task is stopped from a different go-routine other than the one
 	// that actually started it.
 	t.lock.Lock()
@@ -80,18 +87,30 @@ func (t *Task) StopChan() <-chan struct{} {
 // Running gets whether the goroutine is
 // running or not.
 func (t *Task) Running() bool {
+
+	if t == nil {
+		return false
+	}
+
 	t.lock.RLock()
 	running := t.running
 	t.lock.RUnlock()
+
 	return running
 }
 
 
 // Err gets the error returned by the goroutine.
 func (t *Task) Err() error {
+
+	if t == nil {
+		return errors.New("No task")
+	}
+
 	t.lock.RLock()
 	err := t.err
 	t.lock.RUnlock()
+
 	return err
 }
 

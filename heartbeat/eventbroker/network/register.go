@@ -156,8 +156,6 @@ func registerService(event *messages.Message, i channels.Argument) channels.Retu
 			break
 		}
 
-		//fmt.Printf("Rx: %v\n", event)
-
 		var ce CreateEntry
 		ce, err = DeconstructMdnsRegisterMessage(event)
 		//err = json.Unmarshal(event.Text.ByteArray(), &ce)

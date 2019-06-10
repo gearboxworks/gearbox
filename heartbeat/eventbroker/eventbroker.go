@@ -1,7 +1,6 @@
 package eventbroker
 
 import (
-	"errors"
 	"fmt"
 	"gearbox/box"
 	"gearbox/global"
@@ -15,7 +14,6 @@ import (
 	"gearbox/only"
 	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
-	"net/url"
 	"path/filepath"
 	"time"
 )
@@ -110,10 +108,10 @@ func (me *EventBroker) Start() error {
 		// Note: These will be started dynamically as clients are registered.
 
 		// 2. ZeroConf - start discovery and management of network services.
-		err = me.ZeroConf.StartHandler()
-		if err != nil {
-			break
-		}
+		//err = me.ZeroConf.StartHandler()
+		//if err != nil {
+		//	break
+		//}
 
 		// 3. Daemon - starts the daemon handler.
 		err = me.Daemon.StartHandler()
@@ -125,12 +123,10 @@ func (me *EventBroker) Start() error {
 		// This will be started via the daemons process.
 
 		// 5. MQTT client - start the inter-process communications.
-		err = me.MqttClient.StartHandler()
-		if err != nil {
-			break
-		}
-
-		me.TempLoop()
+		//err = me.MqttClient.StartHandler()
+		//if err != nil {
+		//	break
+		//}
 
 		eblog.Debug(me.EntityId, "event broker started OK")
 	}
@@ -161,65 +157,78 @@ func (me *EventBroker) TempLoop() error {
 		Source: me.EntityId,
 		Topic: messages.MessageTopic{
 			Address: "eventbroker-daemon",
-			SubTopic: "scan",
+			SubTopic: "status",
 		},
 		Text: "now",
 	}
 	time.Sleep(time.Second * 8)
 
+	err = me.Daemon.LoadFiles()
+	fmt.Printf("me.Daemon.LoadFiles(): %v\n", err)
+
 	//me.CreateEntity("BEEP")
-	me.Daemon.ChannelHandler.List()
+
+	me.Daemon.Foo()
+
+	time.Sleep(time.Hour * 8000)
 
 	err = me.Daemon.LoadFiles()
-	fmt.Printf("Error: %v\n", err)
+	fmt.Printf("me.Daemon.LoadFiles(): %v\n", err)
 
-	time.Sleep(time.Second * 800)
+	err = me.Daemon.LoadFiles()
+	fmt.Printf("me.Daemon.LoadFiles(): %v\n", err)
 
-	index := 0
-	for {
-		//fmt.Printf("PING\n")
+	//time.Sleep(time.Hour * 8000)
 
-		//fmt.Printf("Error1: %v\n", me.Daemon.State.Error)
-		me.Daemon.State.SetError(errors.New(fmt.Sprintf("Loop #%d (%s)", index, me.Daemon.Fluff)))
-		//fmt.Printf("Error2: %v\n", me.Daemon.State.Error)
+	go func() {
+		index := 0
+		for {
+			fmt.Printf("####################################################################\nPING\n")
+			//me.Daemon.ChannelHandler.List()
+			//me.Daemon.Channels.ListSubscribers()
 
-		fmt.Printf("\n\n%d gbevents before: %v\n", time.Now().Unix(), me.Daemon.State.GetError())
-		i, _ := me.Channels.PublishAndWaitForReturn(msg, 400)
-		//foo := reflect.ValueOf(i)
-		//fmt.Printf("ERROR: %v\t\tRESPONSE: %v\n", err, i)
-		//fmt.Printf("Reflect %s, %s\n", foo.Type(), foo.String())
-		f, err := states.InterfaceToTypeStatus(i)
-		if err == nil {
-			fmt.Printf("%d gbevents after: %v (%v)\n", time.Now().Unix(), f.GetError(), me.Daemon.Fluff)
-		} else {
-			fmt.Printf("%d gbevents after: is nil!\n", time.Now().Unix())
+			//fmt.Printf("Error1: %v\n", me.Daemon.State.Error)
+			//me.Daemon.State.SetError(errors.New(fmt.Sprintf("Loop #%d (%s)", index, me.Daemon.Fluff)))
+			//fmt.Printf("Error2: %v\n", me.Daemon.State.Error)
+
+			fmt.Printf("\n\n%d gbevents before: %v\n", time.Now().Unix(), me.Daemon.State.GetError())
+			i, _ := me.Channels.PublishAndWaitForReturn(msg, 400)
+			//foo := reflect.ValueOf(i)
+			//fmt.Printf("ERROR: %v\t\tRESPONSE: %v\n", err, i)
+			//fmt.Printf("Reflect %s, %s\n", foo.Type(), foo.String())
+			f, err := states.InterfaceToTypeStatus(i)
+			if err == nil {
+				fmt.Printf("%d gbevents after: %v\n", time.Now().Unix(), f.GetError())
+				// fmt.Printf("%d gbevents after: %v (%v)\n", time.Now().Unix(), f.GetError(), me.Daemon.Fluff)
+			} else {
+				fmt.Printf("%d gbevents after: is nil!\n", time.Now().Unix())
+			}
+
+			index++
+			//me.Daemon.State.Error = nil
+			time.Sleep(time.Second * 20)
 		}
+	}()
 
-		index++
-		//me.Daemon.State.Error = nil
-
-		time.Sleep(time.Second * 5)
-	}
-
-	time.Sleep(time.Second * 6)
-
-	//me.CreateEntity("HELO")
-	var u *url.URL
-	u, err = me.FindMqttBroker()
-	if err == nil {
-		err = me.MqttClient.ConnectToServer(u.String())
-	}
-	if err != nil {
-		eblog.Debug(me.EntityId, "Aaaaargh! => %v", err)
-	}
-
-	_ = me.MqttClient.GlobSubscribe(me.MqttClient.EntityId)
-
-	time.Sleep(time.Second * 200)
-
-	err = me.Stop()
-
-	fmt.Printf("Exiting...\n")
+	//time.Sleep(time.Second * 6)
+	//
+	////me.CreateEntity("HELO")
+	//var u *url.URL
+	//u, err = me.FindMqttBroker()
+	//if err == nil {
+	//	err = me.MqttClient.ConnectToServer(u.String())
+	//}
+	//if err != nil {
+	//	eblog.Debug(me.EntityId, "Aaaaargh! => %v", err)
+	//}
+	//
+	//_ = me.MqttClient.GlobSubscribe(me.MqttClient.EntityId)
+	//
+	//time.Sleep(time.Second * 200)
+	//
+	//err = me.Stop()
+	//
+	//fmt.Printf("Exiting...\n")
 
 	return err
 }

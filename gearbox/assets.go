@@ -6,6 +6,7 @@
 // admin/dist/css/projects.8e1f3ed8.css
 // admin/dist/css/projectstack.1dea8567.css
 // admin/dist/eventbroker/etc/daemons/mqttbroker.json
+// admin/dist/eventbroker/etc/daemons/mqttbroker.json2
 // admin/dist/eventbroker/etc/daemons/unfsd.json
 // admin/dist/eventbroker/logs/README.md
 // admin/dist/eventbroker/mqttbroker/bin/hmq
@@ -205,6 +206,24 @@ func adminDistCssProjectstack1dea8567Css() (*asset, error) {
 func adminDistEventbrokerEtcDaemonsMqttbrokerJson() (*asset, error) {
 	path := filepath.Join(rootDir, "admin/dist/eventbroker/etc/daemons/mqttbroker.json")
 	name := "admin/dist/eventbroker/etc/daemons/mqttbroker.json"
+	bytes, err := bindataRead(path, name)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		err = fmt.Errorf("Error reading asset info %s at %s: %v", name, path, err)
+	}
+
+	a := &asset{bytes: bytes, info: fi}
+	return a, err
+}
+
+// adminDistEventbrokerEtcDaemonsMqttbrokerJson2 reads file data from disk. It returns an error on failure.
+func adminDistEventbrokerEtcDaemonsMqttbrokerJson2() (*asset, error) {
+	path := filepath.Join(rootDir, "admin/dist/eventbroker/etc/daemons/mqttbroker.json2")
+	name := "admin/dist/eventbroker/etc/daemons/mqttbroker.json2"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
 		return nil, err
@@ -1699,6 +1718,7 @@ var _bindata = map[string]func() (*asset, error){
 	"admin/dist/css/projects.8e1f3ed8.css": adminDistCssProjects8e1f3ed8Css,
 	"admin/dist/css/projectstack.1dea8567.css": adminDistCssProjectstack1dea8567Css,
 	"admin/dist/eventbroker/etc/daemons/mqttbroker.json": adminDistEventbrokerEtcDaemonsMqttbrokerJson,
+	"admin/dist/eventbroker/etc/daemons/mqttbroker.json2": adminDistEventbrokerEtcDaemonsMqttbrokerJson2,
 	"admin/dist/eventbroker/etc/daemons/unfsd.json": adminDistEventbrokerEtcDaemonsUnfsdJson,
 	"admin/dist/eventbroker/logs/README.md": adminDistEventbrokerLogsReadmeMd,
 	"admin/dist/eventbroker/mqttbroker/bin/hmq": adminDistEventbrokerMqttbrokerBinHmq,
@@ -1833,6 +1853,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"etc": &bintree{nil, map[string]*bintree{
 					"daemons": &bintree{nil, map[string]*bintree{
 						"mqttbroker.json": &bintree{adminDistEventbrokerEtcDaemonsMqttbrokerJson, map[string]*bintree{}},
+						"mqttbroker.json2": &bintree{adminDistEventbrokerEtcDaemonsMqttbrokerJson2, map[string]*bintree{}},
 						"unfsd.json": &bintree{adminDistEventbrokerEtcDaemonsUnfsdJson, map[string]*bintree{}},
 					}},
 				}},

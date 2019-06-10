@@ -11,10 +11,10 @@ import (
 )
 
 
-func ReadJsonConfig(f string) (*CreateEntry, error) {
+func ReadJsonConfig(f string) (*ServiceConfig, error) {
 
 	var err error
-	var c CreateEntry
+	var c ServiceConfig
 	var fh *os.File
 
 	for range only.Once {
@@ -45,7 +45,7 @@ func ReadJsonConfig(f string) (*CreateEntry, error) {
 }
 
 
-func (me *Daemon) ParsePaths(sc CreateEntry, i string) string {
+func (me *Daemon) ParsePaths(sc ServiceConfig, i string) string {
 
 	strReplace := map[string]string {
 		"{{.GetLocalDir}}":			"/usr/local",
@@ -66,7 +66,7 @@ func (me *Daemon) ParsePaths(sc CreateEntry, i string) string {
 }
 
 
-func (me *Daemon) ParseNetwork(sc CreateEntry, i string) string {
+func (me *Daemon) ParseNetwork(sc ServiceConfig, i string) string {
 
 	strReplace := map[string]string {
 		"{{.GetPort}}":	sc.Port.String(),

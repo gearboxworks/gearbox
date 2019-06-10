@@ -3,7 +3,9 @@ package mqttClient
 import (
 	"errors"
 	"fmt"
+	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/only"
+	"reflect"
 )
 
 func (me *MqttClient) EnsureNotNil() error {
@@ -58,6 +60,101 @@ func (me *Service) EnsureNotNil() error {
 }
 func EnsureServiceNotNil(me *Service) error {
 	return me.EnsureNotNil()
+}
+
+
+// Ensure we don't duplicate services.
+func (me *Service) IsExisting(him CreateEntry) error {
+
+	var err error
+
+	switch {
+		case me.Entry.Topic == him.Topic:
+			err = me.EntityId.ProduceError("MqttClient service Topic:%s already exists", me.Entry.Topic)
+
+		case me.Entry.Name == him.Name:
+			err = me.EntityId.ProduceError("MqttClient service Name:%s already exists", me.Entry.Name)
+	}
+
+	return err
+}
+
+
+// Ensure we don't duplicate services.
+func (me *ServicesMap) IsExisting(him CreateEntry) error {
+
+	var err error
+
+	for _, ce := range *me {
+		err = ce.IsExisting(him)
+		if err != nil {
+			break
+		}
+	}
+
+	return err
+}
+
+
+func InterfaceToTypeMqttClient(i interface{}) (*MqttClient, error) {
+
+	var err error
+	var zc *MqttClient
+
+	for range only.Once {
+		err = channels.EnsureArgumentNotNil(i)
+		if err != nil {
+			break
+		}
+
+		checkType := reflect.ValueOf(i)
+		if checkType.Type().String() != "*mqttClient.MqttClient" {
+			err = errors.New("interface type not *mqttClient.MqttClient")
+			break
+		}
+
+		zc = i.(*MqttClient)
+		// zc = (i[0]).(*ZeroConf)
+		// zc = i[0].(*ZeroConf)
+
+		err = zc.EnsureNotNil()
+		if err != nil {
+			break
+		}
+	}
+
+	return zc, err
+}
+
+
+func InterfaceToTypeService(i interface{}) (*Service, error) {
+
+	var err error
+	var s *Service
+
+	for range only.Once {
+		err = channels.EnsureArgumentNotNil(i)
+		if err != nil {
+			break
+		}
+
+		checkType := reflect.ValueOf(i)
+		if checkType.Type().String() != "*mqttClient.Service" {
+			err = errors.New("interface type not *mqttClient.MqttClient")
+			break
+		}
+
+		s = i.(*Service)
+		// zc = (i[0]).(*Service)
+		// zc = i[0].(*Service)
+
+		err = s.EnsureNotNil()
+		if err != nil {
+			break
+		}
+	}
+
+	return s, err
 }
 
 

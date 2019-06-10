@@ -118,6 +118,10 @@ func EmptyTask(task *Task, i ...interface{}) error {
 // EG: Wait for the process to actually stop
 func (me *Task) Stop() error {
 
+	if me == nil {
+		return errors.New("non-existant task")
+	}
+
 	me.stop()
 	select {
 		case <-me.StopChan():
@@ -135,6 +139,10 @@ func (me *Task) Stop() error {
 // Mirrors tasks.StopChan() with extra enhancements.
 // This will wait indefinitely until a task has stopped.
 func (me *Task) WaitUntilStopped() bool {
+
+	if me == nil {
+		return false
+	}
 
 	wait := me.StopChan()
 	if wait != nil {

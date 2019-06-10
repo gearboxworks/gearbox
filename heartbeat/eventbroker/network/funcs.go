@@ -1,11 +1,16 @@
 package network
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
+	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/only"
 	"net"
+	"reflect"
 	"strings"
 )
 
@@ -79,6 +84,186 @@ func EnsureServicesNotNil(me *Service) error {
 //
 //	return err
 //}
+
+
+// Ensure we don't duplicate services.
+func (me *Service) IsExisting(him CreateEntry) error {
+
+	var err error
+
+	// @TODO - Need to check to see if this service has already been registered.
+	//switch {
+	//	case strconv.Itoa(me.Entry.Port) == him.Port.String():
+	//		err = me.EntityId.ProduceError("service HostName:%s already exists", me.Entry.HostName)
+	//
+	//	case me.Entry.HostName == him:
+	//		err = me.EntityId.ProduceError("service Name:%s already exists", me.Entry.Name)
+	//}
+
+	return err
+}
+
+
+// Ensure we don't duplicate services.
+func (me *ServicesMap) IsExisting(him CreateEntry) error {
+
+	var err error
+
+	for _, ce := range *me {
+		err = ce.IsExisting(him)
+		if err != nil {
+			break
+		}
+	}
+
+	return err
+}
+
+
+func ConstructMdnsRegisterMessage(me messages.MessageAddress, to messages.MessageAddress, s CreateEntry) messages.Message {
+
+	var err error
+	var msgTemplate messages.Message
+	var j []byte
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		j, err = json.Marshal(s)
+		if err != nil {
+			break
+		}
+
+		msgTemplate = messages.Message{
+			Source: me,
+			Topic: messages.MessageTopic{
+				Address:  to,
+				SubTopic: states.ActionRegister,
+			},
+			Text: messages.MessageText(j),
+		}
+	}
+
+	return msgTemplate
+}
+
+
+func DeconstructMdnsRegisterMessage(event *messages.Message) (CreateEntry, error) {
+
+	var err error
+	var ce CreateEntry
+
+	for range only.Once {
+		//err = ce.EnsureNotNil()
+		if event == nil {
+			err = errors.New("message is nil")
+			break
+		}
+
+		err = json.Unmarshal(event.Text.ByteArray(), &ce)
+		if err != nil {
+			break
+		}
+	}
+
+	return ce, err
+}
+
+
+func ConstructMdnsUnregisterMessage(me messages.MessageAddress, to messages.MessageAddress, s CreateEntry) messages.Message {
+
+	var err error
+	var msgTemplate messages.Message
+	var j []byte
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		j, err = json.Marshal(s)
+		if err != nil {
+			break
+		}
+
+		msgTemplate = messages.Message{
+			Source: me,
+			Topic: messages.MessageTopic{
+				Address:  to,
+				SubTopic: states.ActionUnregister,
+			},
+			Text: messages.MessageText(j),
+		}
+	}
+
+	return msgTemplate
+}
+
+
+func InterfaceToTypeZeroConf(i interface{}) (*ZeroConf, error) {
+
+	var err error
+	var zc *ZeroConf
+
+	for range only.Once {
+		err = channels.EnsureArgumentNotNil(i)
+		if err != nil {
+			break
+		}
+
+		checkType := reflect.ValueOf(i)
+		if checkType.Type().String() != "*network.ZeroConf" {
+			err = errors.New("interface type not *network.ZeroConf")
+			break
+		}
+
+		zc = i.(*ZeroConf)
+		// zc = (i[0]).(*ZeroConf)
+		// zc = i[0].(*ZeroConf)
+
+		err = zc.EnsureNotNil()
+		if err != nil {
+			break
+		}
+	}
+
+	return zc, err
+}
+
+
+func InterfaceToTypeService(i interface{}) (*Service, error) {
+
+	var err error
+	var s *Service
+
+	for range only.Once {
+		err = channels.EnsureArgumentNotNil(i)
+		if err != nil {
+			break
+		}
+
+		checkType := reflect.ValueOf(i)
+		if checkType.Type().String() != "*network.Service" {
+			err = errors.New("interface type not *network.Service")
+			break
+		}
+
+		s = i.(*Service)
+		// zc = (i[0]).(*Service)
+		// zc = i[0].(*Service)
+
+		err = s.EnsureNotNil()
+		if err != nil {
+			break
+		}
+	}
+
+	return s, err
+}
 
 
 func (me *ServicesMap) Print() error {

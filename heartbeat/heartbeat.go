@@ -203,6 +203,12 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 
 		_ = me.EventBroker.TempLoop()
 
+		fmt.Printf("Breaking out.\n")
+		//time.Sleep(time.Second * 2)
+		//_ = me.EventBroker.Stop()
+
+		time.Sleep(time.Hour * 60)
+
 		//// Create a new VM Box instance.
 		//fmt.Printf("Gearbox: Creating unfsd instance.\n")
 		//me.NfsInstance, sts = unfsd.NewUnfsd(me.OsSupport)

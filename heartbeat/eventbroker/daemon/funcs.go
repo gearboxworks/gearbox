@@ -7,10 +7,13 @@ import (
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/network"
+	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/only"
 	"github.com/kardianos/service"
+	"net/url"
 	"os"
 	"os/signal"
+	"reflect"
 	"strings"
 	"syscall"
 	"time"
@@ -166,8 +169,15 @@ func InterfaceToTypeDaemon(i interface{}) (*Daemon, error) {
 	for range only.Once {
 		err = channels.EnsureArgumentNotNil(i)
 		if err != nil {
-			//break
+			break
 		}
+
+		checkType := reflect.ValueOf(i)
+		if checkType.Type().String() != "*daemon.Daemon" {
+			err = errors.New("interface type not *daemon.Daemon")
+			break
+		}
+
 		me = i.(*Daemon)
 
 		err = me.EnsureNotNil()
@@ -180,7 +190,38 @@ func InterfaceToTypeDaemon(i interface{}) (*Daemon, error) {
 }
 
 
-func (me *CreateEntry) Print() error {
+func InterfaceToTypeService(i interface{}) (*Service, error) {
+
+	var err error
+	var s *Service
+
+	for range only.Once {
+		err = channels.EnsureArgumentNotNil(i)
+		if err != nil {
+			break
+		}
+
+		checkType := reflect.ValueOf(i)
+		if checkType.Type().String() != "*daemon.Service" {
+			err = errors.New("interface type not *daemon.Service")
+			break
+		}
+
+		s = i.(*Service)
+		// zc = (i[0]).(*Service)
+		// zc = i[0].(*Service)
+
+		err = s.EnsureNotNil()
+		if err != nil {
+			break
+		}
+	}
+
+	return s, err
+}
+
+
+func (me *ServiceConfig) Print() error {
 
 	var err error
 
@@ -224,31 +265,6 @@ func (me *CreateEntry) Print() error {
 	}
 
 	return err
-}
-
-
-func InterfaceToTypeService(i interface{}) (*Service, error) {
-
-	var err error
-	var s *Service
-
-	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
-			break
-		}
-
-		s = i.(*Service)
-		// zc = (i[0]).(*Service)
-		// zc = i[0].(*Service)
-
-		err = s.EnsureNotNil()
-		if err != nil {
-			break
-		}
-	}
-
-	return s, err
 }
 
 
@@ -301,7 +317,7 @@ func (me *Service) Print() error {
 }
 
 
-func (me *CreateEntry) IsTheSame(e CreateEntry) (bool, error) {
+func (me *ServiceConfig) IsTheSame(e ServiceConfig) (bool, error) {
 
 	var same bool
 	var err error
@@ -331,6 +347,105 @@ func (me *programInstance) Start(s service.Service) error {
 
 func (me *programInstance) Stop(s service.Service) error {
 	panic("implement me")
+}
+
+func (me *ServiceConfig) ToServiceType() *service.Config {
+
+	return &me.Config
+}
+
+// Ensure we don't duplicate services.
+func (me *Service) IsExisting(him ServiceConfig) error {
+
+	var err error
+
+	switch {
+	case me.Entry.Config.Name == him.Config.Name:
+		err = me.EntityId.ProduceError("Daemon service Name:%s already exists", me.Entry.Config.Name)
+
+	case me.Entry.Config.DisplayName == him.Config.DisplayName:
+		err = me.EntityId.ProduceError("Daemon service DisplayName:%s already exists", me.Entry.DisplayName)
+
+	case me.Entry.Config.Executable == him.Config.Executable:
+		err = me.EntityId.ProduceError("Daemon service Executable:%s already exists", me.Entry.Config.Executable)
+
+	case me.Entry.Url == him.Url:
+		err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.Url)
+
+	case (me.Entry.Host == him.Host) && (me.Entry.Port == him.Port):
+		err = me.EntityId.ProduceError("Daemon service Host:%s:%s already exists", me.Entry.Host.String(), me.Entry.Port.String())
+	}
+
+	return err
+}
+
+
+func (me *Daemon) HasFileChanged(fn string) (exists bool, changed bool) {
+
+	for range only.Once {
+		jc := me.GetServiceFiles()
+		if _, ok := jc[fn]; !ok {
+			break
+		}
+
+		info, err := os.Stat(fn)
+		if err != nil {
+			break
+		}
+
+		exists = true
+		if jc[fn] != info.ModTime() {
+			changed = true
+		}
+	}
+
+	return exists, changed
+}
+
+
+// Ensure we don't duplicate services.
+func (me *Service) IsRegistered() bool {
+
+	var ret bool
+
+	state, _ := me.Status()
+	switch state.Current {
+	case states.StateIdle:
+		fallthrough
+	case states.StateUnknown:
+		fallthrough
+	case states.StateError:
+		fallthrough
+	case states.StateInitializing:
+		fallthrough
+	case states.StateInitialized:
+		fallthrough
+	case states.StateUnregistered:
+		ret = false
+
+	default:
+		ret = true
+	}
+
+	return ret
+}
+
+
+//execCwd, _ := os.Getwd()
+//if execCwd == "/" {
+//execCwd = string(OsSupport.GetAdminRootDir())
+//}
+//_args.ServiceData.Path = execCwd
+
+func (j *ServiceUrl) UnmarshalJSON(b []byte) error {
+	// Strip off the surrounding quotes and add a domain, one reason you might want a custom type
+
+	u, err := url.Parse(fmt.Sprintf("%s", b[1:len(b)-1]))
+	if err == nil {
+		j.URL = u
+	}
+
+	return err
 }
 
 

@@ -147,14 +147,12 @@ func (me *Daemon) StopServices() error {
 			break
 		}
 
-		for u, _ := range me.daemons {		// Ignore Mutex
-			if me.GetIsManaged(u) {
-				err = me.daemons[u].Stop()		// Ignore Mutex
-				if err == nil {
-					me.DeleteDaemon(u)
-				}
-				// Ignore error, will clean up when program exits.
+		for _, u := range me.GetManagedEntities() {		// Ignore Mutex
+			err = me.daemons[u].Stop()					// Ignore Mutex
+			if err == nil {
+				me.DeleteEntity(u)
 			}
+			// Ignore error, will clean up when program exits.
 		}
 	}
 
@@ -185,10 +183,10 @@ func (me *Daemon) PrintServices() error {
 
 
 // Print all services registered under daemon that I manage.
-func (me *Daemon) ListStarted() ([]messages.MessageAddress, error) {
+func (me *Daemon) ListStarted() (messages.MessageAddresses, error) {
 
 	var err error
-	var sc []messages.MessageAddress
+	var sc messages.MessageAddresses
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -196,7 +194,7 @@ func (me *Daemon) ListStarted() ([]messages.MessageAddress, error) {
 			break
 		}
 
-		for _, u := range me.GetManagedDaemonUuids() {
+		for _, u := range me.GetManagedEntities() {
 			fmt.Printf("# Entry: %s\n", u)
 			sc = append(sc, u)
 		}
@@ -236,7 +234,11 @@ func (me *Daemon) LoadFiles() error {
 					var sc *Service
 					fmt.Printf("Loading file: %s\n", file)
 					sc, err = me.RegisterByFile(file)
-					if (err != nil) || (sc == nil) {
+					if sc == nil {
+						fmt.Printf("Loading file: %s - already loaded\n", file)
+						continue
+					}
+					if err != nil {
 						fmt.Printf("Loading file: %s - FAILED: %v\n", file, err)
 						continue
 					}
@@ -273,6 +275,7 @@ func (me *Daemon) TestMe() error {
 		if err != nil {
 			fmt.Printf("Woops!\n")
 		}
+
 		//
 		//err = s.instance.service.Start()
 		//if err != nil {

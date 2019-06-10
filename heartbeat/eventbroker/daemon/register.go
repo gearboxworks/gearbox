@@ -11,6 +11,7 @@ import (
 	"gearbox/only"
 	"github.com/kardianos/service"
 	"net/url"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -21,7 +22,7 @@ import (
 // Executed as a method.
 
 // Register a service by method defined by a *CreateEntry structure.
-func (me *Daemon) Register(c CreateEntry) (*Service, error) {
+func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 
 	var err error
 	var sc Service
@@ -32,8 +33,20 @@ func (me *Daemon) Register(c CreateEntry) (*Service, error) {
 			break
 		}
 
-		err = me.IsExisting(c)
+		var check *Service
+		check, err = me.IsExisting(c)
 		if err != nil {
+			if check == nil {
+				break
+			}
+
+			// It's not an error, but rather we've already got a service registered.
+			err = nil
+
+			if check.IsRegistered() {
+				break
+			}
+
 			fmt.Printf("PIP! %v\n", time.Now().Unix())
 			break
 		}
@@ -90,7 +103,7 @@ func (me *Daemon) Register(c CreateEntry) (*Service, error) {
 			//}
 
 			// Make sure it's not already present.
-			sc.State, err = sc.Status()
+			_, err = sc.Status()
 
 			//me.Channels.PublishCallerState(&u, &state)
 			//s := sc.State.GetCurrent()
@@ -117,7 +130,7 @@ func (me *Daemon) Register(c CreateEntry) (*Service, error) {
 				break
 			}
 
-			sc.State, err = sc.Status()
+			_, err = sc.Status()
 			if err != nil {
 				break
 			}
@@ -141,7 +154,7 @@ func (me *Daemon) Register(c CreateEntry) (*Service, error) {
 
 // Register a service via a channel defined by a *CreateEntry structure and
 // returns a *Service structure if successful.
-func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s CreateEntry) (*network.Service, error) {
+func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s ServiceConfig) (*network.Service, error) {
 
 	var err error
 	var j []byte
@@ -189,12 +202,17 @@ func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s CreateEntr
 func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 
 	var err error
-	var sc *CreateEntry
+	var sc *ServiceConfig
 	var s *Service
 
 	for range only.Once {
 		err = me.EnsureNotNil()
 		if err != nil {
+			break
+		}
+
+		exists, changed := me.HasFileChanged(f)
+		if exists && !changed {
 			break
 		}
 
@@ -208,7 +226,12 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 			break
 		}
 
-		s.JsonFile = f
+		info, err := os.Stat(f)
+		if err != nil {
+			break
+		}
+		s.JsonFile.Name = f
+		s.JsonFile.LastModTime = info.ModTime()
 
 		eblog.Debug(me.EntityId, "registered service by file %s OK", f)
 	}
@@ -221,10 +244,10 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 
 
 // Create a service by method defined by a *CreateEntry structure.
-func (me *Daemon) createEntry(c CreateEntry) (*CreateEntry, error) {
+func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 
 	var err error
-	var sc *CreateEntry
+	var sc *ServiceConfig
 	var u *url.URL
 
 	for range only.Once {
@@ -370,7 +393,7 @@ func registerService(event *messages.Message, i channels.Argument) channels.Retu
 
 		//fmt.Printf("Rx: %v\n", event)
 
-		ce := CreateEntry{}
+		ce := ServiceConfig{}
 		err = json.Unmarshal(event.Text.ByteArray(), &ce)
 		if err != nil {
 			break

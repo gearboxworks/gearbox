@@ -34,8 +34,10 @@ func (me *Daemon) UnregisterByUuid(u messages.MessageAddress) error {
 			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 
 			state, err = me.daemons[u].Status()	// Mutex not required
-			s := state.GetCurrent()
-			switch s {
+			if err != nil {
+				continue
+			}
+			switch state.Current {
 				case states.StateUnknown:
 					//
 
@@ -54,7 +56,7 @@ func (me *Daemon) UnregisterByUuid(u messages.MessageAddress) error {
 				break
 			}
 
-			me.DeleteDaemon(u)
+			me.DeleteEntity(u)
 
 			me.State.SetNewState(states.StateUnregistered, err)
 			eblog.Debug(me.EntityId, "unregistered service %s OK", u.String())

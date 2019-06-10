@@ -127,6 +127,7 @@ func (me *MessageTopic) String() string {
 
 ////////////////////////////////////////////////////////////////////////////////
 type SubTopic string
+type SubTopics []SubTopic
 func (me *SubTopic) EnsureNotNil() error {
 
 	var err error

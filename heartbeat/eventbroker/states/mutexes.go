@@ -67,7 +67,7 @@ func (me *Status) SetNewAction(a Action) bool {
 }
 
 
-func (me *Status) GetFullState() *Status {
+func (me *Status) GetStatus() *Status {
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()

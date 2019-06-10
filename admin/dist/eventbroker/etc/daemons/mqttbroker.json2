@@ -10,6 +10,7 @@
 	"Arguments": [
 		"--host", "{{.GetHost}}",
 		"--port", "{{.GetPort}}",
+		"--config", "{{.GetUserHomeDir}}/.gearbox/admin/dist/eventbroker/mqttbroker/etc/mqttbroker.cfg",
 		"-d"
 	],
 	"Env": [
