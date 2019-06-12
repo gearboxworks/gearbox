@@ -3,18 +3,15 @@ package daemon
 import (
 	"encoding/json"
 	"fmt"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/network"
+	"gearbox/heartbeat/eventbroker/only"
+	"gearbox/heartbeat/eventbroker/ospaths"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
 	"github.com/kardianos/service"
-	"net/url"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -56,14 +53,17 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 		for range only.Once {
 			sc.State.SetNewAction(states.ActionRegister)
 			sc.EntityId = messages.GenerateAddress()
+			sc.State.EntityId = &sc.EntityId
 			sc.IsManaged = true
 			sc.channels = me.Channels
-			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+			sc.channels.PublishCallerState(&sc.State)
 
 			sc.Entry, err = me.createEntry(c)
 			if err != nil {
 				break
 			}
+
+			sc.MdnsEntry, err = sc.CreateMdnsEntry()
 
 			sc.instance.Config = sc.Entry.ToServiceType()
 
@@ -81,44 +81,16 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 				break
 			}
 
-			//state, err = sc.Status()
-			//switch {
-			//	case state.Current == states.StateUnknown:
-			//		// Drop through.
-			//
-			//	case state.Current == states.StateStarted:
-			//		err = sc.instance.service.Stop()
-			//		if err != nil {
-			//			break
-			//		}
-			//		err = sc.instance.service.Uninstall()
-			//		if err != nil {
-			//			break
-			//		}
-			//
-			//	case state.Current == states.StateStopped:
-			//		err = sc.instance.service.Uninstall()
-			//		if err != nil {
-			//			break
-			//		}
-			//}
-
 			// Make sure it's not already present.
-			_, err = sc.Status()
-
-			//me.Channels.PublishCallerState(&u, &state)
-			//s := sc.State.GetCurrent()
-
-			// Already started. Stop it.
-			if sc.State.Current == states.StateStarted {
+			var state states.State
+			state, err = sc.decodeServiceState()
+			// Already registered or started. Stop it.
+			if state == states.StateStopped {
 				err = sc.instance.service.Uninstall()
 				if err != nil {
 					break
 				}
-			}
-
-			// Already registered. Remove it.
-			if sc.State.Current == states.StateStopped {
+			} else if state == states.StateStarted {
 				err = sc.instance.service.Uninstall()
 				if err != nil {
 					break
@@ -131,22 +103,23 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 				break
 			}
 
-			_, err = sc.Status()
+			_, err = sc.decodeServiceState()
 			if err != nil {
 				break
 			}
 
-			me.mutex.Lock()
-			me.daemons[sc.EntityId] = &sc	// Managed by Mutex
-			me.mutex.Unlock()
+			err = me.AddEntity(sc.EntityId, &sc)
+			if err != nil {
+				break
+			}
 
-			eblog.Debug(me.EntityId, "registered service %s OK", sc.Entry.Url)
+			sc.State.SetNewState(states.StateRegistered, err)
+			sc.channels.PublishCallerState(&sc.State)
+			eblog.Debug(me.EntityId, "registered service %s OK", sc.Entry.UrlPtr.String())
 		}
-
-		sc.State.SetNewState(states.StateRegistered, err)
-		me.Channels.PublishCallerState(&sc.EntityId, &sc.State)
 	}
 
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -193,6 +166,7 @@ func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s ServiceCon
 		eblog.Debug(me.EntityId, "registered service by channel %s OK", sc.EntityId.String())
 	}
 
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -206,6 +180,7 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 	var err error
 	var sc *ServiceConfig
 	var s *Service
+	var ok bool
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -213,10 +188,18 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 			break
 		}
 
-		exists, changed := me.HasFileChanged(f)
-		if exists && !changed {
-			break
+		ok = me.IsFileRegistered(f)
+		if ok {
+			ok, err = me.HasFileChanged(f)
+			if !ok {
+				break
+			}
 		}
+
+		//err = me.RemoveFileIfExist(f)
+		//if err != nil {
+		//	break
+		//}
 
 		sc, err = ReadJsonConfig(f)
 		if err != nil {
@@ -245,7 +228,7 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 }
 
 
-func (me *Daemon) LoadFiles() error {
+func (me *Daemon) LoadServiceFiles() error {
 
 	var err error
 
@@ -255,39 +238,29 @@ func (me *Daemon) LoadFiles() error {
 			break
 		}
 
-		for range only.Once {
-			checkIn := string(me.osSupport.GetAdminRootDir() + "/" + DefaultJsonFiles)
-			fmt.Printf("%d Loading files... from %s\n", time.Now().Unix(), checkIn)
+		var files []string
+		files, err = me.FindServiceFiles()
+		if err != nil {
+			break
+		}
 
-			var files []string
-			err = filepath.Walk(checkIn, func(path string, info os.FileInfo, err error) error {
-				files = append(files, path)
-				return nil
-			})
-			if err != nil {
-				break
+		for _, file := range files {
+			var sc *Service
+			sc, err = me.RegisterByFile(file)
+			if sc == nil {
+				//eblog.Debug(me.EntityId, "Unloaded service file %s", file)
+				continue
 			}
+			if err != nil {
+				eblog.Debug(me.EntityId, "Loading service file %s failed with '%v'\n", file, err)
+				continue
+			}
+			eblog.Debug(me.EntityId, "Loaded service file %s", file)
 
-			for _, file := range files {
-				if strings.HasSuffix(file, ".json") {
-					var sc *Service
-					fmt.Printf("Loading file: %s\n", file)
-					sc, err = me.RegisterByFile(file)
-					if sc == nil {
-						fmt.Printf("Loading file: %s - already loaded\n", file)
-						continue
-					}
-					if err != nil {
-						fmt.Printf("Loading file: %s - FAILED: %v\n", file, err)
-						continue
-					}
-
-					fmt.Printf("Starting service: %s\n", file)
-					err = sc.Start()
-					if err != nil {
-						fmt.Printf("Loading file: %s - FAILED\n", file)
-					}
-				}
+			fmt.Printf("Starting service: %s\n", file)
+			err = sc.Start()
+			if err != nil {
+				fmt.Printf("Loading file: %s - FAILED\n", file)
 			}
 		}
 	}
@@ -301,7 +274,6 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 
 	var err error
 	var sc *ServiceConfig
-	var u *url.URL
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -311,116 +283,93 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 
 		sc = &c
 
-		switch {
-			case sc.MdnsType == "":
-				err = me.EntityId.ProduceError("service MdnsType not defined")
-				break
 
-			case sc.Name == "":
-				err = me.EntityId.ProduceError("service Name not defined")
-				break
-
-			case sc.DisplayName == "":
-				err = me.EntityId.ProduceError("service DisplayName not defined")
-				break
-
-			case sc.Description == "":
-				err = me.EntityId.ProduceError("service Description not defined")
-				break
-
-			case sc.Executable == "":
-				err = me.EntityId.ProduceError("service Executable not defined")
-				break
-		}
-
-		// u, err = url.Parse(fmt.Sprintf("tcp://%s:%d", mqttService.Entry.HostName, mqttService.Entry.Port))
-		u, err = url.Parse(sc.Url)
-		if err != nil {
+		// Basic sanity checks.
+		if sc.MdnsType == "" {
+			err = me.EntityId.ProduceError("service MdnsType not defined")
 			break
 		}
 
-		if u.Port() == "0" {
-			var p network.Port
-			p, err = network.GetFreePort()
-			if err != nil {
-				break
-			}
-			u.Host = u.Host + ":" + p.String()
+		if sc.Config.Name == "" {
+			err = me.EntityId.ProduceError("service Name not defined")
+			break
 		}
-		sc.Url = u.String()
-		sc.Host = network.Host(u.Hostname())
-		sc.Port = network.StringToPort(u.Port())
 
-		//if sc.UserName == "" {
-		//	sc.UserName = ""
-		//}
-		//
+		if sc.Config.DisplayName == "" {
+			err = me.EntityId.ProduceError("service DisplayName not defined")
+			break
+		}
+
+		if sc.Config.Description == "" {
+			err = me.EntityId.ProduceError("service Description not defined")
+			break
+		}
+
+		if sc.Config.Executable == "" {
+			err = me.EntityId.ProduceError("service Executable not defined")
+			break
+		}
+
+
+		sc.autoHost = "0.0.0.0"
+		sc.autoPort = "0"
+		// Check URL.
+		//sc.Url = me.ParsePaths(*sc, sc.Url)
+		sc.UrlPtr, err = network.ParseUrl(sc.Url)
+		sc.Url = sc.UrlPtr.String()
+		sc.autoHost = sc.UrlPtr.Hostname()
+		sc.autoPort = sc.UrlPtr.Port()
+
+		//sc.Host = sc.Url.Hostname()
+		//sc.Port = sc.Url.Port()
+
 		//if len(sc.Dependencies) == 0 {
 		//	sc.Dependencies = []string{}
 		//}
 
-		sc.ChRoot = me.ParsePaths(*sc, sc.ChRoot)
-		err = me.CreateDirPaths(sc.ChRoot)
-		if err != nil {
-			break
-		}
 
-		sc.Executable = me.ParsePaths(*sc, sc.Executable)
-		err = me.CreateDirPaths(sc.Executable)
-		if err != nil {
-			break
-		}
+		// Parse paths.
+		dirs := ospaths.NewPath()
+		sc.Config.ChRoot = me.ParsePaths(*sc, sc.Config.ChRoot)
+		dirs = dirs.AppendDir(sc.Config.ChRoot)
 
-		if sc.WorkingDirectory == "" {
-			sc.WorkingDirectory = filepath.FromSlash(fmt.Sprintf("%s/%s", me.osSupport.GetAdminRootDir(), defaultBaseDir))
+		sc.Config.Executable = me.ParsePaths(*sc, sc.Config.Executable)
+		dirs = dirs.AppendFile(sc.Config.Executable)
+
+		if sc.Config.WorkingDirectory == "" {
+			sc.Config.WorkingDirectory = me.OsPaths.EventBrokerWorkingDir.String()
 		} else {
-			sc.WorkingDirectory = me.ParsePaths(*sc, sc.WorkingDirectory)
+			sc.Config.WorkingDirectory = me.ParsePaths(*sc, sc.Config.WorkingDirectory)
 		}
-		err = me.CreateDirPaths(sc.WorkingDirectory)
-		if err != nil {
-			break
-		}
+		dirs = dirs.AppendDir(sc.Config.WorkingDirectory)
 
 		if sc.Stdout == "" {
-			sc.Stdout = filepath.FromSlash(fmt.Sprintf("%s/%s/%s.log",
-				me.osSupport.GetAdminRootDir(),
-				defaultLogBaseDir,
-				sc.Name))
+			sc.Stdout = me.OsPaths.EventBrokerLogDir.AddFileToPath("%s-error.log", sc.Name).String()
 		} else {
 			sc.Stdout = me.ParsePaths(*sc, sc.Stdout)
 		}
-		err = me.CreateDirPaths(sc.Stdout)
-		if err != nil {
-			break
-		}
+		dirs = dirs.AppendFile(sc.Stdout)
 
 		if sc.Stderr == "" {
-			sc.Stderr = filepath.FromSlash(fmt.Sprintf("%s/%s/%s-error.log",
-				me.osSupport.GetAdminRootDir(),
-				defaultLogBaseDir,
-				sc.Name))
+			sc.Stderr = me.OsPaths.EventBrokerLogDir.AddFileToPath("%s.log", sc.Name).String()
 		} else {
 			sc.Stderr = me.ParsePaths(*sc, sc.Stderr)
 		}
-		err = me.CreateDirPaths(sc.Stderr)
+		dirs = dirs.AppendFile(sc.Stderr)
+
+		err = dirs.CreateIfNotExists()
 		if err != nil {
 			break
 		}
 
+
+		// Parse envs and arguments.
 		for k, v := range sc.Env {
 			sc.Env[k] = me.ParsePaths(*sc, v)
-			err = me.CreateDirPaths(sc.Env[k])
-			if err != nil {
-				break
-			}
 		}
 
 		for k, v := range sc.Arguments {
 			sc.Arguments[k] = me.ParsePaths(*sc, v)
-			err = me.CreateDirPaths(sc.Arguments[k])
-			if err != nil {
-				break
-			}
 		}
 	}
 

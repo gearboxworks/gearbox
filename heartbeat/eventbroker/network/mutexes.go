@@ -2,6 +2,7 @@ package network
 
 import (
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
 )
 
@@ -38,13 +39,39 @@ func (me *ZeroConf) GetManagedEntities() messages.MessageAddresses {
 }
 
 
-func (me *ZeroConf) DeleteEntity(entity messages.MessageAddress) {
+func (me *ZeroConf) AddEntity(entity messages.MessageAddress, sc *Service) error {
+	var err error
 
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
-	delete(me.services, entity)	// Managed by Mutex
 
-	return
+	if _, ok := me.services[entity]; !ok { // Managed by Mutex
+		me.services[entity] = sc
+	} else {
+		err = me.EntityId.ProduceError("service %s already exists", entity)
+	}
+
+	return err
+}
+
+
+func (me *ZeroConf) DeleteEntity(entity messages.MessageAddress) error {
+
+	var err error
+
+	me.mutex.Lock()
+	defer me.mutex.Unlock()
+
+	for range only.Once {
+		if _, ok := me.services[entity]; !ok { // Managed by Mutex
+			err = me.EntityId.ProduceError("service doesn't exist")
+			break
+		}
+
+		delete(me.services, entity) // Managed by Mutex
+	}
+
+	return err
 }
 
 

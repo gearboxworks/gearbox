@@ -7,7 +7,7 @@ import (
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -38,7 +38,7 @@ func stopHandler(event *messages.Message, i channels.Argument, r channels.Return
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return &err
 }
 
 
@@ -65,7 +65,7 @@ func startHandler(event *messages.Message, i channels.Argument, r channels.Retur
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return &err
 }
 
 
@@ -162,7 +162,7 @@ func unsubscribeTopic(event *messages.Message, i channels.Argument, r channels.R
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return &err
 }
 
 

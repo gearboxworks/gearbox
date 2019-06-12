@@ -2,10 +2,9 @@ package network
 
 import (
 	"gearbox/heartbeat/eventbroker/eblog"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
 	"github.com/grandcat/zeroconf"
 )
 
@@ -31,55 +30,56 @@ func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 		}
 
 		// Create new service entry.
-		for range only.Once {
-			sc.State.SetNewAction(states.ActionRegister)
-			sc.EntityId = messages.GenerateAddress()
-			sc.IsManaged = true
-			sc.channels = me.Channels
-			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		sc.State.SetNewAction(states.ActionRegister)
+		sc.EntityId = messages.GenerateAddress()
+		sc.State.EntityId = &sc.EntityId
+		sc.IsManaged = true
+		sc.channels = me.Channels
+		sc.channels.PublishCallerState(&sc.State)
 
-			if s.Port == 0 {
-				s.Port, err = GetFreePort()
-				if err != nil {
-					break
-				}
-			}
+		err = s.Port.IfZeroFindFreePort()
+		if err != nil {
+			break
+		}
 
-			if len(s.Text) == 0 {
-				s.Text = []string{"txtv=0", "lo=1", "la=2"}
-			}
+		if len(s.Text) == 0 {
+			s.Text = []string{"txtv=0", "lo=1", "la=2"}
+		}
 
-			if s.Domain == "" {
-				s.Domain = DefaultDomain
-			}
+		if s.Domain == "" {
+			s.Domain = DefaultDomain
+		}
 
-			sc.instance, err = zeroconf.Register(
-				s.Name.String(),
-				s.Type.String(),
-				s.Domain.String(),
-				int(s.Port),
-				s.Text,
-				nil)
-			if err != nil {
-				err = me.EntityId.ProduceError("unable to register service")
-				break
-			}
+		sc.instance, err = zeroconf.Register(
+			s.Name.String(),
+			s.Type.String(),
+			s.Domain.String(),
+			s.Port.ToInt(),
+			s.Text,
+			nil)
+		if err != nil {
+			err = me.EntityId.ProduceError("unable to register service")
+			break
+		}
 
-			sc.Entry.Instance = s.Name.String()
-			sc.Entry.Service = s.Type.String()
-			sc.Entry.Domain = s.Domain.String()
-			sc.Entry.Port = int(s.Port)
-			sc.Entry.Text = s.Text
+		sc.Entry.Instance = s.Name.String()
+		sc.Entry.Service = s.Type.String()
+		sc.Entry.Domain = s.Domain.String()
+		sc.Entry.Port = s.Port.ToInt()
+		sc.Entry.Text = s.Text
+		sc.Entry.TTL = s.TTL
 
-			me.services[sc.EntityId] = &sc
-
-			eblog.Debug(me.EntityId, "registered service %s OK", sc.EntityId.String())
+		err = me.AddEntity(sc.EntityId, &sc)
+		if err != nil {
+			break
 		}
 
 		sc.State.SetNewState(states.StateRegistered, err)
-		sc.channels.PublishCallerState(&sc.EntityId, &sc.State)
+		sc.channels.PublishCallerState(&sc.State)
+		eblog.Debug(me.EntityId, "registered service %s OK", sc.EntityId.String())
 	}
 
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -99,11 +99,9 @@ func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s ServiceC
 			break
 		}
 
-		if s.Port == 0 {
-			s.Port, err = GetFreePort()
-			if err != nil {
-				break
-			}
+		err = s.Port.IfZeroFindFreePort()
+		if err != nil {
+			break
 		}
 
 		if len(s.Text) == 0 {
@@ -114,7 +112,7 @@ func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s ServiceC
 			s.Domain = DefaultDomain
 		}
 
-		reg := ConstructMdnsRegisterMessage(caller, me.EntityId, s)
+		reg := ConstructMdnsMessage(caller, me.EntityId, s, states.ActionRegister)
 		err = me.Channels.Publish(reg)
 		if err != nil {
 			break
@@ -133,6 +131,7 @@ func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s ServiceC
 		eblog.Debug(me.EntityId, "registered service by channel %s OK", sc.EntityId.String())
 	}
 
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

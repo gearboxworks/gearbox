@@ -3,7 +3,8 @@ package channels
 import (
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
+	"gearbox/heartbeat/eventbroker/states"
 )
 
 func (me *Channels) UnSubscribe(client messages.MessageTopic) error {
@@ -31,9 +32,13 @@ func (me *Channels) UnSubscribe(client messages.MessageTopic) error {
 			break
 		}
 
+		me.subscribers[client.Address].State.SetNewAction(states.ActionUnsubscribe)
+
 		me.subscribers[client.Address].DeleteTopic(client.SubTopic)	// Managed by Mutex
 
-		eblog.Debug(me.EntityId, "Unsubscribed: %s", messages.SprintfTopic(client.Address, client.SubTopic))
+		me.subscribers[client.Address].State.SetNewState(states.StateUnsubscribed, err)
+		me.PublishSpecificState(&client.Address, states.State(states.StateUnsubscribed))
+		eblog.Debug(me.EntityId, "channel unsubscriber: %s", messages.SprintfTopic(client.Address, client.SubTopic))
 	}
 
 	eblog.LogIfNil(me, err)
@@ -43,28 +48,31 @@ func (me *Channels) UnSubscribe(client messages.MessageTopic) error {
 }
 
 
-func (me *Subscriber) UnSubscribe(topic messages.SubTopic) error {
-
-	var err error
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		err = topic.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		me.DeleteTopic(topic)	// Managed by Mutex
-
-		eblog.Debug(me.EntityId, "Unsubscribed: %s", messages.SprintfTopic(me.EntityId, topic))
-	}
-
-	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
-
-	return err
-}
+//func (me *Subscriber) UnSubscribe(client messages.SubTopic) error {
+//
+//	var err error
+//
+//	for range only.Once {
+//		err = me.EnsureNotNil()
+//		if err != nil {
+//			break
+//		}
+//
+//		err = client.EnsureNotNil()
+//		if err != nil {
+//			break
+//		}
+//
+//		me.State.SetNewAction(states.ActionUnsubscribe)
+//
+//		me.DeleteTopic(client)	// Managed by Mutex
+//
+//		me.State.SetNewState(states.StateUnsubscribed, err)
+//		eblog.Debug(me.EntityId, "channel unsubscriber: %s", messages.SprintfTopic(client.Address, client.SubTopic))
+//	}
+//
+//	eblog.LogIfNil(me, err)
+//	eblog.LogIfError(me.EntityId, err)
+//
+//	return err
+//}

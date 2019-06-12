@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
 	"time"
 )
@@ -39,13 +40,39 @@ func (me *Daemon) GetManagedEntities() messages.MessageAddresses {
 }
 
 
-func (me *Daemon) DeleteEntity(entity messages.MessageAddress) {
+func (me *Daemon) AddEntity(entity messages.MessageAddress, sc *Service) error {
+	var err error
 
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
-	delete(me.daemons, entity)	// Managed by Mutex
 
-	return
+	if _, ok := me.daemons[entity]; !ok { // Managed by Mutex
+		me.daemons[entity] = sc
+	} else {
+		err = me.EntityId.ProduceError("service %s already exists", entity)
+	}
+
+	return err
+}
+
+
+func (me *Daemon) DeleteEntity(entity messages.MessageAddress) error {
+
+	var err error
+
+	me.mutex.Lock()
+	defer me.mutex.Unlock()
+
+	for range only.Once {
+		if _, ok := me.daemons[entity]; !ok { // Managed by Mutex
+			err = me.EntityId.ProduceError("service doesn't exist")
+			break
+		}
+
+		delete(me.daemons, entity) // Managed by Mutex
+	}
+
+	return err
 }
 
 

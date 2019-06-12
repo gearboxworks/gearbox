@@ -1,11 +1,10 @@
 package mqttClient
 
 import (
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 )
 
 
@@ -13,7 +12,7 @@ import (
 // Executed as a method.
 
 // Unsubscribe a service by method defined by a UUID reference.
-func (me *MqttClient) UnsubscribeByUuid(u messages.MessageAddress) error {
+func (me *MqttClient) UnsubscribeByUuid(client messages.MessageAddress) error {
 
 	var err error
 
@@ -23,30 +22,26 @@ func (me *MqttClient) UnsubscribeByUuid(u messages.MessageAddress) error {
 			break
 		}
 
-		if _, ok := me.services[u]; !ok {
-			err = me.EntityId.ProduceError("no service defined")
-			break
-		}
-
-		err = me.services[u].EnsureNotNil()
+		err = me.services[client].EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		for range only.Once {
-			me.services[u].State.SetNewAction(states.ActionUnsubscribe)
-			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.services[client].State.SetNewAction(states.ActionUnsubscribe)
+		me.services[client].channels.PublishCallerState(&me.State)
 
-			me.instance.client.Unsubscribe(me.services[u].Entry.Topic.String())
+		me.instance.client.Unsubscribe(me.services[client].Entry.Topic.String())
 
-			delete(me.services, u)
-
-			eblog.Debug(me.EntityId, "unregistered service %s OK", u.String())
+		err = me.DeleteEntity(client)
+		if err != nil {
+			break
 		}
 
-		me.Channels.PublishCallerState(&u, &states.Status{Current: states.StateUnsubscribed})
+		me.Channels.PublishSpecificState(&client, states.State(states.StateUnsubscribed))
+		eblog.Debug(me.EntityId, "unregistered service %s OK", client.String())
 	}
 
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

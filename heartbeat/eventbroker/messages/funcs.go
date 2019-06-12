@@ -2,7 +2,7 @@ package messages
 
 import (
 	"errors"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 	"reflect"
 )
 
@@ -13,12 +13,11 @@ func InterfaceToTypeSubTopics(i interface{}) (*SubTopics, error) {
 
 	for range only.Once {
 		if i == nil {
-			err = errors.New("status.Status is nil")
+			err = errors.New("interface is nil, should be" + InterfaceTypeSubTopics)
 			break
 		}
 
 		checkType := reflect.ValueOf(i)
-		//fmt.Printf("InterfaceToTypeSubTopics = %v\n", checkType.Type().String())
 		if checkType.Type().String() != InterfaceTypeSubTopics {
 			err = errors.New("interface type not " + InterfaceTypeSubTopics)
 			break

@@ -1,8 +1,10 @@
 package messages
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"gearbox/heartbeat/eventbroker/only"
 	"github.com/google/uuid"
 	"time"
 )
@@ -29,13 +31,23 @@ const (
 	InterfaceTypeMessage   = "*" + Package + ".Message"
 	InterfaceTypeSubTopic  = "*" + Package + ".SubTopic"
 	InterfaceTypeSubTopics = "*" + Package + ".SubTopics"
-	InterfaceTypeError     = "error"
 )
 
 
 func (me MessageText) ToMessageAddress() MessageAddress {
 
 	return MessageAddress(me.String())
+}
+
+
+func (me *Message) String() string {
+
+	return fmt.Sprintf(`Time:%d  Source:%s  Topic:%s  Text:%s`,
+		me.Time.Unix(),
+		me.Source.String(),
+		me.Topic.String(),
+		me.Text.String(),
+	)
 }
 
 
@@ -199,8 +211,75 @@ func (me *MessageText) String() string {
 
 	return string(*me)
 }
+
 func (me *MessageText) ByteArray() []byte {
 
 	return []byte(*me)
+}
+
+func (me *Message) Validate() error {
+
+	var err error
+
+	for range only.Once {
+		//err = me.Text.EnsureNotNil()
+		//if err != nil {
+		//	break
+		//}
+
+		err = me.Topic.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		err = me.Source.EnsureNotNil()
+		if err != nil {
+			break
+		}
+	}
+
+	return err
+}
+
+func (me *Message) ToMessageText() MessageText {
+
+	var err error
+	var j []byte
+
+	for range only.Once {
+		//err = me.EnsureNotNil()
+		//if err != nil {
+		//	break
+		//}
+
+		j, err = json.Marshal(me)
+		if err != nil {
+			break
+		}
+	}
+
+	return MessageText(j)
+}
+
+func (me *MessageText) ToMessage() (*Message, error) {
+
+	var err error
+	var ret Message
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		err = json.Unmarshal(me.ByteArray(), &ret)
+		if err != nil {
+			break
+		}
+
+		err = ret.Validate()
+	}
+
+	return &ret, err
 }
 

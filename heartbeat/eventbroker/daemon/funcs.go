@@ -3,12 +3,10 @@ package daemon
 import (
 	"errors"
 	"fmt"
-	"gearbox/global"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/network"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
 	"github.com/kardianos/service"
 	"net/url"
 	"os"
@@ -167,8 +165,8 @@ func InterfaceToTypeDaemon(i interface{}) (*Daemon, error) {
 	var me *Daemon
 
 	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
+		if i == nil {
+			err = errors.New("interface is nil, should be" + InterfaceTypeDaemon)
 			break
 		}
 
@@ -197,21 +195,18 @@ func InterfaceToTypeService(i interface{}) (*Service, error) {
 	var s *Service
 
 	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
+		if i == nil {
+			err = errors.New("interface is nil, should be" + InterfaceTypeService)
 			break
 		}
 
 		checkType := reflect.ValueOf(i)
-		//fmt.Printf("InterfaceToTypeService = %v\n", checkType.Type().String())
 		if checkType.Type().String() != InterfaceTypeService {
 			err = errors.New("interface type not " + InterfaceTypeService)
 			break
 		}
 
 		s = i.(*Service)
-		// zc = (i[0]).(*Service)
-		// zc = i[0].(*Service)
 
 		err = s.EnsureNotNil()
 		if err != nil {
@@ -361,6 +356,11 @@ func (me *Service) IsExisting(him ServiceConfig) error {
 
 	var err error
 
+	if (me.Entry.UrlPtr == nil) || (him.UrlPtr == nil) {
+		// return errors.New("nil pointer")
+		return err
+	}
+
 	switch {
 		case me.Entry.Config.Name == him.Config.Name:
 			err = me.EntityId.ProduceError("Daemon service Name:%s already exists", me.Entry.Config.Name)
@@ -371,18 +371,23 @@ func (me *Service) IsExisting(him ServiceConfig) error {
 		case me.Entry.Config.Executable == him.Config.Executable:
 			err = me.EntityId.ProduceError("Daemon service Executable:%s already exists", me.Entry.Config.Executable)
 
-		case me.Entry.Url == him.Url:
-			err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.Url)
+		case me.Entry.UrlPtr == him.UrlPtr:
+			err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.UrlPtr)
 
-		case (me.Entry.Host == him.Host) && (me.Entry.Port == him.Port):
-			err = me.EntityId.ProduceError("Daemon service Host:%s:%s already exists", me.Entry.Host.String(), me.Entry.Port.String())
+		case me.Entry.Url == him.Url:
+			err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.UrlPtr)
+
+		case (me.Entry.UrlPtr.Hostname() == him.UrlPtr.Hostname()) && (me.Entry.UrlPtr.Port() == him.UrlPtr.Port()):
+			err = me.EntityId.ProduceError("Daemon service Host:%s:%s already exists", me.Entry.UrlPtr.Hostname(), me.Entry.UrlPtr.Port())
 	}
 
 	return err
 }
 
 
-func (me *Daemon) HasFileChanged(fn string) (exists bool, changed bool) {
+func (me *Daemon) HasFileChanged(fn string) (changed bool, err error) {
+
+	var info os.FileInfo
 
 	for range only.Once {
 		jc := me.GetServiceFiles()
@@ -390,18 +395,60 @@ func (me *Daemon) HasFileChanged(fn string) (exists bool, changed bool) {
 			break
 		}
 
-		info, err := os.Stat(fn)
+		info, err = os.Stat(fn)
+		if err != nil {
+			break
+		}
+
+		if jc[fn] != info.ModTime() {
+			jc[fn] = info.ModTime()
+			changed = true
+		}
+	}
+
+	return changed, err
+}
+
+
+func (me *Daemon) IsFileRegistered(fn string) (ok bool) {
+
+	jc := me.GetServiceFiles()
+	_, ok = jc[fn]
+
+	return ok
+}
+
+
+func (me *Daemon) DoesFileExist(fn string) (exists bool, err error) {
+
+	for range only.Once {
+		_, err = os.Stat(fn)
 		if err != nil {
 			break
 		}
 
 		exists = true
-		if jc[fn] != info.ModTime() {
-			changed = true
+	}
+
+	return exists, err
+}
+
+
+func (me *Daemon) RemoveFileIfExist(fn string) (err error) {
+
+	for range only.Once {
+		_, err = os.Stat(fn)
+		if err != nil {
+			break
+		}
+
+		err := os.Remove(fn)
+		if err != nil {
+			break
 		}
 	}
 
-	return exists, changed
+	return err
 }
 
 
@@ -410,7 +457,7 @@ func (me *Service) IsRegistered() bool {
 
 	var ret bool
 
-	state, _ := me.Status()
+	state, _ := me.Status(DontPublishState)
 	switch state.Current {
 		case states.StateIdle:
 			fallthrough
@@ -464,11 +511,13 @@ func (me *Service) CreateMdnsEntry() (*network.ServiceConfig, error) {
 			break
 		}
 
+		foo := strings.ReplaceAll(me.Entry.Config.Name, ".", "_")
 		zc = network.ServiceConfig{
-			Name:   network.Name(strings.ToLower("_" + global.Brandname + "-" + me.Entry.Name)),
+			// Name:   network.Name(strings.ToLower("_" + global.Brandname + "-" + me.Entry.Config.Name)),
+			Name:   network.Name(strings.ToLower("_" + foo)),
 			Type:   network.Type(fmt.Sprintf("_%s._tcp", me.Entry.MdnsType)),
 			Domain: network.DefaultDomain,
-			Port:   me.Entry.Port,
+			Port:   network.Port(me.Entry.UrlPtr.Port()),
 		}
 	}
 

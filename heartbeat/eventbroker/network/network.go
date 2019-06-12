@@ -2,17 +2,16 @@ package network
 
 import (
 	"gearbox/box"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
+	"gearbox/heartbeat/eventbroker/entity"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/tasks"
-	"gearbox/only"
-	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
 )
 
 
-func (me *ZeroConf) New(OsSupport oss.OsSupporter, args ...Args) error {
+func (me *ZeroConf) New(args ...Args) error {
 
 	var _args Args
 	var err error
@@ -23,7 +22,6 @@ func (me *ZeroConf) New(OsSupport oss.OsSupporter, args ...Args) error {
 			_args = args[0]
 		}
 
-		_args.osSupport = OsSupport
 		foo := box.Args{}
 		err = copier.Copy(&foo, &_args)
 		if err != nil {
@@ -36,8 +34,19 @@ func (me *ZeroConf) New(OsSupport oss.OsSupporter, args ...Args) error {
 			break
 		}
 
+		if _args.OsPaths == nil {
+			err = me.EntityId.ProduceError("ospaths is nil")
+			break
+		}
+
+
 		if _args.EntityId == "" {
-			_args.EntityId = DefaultEntityId
+			_args.EntityId = entity.NetworkEntityName
+		}
+		_args.State.EntityId = &_args.EntityId
+
+		if _args.Boxname == "" {
+			_args.Boxname = entity.NetworkEntityName
 		}
 
 		if _args.domain == "" {
@@ -62,7 +71,7 @@ func (me *ZeroConf) New(OsSupport oss.OsSupporter, args ...Args) error {
 		eblog.Debug(me.EntityId, "init complete")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -82,7 +91,10 @@ func (me *ZeroConf) StartHandler() error {
 		}
 
 		me.State.SetNewAction(states.ActionStart)
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.Channels.PublishState(&me.EntityId, &me.State)
+
+		//fmt.Printf("Sleeping with the fishes....\n")
+		//break
 
 		for range only.Once {
 			me.Task, err = tasks.StartTask(initZeroConf, startZeroConf, monitorZeroConf, stopZeroConf, me)
@@ -92,10 +104,10 @@ func (me *ZeroConf) StartHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStarted, err)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 		eblog.Debug(me.EntityId, "started task handler")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -115,7 +127,7 @@ func (me *ZeroConf) StopHandler() error {
 		}
 
 		me.State.SetNewAction(states.ActionStop)
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 
 		for range only.Once {
 			_ = me.StopServices()
@@ -125,10 +137,10 @@ func (me *ZeroConf) StopHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStopped, err)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 		eblog.Debug(me.EntityId, "stopped task handler")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -154,7 +166,6 @@ func (me *ZeroConf) StopServices() error {
 		}
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

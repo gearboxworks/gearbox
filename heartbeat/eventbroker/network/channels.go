@@ -6,7 +6,7 @@ import (
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +36,7 @@ func stopHandler(event *messages.Message, i channels.Argument, r channels.Return
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return &err
 }
 
 
@@ -63,7 +63,7 @@ func startHandler(event *messages.Message, i channels.Argument, r channels.Retur
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return &err
 }
 
 
@@ -115,9 +115,10 @@ func registerService(event *messages.Message, i channels.Argument, r channels.Re
 		}
 
 		var ce ServiceConfig
-		ce, err = DeconstructMdnsRegisterMessage(event)
+		ce, err = DeconstructMdnsMessage(event)
 		//err = json.Unmarshal(event.Text.ByteArray(), &ce)
 		if err != nil {
+			err = me.EntityId.ProduceError("cannot deconstruct MDNS message with error '%v'", err)
 			break
 		}
 
@@ -148,8 +149,6 @@ func unregisterService(event *messages.Message, i channels.Argument, r channels.
 			break
 		}
 
-		//fmt.Printf("MESSAGE Rx:\n[%v]\n", event.Text.String())
-
 		// Use message element as the UUID.
 		err = me.UnregisterByEntityId(event.Text.ToMessageAddress())
 		if err != nil {
@@ -162,7 +161,7 @@ func unregisterService(event *messages.Message, i channels.Argument, r channels.
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return &err
 }
 
 
@@ -221,6 +220,6 @@ func scanServices(event *messages.Message, i channels.Argument, r channels.Retur
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return &err
 }
 

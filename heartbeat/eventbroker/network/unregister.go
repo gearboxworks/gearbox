@@ -2,10 +2,9 @@ package network
 
 import (
 	"gearbox/heartbeat/eventbroker/eblog"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
 )
 
 
@@ -13,7 +12,7 @@ import (
 // Executed as a method.
 
 // Unregister a service by method defined by a UUID reference.
-func (me *ZeroConf) UnregisterByEntityId(u messages.MessageAddress) error {
+func (me *ZeroConf) UnregisterByEntityId(client messages.MessageAddress) error {
 
 	var err error
 
@@ -23,29 +22,26 @@ func (me *ZeroConf) UnregisterByEntityId(u messages.MessageAddress) error {
 			break
 		}
 
-		if _, ok := me.services[u]; !ok {
-			err = me.EntityId.ProduceError("no service defined")
-			break
-		}
-
-		err = me.services[u].EnsureNotNil()
+		err = me.services[client].EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		for range only.Once {
-			me.services[u].State.SetNewAction(states.ActionUnregister)
-			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.services[client].State.SetNewAction(states.ActionUnregister)
+		me.services[client].channels.PublishCallerState(&me.State)
 
-			me.services[u].instance.Shutdown()
-			delete(me.services, u)
+		me.services[client].instance.Shutdown()
 
-			eblog.Debug(me.EntityId, "unregistered service %s OK", u.String())
+		err = me.DeleteEntity(client)
+		if err != nil {
+			break
 		}
 
-		me.Channels.PublishCallerState(&u, &states.Status{Current: states.StateUnregistered})
+		me.Channels.PublishSpecificState(&client, states.State(states.StateUnregistered))
+		eblog.Debug(me.EntityId, "unregistered service %s OK", client.String())
 	}
 
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -73,6 +69,7 @@ func (me *ZeroConf) UnregisterByChannel(caller messages.MessageAddress, u messag
 		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", u.String())
 	}
 
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

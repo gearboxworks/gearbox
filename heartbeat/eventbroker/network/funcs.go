@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
-	"net"
 	"reflect"
 	"strings"
 )
@@ -122,6 +120,18 @@ func (me *ServicesMap) IsExisting(him ServiceConfig) error {
 
 func ConstructMdnsRegisterMessage(me messages.MessageAddress, to messages.MessageAddress, s ServiceConfig) messages.Message {
 
+	return ConstructMdnsMessage(me, to, s, states.ActionRegister)
+}
+
+
+func ConstructMdnsUnregisterMessage(me messages.MessageAddress, to messages.MessageAddress, s ServiceConfig) messages.Message {
+
+	return ConstructMdnsMessage(me, to, s, states.ActionUnregister)
+}
+
+
+func ConstructMdnsMessage(me messages.MessageAddress, to messages.MessageAddress, s ServiceConfig, a states.Action) messages.Message {
+
 	var err error
 	var msgTemplate messages.Message
 	var j []byte
@@ -141,7 +151,7 @@ func ConstructMdnsRegisterMessage(me messages.MessageAddress, to messages.Messag
 			Source: me,
 			Topic: messages.MessageTopic{
 				Address:  to,
-				SubTopic: states.ActionRegister,
+				SubTopic: messages.SubTopic(a),
 			},
 			Text: messages.MessageText(j),
 		}
@@ -151,7 +161,7 @@ func ConstructMdnsRegisterMessage(me messages.MessageAddress, to messages.Messag
 }
 
 
-func DeconstructMdnsRegisterMessage(event *messages.Message) (ServiceConfig, error) {
+func DeconstructMdnsMessage(event *messages.Message) (ServiceConfig, error) {
 
 	var err error
 	var ce ServiceConfig
@@ -165,42 +175,16 @@ func DeconstructMdnsRegisterMessage(event *messages.Message) (ServiceConfig, err
 
 		err = json.Unmarshal(event.Text.ByteArray(), &ce)
 		if err != nil {
+			fmt.Printf("##########################################################\nWHY?: %s\n", event.String())
+
+			fmt.Printf("registerService: %s\n", event.String())
+			fmt.Printf("Callers: %v\n", eblog.MyCallers(eblog.CallerCurrent, 3).Print())
+			fmt.Print("")
 			break
 		}
 	}
 
 	return ce, err
-}
-
-
-func ConstructMdnsUnregisterMessage(me messages.MessageAddress, to messages.MessageAddress, s ServiceConfig) messages.Message {
-
-	var err error
-	var msgTemplate messages.Message
-	var j []byte
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			break
-		}
-
-		j, err = json.Marshal(s)
-		if err != nil {
-			break
-		}
-
-		msgTemplate = messages.Message{
-			Source: me,
-			Topic: messages.MessageTopic{
-				Address:  to,
-				SubTopic: states.ActionUnregister,
-			},
-			Text: messages.MessageText(j),
-		}
-	}
-
-	return msgTemplate
 }
 
 
@@ -210,8 +194,8 @@ func InterfaceToTypeZeroConf(i interface{}) (*ZeroConf, error) {
 	var zc *ZeroConf
 
 	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
+		if i == nil {
+			err = errors.New("interface is nil, should be" + InterfaceTypeZeroConf)
 			break
 		}
 
@@ -242,21 +226,18 @@ func InterfaceToTypeService(i interface{}) (*Service, error) {
 	var s *Service
 
 	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
+		if i == nil {
+			err = errors.New("interface is nil, should be" + InterfaceTypeService)
 			break
 		}
 
 		checkType := reflect.ValueOf(i)
-		//fmt.Printf("InterfaceToTypeService = %v\n", checkType.Type().String())
 		if checkType.Type().String() != InterfaceTypeService {
 			err = errors.New("interface type not " + InterfaceTypeService)
 			break
 		}
 
 		s = i.(*Service)
-		// zc = (i[0]).(*Service)
-		// zc = i[0].(*Service)
 
 		err = s.EnsureNotNil()
 		if err != nil {
@@ -486,48 +467,5 @@ func (me *Entry) Print() error {
 	}
 
 	return err
-}
-
-
-// GetFreePort asks the kernel for a free open port that is ready to use.
-func GetFreePort() (Port, error) {
-
-	var port int
-
-	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-	if err != nil {
-		return 0, err
-	}
-
-	l, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		return 0, err
-	}
-	defer l.Close()
-
-	port = l.Addr().(*net.TCPAddr).Port
-	eblog.Debug(DefaultEntityId, "Foung a free port on == %d", port)
-
-	return Port(port), nil
-}
-
-
-// GetFreePort asks the kernel for free open ports that are ready to use.
-func GetFreePorts(count int) ([]int, error) {
-	var ports []int
-	for i := 0; i < count; i++ {
-		addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-		if err != nil {
-			return nil, err
-		}
-
-		l, err := net.ListenTCP("tcp", addr)
-		if err != nil {
-			return nil, err
-		}
-		defer l.Close()
-		ports = append(ports, l.Addr().(*net.TCPAddr).Port)
-	}
-	return ports, nil
 }
 

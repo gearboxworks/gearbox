@@ -1,19 +1,17 @@
 package daemon
 
 import (
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/tasks"
-	"gearbox/only"
 )
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a task.
 
-var globalCheck = ""
 
 // Non-exposed task function - M-DNS initialization.
 func initDaemon(task *tasks.Task, i ...interface{}) error {
@@ -29,7 +27,7 @@ func initDaemon(task *tasks.Task, i ...interface{}) error {
 
 		for range only.Once {
 			me.State.SetNewAction(states.ActionInitialize)
-			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+			me.Channels.PublishState(&me.EntityId, &me.State)
 
 			_ = task.SetRetryLimit(defaultRetries)
 			_ = task.SetRetryDelay(DefaultRetryDelay)
@@ -39,24 +37,24 @@ func initDaemon(task *tasks.Task, i ...interface{}) error {
 				break
 			}
 
-			err = me.channelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me, InterfaceTypeError)
+			err = me.channelHandler.Subscribe(states.ActionStop, stopHandler, me, states.InterfaceTypeError)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("start"), startHandler, me, InterfaceTypeError)
+			err = me.channelHandler.Subscribe(states.ActionStart, startHandler, me, states.InterfaceTypeError)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me, states.InterfaceTypeStatus)
+			err = me.channelHandler.Subscribe(states.ActionStatus, statusHandler, me, states.InterfaceTypeStatus)
 			if err != nil {
 				break
 			}
 
-			err = me.channelHandler.Subscribe(messages.SubTopic("register"), registerService, me, InterfaceTypeService)
+			err = me.channelHandler.Subscribe(states.ActionRegister, registerService, me, InterfaceTypeService)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("unregister"), unregisterService, me, InterfaceTypeError)
+			err = me.channelHandler.Subscribe(states.ActionUnregister, unregisterService, me, states.InterfaceTypeError)
 			if err != nil {
 				break
 			}
@@ -64,16 +62,16 @@ func initDaemon(task *tasks.Task, i ...interface{}) error {
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("load"), loadConfigHandler, me, InterfaceTypeError)
+			err = me.channelHandler.Subscribe(messages.SubTopic("load"), loadConfigHandler, me, states.InterfaceTypeError)
 			if err != nil {
 				break
 			}
 
 			me.State.SetNewState(states.StateInitialized, err)
+			me.Channels.PublishState(&me.EntityId, &me.State)
 			eblog.Debug(me.EntityId, "task handler init completed OK")
 		}
 
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 		eblog.LogIfNil(me, err)
 		eblog.LogIfError(me.EntityId, err)
 	}
@@ -96,16 +94,16 @@ func startDaemon(task *tasks.Task, i ...interface{}) error {
 
 		for range only.Once {
 			me.State.SetNewAction(states.ActionStart)
-			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+			me.Channels.PublishState(&me.EntityId, &me.State)
 
 			// Read in any new files and load them up.
-			err = me.LoadFiles()
+			err = me.LoadServiceFiles()
 
 			me.State.SetNewState(states.StateStarted, err)
+			me.Channels.PublishState(&me.EntityId, &me.State)
 			eblog.Debug(me.EntityId, "task handler init completed OK")
 		}
 
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 		eblog.LogIfNil(me, err)
 		eblog.LogIfError(me.EntityId, err)
 	}
@@ -127,12 +125,12 @@ func monitorDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		for range only.Once {
-			_ = me.LoadFiles()
+			_ = me.LoadServiceFiles()
 
 			for _, u := range me.GetManagedEntities() {
 				var state states.Status
 
-				state, err = me.daemons[u].Status()	// Managed by Mutex
+				state, err = me.daemons[u].Status(PublishState)	// Managed by Mutex
 				if err != nil {
 					continue
 				}
@@ -189,7 +187,7 @@ func stopDaemon(task *tasks.Task, i ...interface{}) error {
 
 		for range only.Once {
 			me.State.SetNewAction(states.ActionStop)
-			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+			me.Channels.PublishState(&me.EntityId, &me.State)
 
 			err = me.channelHandler.StopHandler()
 			if err != nil {
@@ -197,10 +195,10 @@ func stopDaemon(task *tasks.Task, i ...interface{}) error {
 			}
 
 			me.State.SetNewState(states.StateStopped, err)
+			me.Channels.PublishState(&me.EntityId, &me.State)
 			eblog.Debug(me.EntityId, "task handler stopped OK")
 		}
 
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 		eblog.LogIfNil(me, err)
 		eblog.LogIfError(me.EntityId, err)
 	}

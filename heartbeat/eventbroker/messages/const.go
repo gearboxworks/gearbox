@@ -6,7 +6,6 @@ import (
 
 const (
 	TopicSeparator = "/%s/%s"
-	BroadcastAddress = "broadcast"
 )
 
 

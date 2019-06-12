@@ -3,19 +3,18 @@ package daemon
 import (
 	"fmt"
 	"gearbox/box"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
+	"gearbox/heartbeat/eventbroker/entity"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/tasks"
-	"gearbox/only"
-	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
 	"time"
 )
 
 
-func (me *Daemon) New(OsSupport oss.OsSupporter, args ...Args) error {
+func (me *Daemon) New(args ...Args) error {
 
 	var _args Args
 	var err error
@@ -26,7 +25,6 @@ func (me *Daemon) New(OsSupport oss.OsSupporter, args ...Args) error {
 			_args = args[0]
 		}
 
-		_args.osSupport = OsSupport
 		foo := box.Args{}
 		err = copier.Copy(&foo, &_args)
 		if err != nil {
@@ -39,8 +37,19 @@ func (me *Daemon) New(OsSupport oss.OsSupporter, args ...Args) error {
 			break
 		}
 
+		if _args.OsPaths == nil {
+			err = me.EntityId.ProduceError("ospaths is nil")
+			break
+		}
+
+
 		if _args.EntityId == "" {
-			_args.EntityId = DefaultEntityId
+			_args.EntityId = entity.DaemonEntityName
+		}
+		_args.State.EntityId = &_args.EntityId
+
+		if _args.Boxname == "" {
+			_args.Boxname = entity.DaemonEntityName
 		}
 
 		//if _args.waitTime == 0 {
@@ -50,8 +59,14 @@ func (me *Daemon) New(OsSupport oss.OsSupporter, args ...Args) error {
 		//	_args.restartAttempts = defaultRetries
 		//}
 
-		_args.daemons = make(ServicesMap)	// Mutex not required
+		jdir := _args.OsPaths.EventBrokerEtcDir.AddToPath(DefaultJsonDir)
+		_, err = jdir.CreateIfNotExists()
+		if err != nil {
+			break
+		}
 
+
+		_args.daemons = make(ServicesMap)	// Mutex not required
 		*me = Daemon(_args)
 
 
@@ -60,7 +75,7 @@ func (me *Daemon) New(OsSupport oss.OsSupporter, args ...Args) error {
 		eblog.Debug(me.EntityId, "init complete")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -79,8 +94,8 @@ func (me *Daemon) StartHandler() error {
 			break
 		}
 
-		me.State.SetNewState(states.StateStarting, err)
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.State.SetNewAction(states.ActionStart)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 
 		for range only.Once {
 			me.Task, err = tasks.StartTask(initDaemon, startDaemon, monitorDaemon, stopDaemon, me)
@@ -90,10 +105,10 @@ func (me *Daemon) StartHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStarted, err)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 		eblog.Debug(me.EntityId, "started task handler")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -112,8 +127,8 @@ func (me *Daemon) StopHandler() error {
 			break
 		}
 
-		me.State.SetNewState(states.StateStopping, err)
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.State.SetNewAction(states.ActionStop)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 
 		for range only.Once {
 			_ = me.StopServices()
@@ -123,10 +138,10 @@ func (me *Daemon) StopHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStopped, err)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 		eblog.Debug(me.EntityId, "stopped task handler")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -147,13 +162,12 @@ func (me *Daemon) StopServices() error {
 		for _, u := range me.GetManagedEntities() {		// Ignore Mutex
 			err = me.daemons[u].Stop()					// Ignore Mutex
 			if err == nil {
-				me.DeleteEntity(u)
+				err = me.DeleteEntity(u)
 			}
 			// Ignore error, will clean up when program exits.
 		}
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -216,7 +230,7 @@ func (me *Daemon) TestMe() error {
 	if err == nil {
 		var state states.Status
 
-		state, err = s.Status()
+		state, err = s.Status(PublishState)
 		fmt.Printf("Status: %v\n", state)
 		if err != nil {
 			fmt.Printf("Woops!\n")

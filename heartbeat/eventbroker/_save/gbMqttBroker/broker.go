@@ -9,7 +9,7 @@ import (
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/tasks"
 	"gearbox/help"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/fhmq/hmq/broker"
@@ -48,7 +48,7 @@ func (me *Mqtt) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 		if _args.EntityId == "" {
 			_args.EntityId = DefaultEntityId
 		}
-
+		_args.State.EntityId = &_args.EntityId
 
 		// Setup Broker.
 		// ConfigureConfig is normally used with args, but good enough to create a default config.

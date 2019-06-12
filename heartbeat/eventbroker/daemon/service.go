@@ -1,105 +1,157 @@
 package daemon
 
 import (
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
+	"gearbox/heartbeat/eventbroker/entity"
+	"gearbox/heartbeat/eventbroker/network"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
 	"github.com/kardianos/service"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 
-func (me *Service) Start() error {
+func (srv *Service) Start() error {
 
 	var err error
 
 	for range only.Once {
-		err = me.EnsureNotNil()
+		err = srv.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		me.State.SetNewAction(states.ActionStart)
-		channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
+		srv.State.SetNewAction(states.ActionStart)
+		srv.channels.PublishState(&srv.EntityId, &srv.State)
 
-		err = me.instance.service.Start()
+		err = srv.instance.service.Start()
 		if err != nil {
 			break
 		}
 
-		_, err = me.Status()
+		var state states.State
+		state, err = srv.decodeServiceState()
 		if err != nil {
 			break
 		}
+		// Didn't start.
+		if state != states.StateStarted {
+			break
+		}
 
-		me.State.SetNewState(states.StateStarted, err)
-		eblog.Debug(me.EntityId, "handler started OK")
+		err = srv.RegisterMDNS()
+		if err != nil {
+			err = srv.Stop()
+			if err != nil {
+				break
+			}
+
+			break
+		}
+
+		srv.State.SetNewState(states.StateStarted, err)
+		srv.channels.PublishState(&srv.EntityId, &srv.State)
+		eblog.Debug(srv.EntityId, "service started OK")
 	}
 
-	channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
-	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfNil(srv, err)
+	eblog.LogIfError(srv.EntityId, err)
 
 	return nil
 }
 
 
-func (me *Service) Stop() error {
+func (srv *Service) Stop() error {
 
 	var err error
 
 	for range only.Once {
-		err = me.EnsureNotNil()
+		err = srv.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		me.State.SetNewAction(states.ActionStop)
-		channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
+		srv.State.SetNewAction(states.ActionStop)
+		srv.channels.PublishState(&srv.EntityId, &srv.State)
 
-		err = me.instance.service.Stop()
+		err = srv.instance.service.Stop()
 		if err != nil {
 			break
 		}
 
-		me.State.SetNewState(states.StateStopped, err)
-		eblog.Debug(me.EntityId, "handler stopped OK")
+		var state states.State
+		state, err = srv.decodeServiceState()
+		if err != nil {
+			break
+		}
+		// Didn't stop.
+		if state != states.StateStopped {
+			break
+		}
+
+		err = srv.UnregisterMDNS()
+		if err != nil {
+			break
+		}
+
+		srv.State.SetNewState(states.StateStopped, err)
+		srv.channels.PublishState(&srv.EntityId, &srv.State)
+		eblog.Debug(srv.EntityId, "service stopped OK")
 	}
 
-	channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
-	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfNil(srv, err)
+	eblog.LogIfError(srv.EntityId, err)
 
 	return err
 }
 
 
-//// Now unregister the service with zeroconf.
-//zc := network.CreateEntry{
-//	Name: network.Name("gearbox_" + me.Entry.Name),
-//	Type: network.Type(fmt.Sprintf("_%s._tcp", me.Entry.MdnsType)),
-//	Domain: "local",
-//	Port: network.Port(me.port),
-//}
-//me.mdns, err = me.RegisterByChannel(me.EntityId, zc)
-//if err != nil {
-//	break
-//}
-
-
-func (me *Service) Status() (states.Status, error) {
+func (srv *Service) Status(publish bool) (states.Status, error) {
 
 	var err error
 
 	for range only.Once {
-		err = me.EnsureNotNil()
+		err = srv.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		var state states.State
+		state, err = srv.decodeServiceState()
+
+		srv.State.SetNewState(state, err)
+
+		if srv.State.HasChangedState() {
+			eblog.Debug(srv.EntityId, "status current:%s last:%s", srv.State.GetCurrent().String(), srv.State.GetLast().String())
+
+			if publish {
+				srv.channels.PublishState(&srv.EntityId, &srv.State)
+			}
+		}
+	}
+
+	eblog.LogIfNil(srv, err)
+	eblog.LogIfError(srv.EntityId, err)
+
+	return srv.State, err
+}
+
+
+func (srv *Service) decodeServiceState() (states.State, error) {
+
+	var err error
+	var state states.State
+
+	for range only.Once {
+		err = srv.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
 		var serviceState service.Status
-
-		serviceState, err = me.instance.service.Status()
+		serviceState, err = srv.instance.service.Status()
 		// We want to translate the states defined from the service package.
 
 		// ErrNameFieldRequired is returned when Config.Name is empty.
@@ -109,41 +161,103 @@ func (me *Service) Status() (states.Status, error) {
 		// ErrNotInstalled is returned when the service is not installed
 		// service.ErrNotInstalled
 
-		var newState states.State
 		switch {
 			case err == service.ErrNameFieldRequired:
-				newState = states.StateError
+				state = states.StateError
 
 			case err == service.ErrNoServiceSystemDetected:
-				newState = states.StateError
+				state = states.StateError
 
 			case err == service.ErrNotInstalled:
-				newState = states.StateUnregistered
+				state = states.StateUnregistered
 
 			case serviceState == service.StatusUnknown:
-				newState = states.StateUnknown
+				state = states.StateUnknown
 
 			case serviceState == service.StatusStopped:
-				newState = states.StateStopped
+				state = states.StateStopped
 
 			case serviceState == service.StatusRunning:
-				newState = states.StateStarted
+				state = states.StateStarted
 
 			default:
-				newState = states.StateError
-		}
-		me.State.SetNewState(newState, err)
-
-		if me.State.HasChangedState() {
-			eblog.Debug(me.EntityId, "status current:%s last:%s", me.State.GetCurrent().String(), me.State.GetLast().String())
+				state = states.StateError
 		}
 	}
 
-	channels.PublishCallerState(me.channels, &me.EntityId, &me.State)
-	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	return state, err
+}
 
-	return me.State, err
+
+func (srv *Service) RegisterMDNS() error {
+
+	var err error
+
+	for range only.Once {
+		err = srv.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		// Register with ZeroConf
+		var i interface{}
+		// msg := network.ConstructMdnsRegisterMessage(srv.EntityId, entity.NetworkEntityName, *srv.MdnsEntry)
+		msg := network.ConstructMdnsMessage(srv.EntityId, entity.NetworkEntityName, *srv.MdnsEntry, states.ActionRegister)
+		i, err = srv.channels.PublishAndWaitForReturn(msg, 400)
+		if err != nil {
+			break
+		}
+
+		// Might have to store the ZeroConf *sc in the *Service entity.
+		_, err = network.InterfaceToTypeService(i)
+		if err != nil {
+			eblog.Debug(srv.EntityId, "couldn't register MDNS service")
+			break
+		}
+
+		eblog.Debug(srv.EntityId, "registered MDNS service OK")
+	}
+
+	eblog.LogIfNil(srv, err)
+	eblog.LogIfError(srv.EntityId, err)
+
+	return nil
+}
+
+
+func (srv *Service) UnregisterMDNS() error {
+
+	var err error
+
+	for range only.Once {
+		err = srv.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		// Register with ZeroConf
+		var i interface{}
+		//var sc *network.Service
+		// msg := network.ConstructMdnsRegisterMessage(srv.EntityId, entity.NetworkEntityName, *srv.MdnsEntry)
+		msg := network.ConstructMdnsMessage(srv.EntityId, entity.NetworkEntityName, *srv.MdnsEntry, states.ActionUnregister)
+		i, err = srv.channels.PublishAndWaitForReturn(msg, 400)
+		if err != nil {
+			break
+		}
+
+		_, err = states.InterfaceToTypeError(i)
+		if err != nil {
+			eblog.Debug(srv.EntityId, "couldn't unregister MDNS service")
+			break
+		}
+
+		eblog.Debug(srv.EntityId, "unregistered MDNS service OK")
+	}
+
+	eblog.LogIfNil(srv, err)
+	eblog.LogIfError(srv.EntityId, err)
+
+	return nil
 }
 
 
@@ -183,5 +297,38 @@ func translateState(i service.Status, err error) (states.State, error) {
 	}
 
 	return s, err
+}
+
+
+func (me *Daemon) FindServiceFiles() ([]string, error) {
+
+	var err error
+	var files []string
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		checkIn := me.OsPaths.EventBrokerEtcDir.AddToPath(DefaultJsonDir)
+		err = checkIn.DirExists()
+		if err != nil {
+			break
+		}
+
+		eblog.Debug(me.EntityId, "Finding service files within %s", checkIn)
+		err = filepath.Walk(checkIn.String(), func(path string, info os.FileInfo, err error) error {
+			if strings.HasSuffix(path, ".json") {
+				files = append(files, path)
+			}
+			return nil
+		})
+		if err != nil {
+			break
+		}
+	}
+
+	return files, err
 }
 

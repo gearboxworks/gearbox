@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"gearbox/box"
 	"gearbox/heartbeat/eventbroker/eblog"
+	"gearbox/heartbeat/eventbroker/entity"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
-	oss "gearbox/os_support"
+	"gearbox/heartbeat/eventbroker/only"
 	"github.com/jinzhu/copier"
 	"github.com/olebedev/emitter"
 	"sync"
 )
 
 
-func (me *Channels) New(OsSupport oss.OsSupporter, args ...Args) error {
+func (me *Channels) New(args ...Args) error {
 
 	var _args Args
 	var err error
@@ -25,7 +25,6 @@ func (me *Channels) New(OsSupport oss.OsSupporter, args ...Args) error {
 			_args = args[0]
 		}
 
-		_args.osSupport = OsSupport
 		foo := box.Args{}
 		err = copier.Copy(&foo, &_args)
 		if err != nil {
@@ -33,8 +32,19 @@ func (me *Channels) New(OsSupport oss.OsSupporter, args ...Args) error {
 			break
 		}
 
+		if _args.OsPaths == nil {
+			err = me.EntityId.ProduceError("ospaths is nil")
+			break
+		}
+
+
 		if _args.EntityId == "" {
-			_args.EntityId = DefaultEntityId
+			_args.EntityId = entity.ChannelEntityName
+		}
+		_args.State.EntityId = &_args.EntityId
+
+		if _args.Boxname == "" {
+			_args.Boxname = entity.ChannelEntityName
 		}
 
 		_args.instance.emitter = &emitter.Emitter{}
@@ -48,7 +58,7 @@ func (me *Channels) New(OsSupport oss.OsSupporter, args ...Args) error {
 		eblog.Debug(me.EntityId, "init complete")
 	}
 
-	PublishCallerState(me, &me.EntityId, &me.State)
+	me.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -180,17 +190,18 @@ func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscri
 			me.subscribers = make(Subscribers)
 		}
 
-		if _, ok := me.subscribers[client]; !ok {
-			sub = Subscriber{
-				EntityId:  client,
-				State: states.Status{},
-				IsManaged: true,
+		sub = Subscriber{
+			EntityId:  client,
+			State: states.Status{},
+			IsManaged: true,
 
-				topics: make(References),
-				mutex: sync.RWMutex{},
-				parentInstance: &me.instance,
-			}
-			me.subscribers[client] = &sub
+			topics: make(References),
+			mutex: sync.RWMutex{},
+			parentInstance: &me.instance,
+		}
+		err = me.AddEntity(client, &sub)
+		if err != nil {
+			break
 		}
 
 		go func() {
@@ -258,20 +269,11 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 					continue
 				}
 
-				//if _, ok := sub.topics[topic]; !ok {
-				//	// No callback defined, ignore.
-				//	continue
-				//}
-				//
-				//if sub.topics[topic].Callback == nil {
-				//	continue
-				//}
-
-				//eblog.Debug(me.EntityId, "LOOP:[%d]", child)
 				// Execute callback in thread.
 				go func(c int) {
 					//defer wg.Done()
 					// eblog.Debug(me.EntityId, "Callback(%s)	Time:%v	Src:%s	Text:%s", msg.Topic, msg.Time.Convert().Unix(), msg.Src, msg.Text)
+					//fmt.Printf("AAARGH: %v/%v - %s\n", client, topic, msg.String())
 					sub.SetExecuted(topic, false)
 					if ret != nil {
 						r := callback(&msg, args, retType)
@@ -280,33 +282,6 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 						 _ = callback(&msg, args, retType)
 					}
 					sub.SetExecuted(topic, true)
-
-					////var args Argument
-					////if sub.ValidateArguments(topic) {
-					////	args = sub.GetArguments(topic)
-					////} else {
-					////	args = nil
-					////}
-					//
-					//// MUTEX if _, ok := sub.Returns[topic]; ok {
-					//if sub.ValidateReturns(topic) {
-					//	// MUTEX sub.Returns[topic] = sub.Callbacks[topic](&msg, sub.Arguments[topic])
-					//	// ret := sub.Callbacks[topic](&msg, sub.Arguments[topic])
-					//	// ret := sub.topics[topic].Callback(&msg, args)
-					//	ret := callback(&msg, args)
-					//	sub.SetReturns(topic, ret)
-					//
-					//	//foo := reflect.ValueOf(ret)
-					//	//if foo.Type().String() == "*states.Status" {
-					//	//	f := ret.(*states.Status)
-					//	//	fmt.Printf("%d rxHandler records: %v\n", time.Now().Unix(), f.GetError())
-					//	//}
-					//} else {
-					//	// MUTEX _ = sub.Callbacks[topic](&msg, sub.Arguments[topic])
-					//	 _ = sub.topics[topic].Callback(&msg, args)
-					//}
-					//
-					//sub.SetExecuted(topic, true)
 
 					//wgChannel <- c
 				}(child)
@@ -340,3 +315,4 @@ func (me *Channels) GetEntityId() messages.MessageAddress {
 
 	return me.EntityId
 }
+

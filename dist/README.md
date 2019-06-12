@@ -17,6 +17,7 @@ npm run build
 
 ### Prepares to be included into gearbox executable
 ```
+go-bindata -dev -o gearbox/dist.go -pkg gearbox dist/...
 go-bindata -dev -o gearbox/admin_dist.go -pkg gearbox admin/dist/...
 ```
 

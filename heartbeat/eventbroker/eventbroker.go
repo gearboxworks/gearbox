@@ -7,19 +7,19 @@ import (
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/daemon"
 	"gearbox/heartbeat/eventbroker/eblog"
+	"gearbox/heartbeat/eventbroker/entity"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/mqttClient"
 	"gearbox/heartbeat/eventbroker/network"
+	"gearbox/heartbeat/eventbroker/only"
+	"gearbox/heartbeat/eventbroker/ospaths"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
-	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
-	"path/filepath"
 	"time"
 )
 
 
-func New(OsSupport oss.OsSupporter, args ...Args) (*EventBroker, error) {
+func New(args ...Args) (*EventBroker, error) {
 
 	var _args Args
 	var err error
@@ -32,15 +32,6 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*EventBroker, error) {
 			_args = args[0]
 		}
 
-		if _args.Boxname == "" {
-			_args.Boxname = global.Brandname
-		}
-
-		if _args.EntityId == "" {
-			_args.EntityId = DefaultEntityName
-		}
-
-		_args.osSupport = OsSupport
 		foo := box.Args{}
 		err = copier.Copy(&foo, &_args)
 		if err != nil {
@@ -48,27 +39,45 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*EventBroker, error) {
 			break
 		}
 
-		_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.osSupport.GetAdminRootDir(), defaultPidFile))
+		if _args.Boxname == "" {
+			_args.Boxname = global.Brandname
+		}
+
+		if _args.EntityId == "" {
+			_args.EntityId = DefaultEntityName
+		}
+		_args.State.EntityId = &_args.EntityId
+
+		if _args.SubBaseDir == "" {
+			_args.SubBaseDir = ospaths.DefaultBaseDir
+		}
+		_args.OsPaths = ospaths.New(_args.SubBaseDir)
+		err = _args.OsPaths.CreateIfNotExists()
+		if err != nil {
+			break
+		}
+
 
 		_args.Entities = make(Entities)
+		*me = EventBroker(_args)
 
 
 		// 1. Channel - provides inter-thread communications.
-		err = _args.Channels.New(OsSupport, channels.Args{})
+		err = me.Channels.New(channels.Args{Boxname: me.Boxname, OsPaths: me.OsPaths})
 		if err != nil {
 			break
 		}
 
 
 		// 2. ZeroConf - provides discovery and management of network services.
-		err = _args.ZeroConf.New(OsSupport, network.Args{Channels: &_args.Channels})
+		err = me.ZeroConf.New(network.Args{Boxname: me.Boxname, Channels: &me.Channels, OsPaths: me.OsPaths})
 		if err != nil {
 			break
 		}
 
 
 		// 3. Daemon - provides control over arbitrary services.
-		err = _args.Daemon.New(OsSupport, daemon.Args{Channels: &_args.Channels})
+		err = me.Daemon.New(daemon.Args{Boxname: me.Boxname, Channels: &me.Channels, OsPaths: me.OsPaths})
 		if err != nil {
 			break
 		}
@@ -77,12 +86,10 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*EventBroker, error) {
 
 
 		// 5. MQTT client - provides inter-process communications.
-		err = _args.MqttClient.New(OsSupport, mqttClient.Args{Channels: &_args.Channels})
+		err = me.MqttClient.New(mqttClient.Args{Boxname: me.Boxname, Channels: &me.Channels, OsPaths: me.OsPaths})
 		if err != nil {
 			break
 		}
-
-		*me = EventBroker(_args)
 
 
 		me.State.SetWant(states.StateIdle)
@@ -91,7 +98,7 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*EventBroker, error) {
 		}
 	}
 
-	channels.PublishCallerState(&me.Channels, &me.EntityId, &me.State)
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -113,14 +120,7 @@ func (me *EventBroker) Start() error {
 		// 1. Channel - provides inter-thread communications.
 		// Start the inter-thread service.
 		// Note: These will be started dynamically as clients are registered.
-		me.channelHandler, err = me.Channels.StartClientHandler(messages.BroadcastAddress)
-		if err != nil {
-			break
-		}
-		_, err := me.Channels.Subscribe(messages.MessageTopic{
-			Address: messages.BroadcastAddress,
-			SubTopic: "status",
-		}, statusHandler, me, states.InterfaceTypeStatus)
+		err = me.StartChannelHandler()
 		if err != nil {
 			break
 		}
@@ -151,10 +151,18 @@ func (me *EventBroker) Start() error {
 			break
 		}
 
+
+		//_, _ = me.Daemon.FindServiceFiles()
+		//_ = me.Daemon.LoadServiceFiles()
+		//time.Sleep(time.Second * 5)
+		//_ = me.Daemon.UnloadServiceFiles()
+		//time.Sleep(time.Hour * 60)
+
+
 		eblog.Debug(me.EntityId, "event broker started OK")
 	}
 
-	channels.PublishCallerState(&me.Channels, &me.EntityId, &me.State)
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -181,6 +189,11 @@ func (me *EventBroker) Stop() error {
 	}
 
 	err = me.Channels.StopHandler()
+	if err != nil {
+		eblog.Debug(me.EntityId, "Channels shutdown error %v", err)
+	}
+
+	err = me.StopChannelHandler()
 	if err != nil {
 		eblog.Debug(me.EntityId, "Channels shutdown error %v", err)
 	}
@@ -236,18 +249,16 @@ func (me *EventBroker) TempLoop() error {
 	//err = me.Daemon.LoadFiles()
 	//fmt.Printf("me.Daemon.LoadFiles(): %v\n", err)
 	//me.CreateEntity("BEEP")
-	me.Foo()
+	fmt.Printf("####################################################################\nPING\n")
+	//err = me.Daemon.LoadFiles()
+	fmt.Printf("me.Daemon.LoadFiles(): %v\n", err)
+	fmt.Printf("####################################################################\nPING\n")
+
+
+	//me.Foo()
 	me.SimpleLoop()
 
 	time.Sleep(time.Hour * 8000)
-
-	err = me.Daemon.LoadFiles()
-	fmt.Printf("me.Daemon.LoadFiles(): %v\n", err)
-
-	err = me.Daemon.LoadFiles()
-	fmt.Printf("me.Daemon.LoadFiles(): %v\n", err)
-
-	//time.Sleep(time.Hour * 8000)
 
 	go func() {
 		index := 0
@@ -340,7 +351,10 @@ func (me *EventBroker) Foo() {
 		fmt.Printf("me.Channels.GetEntities\t=> %s\n", f.String())
 	}
 	fmt.Printf("me.Channels.GetListenerTopics\n")
-	t = me.Channels.GetListenerTopics()
+	t, err = me.Channels.GetListenerTopics()
+	if err != nil {
+		fmt.Printf("me.Channels.GetListenerTopics\tERR:%v\n", err)
+	}
 	for _, f := range t {
 		fmt.Printf("me.Channels.GetListenerTopics\t=> %s\n", f.String())
 	}
@@ -427,31 +441,34 @@ func (me *EventBroker) Foo() {
 
 func (me *EventBroker) SimpleLoop() {
 
-	var err error
 	fmt.Printf("SimpleLoop()\n")
 
 	for range only.Once {
-		//fmt.Printf("daemon == %v\n", d)
-		//fmt.Printf("daemon topics == %v\n", d.GetTopics())
-		time.Sleep(time.Hour * 100)
-
-		msg := messages.Message{
+		msg1 := messages.Message{
 			Source: me.EntityId,
 			Topic: messages.MessageTopic{
-				Address: "eventbroker-daemon",
+				Address: entity.DaemonEntityName,
 				SubTopic: "status",
 			},
-			Text: "hello",
+			Text: "",
 		}
+
+		msg2 := messages.Message{
+			Source: me.EntityId,
+			Topic: messages.MessageTopic{
+				Address: entity.BroadcastEntityName,
+				SubTopic: "get",
+			},
+			Text: msg1.ToMessageText(),
+		}
+
+		fmt.Printf("MSG1: %v\n", msg1)
+		fmt.Printf("MSG2: %v\n", msg2)
 
 		for i := 0; i < 10; i++ {
 
-			err = me.Daemon.LoadFiles()
-			fmt.Printf("me.Daemon.LoadFiles(): %v\n", err)
-			time.Sleep(time.Second * 10)
-
 			fmt.Printf("\n\n%d gbevents before: %v\n", time.Now().Unix(), me.Daemon.State.GetError())
-			i, _ := me.Channels.PublishAndWaitForReturn(msg, 400)
+			i, _ := me.Channels.PublishAndWaitForReturn(msg2, 400)
 			f, err := messages.InterfaceToTypeSubTopics(i)
 			if err == nil {
 				fmt.Printf("%d gbevents after: %v\n", time.Now().Unix(), f)
@@ -459,16 +476,11 @@ func (me *EventBroker) SimpleLoop() {
 				fmt.Printf("%d gbevents after: is nil!\n", time.Now().Unix())
 			}
 
-
-			err = me.Daemon.UnLoadFiles()
-			fmt.Printf("me.Daemon.UnLoadFiles(): %v\n", err)
-
-			time.Sleep(time.Second * 20)
+			time.Sleep(time.Second * 10)
 		}
 
 		time.Sleep(time.Hour * 60)
 	}
-
 }
 
 
@@ -538,73 +550,4 @@ func (me *EventBroker) SimpleLoop() {
 //
 //	return err
 //}
-
-
-// Non-exposed channel function that responds to a "status" channel request.
-func statusHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
-
-	var err error
-	var me *EventBroker
-	var ret *states.Status
-
-	for range only.Once {
-		me, err = InterfaceToTypeEventBroker(i)
-		if err != nil {
-			break
-		}
-
-		fmt.Printf("Event(%s) Time:%d Src:%s Text:%s\n", event.Topic.String(), event.Time.Convert().Unix(), event.Source.String(), event.Text.String())
-
-		if _, ok := me.Entities[event.Source]; !ok {
-			sub := Entity{
-				Src:   event.Topic.Address,
-				State: &states.Status{},
-				StateString: states.State(event.Text),
-			}
-			me.Entities[event.Source] = &sub
-		}
-
-		fmt.Printf("Entities\n")
-		for n, e := range me.Entities {
-			fmt.Printf("%s	%s %s %v\n",
-				n,
-				e.Src,
-				e.StateString,
-				e.State,
-				)
-		}
-
-		switch event.Text {
-			case states.StateStarted:
-				// .
-
-			case states.StateStopped:
-				// .
-		}
-
-		//msg := messages.Message{
-		//	Source: me.EntityId,
-		//	Topic: messages.MessageTopic{
-		//		Address: event.Source,
-		//		SubTopic: "status",
-		//	},
-		//	Text: "",
-		//}
-		//fmt.Printf("\n\n%d gbevents before: %v\n", time.Now().Unix(), me.Daemon.State.GetError())
-		//i, _ := me.Channels.PublishAndWaitForReturn(msg, 400)
-		//f, err := states.InterfaceToTypeStatus(i)
-		//if err == nil {
-		//	fmt.Printf("%d gbevents after: %v\n", time.Now().Unix(), f)
-		//} else {
-		//	fmt.Printf("%d gbevents after: is nil!\n", time.Now().Unix())
-		//}
-
-		eblog.Debug(me.EntityId, "statusHandler() via channel")
-	}
-
-	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
-
-	return ret
-}
 

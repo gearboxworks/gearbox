@@ -1,12 +1,11 @@
 package mqttClient
 
 import (
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/tasks"
-	"gearbox/only"
 )
 
 
@@ -28,7 +27,7 @@ func initMqttClient(task *tasks.Task, i ...interface{}) error {
 
 		for range only.Once {
 			me.State.SetNewAction(states.ActionInitialize)
-			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+			me.Channels.PublishState(&me.EntityId, &me.State)
 
 			_ = task.SetRetryLimit(DefaultRetries)
 			_ = task.SetRetryDelay(DefaultRetryDelay)
@@ -38,24 +37,24 @@ func initMqttClient(task *tasks.Task, i ...interface{}) error {
 				break
 			}
 
-			err = me.channelHandler.Subscribe(messages.SubTopic("stop"), stopHandler, me, InterfaceTypeError)
+			err = me.channelHandler.Subscribe(states.ActionStop, stopHandler, me, states.InterfaceTypeError)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("start"), startHandler, me, InterfaceTypeError)
+			err = me.channelHandler.Subscribe(states.ActionStart, startHandler, me, states.InterfaceTypeError)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("status"), statusHandler, me, states.InterfaceTypeStatus)
+			err = me.channelHandler.Subscribe(states.ActionStatus, statusHandler, me, states.InterfaceTypeStatus)
 			if err != nil {
 				break
 			}
 
-			err = me.channelHandler.Subscribe(messages.SubTopic("subscribe"), subscribeTopic, me, InterfaceTypeService)
+			err = me.channelHandler.Subscribe(states.ActionSubscribe, subscribeTopic, me, InterfaceTypeService)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("unsubscribe"), unsubscribeTopic, me, InterfaceTypeError)
+			err = me.channelHandler.Subscribe(states.ActionUnsubscribe, unsubscribeTopic, me, states.InterfaceTypeError)
 			if err != nil {
 				break
 			}
@@ -65,10 +64,10 @@ func initMqttClient(task *tasks.Task, i ...interface{}) error {
 			}
 
 			me.State.SetNewState(states.StateInitialized, err)
+			me.Channels.PublishState(&me.EntityId, &me.State)
 			eblog.Debug(me.EntityId, "task handler init completed OK")
 		}
 
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 		eblog.LogIfNil(me, err)
 		eblog.LogIfError(me.EntityId, err)
 	}
@@ -89,17 +88,18 @@ func startMqttClient(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-		//for range only.Once {
-		//	me.State.SetNewAction(states.ActionStart)
-		//	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
-		//
-		//	// Already started as part of initDaemon().
-		//
-		//	me.State.SetNewState(states.StateStarted, err)
-		//	eblog.Debug(me.EntityId, "task handler init completed OK")
-		//}
+		for range only.Once {
+			me.State.SetNewAction(states.ActionStart)
+			me.Channels.PublishState(&me.EntityId, &me.State)
 
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+			// Already started as part of init.
+
+
+			me.State.SetNewState(states.StateStarted, err)
+			me.Channels.PublishState(&me.EntityId, &me.State)
+			eblog.Debug(me.EntityId, "task handler init completed OK")
+		}
+
 		eblog.LogIfNil(me, err)
 		eblog.LogIfError(me.EntityId, err)
 	}
@@ -153,10 +153,10 @@ func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
 			//	break
 			//}
 
+			me.Channels.PublishState(&me.EntityId, &me.State)
 			eblog.Debug(me.EntityId, "task handler status OK")
 		}
 
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 		eblog.LogIfNil(me, err)
 		eblog.LogIfError(me.EntityId, err)
 	}
@@ -179,7 +179,7 @@ func stopMqttClient(task *tasks.Task, i ...interface{}) error {
 
 		for range only.Once {
 			me.State.SetNewAction(states.ActionStop)
-			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+			me.Channels.PublishState(&me.EntityId, &me.State)
 
 			err = me.channelHandler.StopHandler()
 			if err != nil {
@@ -187,10 +187,10 @@ func stopMqttClient(task *tasks.Task, i ...interface{}) error {
 			}
 
 			me.State.SetNewState(states.StateStopped, err)
+			me.Channels.PublishState(&me.EntityId, &me.State)
 			eblog.Debug(me.EntityId, "task handler stopped OK")
 		}
 
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 		eblog.LogIfNil(me, err)
 		eblog.LogIfError(me.EntityId, err)
 	}

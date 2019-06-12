@@ -3,11 +3,10 @@ package eventbroker
 import (
 	"errors"
 	"fmt"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/network"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 	"net/url"
 	"reflect"
 	"time"
@@ -47,13 +46,12 @@ func InterfaceToTypeEventBroker(i interface{}) (*EventBroker, error) {
 	var me *EventBroker
 
 	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
+		if i == nil {
+			err = errors.New("interface is nil, should be" + InterfaceTypeEventBroker)
 			break
 		}
 
 		checkType := reflect.ValueOf(i)
-		//fmt.Printf("InterfaceToTypeEventBroker = %v\n", checkType.Type().String())
 		if checkType.Type().String() != InterfaceTypeEventBroker {
 			err = errors.New("interface type not " + InterfaceTypeEventBroker)
 			break
@@ -135,21 +133,21 @@ func (me *EventBroker) CreateEntity(serviceName string) {
 		Name: network.Name(serviceName + "1"),
 		Type: "_gearbox._tcp",
 		Domain: "local",
-		Port: 0,
+		Port: network.SelectRandomPort,
 	}
 
 	s2 := network.ServiceConfig{
 		Name: network.Name(serviceName + "2"),
 		Type: "_gearbox._tcp",
 		Domain: "local",
-		Port: 0,
+		Port: network.SelectRandomPort,
 	}
 
 	s3 := network.ServiceConfig{
 		Name: network.Name(serviceName + "3"),
 		Type: "_gearbox._tcp",
 		Domain: "local",
-		Port: 0,
+		Port: network.SelectRandomPort,
 	}
 
 	var s1ref *network.Service

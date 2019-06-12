@@ -3,9 +3,9 @@ package mqttClient
 import (
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/ospaths"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/tasks"
-	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"net/url"
 	"sync"
@@ -14,7 +14,7 @@ import (
 
 
 const (
-	DefaultEntityId = "eventbroker-mqttclient"
+	// DefaultEntityId = "eventbroker-mqttclient"
 	defaultWaitTime = time.Millisecond * 1000
 	defaultDomain   = "local"
 	DefaultRetries  = 12
@@ -25,6 +25,7 @@ const (
 
 type MqttClient struct {
 	EntityId        messages.MessageAddress
+	Boxname         string
 	State           states.Status
 	Task            *tasks.Task
 	Channels        *channels.Channels
@@ -37,7 +38,7 @@ type MqttClient struct {
 	waitTime        time.Duration
 	domain          string
 	services        ServicesMap
-	osSupport       oss.OsSupporter
+	OsPaths         *ospaths.BasePaths
 }
 type Args MqttClient
 type clientInstance struct {
@@ -74,7 +75,6 @@ const (
 	InterfaceTypeMqttClient    = "*" + Package + ".MqttClient"
 	InterfaceTypeService       = "*" + Package + ".Service"
 	InterfaceTypeServiceConfig = "*" + Package + ".ServiceConfig"
-	InterfaceTypeError         = "error"
 )
 
 type Topic string

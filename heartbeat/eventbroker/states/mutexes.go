@@ -32,35 +32,34 @@ func (me *Status) SetNewAction(a Action) bool {
 
 	me.Action = a
 	switch me.Action {
-	case ActionRegister:
-		me.Current = StateRegistering
-		me.Want = StateRegistered
-	case ActionUnregister:
-		me.Current = StateUnregistering
-		me.Want = StateUnregistered
-	case ActionPublish:
-		me.Current = StatePublishing
-		me.Want = StatePublished
-	case ActionUnpublish:
-		me.Current = StateUnpublishing
-		me.Want = StateUnpublished
-	case ActionSubscribe:
-		me.Current = StateSubscribing
-		me.Want = StateSubscribed
-	case ActionUnsubscribe:
-		me.Current = StateUnsubscribing
-		me.Want = StateUnsubscribed
+		case ActionRegister:
+			me.Current = StateRegistering
+			me.Want = StateRegistered
+		case ActionUnregister:
+			me.Current = StateUnregistering
+			me.Want = StateUnregistered
+		case ActionPublish:
+			me.Current = StatePublishing
+			me.Want = StatePublished
+		case ActionUnpublish:
+			me.Current = StateUnpublishing
+			me.Want = StateUnpublished
+		case ActionSubscribe:
+			me.Current = StateSubscribing
+			me.Want = StateSubscribed
+		case ActionUnsubscribe:
+			me.Current = StateUnsubscribing
+			me.Want = StateUnsubscribed
 
-
-	case ActionInitialize:
-		me.Current = StateInitializing
-		me.Want = StateInitialized
-	case ActionStop:
-		me.Current = StateStopping
-		me.Want = StateStopped
-	case ActionStart:
-		me.Current = StateStarting
-		me.Want = StateStarted
+		case ActionInitialize:
+			me.Current = StateInitializing
+			me.Want = StateInitialized
+		case ActionStop:
+			me.Current = StateStopping
+			me.Want = StateStopped
+		case ActionStart:
+			me.Current = StateStarting
+			me.Want = StateStarted
 	}
 
 	return ok

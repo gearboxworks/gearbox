@@ -1,16 +1,10 @@
 package daemon
 
 import (
-	"fmt"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 
@@ -18,7 +12,7 @@ import (
 // Executed as a method.
 
 // Unregister a service by method defined by a UUID reference.
-func (me *Daemon) UnregisterByEntityId(u messages.MessageAddress) error {
+func (me *Daemon) UnregisterByEntityId(client messages.MessageAddress) error {
 
 	var err error
 	var state states.Status
@@ -29,46 +23,47 @@ func (me *Daemon) UnregisterByEntityId(u messages.MessageAddress) error {
 			break
 		}
 
-		err = me.EnsureDaemonNotNil(u)
+		err = client.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		for range only.Once {
-			me.daemons[u].State.SetNewAction(states.ActionUnregister)	// Managed by Mutex
-			channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.daemons[client].State.SetNewAction(states.ActionUnregister)	// Managed by Mutex
+		me.daemons[client].channels.PublishCallerState(&me.daemons[client].State)
 
-			state, err = me.daemons[u].Status()	// Mutex not required
-			if err != nil {
-				continue
-			}
-			switch state.Current {
-				case states.StateUnknown:
-					//
-
-				case states.StateStarted:
-					err = me.daemons[u].instance.service.Stop()	// Mutex not required
-					if err != nil {
-						break
-					}
-
-				case states.StateStopped:
-					//
-			}
-
-			err = me.daemons[u].instance.service.Uninstall()	// Mutex not required
-			if err != nil {
-				break
-			}
-
-			me.DeleteEntity(u)
-
-			me.State.SetNewState(states.StateUnregistered, err)
-			eblog.Debug(me.EntityId, "unregistered service %s OK", u.String())
+		state, err = me.daemons[client].Status(DontPublishState)	// Mutex not required
+		if err != nil {
+			continue
 		}
+		switch state.Current {
+			case states.StateUnknown:
+				//
+
+			case states.StateStarted:
+				err = me.daemons[client].instance.service.Stop()	// Mutex not required
+				if err != nil {
+					break
+				}
+
+			case states.StateStopped:
+				//
+		}
+
+		err = me.daemons[client].instance.service.Uninstall()	// Mutex not required
+		if err != nil {
+			break
+		}
+
+		err = me.DeleteEntity(client)
+		if err != nil {
+			break
+		}
+
+		me.Channels.PublishSpecificState(&client, states.State(states.StateUnsubscribed))
+		eblog.Debug(me.EntityId, "unregistered service %s OK", client.String())
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -97,6 +92,7 @@ func (me *Daemon) UnregisterByChannel(caller messages.MessageAddress, u messages
 		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", u.String())
 	}
 
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -147,7 +143,7 @@ func (me *Daemon) UnregisterByFile(f string) (*Service, error) {
 }
 
 
-func (me *Daemon) UnLoadFiles() error {
+func (me *Daemon) UnloadServiceFiles() error {
 
 	var err error
 
@@ -157,34 +153,24 @@ func (me *Daemon) UnLoadFiles() error {
 			break
 		}
 
-		for range only.Once {
-			checkIn := string(me.osSupport.GetAdminRootDir() + "/" + DefaultJsonFiles)
-			fmt.Printf("%d Unloading files... from %s\n", time.Now().Unix(), checkIn)
+		var files []string
+		files, err = me.FindServiceFiles()
+		if err != nil {
+			break
+		}
 
-			var files []string
-			err = filepath.Walk(checkIn, func(path string, info os.FileInfo, err error) error {
-				files = append(files, path)
-				return nil
-			})
+		for _, file := range files {
+			var sc *Service
+			sc, err = me.UnregisterByFile(file)
+			if sc == nil {
+				//eblog.Debug(me.EntityId, "Unloaded service file %s", file)
+				continue
+			}
 			if err != nil {
-				break
+				eblog.Debug(me.EntityId, "Unloading service file %s failed with '%v'\n", file, err)
+				continue
 			}
-
-			for _, file := range files {
-				if strings.HasSuffix(file, ".json") {
-					var sc *Service
-					fmt.Printf("Unloading file: %s\n", file)
-					sc, err = me.UnregisterByFile(file)
-					if sc == nil {
-						eblog.Debug(me.EntityId, "Unloading file: %s - already unloaded\n", file)
-						continue
-					}
-					if err != nil {
-						eblog.Debug(me.EntityId, "Unloading file: %s - FAILED: %v\n", file, err)
-						continue
-					}
-				}
-			}
+			eblog.Debug(me.EntityId, "Unloaded service file %s", file)
 		}
 	}
 

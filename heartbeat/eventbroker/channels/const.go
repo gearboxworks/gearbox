@@ -2,26 +2,27 @@ package channels
 
 import (
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/ospaths"
 	"gearbox/heartbeat/eventbroker/states"
-	oss "gearbox/os_support"
 	"github.com/olebedev/emitter"
 	"sync"
 )
 
 
 const (
-	DefaultEntityId   = "eventbroker-channels"
+	// DefaultEntityId   = "eventbroker-channels"
 )
 
 
 type Channels struct {
-	EntityId messages.MessageAddress
-	State    states.Status
+	EntityId    messages.MessageAddress
+	Boxname     string
+	State       states.Status
 
-	mutex            sync.RWMutex	// Mutex control for this struct.
-	subscribers      Subscribers
-	instance         channelsInstance
-	osSupport        oss.OsSupporter
+	mutex       sync.RWMutex // Mutex control for this struct.
+	subscribers Subscribers
+	instance    channelsInstance
+	OsPaths     *ospaths.BasePaths
 }
 type Args Channels
 

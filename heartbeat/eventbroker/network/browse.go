@@ -2,10 +2,10 @@ package network
 
 import (
 	"context"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
+	"gearbox/heartbeat/eventbroker/states"
 	"github.com/grandcat/zeroconf"
 )
 
@@ -41,6 +41,9 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 				found[u] = &Service{
 						EntityId: u,
 						Entry: Entry(*entry),
+						State: states.Status{
+							EntityId: &u,
+						},
 				}
 			}
 			// fmt.Println("No more entries.")
@@ -59,7 +62,6 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 		eblog.Debug(me.EntityId, "service scan completed")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -155,7 +157,7 @@ func (me *Service) compareService(e ServiceConfig) (bool, error) {
 			case (me.Entry.Instance == e.Name.String()) &&
 				(me.Entry.Service == e.Type.String()) &&
 				(me.Entry.Domain == e.Domain.String()) &&
-				(me.Entry.Port == int(e.Port)):
+				(me.Entry.Port == e.Port.ToInt()):
 				found = true
 				break
 

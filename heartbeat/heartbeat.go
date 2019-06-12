@@ -5,9 +5,9 @@ import (
 	"gearbox/app/logger"
 	"gearbox/box"
 	"gearbox/global"
-	"gearbox/heartbeat/external"
 	"gearbox/heartbeat/eventbroker"
 	"gearbox/heartbeat/eventbroker/daemon"
+	"gearbox/heartbeat/external"
 	"gearbox/help"
 	"gearbox/only"
 	"gearbox/os_support"
@@ -118,6 +118,13 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 
 		_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetAdminRootDir(), DefaultPidFile))
 
+		//ebbd := filepath.FromSlash(fmt.Sprintf("%s/dist", _args.OsSupport.GetUserHomeDir()))
+		//_args.EventBroker, err = eventbroker.New(eventbroker.Args{Boxname: _args.Boxname, SubBaseDir: "dist"})
+		_args.EventBroker, err = eventbroker.New(eventbroker.Args{Boxname: _args.Boxname})
+		if err != nil {
+			break
+		}
+
 		//execPath, _ := os.Executable()
 		//execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/heartbeat" // os.Getwd()
 		//// Start a new Daemon instance.
@@ -133,11 +140,6 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 		//		RunAtLoad:   true,
 		//	},
 		//})
-
-		_args.EventBroker, err = eventbroker.New(_args.OsSupport, eventbroker.Args{Boxname: _args.Boxname, PidFile: _args.PidFile})
-		if err != nil {
-			break
-		}
 
 		*hb = Heartbeat(_args)
 	}
@@ -201,7 +203,8 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 			os.Exit(0)
 		}()
 
-		_ = me.EventBroker.TempLoop()
+		fmt.Printf("Dropping in.\n")
+		me.EventBroker.SimpleLoop()
 
 		fmt.Printf("Breaking out.\n")
 		//time.Sleep(time.Second * 2)

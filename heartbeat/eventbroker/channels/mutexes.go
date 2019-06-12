@@ -3,7 +3,7 @@ package channels
 import (
 	"fmt"
 	"gearbox/heartbeat/eventbroker/messages"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 )
 
 // Mutex handling.
@@ -41,6 +41,42 @@ func (me *Channels) GetManagedEntities() messages.MessageAddresses {
 	}
 
 	return ret
+}
+
+
+func (me *Channels) AddEntity(entity messages.MessageAddress, sc *Subscriber) error {
+	var err error
+
+	me.mutex.Lock()
+	defer me.mutex.Unlock()
+
+	if _, ok := me.subscribers[entity]; !ok { // Managed by Mutex
+		me.subscribers[entity] = sc
+	} else {
+		err = me.EntityId.ProduceError("service %s already exists", entity)
+	}
+
+	return err
+}
+
+
+func (me *Channels) DeleteEntity(entity messages.MessageAddress) error {
+
+	var err error
+
+	me.mutex.Lock()
+	defer me.mutex.Unlock()
+
+	for range only.Once {
+		if _, ok := me.subscribers[entity]; !ok { // Managed by Mutex
+			err = me.EntityId.ProduceError("service doesn't exist")
+			break
+		}
+
+		delete(me.subscribers, entity) // Managed by Mutex
+	}
+
+	return err
 }
 
 
@@ -99,38 +135,46 @@ func (me *Subscriber) GetTopics() messages.SubTopics {
 }
 
 
-func (me *Channels) GetListeners(topic messages.MessageTopic) []string {
+func (me *Channels) GetListeners(topic messages.MessageTopic) ([]string, error) {
 
 	var ret []string
+	var err error
 
-	if me == nil {
-		return ret
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		foo := me.instance.emitter.Listeners(topic.String())[0]
+
+		for f := range foo {
+			ret = append(ret, f.Topic)
+			fmt.Printf("[%s] - '%s' '%s' '%s'\n", f.Topic, f.OriginalTopic, f.Args, f.Flags)
+		}
 	}
 
-	foo := me.instance.emitter.Listeners(topic.String())[0]
-
-	for f := range foo {
-		ret = append(ret, f.Topic)
-		fmt.Printf("[%s] - '%s' '%s' '%s'\n", f.Topic, f.OriginalTopic, f.Args, f.Flags)
-	}
-
-	return ret
+	return ret, err
 }
 
 
-func (me *Channels) GetListenerTopics() messages.Topics {
+func (me *Channels) GetListenerTopics() (messages.Topics, error) {
 
 	var topics messages.Topics
+	var err error
 
-	if me == nil {
-		return topics
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		for _, t := range me.instance.emitter.Topics() {
+			topics = append(topics, messages.StringToTopic(t))
+		}
 	}
 
-	for _, t := range me.instance.emitter.Topics() {
-		topics = append(topics, messages.StringToTopic(t))
-	}
-
-	return topics
+	return topics, err
 }
 
 
@@ -179,13 +223,25 @@ func (me *Subscriber) AddTopic(topic messages.SubTopic, callback Callback, argIn
 	return
 }
 
-func (me *Subscriber) DeleteTopic(sub messages.SubTopic) {
+
+func (me *Subscriber) DeleteTopic(entity messages.SubTopic) error {
+
+	var err error
+
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
-	delete(me.topics, sub)
+	for range only.Once {
+		_, ok := me.topics[entity] // Managed by Mutex
+		if !ok {
+			err = me.EntityId.ProduceError("service doesn't exist")
+			break
+		}
 
-	return
+		delete(me.topics, entity) // Managed by Mutex
+	}
+
+	return err
 }
 
 

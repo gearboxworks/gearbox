@@ -2,7 +2,7 @@ package states
 
 import (
 	"errors"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 	"reflect"
 )
 
@@ -14,25 +14,21 @@ func InterfaceToTypeStatus(i interface{}) (*Status, error) {
 
 	for range only.Once {
 		if i == nil {
-			err = errors.New("status.Status is nil")
+			err = errors.New("interface is nil, should be" + InterfaceTypeStatus)
 			break
 		}
 
 		checkType := reflect.ValueOf(i)
-		if checkType.Type().String() != "*states.Status" {
-			err = errors.New("interface type not *status.Status")
-			// fmt.Printf("%v\n", f.GetError())
+		if checkType.Type().String() != InterfaceTypeStatus {
+			err = errors.New("interface type not " + InterfaceTypeStatus)
 			break
 		}
 
 		zc = i.(*Status)
-		// zc = (i[0]).(*ZeroConf)
-		// zc = i[0].(*ZeroConf)
 	}
 
 	return zc, err
 }
-
 
 func InterfaceToTypeError(i interface{}) (*error, error) {
 
@@ -41,19 +37,17 @@ func InterfaceToTypeError(i interface{}) (*error, error) {
 
 	for range only.Once {
 		if i == nil {
-			err = errors.New("error is nil")
+			err = errors.New("interface is nil, should be" + InterfaceTypeError)
 			break
 		}
 
 		checkType := reflect.ValueOf(i)
-		if checkType.Type().String() != "*error" {
-			err = errors.New("interface type not *error")
+		if checkType.Type().String() != InterfaceTypeError {
+			err = errors.New("interface type not " + InterfaceTypeError)
 			break
 		}
 
 		zc = i.(*error)
-		// zc = (i[0]).(*ZeroConf)
-		// zc = i[0].(*ZeroConf)
 	}
 
 	return zc, err

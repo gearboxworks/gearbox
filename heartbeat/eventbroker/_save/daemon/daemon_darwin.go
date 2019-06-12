@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"gearbox/global"
 	"gearbox/help"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/os_support"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"

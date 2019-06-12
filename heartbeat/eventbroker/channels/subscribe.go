@@ -4,12 +4,12 @@ import (
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 	"sync"
 )
 
 
-func (me *Channels) Subscribe(topic messages.MessageTopic, callback Callback, argInterface Argument, retType ReturnType) (*Subscriber, error) {
+func (me *Channels) Subscribe(client messages.MessageTopic, callback Callback, argInterface Argument, retType ReturnType) (*Subscriber, error) {
 
 	var err error
 	var sub Subscriber
@@ -20,43 +20,44 @@ func (me *Channels) Subscribe(topic messages.MessageTopic, callback Callback, ar
 			break
 		}
 
-		for range only.Once {
-			err = topic.EnsureNotNil()
-			if err != nil {
-				break
-			}
-
-			if callback == nil {
-				err = me.EntityId.ProduceError("callback function is empty")
-				break
-			}
-
-			if retType == "" {
-				err = me.EntityId.ProduceError("return type is empty")
-				break
-			}
-
-			if me.subscribers == nil {
-				me.subscribers = make(Subscribers)
-			}
-
-			if _, ok := me.subscribers[topic.Address]; !ok {
-				sub = Subscriber{
-					EntityId:  topic.Address,
-					State: states.Status{},
-					IsManaged: true,
-
-					topics: make(References),
-					mutex: sync.RWMutex{},
-					parentInstance: &me.instance,
-				}
-				me.subscribers[topic.Address] = &sub
-			}
-			me.subscribers[topic.Address].AddTopic(topic.SubTopic, callback, argInterface, retType)
-
-			me.subscribers[topic.Address].State.SetNewState(states.StateSubscribed, err)
-			eblog.Debug(me.EntityId, "channel new subscriber: %s", messages.SprintfTopic(topic.Address, topic.SubTopic))
+		err = client.EnsureNotNil()
+		if err != nil {
+			break
 		}
+
+		if callback == nil {
+			err = me.EntityId.ProduceError("callback function is empty")
+			break
+		}
+
+		if retType == "" {
+			err = me.EntityId.ProduceError("return type is empty")
+			break
+		}
+
+		if me.subscribers == nil {
+			me.subscribers = make(Subscribers)
+		}
+
+		if _, ok := me.subscribers[client.Address]; !ok {
+			sub = Subscriber{
+				EntityId:  client.Address,
+				State: states.Status{},
+				IsManaged: true,
+
+				topics: make(References),
+				mutex: sync.RWMutex{},
+				parentInstance: &me.instance,
+			}
+			me.subscribers[client.Address] = &sub
+		}
+
+		me.subscribers[client.Address].State.SetNewAction(states.ActionSubscribe)
+
+		me.subscribers[client.Address].AddTopic(client.SubTopic, callback, argInterface, retType)
+
+		me.subscribers[client.Address].State.SetNewState(states.StateSubscribed, err)
+		eblog.Debug(me.EntityId, "channel subscriber: %s", messages.SprintfTopic(client.Address, client.SubTopic))
 	}
 
 	eblog.LogIfNil(me, err)
@@ -91,6 +92,8 @@ func (me *Subscriber) Subscribe(topic messages.SubTopic, callback Callback, argI
 				err = me.EntityId.ProduceError("return type is empty")
 				break
 			}
+
+			me.State.SetNewAction(states.ActionSubscribe)
 
 			me.AddTopic(topic, callback, argInterface, retType)
 

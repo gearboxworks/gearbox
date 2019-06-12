@@ -7,7 +7,7 @@ import (
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@ func stopHandler(event *messages.Message, i channels.Argument, r channels.Return
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return &err
 }
 
 
@@ -64,7 +64,7 @@ func startHandler(event *messages.Message, i channels.Argument, r channels.Retur
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return &err
 }
 
 
@@ -164,7 +164,7 @@ func unregisterService(event *messages.Message, i channels.Argument, r channels.
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return &err
 }
 
 
@@ -213,7 +213,7 @@ func loadConfigHandler(event *messages.Message, i channels.Argument, r channels.
 			break
 		}
 
-		err = me.LoadFiles()
+		err = me.LoadServiceFiles()
 
 		eblog.Debug(me.EntityId, "loadConfigHandler() via channel")
 	}

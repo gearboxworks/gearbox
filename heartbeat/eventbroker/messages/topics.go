@@ -3,7 +3,6 @@ package messages
 import (
 	"errors"
 	"fmt"
-	"gearbox/heartbeat/eventbroker/states"
 	"strings"
 )
 
@@ -61,11 +60,11 @@ func StringsToTopic(client string, topic string) MessageTopic {
 
 func CreateTopicGlob(client MessageAddress) *MessageTopic {
 
-	return &MessageTopic{Address: client, SubTopic: states.ActionGlob}
+	return &MessageTopic{Address: client, SubTopic: "*"}
 }
 func (client MessageAddress) CreateTopicGlob() *MessageTopic {
 
-	return &MessageTopic{Address: client, SubTopic: states.ActionGlob}
+	return &MessageTopic{Address: client, SubTopic: "*"}
 }
 
 

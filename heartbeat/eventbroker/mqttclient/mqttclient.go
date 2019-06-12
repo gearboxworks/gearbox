@@ -2,19 +2,18 @@ package mqttClient
 
 import (
 	"gearbox/box"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
+	"gearbox/heartbeat/eventbroker/entity"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/tasks"
-	"gearbox/only"
-	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/jinzhu/copier"
 	"net/url"
 )
 
 
-func (me *MqttClient) New(OsSupport oss.OsSupporter, args ...Args) error {
+func (me *MqttClient) New(args ...Args) error {
 
 	var _args Args
 	var err error
@@ -25,7 +24,6 @@ func (me *MqttClient) New(OsSupport oss.OsSupporter, args ...Args) error {
 			_args = args[0]
 		}
 
-		_args.osSupport = OsSupport
 		foo := box.Args{}
 		err = copier.Copy(&foo, &_args)
 		if err != nil {
@@ -38,8 +36,19 @@ func (me *MqttClient) New(OsSupport oss.OsSupporter, args ...Args) error {
 			break
 		}
 
+		if _args.OsPaths == nil {
+			err = me.EntityId.ProduceError("ospaths is nil")
+			break
+		}
+
+
 		if _args.EntityId == "" {
-			_args.EntityId = DefaultEntityId
+			_args.EntityId = entity.MqttClientEntityName
+		}
+		_args.State.EntityId = &_args.EntityId
+
+		if _args.Boxname == "" {
+			_args.Boxname = entity.MqttClientEntityName
 		}
 
 		if _args.Server == nil {
@@ -67,7 +76,7 @@ func (me *MqttClient) New(OsSupport oss.OsSupporter, args ...Args) error {
 		eblog.Debug(me.EntityId, "init complete")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	me.Channels.PublishState(&me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -86,8 +95,8 @@ func (me *MqttClient) StartHandler() error {
 			break
 		}
 
-		me.State.SetNewState(states.StateStarting, err)
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.State.SetNewAction(states.ActionStart)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 
 		for range only.Once {
 			me.Task, err = tasks.StartTask(initMqttClient, startMqttClient, monitorMqttClient, stopMqttClient, me)
@@ -98,10 +107,10 @@ func (me *MqttClient) StartHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStarted, err)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 		eblog.Debug(me.EntityId, "started task handler")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -120,8 +129,8 @@ func (me *MqttClient) StopHandler() error {
 			break
 		}
 
-		me.State.SetNewState(states.StateStopping, err)
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.State.SetNewAction(states.ActionStop)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 
 		for range only.Once {
 			_ = me.StopServices()
@@ -131,10 +140,10 @@ func (me *MqttClient) StopHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStopped, err)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 		eblog.Debug(me.EntityId, "stopped task handler")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -160,7 +169,6 @@ func (me *MqttClient) StopServices() error {
 		}
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

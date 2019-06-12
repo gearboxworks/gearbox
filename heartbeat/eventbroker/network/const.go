@@ -1,13 +1,13 @@
 package network
 
 import (
-	"fmt"
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/ospaths"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/tasks"
-	oss "gearbox/os_support"
 	"github.com/grandcat/zeroconf"
+	"net/url"
 	"strconv"
 	"sync"
 	"time"
@@ -15,16 +15,19 @@ import (
 
 
 const (
-	DefaultEntityId = "eventbroker-zeroconf"
+	// DefaultEntityId = "eventbroker-zeroconf"
 	DefaultWaitTime = time.Millisecond * 2000
 	DefaultDomain   = "local"
 	DefaultRetries  = 12
 	DefaultRetryDelay = time.Second * 10
+
+	SelectRandomPort = "0"
 )
 
 
 type ZeroConf struct {
 	EntityId        messages.MessageAddress
+	Boxname         string
 	State           states.Status
 	Task            *tasks.Task
 	Channels        *channels.Channels
@@ -36,7 +39,7 @@ type ZeroConf struct {
 	domain          string
 	services        ServicesMap
 	scannedServices ServicesMap
-	osSupport       oss.OsSupporter
+	OsPaths        *ospaths.BasePaths
 }
 type Args ZeroConf
 
@@ -51,6 +54,7 @@ type Service struct {
 	channels       *channels.Channels
 	channelHandler *channels.Subscriber
 	instance       *zeroconf.Server
+	osPaths        *ospaths.BasePaths
 }
 type ServicesMap map[messages.MessageAddress]*Service
 type Entry zeroconf.ServiceEntry
@@ -60,15 +64,16 @@ var browseList		= []string{"_mqtt._udp", "_mqtt._tcp", "_nfs._udp", "_nfs._tcp"}
 
 
 type ServiceConfig struct {
-	EntityId messages.MessageAddress `json:"entity_id"` //
-	Url      string         `json:"url"`       //
+	EntityId  messages.MessageAddress `json:"entity_id"` //
+	UrlString string                  `json:"urlstring"` //
+	Url       *url.URL                `json:"url"`       //
 
-	Name     Name           `json:"name"`      // == Service.Entry.Instance
-	Type     Type           `json:"type"`      // == Service.Entry.Service
-	Domain   Domain         `json:"domain"`    // == Service.Entry.Domain
-	Port     Port           `json:"port"`      // == Service.Entry.Port
-	Text     Text           `json:"text"`      // == Service.Entry.Text
-	TTL      uint32         `json:"ttl"`       // == Service.Entry.TTL
+	Name      Name                    `json:"name"`      // == Service.Entry.Instance
+	Type      Type                    `json:"type"`      // == Service.Entry.Service
+	Domain    Domain                  `json:"domain"`    // == Service.Entry.Domain
+	Port      Port                    `json:"port"`      // == Service.Entry.Port
+	Text      Text                    `json:"text"`      // == Service.Entry.Text
+	TTL       uint32                  `json:"ttl"`       // == Service.Entry.TTL
 }
 
 const (
@@ -76,7 +81,6 @@ const (
 	InterfaceTypeZeroConf      = "*" + Package + ".ZeroConf"
 	InterfaceTypeService       = "*" + Package + ".Service"
 	InterfaceTypeServiceConfig = "*" + Package + ".ServiceConfig"
-	InterfaceTypeError         = "error"
 )
 
 var msgTemplate = messages.Message{
@@ -98,23 +102,35 @@ var msgTemplate = messages.Message{
 */
 
 
-type Port int
-func (me Port) String() (string) {
-
-	return fmt.Sprintf("%d", me)
+type Port string
+func (me *Port) String() (string) {
+	return string(*me)
 }
-func StringToPort(i string) Port {
+func (me *Port) ToInt() int {
 
-	p, _ := strconv.Atoi(i)
+	p, _ := strconv.Atoi(me.String())
 
-	return Port(p)
+	return p
 }
+//type Port int
+//func (me Port) String() (string) {
+//
+//	return fmt.Sprintf("%d", me)
+//}
+//func StringToPort(i string) Port {
+//
+//	p, _ := strconv.Atoi(i)
+//
+//	return Port(p)
+//}
+
 
 type Host string
 func (me *Host) String() (string) {
 
 	return string(*me)
 }
+
 
 type Name string
 func (me *Name) String() (string) {

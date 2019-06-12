@@ -2,11 +2,10 @@ package mqttClient
 
 import (
 	"fmt"
-	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/fhmq/hmq/lib/topics"
 	"net/url"
@@ -58,8 +57,8 @@ func (me *MqttClient) ConnectToServer(u string) error {
 			me.instance.client.Disconnect(500)
 		}
 
-		me.State.SetNewAction(states.ActionInitialize)
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		me.State.SetNewAction(states.ActionStart)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 
 		me.Server, err = url.Parse(u)
 		if err != nil {
@@ -113,10 +112,10 @@ func (me *MqttClient) ConnectToServer(u string) error {
 		}
 
 		me.State.SetNewState(states.StateStarted, err)
+		me.Channels.PublishState(&me.EntityId, &me.State)
 		eblog.Debug(me.EntityId, "connected to broker %s", me.Server)
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

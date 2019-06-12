@@ -3,8 +3,9 @@ package daemon
 import (
 	"encoding/json"
 	"gearbox/heartbeat/eventbroker/eblog"
+	"gearbox/heartbeat/eventbroker/entity"
 	"gearbox/heartbeat/eventbroker/messages"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,7 +20,7 @@ func ReadJsonConfig(f string) (*ServiceConfig, error) {
 
 	for range only.Once {
 		if f == "" {
-			err = messages.ProduceError(DefaultEntityId, "Daemon service JSON file not defined")
+			err = messages.ProduceError(entity.DaemonEntityName, "Daemon service JSON file not defined")
 			break
 		}
 
@@ -47,15 +48,23 @@ func ReadJsonConfig(f string) (*ServiceConfig, error) {
 
 func (me *Daemon) ParsePaths(sc ServiceConfig, i string) string {
 
+	if me.OsPaths == nil {
+		return i
+	}
+
 	strReplace := map[string]string {
-		"{{.GetLocalDir}}":			"/usr/local",
-		"{{.GetUserHomeDir}}":		string(me.osSupport.GetUserHomeDir()),
-		"{{.GetAdminRootDir}}":		string(me.osSupport.GetAdminRootDir()),
-		"{{.GetCacheDir}}":			string(me.osSupport.GetCacheDir()),
-		"{{.GetSuggestedBasedir}}":	string(me.osSupport.GetSuggestedBasedir()),
-		"{{.GetUserConfigDir}}":	string(me.osSupport.GetUserConfigDir()),
-		"{{.GetPort}}":				sc.Port.String(),
-		"{{.GetHost}}":				sc.Host.String(),
+		"{{.LocalDir}}":              me.OsPaths.LocalDir.String(),
+		"{{.UserHomeDir}}":           me.OsPaths.UserHomeDir.String(),
+		"{{.AdminRootDir}}":          me.OsPaths.AdminRootDir.String(),
+		"{{.CacheDir}}":              me.OsPaths.CacheDir.String(),
+		"{{.SuggestedBasedir}}":      me.OsPaths.SuggestedBasedir.String(),
+		"{{.UserConfigDir}}":         me.OsPaths.UserConfigDir.String(),
+		"{{.EventBrokerDir}}":        me.OsPaths.EventBrokerDir.String(),
+		"{{.EventBrokerWorkingDir}}": me.OsPaths.EventBrokerWorkingDir.String(),
+		"{{.EventBrokerLogDir}}":     me.OsPaths.EventBrokerLogDir.String(),
+		"{{.EventBrokerEtcDir}}":     me.OsPaths.EventBrokerEtcDir.String(),
+		"{{.Port}}":                  sc.autoPort,	// sc.UrlPtr.Port(),
+		"{{.Host}}":                  sc.autoHost,	// sc.UrlPtr.Hostname(),
 	}
 
 	for k, v := range strReplace {
@@ -69,8 +78,8 @@ func (me *Daemon) ParsePaths(sc ServiceConfig, i string) string {
 func (me *Daemon) ParseNetwork(sc ServiceConfig, i string) string {
 
 	strReplace := map[string]string {
-		"{{.GetPort}}":	sc.Port.String(),
-		"{{.GetHost}}":	sc.Host.String(),
+		"{{.Port}}":	sc.UrlPtr.Port(),
+		"{{.Host}}":	sc.UrlPtr.Hostname(),
 	}
 
 	for k, v := range strReplace {

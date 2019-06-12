@@ -3,8 +3,7 @@ package mqttClient
 import (
 	"errors"
 	"fmt"
-	"gearbox/heartbeat/eventbroker/channels"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 	"reflect"
 )
 
@@ -102,21 +101,18 @@ func InterfaceToTypeMqttClient(i interface{}) (*MqttClient, error) {
 	var zc *MqttClient
 
 	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
+		if i == nil {
+			err = errors.New("interface is nil, should be" + InterfaceTypeMqttClient)
 			break
 		}
 
 		checkType := reflect.ValueOf(i)
-		//fmt.Printf("InterfaceToTypeMqttClient = %v\n", checkType.Type().String())
 		if checkType.Type().String() != InterfaceTypeMqttClient {
 			err = errors.New("interface type not " + InterfaceTypeMqttClient)
 			break
 		}
 
 		zc = i.(*MqttClient)
-		// zc = (i[0]).(*ZeroConf)
-		// zc = i[0].(*ZeroConf)
 
 		err = zc.EnsureNotNil()
 		if err != nil {
@@ -134,21 +130,18 @@ func InterfaceToTypeService(i interface{}) (*Service, error) {
 	var s *Service
 
 	for range only.Once {
-		err = channels.EnsureArgumentNotNil(i)
-		if err != nil {
+		if i == nil {
+			err = errors.New("interface is nil, should be" + InterfaceTypeService)
 			break
 		}
 
 		checkType := reflect.ValueOf(i)
-		//fmt.Printf("InterfaceToTypeService = %v\n", checkType.Type().String())
 		if checkType.Type().String() != InterfaceTypeService {
 			err = errors.New("interface type not " + InterfaceTypeService)
 			break
 		}
 
 		s = i.(*Service)
-		// zc = (i[0]).(*Service)
-		// zc = i[0].(*Service)
 
 		err = s.EnsureNotNil()
 		if err != nil {

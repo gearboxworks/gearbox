@@ -1,6 +1,7 @@
 package states
 
 import (
+	"gearbox/heartbeat/eventbroker/messages"
 	"sync"
 	"time"
 )
@@ -125,6 +126,7 @@ var ActionName = map[int]Action{
 
 
 type Status struct {
+	EntityId *messages.MessageAddress
 	Current  State
 	Want     State
 	Last     State
@@ -139,7 +141,7 @@ type Status struct {
 const (
 	Package					= "states"
 	InterfaceTypeStatus		= "*" + Package + ".Status"
-	InterfaceTypeError		= "error"
+	InterfaceTypeError		= "*error"
 )
 
 

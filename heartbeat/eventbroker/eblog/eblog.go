@@ -1,6 +1,7 @@
 package eblog
 
 import (
+	"fmt"
 	"gearbox/heartbeat/eventbroker/messages"
 	"github.com/gearboxworks/go-status"
 	"reflect"
@@ -96,6 +97,23 @@ func MyCallers(whichCaller int, howMany int) (*Callers) {
 	}
 
 	return &callers
+}
+
+// Determine the calling functions that called this function.
+// IE: MyCaller's grand-parent.
+func (me *Callers) Print() string {
+
+	var ret string
+
+	if me == nil {
+		return ""
+	}
+
+	for k, v := range *me {
+		ret += fmt.Sprintf("[%d] %s %s:%d\n", k, v.File, v.Function, v.LineNumber)
+	}
+
+	return ret
 }
 
 

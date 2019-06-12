@@ -2,9 +2,7 @@ package channels
 
 import (
 	"errors"
-	"gearbox/only"
 	"gearbox/heartbeat/eventbroker/messages"
-	"reflect"
 )
 
 
@@ -36,11 +34,11 @@ func EnsureArgumentNotNil(me Argument) error {
 	var err error
 
 	switch {
-	case me == nil:
-		err = errors.New("channel argument is nil")
+		case me == nil:
+			err = errors.New("channel argument is nil")
 
-	default:
-		// err = errors.New("subscriber not nil")
+		default:
+			// err = errors.New("subscriber not nil")
 	}
 
 	return err
@@ -82,28 +80,6 @@ func (me *Subscriber) EnsureNotNil() error {
 	}
 
 	return err
-}
-
-
-func ReturnInterfaceType(i interface{}) (string, error) {
-
-	var err error
-	var ret string
-
-	for range only.Once {
-		err = EnsureArgumentNotNil(i)
-		if err != nil {
-			break
-		}
-
-		checkType := reflect.ValueOf(i)
-		ret = checkType.Type().String()
-		if ret == "" {
-			err = errors.New("interface type is nil")
-		}
-	}
-
-	return ret, err
 }
 
 

@@ -5,7 +5,7 @@ import (
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/states"
-	"gearbox/only"
+	"gearbox/heartbeat/eventbroker/only"
 	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
 )
@@ -38,6 +38,7 @@ func (me *MqttBroker) New(OsSupport oss.OsSupporter, args ...Args) error {
 		if _args.EntityId == "" {
 			_args.EntityId = DefaultEntityId
 		}
+		_args.State.EntityId = &_args.EntityId
 
 		//if _args.Servers == nil {
 		//	_args.Servers, err = url.Parse(DefaultServer)
