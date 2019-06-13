@@ -45,7 +45,7 @@ func (me *MqttClient) New(args ...Args) error {
 		if _args.EntityId == "" {
 			_args.EntityId = entity.MqttClientEntityName
 		}
-		_args.State.EntityId = &_args.EntityId
+		_args.State = states.New(&_args.EntityId, &_args.EntityId, entity.SelfEntityName)
 
 		if _args.Boxname == "" {
 			_args.Boxname = entity.MqttClientEntityName
@@ -76,7 +76,7 @@ func (me *MqttClient) New(args ...Args) error {
 		eblog.Debug(me.EntityId, "init complete")
 	}
 
-	me.Channels.PublishState(&me.EntityId, &me.State)
+	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -96,7 +96,7 @@ func (me *MqttClient) StartHandler() error {
 		}
 
 		me.State.SetNewAction(states.ActionStart)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 
 		for range only.Once {
 			me.Task, err = tasks.StartTask(initMqttClient, startMqttClient, monitorMqttClient, stopMqttClient, me)
@@ -107,7 +107,7 @@ func (me *MqttClient) StartHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStarted, err)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 		eblog.Debug(me.EntityId, "started task handler")
 	}
 
@@ -130,7 +130,7 @@ func (me *MqttClient) StopHandler() error {
 		}
 
 		me.State.SetNewAction(states.ActionStop)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 
 		for range only.Once {
 			_ = me.StopServices()
@@ -140,7 +140,7 @@ func (me *MqttClient) StopHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStopped, err)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 		eblog.Debug(me.EntityId, "stopped task handler")
 	}
 

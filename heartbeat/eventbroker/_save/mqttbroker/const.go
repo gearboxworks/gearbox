@@ -62,7 +62,7 @@ const mqttBrokerJson = `
 
 type MqttBroker struct {
 	EntityId        messages.MessageAddress
-	State           states.Status
+	State           *states.Status
 	Task            *tasks.Task
 	Server          *url.URL
 	Channels        *channels.Channels

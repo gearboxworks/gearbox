@@ -1,6 +1,10 @@
 package states
 
-import "time"
+import (
+	"fmt"
+	"gearbox/heartbeat/eventbroker/only"
+	"time"
+)
 
 
 func (me *Status) SetNewState(new State, err error) bool {
@@ -63,6 +67,43 @@ func (me *Status) SetNewAction(a Action) bool {
 	}
 
 	return ok
+}
+
+
+func (me *Status) String() string {
+
+	var ret string
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+
+		ret = fmt.Sprintf(`EntityId:%s  Name:%s  Parent:%s  Action:%s  Want:%s  Current:%s  Last:%s  LastWhen:%v  Error:%v`,
+			me.EntityId.String(),
+			me.EntityName.String(),
+			me.ParentId.String(),
+			me.Action.String(),
+			me.Want.String(),
+			me.Current.String(),
+			me.Last.String(),
+			me.LastWhen.Unix(),
+			me.Error,
+		)
+	}
+
+	return ret
+}
+
+
+func StatusAsString(me *Status) string {
+
+	return me.String()
 }
 
 

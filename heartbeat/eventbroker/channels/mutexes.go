@@ -44,23 +44,23 @@ func (me *Channels) GetManagedEntities() messages.MessageAddresses {
 }
 
 
-func (me *Channels) AddEntity(entity messages.MessageAddress, sc *Subscriber) error {
+func (me *Channels) AddEntity(client messages.MessageAddress, sc *Subscriber) error {
 	var err error
 
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
-	if _, ok := me.subscribers[entity]; !ok { // Managed by Mutex
-		me.subscribers[entity] = sc
+	if _, ok := me.subscribers[client]; !ok { // Managed by Mutex
+		me.subscribers[client] = sc
 	} else {
-		err = me.EntityId.ProduceError("service %s already exists", entity)
+		err = me.EntityId.ProduceError("service %s already exists", client)
 	}
 
 	return err
 }
 
 
-func (me *Channels) DeleteEntity(entity messages.MessageAddress) error {
+func (me *Channels) DeleteEntity(client messages.MessageAddress) error {
 
 	var err error
 
@@ -68,12 +68,12 @@ func (me *Channels) DeleteEntity(entity messages.MessageAddress) error {
 	defer me.mutex.Unlock()
 
 	for range only.Once {
-		if _, ok := me.subscribers[entity]; !ok { // Managed by Mutex
+		if _, ok := me.subscribers[client]; !ok { // Managed by Mutex
 			err = me.EntityId.ProduceError("service doesn't exist")
 			break
 		}
 
-		delete(me.subscribers, entity) // Managed by Mutex
+		delete(me.subscribers, client) // Managed by Mutex
 	}
 
 	return err
@@ -224,7 +224,7 @@ func (me *Subscriber) AddTopic(topic messages.SubTopic, callback Callback, argIn
 }
 
 
-func (me *Subscriber) DeleteTopic(entity messages.SubTopic) error {
+func (me *Subscriber) DeleteTopic(client messages.SubTopic) error {
 
 	var err error
 
@@ -232,13 +232,13 @@ func (me *Subscriber) DeleteTopic(entity messages.SubTopic) error {
 	defer me.mutex.Unlock()
 
 	for range only.Once {
-		_, ok := me.topics[entity] // Managed by Mutex
+		_, ok := me.topics[client] // Managed by Mutex
 		if !ok {
 			err = me.EntityId.ProduceError("service doesn't exist")
 			break
 		}
 
-		delete(me.topics, entity) // Managed by Mutex
+		delete(me.topics, client) // Managed by Mutex
 	}
 
 	return err
@@ -264,26 +264,26 @@ func (me *Subscriber) SetReturns(sub messages.SubTopic, v Return) {
 }
 
 
-//func (me *Subscriber) GetEntityId(entity messages.MessageAddress) messages.MessageAddress {
+//func (me *Subscriber) GetEntityId(client messages.MessageAddress) messages.MessageAddress {
 //
 //	me.daemonsMutex.RLock()
 //	defer me.daemonsMutex.RUnlock()
-//	return me.daemons[entity].EntityId	// Managed by Mutex
+//	return me.daemons[client].EntityId	// Managed by Mutex
 //}
 //
 //
-//func (me *Subscriber) EnsureSubscriberNotNil(entity messages.MessageAddress) error {
+//func (me *Subscriber) EnsureSubscriberNotNil(client messages.MessageAddress) error {
 //
 //	var err error
 //
 //	me.daemonsMutex.RLock()
 //	defer me.daemonsMutex.RUnlock()
 //
-//	_, ok := me.daemons[entity]	// Managed by Mutex
+//	_, ok := me.daemons[client]	// Managed by Mutex
 //	if !ok {
 //		err = me.EntityId.ProduceError("service doesn't exist")
 //	} else {
-//		err = me.daemons[entity].EnsureNotNil()	// Managed by Mutex
+//		err = me.daemons[client].EnsureNotNil()	// Managed by Mutex
 //	}
 //
 //	return err
@@ -291,11 +291,11 @@ func (me *Subscriber) SetReturns(sub messages.SubTopic, v Return) {
 //
 //
 //// Mutex handling.
-//func (me *Subscriber) DeleteSubscriber(entity messages.MessageAddress) {
+//func (me *Subscriber) DeleteSubscriber(client messages.MessageAddress) {
 //
 //	me.daemonsMutex.Lock()
 //	defer me.daemonsMutex.Unlock()
-//	delete(me.daemons, entity)	// Managed by Mutex
+//	delete(me.daemons, client)	// Managed by Mutex
 //
 //	return
 //}

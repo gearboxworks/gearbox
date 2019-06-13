@@ -4,6 +4,7 @@ import (
 	"gearbox/box"
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
+	"gearbox/heartbeat/eventbroker/entity"
 	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/only"
 	oss "gearbox/os_support"
@@ -38,7 +39,7 @@ func (me *MqttBroker) New(OsSupport oss.OsSupporter, args ...Args) error {
 		if _args.EntityId == "" {
 			_args.EntityId = DefaultEntityId
 		}
-		_args.State.EntityId = &_args.EntityId
+		_args.State = states.New(&_args.EntityId, &_args.EntityId, entity.SelfEntityName)
 
 		//if _args.Servers == nil {
 		//	_args.Servers, err = url.Parse(DefaultServer)
@@ -56,7 +57,7 @@ func (me *MqttBroker) New(OsSupport oss.OsSupporter, args ...Args) error {
 		eblog.Debug(me.EntityId, "init complete")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	channels.PublishState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -76,7 +77,7 @@ func (me *MqttBroker) StartHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStarting, err)
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		channels.PublishState(me.Channels, &me.EntityId, &me.State)
 
 		// Not using tasks.
 		//for range only.Once {
@@ -94,7 +95,7 @@ func (me *MqttBroker) StartHandler() error {
 		eblog.Debug(me.EntityId, "started task handler")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	channels.PublishState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -114,7 +115,7 @@ func (me *MqttBroker) StopHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStopping, err)
-		channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+		channels.PublishState(me.Channels, &me.EntityId, &me.State)
 
 		for range only.Once {
 			err = me.Task.Stop()
@@ -124,7 +125,7 @@ func (me *MqttBroker) StopHandler() error {
 		eblog.Debug(me.EntityId, "stopped task handler")
 	}
 
-	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+	channels.PublishState(me.Channels, &me.EntityId, &me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -150,7 +151,7 @@ func (me *MqttBroker) StopHandler() error {
 //		}
 //	}
 //
-//	channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
+//	channels.PublishState(me.Channels, &me.EntityId, &me.State)
 //	eblog.LogIfNil(me, err)
 //	eblog.LogIfError(me.EntityId, err)
 //

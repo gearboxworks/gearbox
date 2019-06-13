@@ -3,8 +3,8 @@ package channels
 import (
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/messages"
-	"gearbox/heartbeat/eventbroker/states"
 	"gearbox/heartbeat/eventbroker/only"
+	"gearbox/heartbeat/eventbroker/states"
 	"sync"
 )
 
@@ -40,9 +40,12 @@ func (me *Channels) Subscribe(client messages.MessageTopic, callback Callback, a
 		}
 
 		if _, ok := me.subscribers[client.Address]; !ok {
+			addr := client.Address
 			sub = Subscriber{
-				EntityId:  client.Address,
-				State: states.Status{},
+				EntityId:  addr,
+				EntityName: addr,
+				EntityParent: &me.EntityId,
+				State: states.New(&addr, &addr, me.EntityId),
 				IsManaged: true,
 
 				topics: make(References),

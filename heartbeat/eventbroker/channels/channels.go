@@ -1,7 +1,6 @@
 package channels
 
 import (
-	"fmt"
 	"gearbox/box"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/entity"
@@ -41,7 +40,7 @@ func (me *Channels) New(args ...Args) error {
 		if _args.EntityId == "" {
 			_args.EntityId = entity.ChannelEntityName
 		}
-		_args.State.EntityId = &_args.EntityId
+		_args.State = states.New(&_args.EntityId, &_args.EntityId, entity.SelfEntityName)
 
 		if _args.Boxname == "" {
 			_args.Boxname = entity.ChannelEntityName
@@ -58,7 +57,7 @@ func (me *Channels) New(args ...Args) error {
 		eblog.Debug(me.EntityId, "init complete")
 	}
 
-	me.PublishState(&me.EntityId, &me.State)
+	me.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -123,7 +122,6 @@ func (me *Channels) StopClientHandler(client messages.MessageAddress)  {
 
 	var err error
 
-	fmt.Printf(">> F1\n")
 	for range only.Once {
 		err = me.EnsureNotNil()
 		if err != nil {
@@ -192,7 +190,9 @@ func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscri
 
 		sub = Subscriber{
 			EntityId:  client,
-			State: states.Status{},
+			EntityName:  client,
+			EntityParent: &me.EntityId,
+			State: states.New(&client, &client, me.EntityId),
 			IsManaged: true,
 
 			topics: make(References),

@@ -24,7 +24,7 @@ func (srv *Service) Start() error {
 		}
 
 		srv.State.SetNewAction(states.ActionStart)
-		srv.channels.PublishState(&srv.EntityId, &srv.State)
+		srv.channels.PublishState(srv.State)
 
 		err = srv.instance.service.Start()
 		if err != nil {
@@ -52,7 +52,7 @@ func (srv *Service) Start() error {
 		}
 
 		srv.State.SetNewState(states.StateStarted, err)
-		srv.channels.PublishState(&srv.EntityId, &srv.State)
+		srv.channels.PublishState(srv.State)
 		eblog.Debug(srv.EntityId, "service started OK")
 	}
 
@@ -74,7 +74,7 @@ func (srv *Service) Stop() error {
 		}
 
 		srv.State.SetNewAction(states.ActionStop)
-		srv.channels.PublishState(&srv.EntityId, &srv.State)
+		srv.channels.PublishState(srv.State)
 
 		err = srv.instance.service.Stop()
 		if err != nil {
@@ -97,7 +97,7 @@ func (srv *Service) Stop() error {
 		}
 
 		srv.State.SetNewState(states.StateStopped, err)
-		srv.channels.PublishState(&srv.EntityId, &srv.State)
+		srv.channels.PublishState(srv.State)
 		eblog.Debug(srv.EntityId, "service stopped OK")
 	}
 
@@ -127,7 +127,7 @@ func (srv *Service) Status(publish bool) (states.Status, error) {
 			eblog.Debug(srv.EntityId, "status current:%s last:%s", srv.State.GetCurrent().String(), srv.State.GetLast().String())
 
 			if publish {
-				srv.channels.PublishState(&srv.EntityId, &srv.State)
+				srv.channels.PublishState(srv.State)
 			}
 		}
 	}
@@ -135,7 +135,7 @@ func (srv *Service) Status(publish bool) (states.Status, error) {
 	eblog.LogIfNil(srv, err)
 	eblog.LogIfError(srv.EntityId, err)
 
-	return srv.State, err
+	return *srv.State, err
 }
 
 

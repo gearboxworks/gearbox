@@ -48,7 +48,7 @@ func (me *Mqtt) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 		if _args.EntityId == "" {
 			_args.EntityId = DefaultEntityId
 		}
-		_args.State.EntityId = &_args.EntityId
+		_args.State = states.New(&_args.EntityId)
 
 		// Setup Broker.
 		// ConfigureConfig is normally used with args, but good enough to create a default config.

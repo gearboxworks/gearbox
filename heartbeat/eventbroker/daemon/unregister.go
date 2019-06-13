@@ -15,7 +15,6 @@ import (
 func (me *Daemon) UnregisterByEntityId(client messages.MessageAddress) error {
 
 	var err error
-	var state states.Status
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -28,14 +27,16 @@ func (me *Daemon) UnregisterByEntityId(client messages.MessageAddress) error {
 			break
 		}
 
-		me.daemons[client].State.SetNewAction(states.ActionUnregister)	// Managed by Mutex
-		me.daemons[client].channels.PublishCallerState(&me.daemons[client].State)
+		me.daemons[client].State.SetNewAction(states.ActionStop)	// Was states.ActionUnregister
+		me.daemons[client].channels.PublishState(me.daemons[client].State)
 
-		state, err = me.daemons[client].Status(DontPublishState)	// Mutex not required
+		var state states.State
+		state, err = me.daemons[client].decodeServiceState()
+		//state, err = me.daemons[client].Status(DontPublishState)	// Mutex not required
 		if err != nil {
 			continue
 		}
-		switch state.Current {
+		switch state {
 			case states.StateUnknown:
 				//
 
@@ -54,16 +55,19 @@ func (me *Daemon) UnregisterByEntityId(client messages.MessageAddress) error {
 			break
 		}
 
+		me.daemons[client].State.SetNewState(states.StateStopped, err)		// Was states.StateUnregistered
+		me.daemons[client].channels.PublishState(me.daemons[client].State)
+
 		err = me.DeleteEntity(client)
 		if err != nil {
 			break
 		}
 
-		me.Channels.PublishSpecificState(&client, states.State(states.StateUnsubscribed))
+		//me.Channels.PublishSpecificState(&client, states.State(states.StateUnsubscribed))
 		eblog.Debug(me.EntityId, "unregistered service %s OK", client.String())
 	}
 
-	me.Channels.PublishState(&me.EntityId, &me.State)
+	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -92,7 +96,7 @@ func (me *Daemon) UnregisterByChannel(caller messages.MessageAddress, u messages
 		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", u.String())
 	}
 
-	me.Channels.PublishState(&me.EntityId, &me.State)
+	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

@@ -26,8 +26,8 @@ func initDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		for range only.Once {
-			me.State.SetNewAction(states.ActionInitialize)
-			me.Channels.PublishState(&me.EntityId, &me.State)
+			me.State.SetNewAction(states.ActionStart)
+			me.Channels.PublishState(me.State)
 
 			_ = task.SetRetryLimit(defaultRetries)
 			_ = task.SetRetryDelay(DefaultRetryDelay)
@@ -67,8 +67,8 @@ func initDaemon(task *tasks.Task, i ...interface{}) error {
 				break
 			}
 
-			me.State.SetNewState(states.StateInitialized, err)
-			me.Channels.PublishState(&me.EntityId, &me.State)
+			me.State.SetNewState(states.StateStarted, err)
+			me.Channels.PublishState(me.State)
 			eblog.Debug(me.EntityId, "task handler init completed OK")
 		}
 
@@ -94,13 +94,13 @@ func startDaemon(task *tasks.Task, i ...interface{}) error {
 
 		for range only.Once {
 			me.State.SetNewAction(states.ActionStart)
-			me.Channels.PublishState(&me.EntityId, &me.State)
+			me.Channels.PublishState(me.State)
 
-			// Read in any new files and load them up.
-			err = me.LoadServiceFiles()
+			// Function to restart services should they die.
+			// Will only be executed if monitor task fails.
 
 			me.State.SetNewState(states.StateStarted, err)
-			me.Channels.PublishState(&me.EntityId, &me.State)
+			me.Channels.PublishState(me.State)
 			eblog.Debug(me.EntityId, "task handler init completed OK")
 		}
 
@@ -124,6 +124,15 @@ func monitorDaemon(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
+
+		// First monitor my current state.
+		if me.State.GetCurrent() != states.StateStarted {
+			err = me.EntityId.ProduceError("task needs restarting")
+			break
+		}
+
+
+		// Next do something else.
 		for range only.Once {
 			_ = me.LoadServiceFiles()
 
@@ -187,7 +196,7 @@ func stopDaemon(task *tasks.Task, i ...interface{}) error {
 
 		for range only.Once {
 			me.State.SetNewAction(states.ActionStop)
-			me.Channels.PublishState(&me.EntityId, &me.State)
+			me.Channels.PublishState(me.State)
 
 			err = me.channelHandler.StopHandler()
 			if err != nil {
@@ -195,7 +204,7 @@ func stopDaemon(task *tasks.Task, i ...interface{}) error {
 			}
 
 			me.State.SetNewState(states.StateStopped, err)
-			me.Channels.PublishState(&me.EntityId, &me.State)
+			me.Channels.PublishState(me.State)
 			eblog.Debug(me.EntityId, "task handler stopped OK")
 		}
 

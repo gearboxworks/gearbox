@@ -17,7 +17,7 @@ const (
 type Channels struct {
 	EntityId    messages.MessageAddress
 	Boxname     string
-	State       states.Status
+	State       *states.Status
 
 	mutex       sync.RWMutex // Mutex control for this struct.
 	subscribers Subscribers
@@ -37,7 +37,9 @@ type Event emitter.Event
 
 type Subscriber struct {
 	EntityId       messages.MessageAddress
-	State          states.Status
+	EntityName     messages.MessageAddress
+	EntityParent   *messages.MessageAddress
+	State          *states.Status
 	IsManaged      bool
 
 	mutex          sync.RWMutex // Mutex control for this struct.

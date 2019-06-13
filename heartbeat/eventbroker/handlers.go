@@ -42,7 +42,7 @@ func (me *EventBroker) StartChannelHandler() error {
 		}
 
 		me.State.SetNewState(states.StateInitialized, err)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 		eblog.Debug(me.EntityId, "task handler init completed OK")
 
 	}
@@ -60,7 +60,7 @@ func (me *EventBroker) StopChannelHandler() error {
 
 	for range only.Once {
 		me.State.SetNewAction(states.ActionStop)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 
 		err = me.channelHandler.StopHandler()
 		if err != nil {
@@ -68,7 +68,7 @@ func (me *EventBroker) StopChannelHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStopped, err)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 		eblog.Debug(me.EntityId, "task handler stopped OK")
 	}
 
@@ -79,7 +79,8 @@ func (me *EventBroker) StopChannelHandler() error {
 }
 
 
-// Non-exposed channel function that responds to a "stop" channel request.
+// Non-exposed channel function that responds to a "get" channel request.
+// Wraps a status request into another entity.
 func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
@@ -92,32 +93,34 @@ func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnT
 			break
 		}
 
-		fmt.Printf("Get event: %s\n", event.String())
+		//fmt.Printf("getHandler: %s\n", event.String())
 
 		var msg *messages.Message
 		msg, err = event.Text.ToMessage()
-		fmt.Printf("%d msg == %v, err == %v\n", time.Now().Unix(), msg, err)
-		if err != nil {
+		if err == nil {
+			//fmt.Printf("%d: msg == %s\n", time.Now().Unix(), msg.String())
+		} else {
+			fmt.Printf("getHandler %d: msg == %v / err == %v\n", time.Now().Unix(), msg, err)
 			break
 		}
 
 		switch msg.Topic.SubTopic {
 			case states.ActionStatus:
-				fmt.Printf("Republish status request message: %v\n", msg.String())
+				//fmt.Printf("%d: Republish status request message: %s\n", time.Now().Unix(), msg.String())
 				var ir channels.Return
 				ir, err = me.Channels.PublishAndWaitForReturn(*msg, 200)
-				fmt.Printf("%d ir == %v, err == %v\n", time.Now().Unix(), ir, err)
-				if err != nil {
+				if err == nil {
+					//fmt.Printf("%d: OK - ir == %v\n", time.Now().Unix(), ir)
+				} else {
+					fmt.Printf("getHandler %d: ER - ir == %v /  err == %v\n", time.Now().Unix(), ir, err)
 					break
 				}
 
 				ret, err = states.InterfaceToTypeStatus(ir)
-				fmt.Printf("%d ret == %v, err == %v\n", time.Now().Unix(), ret, err)
 				if err == nil {
-					fmt.Printf("%d status after: %v\n", time.Now().Unix(), ret.GetError())
-					// fmt.Printf("%d gbevents after: %v (%v)\n", time.Now().Unix(), f.GetError(), me.Daemon.Fluff)
+					//fmt.Printf("%d: OK - ret == %s\n", time.Now().Unix(), ret.String())
 				} else {
-					fmt.Printf("%d status after: is nil!\n", time.Now().Unix())
+					fmt.Printf("getHandler %d: ER - ret == nil / err == %v\n", time.Now().Unix(), err)
 				}
 		}
 
@@ -129,7 +132,7 @@ func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnT
 
 		//fmt.Printf("Event(%s) Time:%d Src:%s Text:%s\n", event.Topic.String(), event.Time.Convert().Unix(), event.Source.String(), event.Text.String())
 
-		eblog.Debug(me.EntityId, "statusHandler() via channel")
+		eblog.Debug(me.EntityId, "getHandler() via channel")
 	}
 
 	eblog.LogIfNil(me, err)
@@ -152,25 +155,29 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 			break
 		}
 
-		//fmt.Printf("Status event: %s\n", event.String())
+		//fmt.Printf("statusHandler: %s\n", event.String())
 		//fmt.Printf("Event(%s) Time:%d Src:%s Text:%s\n", event.Topic.String(), event.Time.Convert().Unix(), event.Source.String(), event.Text.String())
 
-		//msg := messages.Message{
-		//	Source: me.EntityId,
-		//	Topic: messages.MessageTopic{
-		//		Address: event.Source,
-		//		SubTopic: "status",
-		//	},
-		//	Text: "",
-		//}
-		//fmt.Printf("\n\n%d gbevents before: %v\n", time.Now().Unix(), me.Daemon.State.GetError())
-		//i, _ := me.Channels.PublishAndWaitForReturn(msg, 400)
-		//f, err := states.InterfaceToTypeStatus(i)
-		//if err == nil {
-		//	fmt.Printf("%d gbevents after: %v\n", time.Now().Unix(), f)
-		//} else {
-		//	fmt.Printf("%d gbevents after: is nil!\n", time.Now().Unix())
-		//}
+		if event.Topic.Address.String() == "" {
+			break
+		}
+
+		if event.Text.String() == "" {
+			break
+		}
+
+		ret, err = states.FromMessageText(event.Text)
+		if err != nil {
+			fmt.Printf("Error %v - %s\n", err, event.String())
+			break
+		}
+
+		//fmt.Printf("Rec: %s\n", ret.String())
+		err = me.Services.AddState(*ret)
+		if err != nil {
+			break
+		}
+		//fmt.Printf(">> %s is at state '%s'\n", ret.EntityId.String(), ret.Current.String())
 
 		eblog.Debug(me.EntityId, "statusHandler() via channel")
 	}

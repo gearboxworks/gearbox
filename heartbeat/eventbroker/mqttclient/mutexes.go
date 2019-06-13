@@ -39,23 +39,23 @@ func (me *MqttClient) GetManagedEntities() messages.MessageAddresses {
 }
 
 
-func (me *MqttClient) AddEntity(entity messages.MessageAddress, sc *Service) error {
+func (me *MqttClient) AddEntity(client messages.MessageAddress, sc *Service) error {
 	var err error
 
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
-	if _, ok := me.services[entity]; !ok { // Managed by Mutex
-		me.services[entity] = sc
+	if _, ok := me.services[client]; !ok { // Managed by Mutex
+		me.services[client] = sc
 	} else {
-		err = me.EntityId.ProduceError("service %s already exists", entity)
+		err = me.EntityId.ProduceError("service %s already exists", client)
 	}
 
 	return err
 }
 
 
-func (me *MqttClient) DeleteEntity(entity messages.MessageAddress) error {
+func (me *MqttClient) DeleteEntity(client messages.MessageAddress) error {
 
 	var err error
 
@@ -63,29 +63,29 @@ func (me *MqttClient) DeleteEntity(entity messages.MessageAddress) error {
 	defer me.mutex.Unlock()
 
 	for range only.Once {
-		if _, ok := me.services[entity]; !ok { // Managed by Mutex
+		if _, ok := me.services[client]; !ok { // Managed by Mutex
 			err = me.EntityId.ProduceError("service doesn't exist")
 			break
 		}
 
-		delete(me.services, entity) // Managed by Mutex
+		delete(me.services, client) // Managed by Mutex
 	}
 
 	return err
 }
 
 
-func (me *MqttClient) EnsureDaemonNotNil(entity messages.MessageAddress) error {
+func (me *MqttClient) EnsureDaemonNotNil(client messages.MessageAddress) error {
 
 	var err error
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	if _, ok := me.services[entity]; !ok {		// Managed by Mutex
+	if _, ok := me.services[client]; !ok {		// Managed by Mutex
 		err = me.EntityId.ProduceError("service doesn't exist")
 	} else {
-		err = me.services[entity].EnsureNotNil()	// Managed by Mutex
+		err = me.services[client].EnsureNotNil()	// Managed by Mutex
 	}
 
 	return err
@@ -184,7 +184,7 @@ func (me *Service) GetStatus() (*states.Status, error) {
 
 	err := me.EnsureNotNil()
 	if err == nil {
-		sc = &me.State		// Managed by Mutex
+		sc = me.State		// Managed by Mutex
 	}
 
 	return sc, err
@@ -237,11 +237,11 @@ func (me *Service) GetStatus() (*states.Status, error) {
 //}
 //
 //
-//func (me *MqttClient) _DeleteEntity(entity messages.MessageAddress) {
+//func (me *MqttClient) _DeleteEntity(client messages.MessageAddress) {
 //
 //	me.mutex.Lock()
 //	defer me.mutex.Unlock()
-//	delete(me.services, entity)	// Managed by Mutex
+//	delete(me.services, client)	// Managed by Mutex
 //
 //	return
 //}
@@ -255,17 +255,17 @@ func (me *Service) GetStatus() (*states.Status, error) {
 //}
 //
 //
-//func (me *MqttClient) _EnsureDaemonNotNil(entity messages.MessageAddress) error {
+//func (me *MqttClient) _EnsureDaemonNotNil(client messages.MessageAddress) error {
 //
 //	var err error
 //
 //	me.mutex.RLock()
 //	defer me.mutex.RUnlock()
 //
-//	if _, ok := me.services[entity]; !ok {		// Managed by Mutex
+//	if _, ok := me.services[client]; !ok {		// Managed by Mutex
 //		err = me.EntityId.ProduceError("service doesn't exist")
 //	} else {
-//		err = me.services[entity].EnsureNotNil()	// Managed by Mutex
+//		err = me.services[client].EnsureNotNil()	// Managed by Mutex
 //	}
 //
 //	return err

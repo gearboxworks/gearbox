@@ -32,7 +32,7 @@ const (
 type Daemon struct {
 	EntityId       messages.MessageAddress
 	Boxname        string
-	State          states.Status
+	State          *states.Status
 	Task           *tasks.Task
 	Channels       *channels.Channels
 
@@ -46,7 +46,9 @@ type Args Daemon
 
 type Service struct {
 	EntityId        messages.MessageAddress
-	State           states.Status
+	EntityName      messages.MessageAddress
+	EntityParent    *messages.MessageAddress
+	State           *states.Status
 	IsManaged       bool
 	Entry           *ServiceConfig
 	JsonFile        JsonConfig
@@ -67,6 +69,7 @@ type JsonConfig struct {
 type ServiceConfig struct {
 	service.Config
 
+	EntityName     string
 	Stdout    string
 	Stderr    string
 	Stdin     string

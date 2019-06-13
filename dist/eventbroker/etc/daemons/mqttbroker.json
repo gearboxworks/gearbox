@@ -1,4 +1,5 @@
 {
+	"EntityName": "mqtt",
 	"Name": "com.gearbox.mqttBroker",
 	"DisplayName": "Gearbox [mqttBroker]",
 	"Description": "mqttBroker is required to support Gearbox",

@@ -58,7 +58,7 @@ func (me *MqttClient) ConnectToServer(u string) error {
 		}
 
 		me.State.SetNewAction(states.ActionStart)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 
 		me.Server, err = url.Parse(u)
 		if err != nil {
@@ -112,7 +112,7 @@ func (me *MqttClient) ConnectToServer(u string) error {
 		}
 
 		me.State.SetNewState(states.StateStarted, err)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 		eblog.Debug(me.EntityId, "connected to broker %s", me.Server)
 	}
 

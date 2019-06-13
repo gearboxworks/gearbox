@@ -26,7 +26,7 @@ const (
 type MqttClient struct {
 	EntityId        messages.MessageAddress
 	Boxname         string
-	State           states.Status
+	State           *states.Status
 	Task            *tasks.Task
 	Channels        *channels.Channels
 	Server          *url.URL
@@ -49,7 +49,9 @@ type clientInstance struct {
 
 type Service struct {
 	EntityId       messages.MessageAddress
-	State          states.Status
+	EntityName     messages.MessageAddress
+	EntityParent   *messages.MessageAddress
+	State          *states.Status
 	IsManaged      bool
 	Entry          *ServiceConfig
 

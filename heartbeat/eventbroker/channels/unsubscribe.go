@@ -34,10 +34,12 @@ func (me *Channels) UnSubscribe(client messages.MessageTopic) error {
 
 		me.subscribers[client.Address].State.SetNewAction(states.ActionUnsubscribe)
 
-		me.subscribers[client.Address].DeleteTopic(client.SubTopic)	// Managed by Mutex
+		err = me.subscribers[client.Address].DeleteTopic(client.SubTopic)	// Managed by Mutex
+		if err != nil {
+			break
+		}
 
 		me.subscribers[client.Address].State.SetNewState(states.StateUnsubscribed, err)
-		me.PublishSpecificState(&client.Address, states.State(states.StateUnsubscribed))
 		eblog.Debug(me.EntityId, "channel unsubscriber: %s", messages.SprintfTopic(client.Address, client.SubTopic))
 	}
 
@@ -48,31 +50,34 @@ func (me *Channels) UnSubscribe(client messages.MessageTopic) error {
 }
 
 
-//func (me *Subscriber) UnSubscribe(client messages.SubTopic) error {
-//
-//	var err error
-//
-//	for range only.Once {
-//		err = me.EnsureNotNil()
-//		if err != nil {
-//			break
-//		}
-//
-//		err = client.EnsureNotNil()
-//		if err != nil {
-//			break
-//		}
-//
-//		me.State.SetNewAction(states.ActionUnsubscribe)
-//
-//		me.DeleteTopic(client)	// Managed by Mutex
-//
-//		me.State.SetNewState(states.StateUnsubscribed, err)
-//		eblog.Debug(me.EntityId, "channel unsubscriber: %s", messages.SprintfTopic(client.Address, client.SubTopic))
-//	}
-//
-//	eblog.LogIfNil(me, err)
-//	eblog.LogIfError(me.EntityId, err)
-//
-//	return err
-//}
+func (me *Subscriber) UnSubscribe(client messages.SubTopic) error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		err = client.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		me.State.SetNewAction(states.ActionUnsubscribe)
+
+		err = me.DeleteTopic(client)	// Managed by Mutex
+		if err != nil {
+			break
+		}
+
+		me.State.SetNewState(states.StateUnsubscribed, err)
+		eblog.Debug(me.EntityId, "channel unsubscriber: %s/%s", me.EntityId.String(), client.String())
+	}
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return err
+}

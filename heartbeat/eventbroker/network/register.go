@@ -30,12 +30,14 @@ func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 		}
 
 		// Create new service entry.
-		sc.State.SetNewAction(states.ActionRegister)
-		sc.EntityId = messages.GenerateAddress()
-		sc.State.EntityId = &sc.EntityId
+		sc.EntityId = *messages.GenerateAddress()
+		sc.EntityName = messages.MessageAddress(s.Name)
+		sc.EntityParent = &me.EntityId
+		sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
+		sc.State.SetNewAction(states.ActionStart)		// Was states.ActionRegister
 		sc.IsManaged = true
 		sc.channels = me.Channels
-		sc.channels.PublishCallerState(&sc.State)
+		sc.channels.PublishState(sc.State)
 
 		err = s.Port.IfZeroFindFreePort()
 		if err != nil {
@@ -74,12 +76,12 @@ func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 			break
 		}
 
-		sc.State.SetNewState(states.StateRegistered, err)
-		sc.channels.PublishCallerState(&sc.State)
+		sc.State.SetNewState(states.StateStarted, err)		// Was states.StateRegistered
+		sc.channels.PublishState(sc.State)
 		eblog.Debug(me.EntityId, "registered service %s OK", sc.EntityId.String())
 	}
 
-	me.Channels.PublishState(&me.EntityId, &me.State)
+	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -131,7 +133,7 @@ func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s ServiceC
 		eblog.Debug(me.EntityId, "registered service by channel %s OK", sc.EntityId.String())
 	}
 
-	me.Channels.PublishState(&me.EntityId, &me.State)
+	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

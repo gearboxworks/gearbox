@@ -38,12 +38,13 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 			for entry := range results {
 				u := messages.GenerateAddress()
 				//fmt.Printf("Found: %v\n", *entry)
-				found[u] = &Service{
-						EntityId: u,
+				n := messages.MessageAddress(entry.ServiceName())
+				found[*u] = &Service{
+						EntityId: *u,
+						EntityName: n,
+						EntityParent: &me.EntityId,
 						Entry: Entry(*entry),
-						State: states.Status{
-							EntityId: &u,
-						},
+						State: states.New(u, &n, me.EntityId),
 				}
 			}
 			// fmt.Println("No more entries.")

@@ -27,21 +27,24 @@ func (me *MqttClient) UnsubscribeByUuid(client messages.MessageAddress) error {
 			break
 		}
 
-		me.services[client].State.SetNewAction(states.ActionUnsubscribe)
-		me.services[client].channels.PublishCallerState(&me.State)
+		me.services[client].State.SetNewAction(states.ActionStop)	// Was states.ActionUnsubscribe
+		me.services[client].channels.PublishState(me.State)
 
 		me.instance.client.Unsubscribe(me.services[client].Entry.Topic.String())
+
+		me.services[client].State.SetNewState(states.StateStopped, err)	// Was states.StateUnsubscribed
+		me.services[client].channels.PublishState(me.services[client].State)
 
 		err = me.DeleteEntity(client)
 		if err != nil {
 			break
 		}
 
-		me.Channels.PublishSpecificState(&client, states.State(states.StateUnsubscribed))
+		//me.Channels.PublishSpecificState(&client, states.State(states.StateUnsubscribed))
 		eblog.Debug(me.EntityId, "unregistered service %s OK", client.String())
 	}
 
-	me.Channels.PublishState(&me.EntityId, &me.State)
+	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

@@ -51,12 +51,14 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 
 		// Create new daemon entry.
 		for range only.Once {
+			sc.EntityId = *messages.GenerateAddress()
+			sc.EntityName = messages.MessageAddress(c.Name)
+			sc.EntityParent = &me.EntityId
+			sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
 			sc.State.SetNewAction(states.ActionRegister)
-			sc.EntityId = messages.GenerateAddress()
-			sc.State.EntityId = &sc.EntityId
 			sc.IsManaged = true
 			sc.channels = me.Channels
-			sc.channels.PublishCallerState(&sc.State)
+			sc.channels.PublishState(sc.State)
 
 			sc.Entry, err = me.createEntry(c)
 			if err != nil {
@@ -114,12 +116,12 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 			}
 
 			sc.State.SetNewState(states.StateRegistered, err)
-			sc.channels.PublishCallerState(&sc.State)
+			sc.channels.PublishState(sc.State)
 			eblog.Debug(me.EntityId, "registered service %s OK", sc.Entry.UrlPtr.String())
 		}
 	}
 
-	me.Channels.PublishState(&me.EntityId, &me.State)
+	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -166,7 +168,7 @@ func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s ServiceCon
 		eblog.Debug(me.EntityId, "registered service by channel %s OK", sc.EntityId.String())
 	}
 
-	me.Channels.PublishState(&me.EntityId, &me.State)
+	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 

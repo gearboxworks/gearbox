@@ -45,15 +45,15 @@ func EnsureArgumentNotNil(me Argument) error {
 }
 
 
-func (me *Channels) EnsureSubscriberNotNil(entity messages.MessageAddress) error {
+func (me *Channels) EnsureSubscriberNotNil(client messages.MessageAddress) error {
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	if _, ok := me.subscribers[entity]; !ok {	// Managed by Mutex
+	if _, ok := me.subscribers[client]; !ok {	// Managed by Mutex
 		return me.EntityId.ProduceError("subscriber doesn't exist")
 	} else {
-		return me.subscribers[entity].EnsureNotNil()      // Managed by Mutex
+		return me.subscribers[client].EnsureNotNil()      // Managed by Mutex
 	}
 }
 

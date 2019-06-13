@@ -1,6 +1,7 @@
 package channels
 
 import (
+	"fmt"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/entity"
 	"gearbox/heartbeat/eventbroker/messages"
@@ -175,24 +176,30 @@ func (me *Channels) PublishAndWaitForReturn(msg messages.Message, waitForExecute
 
 
 // Send channel message on state changes only.
-func PublishState(me *Channels, caller *messages.MessageAddress, state *states.Status) {
+//func PublishState(me *Channels, caller *messages.MessageAddress, state *states.Status) {
+func PublishState(me *Channels, state *states.Status) {
 
 	switch {
 		case me == nil:
-
-		case caller == nil:
-
+			//fmt.Printf("me == nil: %s\n", state.String())
 		case state == nil:
+			//fmt.Printf("state == nil: %s\n", state.String())
+		case state.EnsureNotNil() != nil:
+			//fmt.Printf("state.EnsureNotNil() != nil: %s\n", state.String())
+		case !state.HasChangedState():
+			//fmt.Printf("!state.HasChangedState(): %s\n", state.String())
 
 		case state.GetError() != nil:
-			msg := caller.ConstructMessage(entity.BroadcastEntityName, states.ActionError, messages.MessageText(state.GetError().Error()))
+			//msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionError, messages.MessageText(state.GetError().Error()))
+			msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionError, state.ToMessageText())
 			//fmt.Printf("ERROR: %s\n", msg.String())
 			_ = me.Publish(msg)
 
 		case state.ExpectingNewState():
 			fallthrough
 		case state.HasChangedState():
-			msg := caller.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, messages.MessageText(state.GetCurrent()))
+			//msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, messages.MessageText(state.GetCurrent()))
+			msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, state.ToMessageText())
 			//fmt.Printf("EXPECTING: %s\n", msg.String())
 			_ = me.Publish(msg)
 	}
@@ -201,9 +208,10 @@ func PublishState(me *Channels, caller *messages.MessageAddress, state *states.S
 }
 
 
-func (me *Channels) PublishState(caller *messages.MessageAddress, state *states.Status) {
+func (me *Channels) PublishState(state *states.Status) {
 
-	PublishState(me, caller, state)
+	// PublishState(me, caller, state)
+	PublishState(me, state)
 
 	return
 }
@@ -218,44 +226,8 @@ func (me *Channels) PublishSpecificState(caller *messages.MessageAddress, state 
 			return
 	}
 
-	PublishState(me, caller, &states.Status{Current: state})
-
-	return
-}
-
-
-// Send channel message on state changes only.
-func PublishCallerState(me *Channels, state *states.Status) {
-
-	switch {
-		case me == nil:
-
-		case state.EntityId == nil:
-
-		case state == nil:
-
-		case state.GetError() != nil:
-			// _ = me.Publish(caller.ConstructMessage(*caller, states.ActionError, messages.MessageText(state.GetError().Error())))
-			msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionError, messages.MessageText(state.GetError().Error()))
-			//fmt.Printf("ERROR: %s\n", msg.String())
-			_ = me.Publish(msg)
-
-		case state.ExpectingNewState():
-			fallthrough
-		case state.HasChangedState():
-			// _ = me.Publish(caller.ConstructMessage(*caller, states.ActionStatus, messages.MessageText(state.GetCurrent())))
-			msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, messages.MessageText(state.GetCurrent()))
-			//fmt.Printf("EXPECTING: %s\n", msg.String())
-			_ = me.Publish(msg)
-	}
-
-	return
-}
-
-
-func (me *Channels) PublishCallerState(state *states.Status) {
-
-	PublishCallerState(me, state)
+	msg := caller.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, messages.MessageText(state))
+	_ = me.Publish(msg)
 
 	return
 }

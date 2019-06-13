@@ -46,7 +46,7 @@ func (me *Daemon) New(args ...Args) error {
 		if _args.EntityId == "" {
 			_args.EntityId = entity.DaemonEntityName
 		}
-		_args.State.EntityId = &_args.EntityId
+		_args.State = states.New(&_args.EntityId, &_args.EntityId, entity.SelfEntityName)
 
 		if _args.Boxname == "" {
 			_args.Boxname = entity.DaemonEntityName
@@ -65,17 +65,16 @@ func (me *Daemon) New(args ...Args) error {
 			break
 		}
 
-
 		_args.daemons = make(ServicesMap)	// Mutex not required
+
+		_args.State.SetWant(states.StateIdle)
+		_args.State.SetNewState(states.StateIdle, err)
+
 		*me = Daemon(_args)
-
-
-		me.State.SetWant(states.StateIdle)
-		me.State.SetNewState(states.StateIdle, err)
 		eblog.Debug(me.EntityId, "init complete")
 	}
 
-	me.Channels.PublishState(&me.EntityId, &me.State)
+	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -95,7 +94,7 @@ func (me *Daemon) StartHandler() error {
 		}
 
 		me.State.SetNewAction(states.ActionStart)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 
 		for range only.Once {
 			me.Task, err = tasks.StartTask(initDaemon, startDaemon, monitorDaemon, stopDaemon, me)
@@ -105,7 +104,7 @@ func (me *Daemon) StartHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStarted, err)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 		eblog.Debug(me.EntityId, "started task handler")
 	}
 
@@ -128,7 +127,7 @@ func (me *Daemon) StopHandler() error {
 		}
 
 		me.State.SetNewAction(states.ActionStop)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 
 		for range only.Once {
 			_ = me.StopServices()
@@ -138,7 +137,7 @@ func (me *Daemon) StopHandler() error {
 		}
 
 		me.State.SetNewState(states.StateStopped, err)
-		me.Channels.PublishState(&me.EntityId, &me.State)
+		me.Channels.PublishState(me.State)
 		eblog.Debug(me.EntityId, "stopped task handler")
 	}
 

@@ -1,4 +1,5 @@
 {
+	"EntityName": "unfsd",
 	"Name": "com.gearbox.unfsd",
 	"DisplayName": "Gearbox [UNFSD]",
 	"Description": "UNFSD is required to support Gearbox",

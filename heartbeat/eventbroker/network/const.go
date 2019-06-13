@@ -16,7 +16,7 @@ import (
 
 const (
 	// DefaultEntityId = "eventbroker-zeroconf"
-	DefaultWaitTime = time.Millisecond * 2000
+	DefaultWaitTime = time.Millisecond * 1000
 	DefaultDomain   = "local"
 	DefaultRetries  = 12
 	DefaultRetryDelay = time.Second * 10
@@ -28,7 +28,7 @@ const (
 type ZeroConf struct {
 	EntityId        messages.MessageAddress
 	Boxname         string
-	State           states.Status
+	State           *states.Status
 	Task            *tasks.Task
 	Channels        *channels.Channels
 
@@ -46,7 +46,9 @@ type Args ZeroConf
 
 type Service struct {
 	EntityId       messages.MessageAddress
-	State          states.Status
+	EntityName     messages.MessageAddress
+	EntityParent   *messages.MessageAddress
+	State          *states.Status
 	IsManaged      bool
 	Entry          Entry
 
@@ -65,6 +67,7 @@ var browseList		= []string{"_mqtt._udp", "_mqtt._tcp", "_nfs._udp", "_nfs._tcp"}
 
 type ServiceConfig struct {
 	EntityId  messages.MessageAddress `json:"entity_id"` //
+	EntityName     string
 	UrlString string                  `json:"urlstring"` //
 	Url       *url.URL                `json:"url"`       //
 

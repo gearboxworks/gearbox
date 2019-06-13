@@ -29,12 +29,14 @@ func (me *MqttClient) Subscribe(ce ServiceConfig) (*Service, error) {
 		}
 
 		// Create new client entry.
+		sc.EntityId = *messages.GenerateAddress()
+		sc.EntityName = messages.MessageAddress(ce.Name)
+		sc.EntityParent = &me.EntityId
+		sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
 		sc.State.SetNewAction(states.ActionSubscribe)
-		sc.EntityId = messages.GenerateAddress()
-		sc.State.EntityId = &sc.EntityId
 		sc.IsManaged = true
 		sc.channels = me.Channels
-		sc.channels.PublishCallerState(&sc.State)
+		sc.channels.PublishState(sc.State)
 
 		if ce.callback == nil {
 			ce.callback = defaultCallback
@@ -58,11 +60,11 @@ func (me *MqttClient) Subscribe(ce ServiceConfig) (*Service, error) {
 		}
 
 		sc.State.SetNewState(states.StateSubscribed, err)
-		sc.channels.PublishCallerState(&sc.State)
+		sc.channels.PublishState(sc.State)
 		eblog.Debug(me.EntityId, "subscribed %s OK", sc.EntityId.String())
 	}
 
-	me.Channels.PublishState(&me.EntityId, &me.State)
+	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
@@ -107,7 +109,7 @@ func (me *MqttClient) SubscribeByChannel(caller messages.MessageAddress, s Topic
 		eblog.Debug(me.EntityId, "subscribed by channel %s OK", sc.EntityId.String())
 	}
 
-	me.Channels.PublishState(&me.EntityId, &me.State)
+	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
