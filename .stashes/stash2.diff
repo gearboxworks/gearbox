@@ -1,0 +1,329 @@
+diff --git a/assets/gears.json b/assets/gears.json
+index a700990..ed90400 100644
+--- a/assets/gears.json
++++ b/assets/gears.json
+@@ -14,42 +14,42 @@
+    ],
+    "roles": {
+       "gearbox.works/elasticsearch/elasticsearch": {
+-         "name": "Elasticsearch",
++         "program": "Elasticsearch",
+          "label": "Elasticsearch",
+          "examples": [
+             "Elasticsearch"
+          ]
+       },
+       "gearbox.works/lamp/apache": {
+-         "name": "LAMP Apache Web Server",
++         "program": "LAMP Apache Web Server",
+          "label": "Apache",
+          "examples": [
+             "Apache"
+          ]
+       },
+       "gearbox.works/lamp/mysql": {
+-         "name": "LAMP MySQL database server",
++         "program": "LAMP MySQL database server",
+          "label": "MySQL",
+          "examples": [
+             "MySQL"
+          ]
+       },
+       "gearbox.works/lamp/php": {
+-         "name": "LAMP PHP ProcessVM",
++         "program": "LAMP PHP ProcessVM",
+          "label": "PHP",
+          "examples": [
+             "PHP"
+          ]
+       },
+       "gearbox.works/lemp/nginx": {
+-         "name": "LEMP Nginx Web server",
++         "program": "LEMP Nginx Web server",
+          "label": "Nginx",
+          "examples": [
+             "Nginx"
+          ]
+       },
+       "gearbox.works/lemp/mysql": {
+-         "name": "LEMP Database server; MySQL or MariaDB",
++         "program": "LEMP Database server; MySQL or MariaDB",
+          "label": "DB server",
+          "examples": [
+             "MySQL",
+@@ -57,14 +57,14 @@
+          ]
+       },
+       "gearbox.works/lemp/p-script": {
+-         "name": "LEMP server-side scripting process VM; PHP, Python or Perl",
++         "program": "LEMP server-side scripting process VM; PHP, Python or Perl",
+          "label": "server-side scripting",
+          "examples": [
+             "PHP"
+          ]
+       },
+       "gearbox.works/wordpress/webserver": {
+-         "name": "Web server for WordPress",
++         "program": "Web server for WordPress",
+          "label": "Web server",
+          "examples": [
+             "Apache",
+@@ -74,7 +74,7 @@
+          ]
+       },
+       "gearbox.works/wordpress/dbserver": {
+-         "name": "Database server for WordPress",
++         "program": "Database server for WordPress",
+          "label": "DB server",
+          "examples": [
+             "MySQL",
+@@ -83,7 +83,7 @@
+          ]
+       },
+       "gearbox.works/wordpress/processvm": {
+-         "name": "ProcessVM (PHP) for WordPress",
++         "program": "ProcessVM (PHP) for WordPress",
+          "label": "PHP",
+          "examples": [
+             "PHP",
+@@ -91,7 +91,7 @@
+          ]
+       },
+       "gearbox.works/wordpress/cacheserver": {
+-         "name": "Cache server for WordPress",
++         "program": "Cache server for WordPress",
+          "label": "Cache server",
+          "examples": [
+             "Redis",
+diff --git a/cache/cache.go b/cache/cache.go
+index b7903e4..ab105b8 100644
+--- a/cache/cache.go
++++ b/cache/cache.go
+@@ -148,7 +148,7 @@ func (me *Cache) Set(key types.CacheKey, b []byte, duration string) (sts status.
+ 		fp := me.GetCacheFilepath(key)
+ 		d := filepath.Dir(string(fp))
+ 		if !dirExists(d) {
+-			err = os.Mkdir(filepath.Dir(string(fp)), 0777)
++			err = os.MkdirAll(filepath.Dir(string(fp)), 0777)
+ 			if err != nil {
+ 				sts = status.Wrap(err, &status.Args{
+ 					Message: fmt.Sprintf("unable to create cache directory '%s'", d),
+diff --git a/gearbox/gearbox.go b/gearbox/gearbox.go
+index 29aab82..7e27abb 100644
+--- a/gearbox/gearbox.go
++++ b/gearbox/gearbox.go
+@@ -252,7 +252,7 @@ func NewGearbox(args *Args) Gearboxer {
+ 		gb.HostApi.SetGearbox(&gb)
+ 	}
+ 	if args.Gears == nil {
+-		gb.Gears = gears.NewGears()
++		gb.Gears = gears.NewGears(gb.OsSupport)
+ 	}
+ 	return &gb
+ }
+diff --git a/gears/gears.go b/gears/gears.go
+index 4b849a7..6b5dcc7 100644
+--- a/gears/gears.go
++++ b/gears/gears.go
+@@ -20,18 +20,23 @@ type Gear interface {
+ }
+ 
+ type Gears struct {
+-	Authorities      types.Authorities `json:"authorities"`
+-	NamedStackIds    types.StackIds    `json:"stacks"`
+-	StackRoleMap     StackRoleMap      `json:"roles"`
+-	ServiceOptionMap ServiceOptionsMap `json:"services"`
+-	OsSupport        oss.OsSupporter   `json:"-"`
+-	GlobalOptions    global.Options    `json:"-"`
+-	refreshed        bool
++	Authorities       types.Authorities `json:"authorities"`
++	NamedStackIds     types.StackIds    `json:"stacks"`
++	OsSupport         oss.OsSupporter   `json:"-"`
++	StackRoleMap      StackRoleMap      `json:"roles"`
++	ServiceOptionsMap ServiceOptionsMap `json:"services"`
++	GlobalOptions     global.Options    `json:"-"`
++	refreshed         bool
+ }
+ 
+-func NewGears() *Gears {
+-	o := Gears{}
+-	return &o
++func NewGears(ossup oss.OsSupporter) *Gears {
++	return &Gears{
++		OsSupport: ossup,
++		Authorities: make(types.Authorities,0),
++		NamedStackIds: make(types.StackIds,0),
++		StackRoleMap: make(StackRoleMap,0),
++		ServiceOptionsMap: make(ServiceOptionsMap,0),
++	}
+ }
+ 
+ func (me *Gears) GetNamedStackIds() (nsids types.StackIds, sts status.Status) {
+@@ -52,7 +57,7 @@ func (me *Gears) GetStackRoleMap() (StackRoleMap, status.Status) {
+ }
+ 
+ func (me *Gears) GetNamedStackServiceOptionMap(stackid types.StackId) (rsm ServiceOptionsMap, sts status.Status) {
+-	return me.ServiceOptionMap.FilterForNamedStack(stackid)
++	return me.ServiceOptionsMap.FilterForNamedStack(stackid)
+ }
+ 
+ func (me *Gears) GetNamedStackRoleMap(stackid types.StackId) (StackRoleMap, status.Status) {
+@@ -106,7 +111,7 @@ func (me *Gears) Initialize() (sts status.Status) {
+ 		if is.Error(sts) {
+ 			break
+ 		}
+-		for rs, ro := range me.ServiceOptionMap {
++		for rs, ro := range me.ServiceOptionsMap {
+ 			sr, ok := me.StackRoleMap[rs]
+ 			if !ok {
+ 				continue // @TODO Log error here and communicate back to home base
+diff --git a/gears/service_options.go b/gears/service_options.go
+index 385807a..670c917 100644
+--- a/gears/service_options.go
++++ b/gears/service_options.go
+@@ -81,7 +81,7 @@ func (me ServiceOptionsMap) FilterForNamedStack(stackid types.StackId) (nsrm Ser
+ func (me *ServiceOptions) Fixup(nsid types.StackId) (sts status.Status) {
+ 	for range only.Once {
+ 		gsi := gsid.NewGearspecId()
+-		sts = gsi.Parse(gsid.Identifier(me.NamedStackId))
++		sts = gsi.Parse(gsid.Identifier(nsid))
+ 		if is.Error(sts) {
+ 			break
+ 		}
+diff --git a/global/const.go b/global/const.go
+index 6955946..d8f4c32 100644
+--- a/global/const.go
++++ b/global/const.go
+@@ -3,3 +3,4 @@ package global
+ const DefaultAuthority = "gears.gearbox.works"
+ 
+ const DefaultOrgName = "gearboxworks"
++
+diff --git a/test/unit/host_api_global_options_test.go b/global/test/options_test.go
+similarity index 86%
+rename from test/unit/host_api_global_options_test.go
+rename to global/test/options_test.go
+index 69315ed..74b6376 100644
+--- a/test/unit/host_api_global_options_test.go
++++ b/global/test/options_test.go
+@@ -1,9 +1,9 @@
+-package unit
++package test
+ 
+ import (
+ 	"gearbox/gearbox"
+ 	gopt "gearbox/global"
+-	"gearbox/status"
++	"gearbox/status/is"
+ 	"gearbox/test/includes"
+ 	"gearbox/test/mock"
+ 	"testing"
+@@ -19,7 +19,7 @@ var GlobalOptionsTable = []*gopt.Options{
+ 	{NoCache: T, IsDebug: F},
+ }
+ 
+-func TestHostApiGlobalOptions(t *testing.T) {
++func TestGlobalOptions(t *testing.T) {
+ 	for _, glopt := range GlobalOptionsTable {
+ 		t.Run(glopt.Debug(), func(t *testing.T) {
+ 			testGlobalOption(t, glopt)
+@@ -33,8 +33,9 @@ func testGlobalOption(t *testing.T, glopt *gopt.Options) {
+ 		GlobalOptions: glopt,
+ 	})
+ 	gb.SetConfig(includes.NewTestConfig(gb))
++
+ 	sts := gb.Initialize()
+-	if status.IsError(sts) {
++	if is.Error(sts) {
+ 		t.Error(sts.Message())
+ 	}
+ }
+diff --git a/test/mock/os_support_mock.go b/test/mock/os_support_mock.go
+index aea39ab..f353b2e 100644
+--- a/test/mock/os_support_mock.go
++++ b/test/mock/os_support_mock.go
+@@ -3,9 +3,9 @@ package mock
+ import (
+ 	"fmt"
+ 	"gearbox/os_support"
++	"gearbox/test/user-home"
+ 	"gearbox/types"
+-	"gearbox/util"
+-	"os"
++	"strings"
+ 	"testing"
+ )
+ 
+@@ -21,7 +21,6 @@ var _ oss.OsSupporter = NilOsSupport
+ type OsSupport struct {
+ 	oss.Base
+ 	T                 *testing.T
+-	UserHomePath      string
+ 	SuggestedBasePath string
+ 	UserConfigPath    string
+ 	AdminRootPath     string
+@@ -35,15 +34,10 @@ func NewOsSupport(t *testing.T) oss.OsSupporter {
+ }
+ 
+ func (me *OsSupport) GetUserHomeDir() types.AbsoluteDir {
+-	if me.UserHomePath == "" {
+-		me.UserHomePath = "user-home"
++	if strings.HasPrefix(string(testconst.UserHomeDir),"ERROR:") {
++		me.T.Error(fmt.Sprintf("failed to get current working directory: %s", testconst.UserHomeDir))
+ 	}
+-	dir, err := os.Getwd()
+-	if err != nil {
+-		me.T.Error(fmt.Sprintf("failed to get current working directory: %s", err.Error()))
+-	}
+-	absdir := util.ParentDir(types.AbsoluteDir(dir))
+-	return types.AbsoluteDir(fmt.Sprintf("%s/%s", absdir, me.UserHomePath))
++	return testconst.UserHomeDir
+ }
+ 
+ func (me *OsSupport) GetSuggestedBasedir() types.AbsoluteDir {
+diff --git a/test/unit/const.go b/test/unit/const.go
+deleted file mode 100644
+index 67177cf..0000000
+--- a/test/unit/const.go
++++ /dev/null
+@@ -1 +0,0 @@
+-package unit
+diff --git a/test/user-home/.gearbox/cache/gears.json b/test/user-home/.gearbox/cache/gears.json
+old mode 100755
+new mode 100644
+index fbb23e2..04b57e2
+--- a/test/user-home/.gearbox/cache/gears.json
++++ b/test/user-home/.gearbox/cache/gears.json
+@@ -1 +1,4 @@
+-{"expires":"2019-03-23T14:13:50-04:00","data":"{\n   \"gearbox\": {\n      \"scope\": \"gears\",\n      \"schema\": \"v1\"\n   },\n   \"authorities\": [\n      \"gearbox.works\"\n   ],\n   \"stacks\": [\n      \"gearbox.works/wordpress\",\n      \"gearbox.works/lamp\",\n      \"gearbox.works/lemp\",\n      \"gearbox.works/elasticsearch\"\n   ],\n   \"roles\": {\n      \"gearbox.works/elasticsearch/elasticsearch\": {\n         \"name\": \"Elasticsearch\",\n         \"label\": \"Elasticsearch\",\n         \"examples\": [\n            \"Elasticsearch\"\n         ]\n      },\n      \"gearbox.works/lamp/apache\": {\n         \"name\": \"LAMP Apache Web Server\",\n         \"label\": \"Apache\",\n         \"examples\": [\n            \"Apache\"\n         ]\n      },\n      \"gearbox.works/lamp/mysql\": {\n         \"name\": \"LAMP MySQL database server\",\n         \"label\": \"MySQL\",\n         \"examples\": [\n            \"MySQL\"\n         ]\n      },\n      \"gearbox.works/lamp/php\": {\n         \"name\": \"LAMP PHP ProcessVM\",\n         \"label\": \"PHP\",\n         \"examples\": [\n            \"PHP\"\n         ]\n      },\n      \"gearbox.works/lemp/nginx\": {\n         \"name\": \"LEMP Nginx Web server\",\n         \"label\": \"Nginx\",\n         \"examples\": [\n            \"Nginx\"\n         ]\n      },\n      \"gearbox.works/lemp/mysql\": {\n         \"name\": \"LEMP Database server; MySQL or MariaDB\",\n         \"label\": \"DB server\",\n         \"examples\": [\n            \"MySQL\",\n            \"MariaDB\"\n         ]\n      },\n      \"gearbox.works/lemp/p-script\": {\n         \"name\": \"LEMP server-side scripting process VM; PHP, Python or Perl\",\n         \"label\": \"server-side scripting\",\n         \"examples\": [\n            \"PHP\"\n         ]\n      },\n      \"gearbox.works/wordpress/webserver\": {\n         \"name\": \"Web server for WordPress\",\n         \"label\": \"Web server\",\n         \"examples\": [\n            \"Apache\",\n            \"Nginx\",\n            \"Caddy\",\n            \"Lighttpd\"\n         ]\n      },\n      \"gearbox.works/wordpress/dbserver\": {\n         \"name\": \"Database server for WordPress\",\n         \"label\": \"DB server\",\n         \"examples\": [\n            \"MySQL\",\n            \"MariaDB\",\n            \"Percona\"\n         ]\n      },\n      \"gearbox.works/wordpress/processvm\": {\n         \"name\": \"ProcessVM (PHP) for WordPress\",\n         \"label\": \"PHP\",\n         \"examples\": [\n            \"PHP\",\n            \"HHVM\"\n         ]\n      },\n      \"gearbox.works/wordpress/cacheserver\": {\n         \"name\": \"Cache server for WordPress\",\n         \"label\": \"Cache server\",\n         \"examples\": [\n            \"Redis\",\n            \"Memcached\"\n         ],\n         \"optional\": true,\n         \"max\": 1\n      }\n   },\n   \"services\": {\n      \"gearbox.works/elasticsearch/elasticsearch\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"elasticsearch\",\n         \"options\": [\n            \"elasticsearch:6.6.2\"\n         ]\n      },\n      \"gearbox.works/lamp/apache\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"apache\",\n         \"options\": [\n            \"apache:2.4\"\n         ]\n      },\n      \"gearbox.works/lamp/mysql\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"mysql\",\n         \"options\": [\n            \"mysql:5.5\",\n            \"mysql:5.6\",\n            \"mysql:5.7\",\n            \"mysql:8.0\"\n         ]\n      },\n      \"gearbox.works/lamp/php\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"php\",\n         \"options\": [\n            \"php:5.2\",\n            \"php:5.6\",\n            \"php:7.0\",\n            \"php:7.1\",\n            \"php:7.2\"\n         ]\n      },\n      \"gearbox.works/lemp/nginx\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"nginx\",\n         \"options\": [\n            \"nginx:1.12\",\n            \"nginx:1.13\",\n            \"nginx:1.14\",\n            \"nginx:1.15\"\n         ]\n      },\n      \"gearbox.works/lemp/mysql\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"mariadb\",\n         \"options\": [\n            \"mariadb:5.5\",\n            \"mariadb:10.0\",\n            \"mariadb:10.1\",\n            \"mariadb:10.2\",\n            \"mariadb:10.3\",\n            \"mysql:5.5\",\n            \"mysql:5.6\",\n            \"mysql:5.7\",\n            \"mysql:8.0\"\n         ]\n      },\n      \"gearbox.works/lemp/p-script\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"php\",\n         \"options\": [\n            \"php:5.2\",\n            \"php:5.6\",\n            \"php:7.0\",\n            \"php:7.1\",\n            \"php:7.2\"\n         ]\n      },\n      \"gearbox.works/wordpress/webserver\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"nginx\",\n         \"options\": [\n            \"apache:2.4\",\n            \"nginx:1.12\",\n            \"nginx:1.13\",\n            \"nginx:1.14\",\n            \"nginx:1.15\"\n         ]\n      },\n      \"gearbox.works/wordpress/dbserver\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"mariadb\",\n         \"options\": [\n            \"mariadb:5.5\",\n            \"mariadb:10.0\",\n            \"mariadb:10.1\",\n            \"mariadb:10.2\",\n            \"mariadb:10.3\",\n            \"mysql:5.5\",\n            \"mysql:5.6\",\n            \"mysql:5.7\",\n            \"mysql:8.0\"\n         ]\n      },\n      \"gearbox.works/wordpress/processvm\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"php\",\n         \"options\": [\n            \"php:5.2\",\n            \"php:5.6\",\n            \"php:7.0\",\n            \"php:7.1\",\n            \"php:7.2\"\n         ]\n      },\n      \"gearbox.works/wordpress/cacheserver\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"\",\n         \"options\": [\n            \"memcached:1.5\",\n            \"redis:3.2\",\n            \"redis:4.0\"\n         ]\n      }\n   }\n}\n\n\n"}
+\ No newline at end of file
++{
++   "expires": "2019-03-23T14:13:50-04:00",
++   "data": "{\n   \"gearbox\": {\n      \"scope\": \"gears\",\n      \"schema\": \"v1\"\n   },\n   \"authorities\": [\n      \"gearbox.works\"\n   ],\n   \"stacks\": [\n      \"gearbox.works/wordpress\",\n      \"gearbox.works/lamp\",\n      \"gearbox.works/lemp\",\n      \"gearbox.works/elasticsearch\"\n   ],\n   \"roles\": {\n      \"gearbox.works/elasticsearch/elasticsearch\": {\n         \"program\": \"Elasticsearch\",\n         \"label\": \"Elasticsearch\",\n         \"examples\": [\n            \"Elasticsearch\"\n         ]\n      },\n      \"gearbox.works/lamp/apache\": {\n         \"program\": \"LAMP Apache Web Server\",\n         \"label\": \"Apache\",\n         \"examples\": [\n            \"Apache\"\n         ]\n      },\n      \"gearbox.works/lamp/mysql\": {\n         \"program\": \"LAMP MySQL database server\",\n         \"label\": \"MySQL\",\n         \"examples\": [\n            \"MySQL\"\n         ]\n      },\n      \"gearbox.works/lamp/php\": {\n         \"program\": \"LAMP PHP ProcessVM\",\n         \"label\": \"PHP\",\n         \"examples\": [\n            \"PHP\"\n         ]\n      },\n      \"gearbox.works/lemp/nginx\": {\n         \"program\": \"LEMP Nginx Web server\",\n         \"label\": \"Nginx\",\n         \"examples\": [\n            \"Nginx\"\n         ]\n      },\n      \"gearbox.works/lemp/mysql\": {\n         \"program\": \"LEMP Database server; MySQL or MariaDB\",\n         \"label\": \"DB server\",\n         \"examples\": [\n            \"MySQL\",\n            \"MariaDB\"\n         ]\n      },\n      \"gearbox.works/lemp/p-script\": {\n         \"program\": \"LEMP server-side scripting process VM; PHP, Python or Perl\",\n         \"label\": \"server-side scripting\",\n         \"examples\": [\n            \"PHP\"\n         ]\n      },\n      \"gearbox.works/wordpress/webserver\": {\n         \"program\": \"Web server for WordPress\",\n         \"label\": \"Web server\",\n         \"examples\": [\n            \"Apache\",\n            \"Nginx\",\n            \"Caddy\",\n            \"Lighttpd\"\n         ]\n      },\n      \"gearbox.works/wordpress/dbserver\": {\n         \"program\": \"Database server for WordPress\",\n         \"label\": \"DB server\",\n         \"examples\": [\n            \"MySQL\",\n            \"MariaDB\",\n            \"Percona\"\n         ]\n      },\n      \"gearbox.works/wordpress/processvm\": {\n         \"program\": \"ProcessVM (PHP) for WordPress\",\n         \"label\": \"PHP\",\n         \"examples\": [\n            \"PHP\",\n            \"HHVM\"\n         ]\n      },\n      \"gearbox.works/wordpress/cacheserver\": {\n         \"program\": \"Cache server for WordPress\",\n         \"label\": \"Cache server\",\n         \"examples\": [\n            \"Redis\",\n            \"Memcached\"\n         ],\n         \"optional\": true,\n         \"max\": 1\n      }\n   },\n   \"services\": {\n      \"gearbox.works/elasticsearch/elasticsearch\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"elasticsearch\",\n         \"options\": [\n            \"elasticsearch:6.6.2\"\n         ]\n      },\n      \"gearbox.works/lamp/apache\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"apache\",\n         \"options\": [\n            \"apache:2.4\"\n         ]\n      },\n      \"gearbox.works/lamp/mysql\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"mysql\",\n         \"options\": [\n            \"mysql:5.5\",\n            \"mysql:5.6\",\n            \"mysql:5.7\",\n            \"mysql:8.0\"\n         ]\n      },\n      \"gearbox.works/lamp/php\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"php\",\n         \"options\": [\n            \"php:5.2\",\n            \"php:5.6\",\n            \"php:7.0\",\n            \"php:7.1\",\n            \"php:7.2\"\n         ]\n      },\n      \"gearbox.works/lemp/nginx\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"nginx\",\n         \"options\": [\n            \"nginx:1.12\",\n            \"nginx:1.13\",\n            \"nginx:1.14\",\n            \"nginx:1.15\"\n         ]\n      },\n      \"gearbox.works/lemp/mysql\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"mariadb\",\n         \"options\": [\n            \"mariadb:5.5\",\n            \"mariadb:10.0\",\n            \"mariadb:10.1\",\n            \"mariadb:10.2\",\n            \"mariadb:10.3\",\n            \"mysql:5.5\",\n            \"mysql:5.6\",\n            \"mysql:5.7\",\n            \"mysql:8.0\"\n         ]\n      },\n      \"gearbox.works/lemp/p-script\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"php\",\n         \"options\": [\n            \"php:5.2\",\n            \"php:5.6\",\n            \"php:7.0\",\n            \"php:7.1\",\n            \"php:7.2\"\n         ]\n      },\n      \"gearbox.works/wordpress/webserver\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"nginx\",\n         \"options\": [\n            \"apache:2.4\",\n            \"nginx:1.12\",\n            \"nginx:1.13\",\n            \"nginx:1.14\",\n            \"nginx:1.15\"\n         ]\n      },\n      \"gearbox.works/wordpress/dbserver\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"mariadb\",\n         \"options\": [\n            \"mariadb:5.5\",\n            \"mariadb:10.0\",\n            \"mariadb:10.1\",\n            \"mariadb:10.2\",\n            \"mariadb:10.3\",\n            \"mysql:5.5\",\n            \"mysql:5.6\",\n            \"mysql:5.7\",\n            \"mysql:8.0\"\n         ]\n      },\n      \"gearbox.works/wordpress/processvm\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"php\",\n         \"options\": [\n            \"php:5.2\",\n            \"php:5.6\",\n            \"php:7.0\",\n            \"php:7.1\",\n            \"php:7.2\"\n         ]\n      },\n      \"gearbox.works/wordpress/cacheserver\": {\n         \"org\": \"gearboxworks\",\n         \"default\": \"\",\n         \"options\": [\n            \"memcached:1.5\",\n            \"redis:3.2\",\n            \"redis:4.0\"\n         ]\n      }\n   }\n}\n\n\n"
++}
+\ No newline at end of file
+diff --git a/test/user-home/const.go b/test/user-home/const.go
+new file mode 100644
+index 0000000..2a206a0
+--- /dev/null
++++ b/test/user-home/const.go
+@@ -0,0 +1,19 @@
++package testconst
++
++import (
++	"fmt"
++	"gearbox/types"
++	"os"
++	"path/filepath"
++)
++
++var UserHomeDir types.AbsoluteDir
++
++func init() {
++	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
++	if err != nil {
++		UserHomeDir = types.AbsoluteDir(fmt.Sprintf("ERROR: %s",err.Error()))
++		return
++	}
++	UserHomeDir = types.AbsoluteDir(dir)
++}

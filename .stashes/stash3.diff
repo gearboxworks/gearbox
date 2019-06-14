@@ -1,0 +1,343 @@
+diff --git a/api/api.go b/api/api.go
+index 7a3de48..8b0a8cb 100644
+--- a/api/api.go
++++ b/api/api.go
+@@ -175,6 +175,7 @@ func (me *Api) JsonMarshalHandler(ctx echo.Context, requestType ResourceName, js
+ 		path := ctx.Path()
+ 		if path != "/" {
+ 			r.Links = make(Links, 0)
++			r.Links[LinksResource] = "/"
+ 		}
+ 		if slg, ok := js.(SelfLinkGetter); ok {
+ 			r.Links[SelfResource] = slg.GetApiSelfLink()
+@@ -318,3 +319,23 @@ func ExpandUriTemplate(template string, vars UriTemplateVars) string {
+ 	}
+ 	return url
+ }
++
++type Routes []Route
++type Route struct {
++	Method HttpMethod
++	Path   string
++	Name   ResourceName
++	Func   func(ctx echo.Context, rt ResourceName) interface{}
++}
++
++type HttpMethod int
++
++const (
++	GetMethod HttpMethod = iota
++	PstMethod
++	PutMethod
++	DelMethod
++)
++
++
++
+diff --git a/host_api.go b/host_api.go
+index 58297ab..9972778 100644
+--- a/host_api.go
++++ b/host_api.go
+@@ -21,6 +21,30 @@ type HostApi struct {
+ 	Gearbox *Gearbox
+ }
+ 
++func (me *HostApi) AddRoutes(routes api.Routes) {
++	_api := me.Api
++	for _, r := range routes {
++		switch r.Method {
++		case api.GetMethod:
++			_api.GET(r.Path, r.Name, func(rt api.ResourceName, ctx echo.Context) error {
++				return me.jsonMarshalHandler(_api, ctx, rt, r.Func)
++			})
++		case api.PstMethod:
++			_api.POST(r.Path, r.Name, func(rt api.ResourceName, ctx echo.Context) error {
++				return me.jsonMarshalHandler(_api, ctx, rt, r.Func)
++			})
++		case api.PutMethod:
++			_api.PUT(r.Path, r.Name, func(rt api.ResourceName, ctx echo.Context) error {
++				return me.jsonMarshalHandler(_api, ctx, rt, r.Func)
++			})
++		case api.DelMethod:
++			_api.DELETE(r.Path, r.Name, func(rt api.ResourceName, ctx echo.Context) error {
++				return me.jsonMarshalHandler(_api, ctx, rt, r.Func)
++			})
++		}
++	}
++}
++
+ func apiResponseDefaults() *api.Response {
+ 	return &api.Response{
+ 		Meta: api.ResponseMeta{
+@@ -235,15 +259,15 @@ func (me *HostApi) addBasedirRoutes() {
+ 	})
+ 
+ 	_api.POST("/basedirs/new", "basedir-add", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(me.Gearbox, ctx, rt))
++		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(ctx, rt))
+ 	})
+ 
+ 	_api.PUT("/basedirs/:nickname", "basedir-update", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(me.Gearbox, ctx, rt))
++		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(ctx, rt))
+ 	})
+ 
+ 	_api.DELETE("/basedirs/:nickname", "basedir-delete", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(me.Gearbox, ctx, rt))
++		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(ctx, rt))
+ 	})
+ 
+ }
+@@ -280,26 +304,27 @@ func readBasedirFromRequest(name api.ResourceName, ctx echo.Context, bd *Basedir
+ 	return status
+ }
+ 
+-func (me *HostApi) addBasedir(gb *Gearbox, ctx echo.Context, requestType api.ResourceName) (status Status) {
++func (me *HostApi) addBasedir(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+ 	bd := Basedir{}
+-	status = readBasedirFromRequest(requestType, ctx, &bd)
+-	if !status.IsError() {
++	response = readBasedirFromRequest(requestType, ctx, &bd)
++	if !response.(Status).IsError() {
+ 		me.Gearbox.RequestType = requestType
+-		status = me.Gearbox.AddBasedir(bd.HostDir, bd.Nickname)
++		response = me.Gearbox.AddBasedir(bd.HostDir, bd.Nickname)
+ 	}
+-	return status
++	return response
+ }
+-func (me *HostApi) updateBasedir(gb *Gearbox, ctx echo.Context, requestType api.ResourceName) (status Status) {
++
++func (me *HostApi) updateBasedir(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+ 	bd := Basedir{}
+-	status = readBasedirFromRequest(requestType, ctx, &bd)
+-	if !status.IsError() {
++	response = readBasedirFromRequest(requestType, ctx, &bd)
++	if !response.(Status).IsError() {
+ 		me.Gearbox.RequestType = requestType
+-		status = me.Gearbox.UpdateBasedir(bd.Nickname, bd.HostDir)
++		response = me.Gearbox.UpdateBasedir(bd.Nickname, bd.HostDir)
+ 	}
+-	return status
++	return response
+ }
+ 
+-func (me *HostApi) deleteNamedBasedir(gb *Gearbox, ctx echo.Context, requestType api.ResourceName) (status Status) {
++func (me *HostApi) deleteNamedBasedir(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+ 	me.Gearbox.RequestType = requestType
+ 	return me.Gearbox.DeleteNamedBasedir(getBasedirNickname(ctx))
+ }
+diff --git a/host_api_projects.go b/host_api_projects.go
+index 915703b..d9230f0 100644
+--- a/host_api_projects.go
++++ b/host_api_projects.go
+@@ -19,86 +19,116 @@ func getProjectHostname(ctx echo.Context) string {
+ }
+ 
+ func (me *HostApi) addProjectRoutes() {
+-	_api := me.Api
+-
+-	_api.GET("/projects", "projects", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.getProjectsResponse(ctx, rt))
+-	})
+-
+-	_api.GET("/projects/with-details", ProjectsWithDetailsResource, func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.getProjectsResponse(ctx, rt))
+-	})
+-
+-	_api.GET("/projects/:hostname", ProjectDetailsResource, func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.getProjectResponse(ctx, rt))
+-	})
+-
+-	_api.GET("/projects/enabled", "projects-enabled", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Projects.GetEnabled())
+-	})
+-
+-	_api.GET("/projects/disabled", "projects-disabled", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Projects.GetDisabled())
++	me.AddRoutes(api.Routes{
++		api.Route{Method: api.GetMethod,
++			Path: "/projects", Name: "projects", Func: me.getProjectsResponse},
++		api.Route{Method: api.GetMethod,
++			Path: "/projects/with-details", Name: ProjectsWithDetailsResource, Func: me.getProjectsResponse},
++		api.Route{Method: api.GetMethod,
++			Path: "/projects/enabled", Name: "projects-enabled", Func: me.getEnabledProjectsResponse},
++		api.Route{Method: api.GetMethod,
++			Path: "/projects/disabled", Name: "projects-disabled", Func: me.getDisabledProjectsResponse},
++		api.Route{Method: api.GetMethod,
++			Path: "/projects/candidates", Name: "project-candidates", Func: me.getProjectCandidatesResponse},
++
++		api.Route{Method: api.GetMethod,
++			Path: "/projects/:hostname", Name: ProjectDetailsResource, Func: me.getProjectResponse},
++		api.Route{Method: api.PstMethod,
++			Path: "/projects/:hostname/new", Name: "project-add", Func: me.addProject},
++		api.Route{Method: api.PutMethod,
++			Path: "/projects/:hostname", Name: "project-update", Func: me.updateProject},
++		api.Route{Method: api.DelMethod,
++			Path: "/projects/:hostname", Name: "project-delete", Func: me.deleteProject},
++
++		api.Route{Method: api.GetMethod,
++			Path: "/projects/:hostname/aliases", Name: ProjectAliasesResource, Func: me.getProjectAliasesResponse},
++		api.Route{Method: api.PstMethod,
++			Path: "/projects/:hostname/aliases/new", Name: "project-alias-add", Func: me.addProjectAlias},
++		api.Route{Method: api.PutMethod,
++			Path: "/projects/:hostname/aliases/:alias", Name: "project-alias-update", Func: me.updateProjectAlias},
++		api.Route{Method: api.DelMethod,
++			Path: "/projects/:hostname/aliases/:alias", Name: "project-alias-delete", Func: me.deleteProjectAlias},
++
++		api.Route{Method: api.GetMethod,
++			Path: "/projects/:hostname/services", Name: ProjectServicesResource, Func: me.getProjectServicesResponse},
++		api.Route{Method: api.PstMethod,
++			Path: "/projects/:hostname/services/new", Name: "project-service-add", Func: me.addProjectService},
++		api.Route{Method: api.PutMethod,
++			Path: "/projects/:hostname/services/:service", Name: "project-service-update", Func: me.updateProjectService},
++		api.Route{Method: api.DelMethod,
++			Path: "/projects/:hostname/services/:service", Name: "project-service-delete", Func: me.deleteProjectService},
+ 	})
+ 
+-	_api.GET("/projects/candidates", "project-candidates", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.Config.Candidates)
+-	})
+-
+-	_api.GET("/projects/:hostname/services", ProjectServicesResource, func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.getProjectServicesResponse(ctx, rt))
+-	})
++}
+ 
+-	_api.GET("/projects/:hostname/aliases", ProjectAliasesResource, func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.getProjectAliasesResponse(ctx, rt))
++func (me *HostApi) addProject(ctx echo.Context, rt api.ResourceName) (response interface{}) {
++	return me.jsonMarshalHandler(me.Api, ctx, rt, &api.Status{
++		StatusCode: http.StatusMethodNotAllowed,
++		Error:      fmt.Errorf("the 'project-add' method has not been implemented yet"),
+ 	})
+-
+-	_api.POST("/projects/:hostname/aliases/new", "project-alias-add", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(me.Gearbox, ctx, rt))
++}
++func (me *HostApi) updateProject(ctx echo.Context, rt api.ResourceName) (response interface{}) {
++	return me.jsonMarshalHandler(me.Api, ctx, rt, &api.Status{
++		StatusCode: http.StatusMethodNotAllowed,
++		Error:      fmt.Errorf("the 'project-update' method has not been implemented yet"),
+ 	})
+-
+-	_api.PUT("/projects/:hostname/aliases/:alias", "project-alias-update", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(me.Gearbox, ctx, rt))
++}
++func (me *HostApi) deleteProject(ctx echo.Context, rt api.ResourceName) (response interface{}) {
++	return me.jsonMarshalHandler(me.Api, ctx, rt, &api.Status{
++		StatusCode: http.StatusMethodNotAllowed,
++		Error:      fmt.Errorf("the 'project-delete' method has not been implemented yet"),
+ 	})
++}
+ 
+-	_api.DELETE("/projects/:hostname/aliases/:alias", "project-alias-delete", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(me.Gearbox, ctx, rt))
++func (me *HostApi) addProjectAlias(ctx echo.Context, rt api.ResourceName) (response interface{}) {
++	return me.jsonMarshalHandler(me.Api, ctx, rt, &api.Status{
++		StatusCode: http.StatusMethodNotAllowed,
++		Error:      fmt.Errorf("the 'project-alias-add' method has not been implemented yet"),
+ 	})
+-
+-	_api.POST("/projects/:hostname/services/new", "project-service-add", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.addBasedir(me.Gearbox, ctx, rt))
++}
++func (me *HostApi) updateProjectAlias(ctx echo.Context, rt api.ResourceName) (response interface{}) {
++	return me.jsonMarshalHandler(me.Api, ctx, rt, &api.Status{
++		StatusCode: http.StatusMethodNotAllowed,
++		Error:      fmt.Errorf("the 'project-alias-update' method has not been implemented yet"),
+ 	})
+-
+-	_api.PUT("/projects/:hostname/services/:service", "project-service-update", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.updateBasedir(me.Gearbox, ctx, rt))
++}
++func (me *HostApi) deleteProjectAlias(ctx echo.Context, rt api.ResourceName) (response interface{}) {
++	return me.jsonMarshalHandler(me.Api, ctx, rt, &api.Status{
++		StatusCode: http.StatusMethodNotAllowed,
++		Error:      fmt.Errorf("the 'project-alias-delete' method has not been implemented yet"),
+ 	})
++}
+ 
+-	_api.DELETE("/projects/:hostname/services/:service", "project-service-delete", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, me.deleteNamedBasedir(me.Gearbox, ctx, rt))
++func (me *HostApi) addProjectService(ctx echo.Context, rt api.ResourceName) (response interface{}) {
++	return me.jsonMarshalHandler(me.Api, ctx, rt, &api.Status{
++		StatusCode: http.StatusMethodNotAllowed,
++		Error:      fmt.Errorf("the 'project-service-add' method has not been implemented yet"),
+ 	})
+-
+-	_api.POST("/projects/new", "project-add", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
+-			StatusCode: http.StatusMethodNotAllowed,
+-			Error:      fmt.Errorf("the 'project-add' method has not been implemented yet"),
+-		})
++}
++func (me *HostApi) updateProjectService(ctx echo.Context, rt api.ResourceName) (response interface{}) {
++	return me.jsonMarshalHandler(me.Api, ctx, rt, &api.Status{
++		StatusCode: http.StatusMethodNotAllowed,
++		Error:      fmt.Errorf("the 'project-service-update' method has not been implemented yet"),
+ 	})
+-
+-	_api.POST("/projects/:hostname", "project-update", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
+-			StatusCode: http.StatusMethodNotAllowed,
+-			Error:      fmt.Errorf("the 'project-update' method has not been implemented yet"),
+-		})
++}
++func (me *HostApi) deleteProjectService(ctx echo.Context, rt api.ResourceName) (response interface{}) {
++	return me.jsonMarshalHandler(me.Api, ctx, rt, &api.Status{
++		StatusCode: http.StatusMethodNotAllowed,
++		Error:      fmt.Errorf("the 'project-service-delete' method has not been implemented yet"),
+ 	})
++}
+ 
+-	_api.DELETE("/projects/:hostname", "project-delete", func(rt api.ResourceName, ctx echo.Context) error {
+-		return me.jsonMarshalHandler(_api, ctx, rt, &api.Status{
+-			StatusCode: http.StatusMethodNotAllowed,
+-			Error:      fmt.Errorf("the 'project-delete' method has not been implemented yet"),
+-		})
+-	})
++func (me *HostApi) getEnabledProjectsResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
++	return me.Config.Projects.GetEnabled()
++}
++func (me *HostApi) getDisabledProjectsResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
++	return me.Config.Projects.GetDisabled()
++}
++func (me *HostApi) getProjectCandidatesResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
++	return me.Config.Candidates
+ }
+ 
++
+ func (me *HostApi) getProjectsResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+ 	for range only.Once {
+ 		me.Gearbox.RequestType = requestType
+@@ -116,7 +146,6 @@ func (me *HostApi) getProjectsResponse(ctx echo.Context, requestType api.Resourc
+ 	}
+ 	return response
+ }
+-
+ func (me *HostApi) getProjectAliasesResponse(ctx echo.Context, requestType api.ResourceName) (response interface{}) {
+ 	for range only.Once {
+ 		me.Gearbox.RequestType = requestType
+diff --git a/status.go b/status.go
+index a4fb6a2..bd73ff5 100644
+--- a/status.go
++++ b/status.go
+@@ -133,14 +133,14 @@ func (me Status) Finalize() {
+ 	}
+ }
+ 
+-func (me *Status) IsError() bool {
++func (me Status) IsError() bool {
+ 	return me.Error != nil
+ }
+ 
+-func (me *Status) IsSuccess() bool {
++func (me Status) IsSuccess() bool {
+ 	return !me.Failed || me.HttpStatus == 0
+ }
+ 
+-func (me *Status) NotYetFinalized() bool {
++func (me Status) NotYetFinalized() bool {
+ 	return me.HttpStatus == 0
+ }
