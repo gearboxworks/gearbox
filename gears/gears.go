@@ -3,13 +3,13 @@ package gears
 import (
 	"encoding/json"
 	"fmt"
-	"gearbox/cache"
 	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
 	"gearbox/service"
 	"gearbox/types"
 	"gearbox/util"
+	"github.com/gearboxworks/go-jsoncache"
 	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
@@ -87,7 +87,7 @@ func (me *Gears) Initialize() (sts status.Status) {
 	}
 	for range only.Once {
 		cacheDir := me.OsBridge.GetCacheDir()
-		store := cache.NewCache(cacheDir)
+		store := jsoncache.New(cacheDir)
 
 		store.Disable = me.GlobalOptions.NoCache
 		var ok bool

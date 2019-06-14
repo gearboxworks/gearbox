@@ -9,6 +9,7 @@ require (
 	github.com/cznic/golex v0.0.0-20181122101858-9c343928389c // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/fatih/color v1.7.0
+	github.com/gearboxworks/go-jsoncache v1.0.0
 	github.com/gearboxworks/go-osbridge v0.0.0-20190605062119-0e1c68c1c70f
 	github.com/gearboxworks/go-status v0.0.0-20190528175348-42860fb9e78f
 	github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813
