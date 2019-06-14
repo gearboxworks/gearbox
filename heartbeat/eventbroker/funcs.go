@@ -4,13 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"gearbox/heartbeat/eventbroker/eblog"
-	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/network"
 	"gearbox/heartbeat/eventbroker/only"
-	"gearbox/heartbeat/eventbroker/states"
 	"net/url"
 	"reflect"
-	"sort"
 )
 
 
@@ -99,110 +96,6 @@ func (me *EventBroker) FindMqttBroker() (*url.URL, error) {
 }
 
 
-func (me *Services) AddState(state states.Status) error {
-
-	var err error
-
-	for range only.Once {
-		if me == nil {
-			err = errors.New("status.Status is nil")
-			break
-		}
-
-		if state.EntityId == nil {
-			err = errors.New("status.EntityId is nil")
-			break
-		}
-
-		me.mutex.Lock()
-		defer me.mutex.Unlock()
-
-		client := state.EntityId
-
-		if _, ok := me.States[*client]; !ok {
-			me.States[*client] = &states.Status{}		// states.New(client, client, entity.BroadcastEntityName)
-		}
-
-		me.States[*client] = &state
-		// mutex:      &sync.RWMutex{}
-
-		//me.Logs = append(me.Logs, Log{
-		//	State: state,
-		//	When: time.Now(),
-		//})
-	}
-
-	return err
-}
-
-
-func (me *Services) PrintStates() error {
-
-	var err error
-
-	for range only.Once {
-		if me == nil {
-			err = errors.New("status.Status is nil")
-			break
-		}
-
-		var keys []string
-		for k := range me.States {
-			keys = append(keys, k.String())
-		}
-		sort.Strings(keys)
-
-		for i, e := range keys {
-			s := me.States[messages.MessageAddress(e)]
-			fmt.Printf("%d\tCurrent:%s\tName:%s\tEntityId:%s\tLast:%s\tAction:%s\tParent:%s\n",
-				i,
-				s.Current.String(),
-				s.EntityName.String(),
-				s.EntityId.String(),
-				s.Last.String(),
-				s.Action.String(),
-				s.ParentId.String(),
-			)
-			//fmt.Printf("%d  EntityId:%s  Name:%s  Parent:%s  Action:%s  Want:%s  Current:%s  Last:%s  LastWhen:%v  Error:%v\n",
-			//	i,
-			//	s.EntityId.String(),
-			//	s.EntityName.String(),
-			//	s.ParentId.String(),
-			//	s.Action.String(),
-			//	s.Want.String(),
-			//	s.Current.String(),
-			//	s.Last.String(),
-			//	s.LastWhen.Unix(),
-			//	s.Error,
-			//)
-		}
-	}
-
-	return err
-}
-
-
-//func (me *Services) DeleteState(client messages.SubTopic) error {
-//
-//	var err error
-//
-//	me.mutex.Lock()
-//	defer me.mutex.Unlock()
-//
-//	for range only.Once {
-//		_, ok := me.topics[client] // Managed by Mutex
-//		if !ok {
-//			err = me.EntityId.ProduceError("service doesn't exist")
-//			break
-//		}
-//
-//		delete(me.topics, client) // Managed by Mutex
-//	}
-//
-//	return err
-//}
-//
-//
 //func (me *EventBroker) zcByChannel(s network.ServiceConfig) (*network.Service, error) {
 //
 //	var err error

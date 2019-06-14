@@ -51,7 +51,48 @@ type EventBroker struct {
 type Args EventBroker
 
 
+type Callback func(args interface{}, state states.Status) error
 
+//type States map[messages.MessageAddress]states.Status
+//type Callbacks map[messages.MessageAddress]Callback
+//type CallbackLocks map[messages.MessageAddress]sync.RWMutex // Mutex control for map
+type Log struct {
+	When  time.Time
+	State states.Status
+	//states.State
+}
+const LogSize = 128
+type Logs []Log
+type Service struct {
+	State         *states.Status
+	Callback      Callback
+	Args          interface{}
+	Logs          Logs
+
+	mutex         sync.RWMutex	// Mutex control for map.
+}
+type Services map[messages.MessageAddress]*Service
+
+
+// type Callback func(state states.Status) error
+//type States map[messages.MessageAddress]states.Status
+//type Callbacks map[messages.MessageAddress]Callback
+//type CallbackLocks map[messages.MessageAddress]sync.RWMutex // Mutex control for map
+//type Log struct {
+//	When  time.Time
+//	State states.Status
+//	//states.State
+//}
+//const LogSize = 128
+//type Logs []Log
+//type Services struct {
+//	States        States
+//	Callbacks     Callbacks
+//	CallbackLocks CallbackLocks
+//	Logs          Logs
+//
+//	mutex         sync.RWMutex	// Mutex control for map.
+//}
 //type ServiceAction struct {
 //	State	 *states.Status
 //	CallBack interface{}
@@ -62,33 +103,11 @@ type Args EventBroker
 //}
 //type Entities map[messages.MessageAddress]*Entity
 //type EntityLog []Entities
-
-
-
 //type Entity struct {
 //	State	 states.Status
 //	//State	 states.State
 //	CallBack interface{}
 //}
-type States map[messages.MessageAddress]*states.Status
-type Callbacks map[messages.MessageAddress]interface{}
-type Log struct {
-	When  time.Time
-	State states.Status
-	//states.State
-}
-const LogSize = 128
-type Logs []Log
-type Services struct {
-	States    States
-	Callbacks Callbacks
-	Logs      Logs
-
-	mutex     sync.RWMutex	// Mutex control for map.
-}
-
-
-
 //type ServiceDataEntry struct {
 //	When time.Time
 //	states.Status

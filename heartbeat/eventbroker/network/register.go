@@ -30,8 +30,20 @@ func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 		}
 
 		// Create new service entry.
-		sc.EntityId = *messages.GenerateAddress()
-		sc.EntityName = messages.MessageAddress(s.Name)
+		if s.EntityId != "" {
+			sc.EntityId = s.EntityId
+		} else {
+			sc.EntityId = *messages.GenerateAddress()
+		}
+		if s.EntityName != "" {
+			sc.EntityName = messages.MessageAddress(s.EntityName)
+		} else {
+			if s.Name != "" {
+				sc.EntityName = messages.MessageAddress(s.Name)
+			} else {
+				sc.EntityName = sc.EntityId
+			}
+		}
 		sc.EntityParent = &me.EntityId
 		sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
 		sc.State.SetNewAction(states.ActionStart)		// Was states.ActionRegister

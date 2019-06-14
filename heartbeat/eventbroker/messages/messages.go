@@ -136,6 +136,11 @@ func (me *Uuid) IsNil() bool {
 	return false
 }
 func (me *Uuid) String() string {
+
+	if me.IsNil() {
+		return ""
+	}
+
 	return uuid.UUID(*me).String()
 }
 func (me *Uuid) ToMessageType() MessageText {
@@ -175,6 +180,10 @@ func GenerateAddress() *MessageAddress {
 	return &u
 }
 func (me *MessageAddress) String() string {
+
+	if me.EnsureNotNil() != nil {
+		return ""
+	}
 
 	return string(*me)
 }

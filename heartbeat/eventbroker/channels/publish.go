@@ -1,7 +1,6 @@
 package channels
 
 import (
-	"fmt"
 	"gearbox/heartbeat/eventbroker/eblog"
 	"gearbox/heartbeat/eventbroker/entity"
 	"gearbox/heartbeat/eventbroker/messages"

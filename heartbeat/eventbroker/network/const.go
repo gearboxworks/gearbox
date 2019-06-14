@@ -66,10 +66,11 @@ var browseList		= []string{"_mqtt._udp", "_mqtt._tcp", "_nfs._udp", "_nfs._tcp"}
 
 
 type ServiceConfig struct {
-	EntityId  messages.MessageAddress `json:"entity_id"` //
-	EntityName     string
-	UrlString string                  `json:"urlstring"` //
-	Url       *url.URL                `json:"url"`       //
+	EntityId     messages.MessageAddress
+	EntityName   messages.MessageAddress
+	EntityParent *messages.MessageAddress
+	UrlString    string   `json:"urlstring"` //
+	Url          *url.URL `json:"url"`       //
 
 	Name      Name                    `json:"name"`      // == Service.Entry.Instance
 	Type      Type                    `json:"type"`      // == Service.Entry.Service

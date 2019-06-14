@@ -52,7 +52,15 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 		// Create new daemon entry.
 		for range only.Once {
 			sc.EntityId = *messages.GenerateAddress()
-			sc.EntityName = messages.MessageAddress(c.Name)
+			if c.EntityName != "" {
+				sc.EntityName = messages.MessageAddress(c.EntityName)
+			} else {
+				if c.Name != "" {
+					sc.EntityName = messages.MessageAddress(c.Name)
+				} else {
+					sc.EntityName = sc.EntityId
+				}
+			}
 			sc.EntityParent = &me.EntityId
 			sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
 			sc.State.SetNewAction(states.ActionRegister)

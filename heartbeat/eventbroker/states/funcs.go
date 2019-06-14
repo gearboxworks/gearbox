@@ -101,8 +101,8 @@ func (me *Status) EnsureNotNil() error {
 		case me == nil:
 			err = errors.New("status.Status is nil")
 
-		case me.mutex == nil:
-			err = errors.New("status.mutex is nil")
+		//case me.mutex == nil:
+		//	err = errors.New("status.mutex is nil")
 
 		case me.EntityId == nil:
 			err = errors.New("status.EntityId is nil")

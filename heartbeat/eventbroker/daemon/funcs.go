@@ -514,6 +514,8 @@ func (me *Service) CreateMdnsEntry() (*network.ServiceConfig, error) {
 		foo := strings.ReplaceAll(me.Entry.Config.Name, ".", "_")
 		zc = network.ServiceConfig{
 			// Name:   network.Name(strings.ToLower("_" + global.Brandname + "-" + me.Entry.Config.Name)),
+			EntityId: *messages.GenerateAddress(),
+			EntityName: me.EntityName,	// + "-zeroconf",
 			Name:   network.Name(strings.ToLower("_" + foo)),
 			Type:   network.Type(fmt.Sprintf("_%s._tcp", me.Entry.MdnsType)),
 			Domain: network.DefaultDomain,

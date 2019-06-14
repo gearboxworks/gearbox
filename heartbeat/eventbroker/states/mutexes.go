@@ -10,8 +10,11 @@ import (
 func (me *Status) SetNewState(new State, err error) bool {
 
 	var ok bool
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+
+	if me.mutex != nil {
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+	}
 
 	if err == nil {
 		if me.Current != new {
@@ -31,8 +34,11 @@ func (me *Status) SetNewState(new State, err error) bool {
 func (me *Status) SetNewAction(a Action) bool {
 
 	var ok bool
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+
+	if me.mutex != nil {
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+	}
 
 	me.Action = a
 	switch me.Action {
@@ -81,8 +87,10 @@ func (me *Status) String() string {
 			break
 		}
 
-		me.mutex.RLock()
-		defer me.mutex.RUnlock()
+		if me.mutex != nil {
+			me.mutex.RLock()
+			defer me.mutex.RUnlock()
+		}
 
 		ret = fmt.Sprintf(`EntityId:%s  Name:%s  Parent:%s  Action:%s  Want:%s  Current:%s  Last:%s  LastWhen:%v  Error:%v`,
 			me.EntityId.String(),
@@ -101,6 +109,111 @@ func (me *Status) String() string {
 }
 
 
+func (me *Status) ShortString() string {
+
+	var ret string
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		if me.mutex != nil {
+			me.mutex.RLock()
+			defer me.mutex.RUnlock()
+		}
+
+		ret = fmt.Sprintf("Name:%s\tCurrent:%s\tParent:%s\tAction:%s\tLast:%s\tLastWhen:%v\tError:%v",
+			me.EntityName.String(),
+			me.Current.String(),
+			me.ParentId.String(),
+			me.Action.String(),
+			me.Last.String(),
+			me.LastWhen.Unix(),
+			me.Error,
+		)
+	}
+
+	return ret
+}
+
+
+func (me *Status) IsTheSame(other Status) bool {
+
+	var ret bool
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		if me.mutex != nil {
+			me.mutex.RLock()
+			defer me.mutex.RUnlock()
+		}
+
+		if me.EntityId == nil {
+			break
+		}
+		if me.EntityName == nil {
+			break
+		}
+		if me.ParentId == nil {
+			break
+		}
+
+		if other.EntityId == nil {
+			break
+		}
+		if other.EntityName == nil {
+			break
+		}
+		if other.ParentId == nil {
+			break
+		}
+
+		if *me.EntityId != *other.EntityId {
+			break
+		}
+		if *me.EntityName != *other.EntityName {
+			break
+		}
+		if *me.ParentId != *other.ParentId {
+			break
+		}
+		if me.Current != other.Current {
+			break
+		}
+		if me.Want != other.Want {
+			break
+		}
+		if me.Last != other.Last {
+			break
+		}
+		if me.LastWhen != other.LastWhen {
+			break
+		}
+		if me.Attempts != other.Attempts {
+			break
+		}
+		if me.Error != other.Error {
+			break
+		}
+		if me.Action != other.Action {
+			break
+		}
+
+		ret = true
+	}
+
+	return ret
+}
+
+
 func StatusAsString(me *Status) string {
 
 	return me.String()
@@ -109,16 +222,20 @@ func StatusAsString(me *Status) string {
 
 func (me *Status) GetStatus() *Status {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+	if me.mutex != nil {
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+	}
 
 	return me
 }
 
 func (me *Status) HasChangedState() bool {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+	if me.mutex != nil {
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+	}
 
 	if me.Last != me.Current {
 		return true
@@ -129,8 +246,10 @@ func (me *Status) HasChangedState() bool {
 
 func (me *Status) ExpectingNewState() bool {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+	if me.mutex != nil {
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+	}
 
 	if me.Want != me.Current {
 		return true
@@ -141,112 +260,160 @@ func (me *Status) ExpectingNewState() bool {
 
 func (me *Status) GetCurrent() State {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+	if me.mutex != nil {
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+	}
+
 	return me.Current
 }
 
 func (me *Status) GetWant() State {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+	if me.mutex != nil {
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+	}
+
 	return me.Want
 }
 
 func (me *Status) GetLast() State {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+	if me.mutex != nil {
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+	}
+
 	return me.Last
 }
 
 func (me *Status) GetLastWhen() time.Time {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+	if me.mutex != nil {
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+	}
+
 	return me.LastWhen
 }
 
 func (me *Status) GetAttempts() int {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+	if me.mutex != nil {
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+	}
+
 	return me.Attempts
 }
 
 func (me *Status) GetError() error {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+	if me.mutex != nil {
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+	}
+
 	return me.Error
 }
 
 func (me *Status) GetAction() Action {
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
+	if me.mutex != nil {
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+	}
+
 	return me.Action
 }
 
 func (me *Status) SetCurrent(s State) {
 
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	if me.mutex != nil {
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+	}
+
 	me.Current = s
 }
 
 func (me *Status) SetWant(s State) {
 
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	if me.mutex != nil {
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+	}
+
 	me.Want = s
 }
 
 func (me *Status) SetLast(s State) {
 
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	if me.mutex != nil {
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+	}
+
 	me.Last = s
 }
 
 func (me *Status) SetLastWhen(t time.Time) {
 
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	if me.mutex != nil {
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+	}
+
 	me.LastWhen = t
 }
 
 func (me *Status) SetAttempts(a int) {
 
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	if me.mutex != nil {
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+	}
+
 	me.Attempts = a
 }
 
 func (me *Status) AddAttempts() {
 
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	if me.mutex != nil {
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+	}
+
 	me.Attempts++
 }
 
 func (me *Status) ZeroAttempts() {
 
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	if me.mutex != nil {
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+	}
+
 	me.Attempts = 0
 }
 
 func (me *Status) SetError(e error) {
 
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	if me.mutex != nil {
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+	}
+
 	me.Error = e
 }
 
 func (me *Status) SetaAction(a Action) {
 
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	if me.mutex != nil {
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+	}
+
 	me.Action = a
 }

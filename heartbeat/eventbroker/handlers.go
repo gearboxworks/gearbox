@@ -1,6 +1,7 @@
 package eventbroker
 
 import (
+	"errors"
 	"fmt"
 	"gearbox/heartbeat/eventbroker/channels"
 	"gearbox/heartbeat/eventbroker/eblog"
@@ -8,6 +9,8 @@ import (
 	"gearbox/heartbeat/eventbroker/messages"
 	"gearbox/heartbeat/eventbroker/only"
 	"gearbox/heartbeat/eventbroker/states"
+	"sort"
+	"sync"
 	"time"
 )
 
@@ -44,7 +47,6 @@ func (me *EventBroker) StartChannelHandler() error {
 		me.State.SetNewState(states.StateInitialized, err)
 		me.Channels.PublishState(me.State)
 		eblog.Debug(me.EntityId, "task handler init completed OK")
-
 	}
 
 	eblog.LogIfNil(me, err)
@@ -80,7 +82,8 @@ func (me *EventBroker) StopChannelHandler() error {
 
 
 // Non-exposed channel function that responds to a "get" channel request.
-// Wraps a status request into another entity.
+// This expects the message text to contain an embedded status request message.
+// Thus exposes entity status' to the outside.
 func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
@@ -147,7 +150,10 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 
 	var err error
 	var me *EventBroker
-	var ret *states.Status
+	var state *states.Status
+	var sc *Service
+	var ok bool
+
 
 	for range only.Once {
 		me, err = InterfaceToTypeEventBroker(i)
@@ -166,18 +172,38 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 			break
 		}
 
-		ret, err = states.FromMessageText(event.Text)
+		state, err = states.FromMessageText(event.Text)
 		if err != nil {
 			fmt.Printf("Error %v - %s\n", err, event.String())
 			break
 		}
 
-		//fmt.Printf("Rec: %s\n", ret.String())
-		err = me.Services.AddState(*ret)
+
+		// Create callback reference if not already present.
+		sc, ok, err = me.AttachCallback(*state.EntityName, nil, nil)
 		if err != nil {
 			break
 		}
-		//fmt.Printf(">> %s is at state '%s'\n", ret.EntityId.String(), ret.Current.String())
+
+		if !ok {
+			// If it was already there, only update if there's a change.
+			ok = sc.IsTheSame(*state)
+			if ok {
+				break
+			}
+		}
+
+		err = sc.updateState(*state)
+		if err != nil {
+			break
+		}
+
+		err = sc.processCallback(*state)
+		if err != nil {
+			break
+		}
+
+		//fmt.Printf(">> %s is at state '%s'\n", state.EntityId.String(), state.Current.String())
 
 		eblog.Debug(me.EntityId, "statusHandler() via channel")
 	}
@@ -185,7 +211,7 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return ret
+	return state
 }
 
 
@@ -249,4 +275,323 @@ func startHandler(event *messages.Message, i channels.Argument, r channels.Retur
 
 	return ret
 }
+
+
+func (me Services) Exists(client messages.MessageAddress) (*Service, error) {
+
+	var err error
+	var ret *Service
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		err = client.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		if _, ok := me[client]; !ok {
+			break
+		}
+
+		err = me[client].EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		ret = me[client]
+	}
+
+	return ret, err
+}
+
+
+func (me Services) LookFor(client messages.MessageAddress) (*Service, error) {
+
+	var err error
+	var ret *Service
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		err = client.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		var keys messages.MessageAddress
+		for keys, ret = range me {
+			if keys == client {
+				break
+			}
+
+			if *ret.State.EntityId == client {
+				break
+			}
+
+			if *ret.State.EntityName == client {
+				break
+			}
+		}
+
+		//err = me.Exists(keys)
+	}
+
+	return ret, err
+}
+
+
+func (me *EventBroker) AttachCallback(client messages.MessageAddress, cb Callback, args interface{}) (*Service, bool, error) {
+
+	var err error
+	var ok bool
+	var ret *Service
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		err = client.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		ret, err = me.Services.Exists(client)
+		if err != nil {
+			break
+		}
+		if ret != nil {
+			// If map entry exists, just update cb.
+			//
+			//me[client].mutex.Lock()
+			//defer me[client].mutex.Unlock()
+			//
+			//me[client].Callback = cb
+			break
+		}
+
+		ret = &Service{
+			State: states.New(&client, &client, entity.BroadcastEntityName),
+			Callback: cb,
+			Args: args,
+			Logs: make(Logs, 0),
+			mutex: sync.RWMutex{},
+		}
+
+		me.Services[client] = ret
+		ok = true
+	}
+
+	return ret, ok, err
+}
+
+
+func (me Services) PrintStates() error {
+
+	var err error
+
+	for range only.Once {
+		if me == nil {
+			err = errors.New("status.Status is nil")
+			break
+		}
+
+		//me.mutex.RLock()
+		//defer me.mutex.RUnlock()
+		var keys []string
+		for k := range me {
+			keys = append(keys, k.String())
+		}
+		sort.Strings(keys)
+
+		for i, e := range keys {
+			fmt.Printf("%d %s\n", i, me[messages.MessageAddress(e)].PrintState())
+		}
+	}
+
+	return err
+}
+
+
+func (me Services) EnsureNotNil() error {
+
+	var err error
+
+	if me == nil {
+		err = errors.New("services is nil")
+	}
+
+	return err
+}
+
+
+
+func (me *Service) updateState(state states.Status) error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		me.mutex.Lock()
+		defer me.mutex.Unlock()
+
+		me.State = &state
+
+		//me.Logs = append(me.Logs, Log{
+		//	State: state,
+		//	When: time.Now(),
+		//})
+	}
+
+	return err
+}
+
+
+func (me *Service) IsTheSame(state states.Status) bool {
+
+	var err error
+	var ok bool
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		if state.EntityId == nil {
+			err = errors.New("status.EntityId is nil")
+			break
+		}
+
+		if me.State.Current != state.Current {
+			break
+		}
+		if me.State.Want != state.Want {
+			break
+		}
+		if me.State.Last != state.Last {
+			break
+		}
+		if me.State.LastWhen != state.LastWhen {
+			break
+		}
+		if me.State.Attempts != state.Attempts {
+			break
+		}
+		if me.State.Error != state.Error {
+			break
+		}
+		if me.State.Action != state.Action {
+			break
+		}
+
+		ok = true
+	}
+
+	return ok
+}
+
+
+func (me *Service) processCallback(state states.Status) error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		if me.Callback == nil {
+			// Don't fire, if we don't have a CB defined.
+			break
+		}
+
+
+		// Ensure we process in the correct order.
+		me.mutex.Lock()
+		err = me.Callback(me.Args, state)
+		me.mutex.Unlock()
+	}
+
+	return err
+}
+
+
+func (me *Service) PrintState() string {
+
+	var err error
+	var ret string
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		me.mutex.RLock()
+		defer me.mutex.RUnlock()
+		fmt.Printf("%s", me.State.String())
+	}
+
+	return ret
+}
+
+
+func (me *Service) EnsureNotNil() error {
+
+	var err error
+
+	if me == nil {
+		err = errors.New("service is nil")
+	}
+
+	return err
+}
+
+
+
+func (me Callback) EnsureNotNil() error {
+
+	var err error
+
+	if me == nil {
+		err = errors.New("callback is nil")
+	}
+
+	return err
+}
+
+
+//func (me Services) DeleteState(client messages.SubTopic) error {
+//
+//	var err error
+//
+//	me.mutex.Lock()
+//	defer me.mutex.Unlock()
+//
+//	for range only.Once {
+//		_, ok := me.topics[client] // Managed by Mutex
+//		if !ok {
+//			err = me.EntityId.ProduceError("service doesn't exist")
+//			break
+//		}
+//
+//		delete(me.topics, client) // Managed by Mutex
+//	}
+//
+//	return err
+//}
 

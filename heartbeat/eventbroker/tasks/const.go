@@ -46,3 +46,6 @@ type Task struct {
 	err           error
 }
 
+type TaskFunc func(me *Task, you ...interface{}) error
+type Tasks map[Uuid]*Task
+var tasks = make(Tasks)

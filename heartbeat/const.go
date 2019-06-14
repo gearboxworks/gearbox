@@ -2,9 +2,11 @@ package heartbeat
 
 import (
 	"gearbox/box"
-	"gearbox/heartbeat/external/unfsd"
 	"gearbox/heartbeat/eventbroker"
 	"gearbox/heartbeat/eventbroker/daemon"
+	"gearbox/heartbeat/eventbroker/messages"
+	"gearbox/heartbeat/eventbroker/states"
+	"gearbox/heartbeat/external/unfsd"
 	oss "gearbox/os_support"
 	"github.com/getlantern/systray"
 	"time"
@@ -21,13 +23,14 @@ type State struct {
 
 type Heartbeat struct {
 	Boxname        string
-	EventBroker		   *eventbroker.EventBroker
+	EventBroker    *eventbroker.EventBroker
 	BoxInstance    *box.Box
 	DaemonInstance *daemon.Daemon
 	NfsInstance    *unfsd.Unfsd
 	State          State
-	OvaFile        string
 	PidFile        string
+	menu           Menus
+	baseDir        string
 
 	// SSH related - Need to fix this. It's used within CreateBox()
 	SshUsername  string
@@ -51,23 +54,31 @@ type Heartbeat struct {
 type Args Heartbeat
 
 
-type menuStruct struct {
-	vmStatusEntry    *systray.MenuItem
-	apiStatusEntry   *systray.MenuItem
-	unfsdStatusEntry *systray.MenuItem
-	startEntry       *systray.MenuItem
-	stopEntry        *systray.MenuItem
-	adminEntry       *systray.MenuItem
-	sshEntry         *systray.MenuItem
-	quitEntry        *systray.MenuItem
-	restartEntry     *systray.MenuItem
+type Menus map[messages.MessageAddress]*Menu
+type Menu struct {
+	MenuItem         *systray.MenuItem
+	PrefixToolTip    string
+	PrefixMenu       string
+	CurrentIcon      string
+	State            states.State
 
-	helpEntry        *systray.MenuItem
-	versionEntry     *systray.MenuItem
-	updateEntry      *systray.MenuItem
-	createEntry      *systray.MenuItem
+	//vmStatusEntry    *systray.MenuItem
+	//apiStatusEntry   *systray.MenuItem
+	//unfsdStatusEntry *systray.MenuItem
+	//
+	//startEntry       *systray.MenuItem
+	//stopEntry        *systray.MenuItem
+	//adminEntry       *systray.MenuItem
+	//updateEntry      *systray.MenuItem
+	//createEntry      *systray.MenuItem
+	//sshEntry         *systray.MenuItem
+	//quitEntry        *systray.MenuItem
+	//restartEntry     *systray.MenuItem
+	//
+	//helpEntry        *systray.MenuItem
+	//versionEntry     *systray.MenuItem
 }
-
+type MenuItem             systray.MenuItem
 
 const (
 	UnknownState = "unknown"
@@ -82,7 +93,7 @@ const (
 	DefaultConsoleOkString = "Gearbox Heartbeat"
 	DefaultShowConsole     = false
 	DefaultConsoleReadWait = time.Second * 5
-	DefaultPidFile         = "heartbeat/heartbeat.pid"
+	DefaultPidFile         = "heartbeat.pid"
 )
 
 
@@ -90,16 +101,16 @@ const pidName = "[Gearbox]"
 
 
 const (
-	DefaultLogo = "heartbeat/img/IconLogo.ico"
-	DefaultUp = "heartbeat/img/UpArrow.ico"
-	DefaultDown = "heartbeat/img/DownArrow.ico"
+	DefaultLogo = "img/IconLogo.ico"
+	DefaultUp = "img/UpArrow.ico"
+	DefaultDown = "img/DownArrow.ico"
 
-	IconLogo = "heartbeat/img/IconLogo.ico"
-	IconError = "heartbeat/img/IconError.ico"
-	IconWarning = "heartbeat/img/IconWarning.ico"
-	IconUp = "heartbeat/img/IconUp.ico"
-	IconDown = "heartbeat/img/IconDown.ico"
-	IconStarting = "heartbeat/img/IconStarting.ico"
-	IconStopping = "heartbeat/img/IconStopping.ico"
+	IconLogo = "img/IconLogo.ico"
+	IconError = "img/IconError.ico"
+	IconWarning = "img/IconWarning.ico"
+	IconUp = "img/IconUp.ico"
+	IconDown = "img/IconDown.ico"
+	IconStarting = "img/IconStarting.ico"
+	IconStopping = "img/IconStopping.ico"
 )
 

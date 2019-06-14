@@ -8,11 +8,6 @@ import (
 )
 
 
-type TaskFunc func(me *Task, you ...interface{}) error
-type Tasks map[Uuid]*Task
-var tasks = make(Tasks)
-
-
 func StartTask(initFunc TaskFunc, startFunc TaskFunc, monitorFunc TaskFunc, stopFunc TaskFunc, ref ...interface{}) (*Task, error) {
 
 	var err error

@@ -57,9 +57,11 @@ func New(args ...Args) (*EventBroker, error) {
 			break
 		}
 
-		_args.Services.States = make(States)
-		_args.Services.Callbacks = make(Callbacks)
-		_args.Services.Logs = make(Logs, 0)
+		//_args.Services.States = make(States)
+		//_args.Services.Callbacks = make(Callbacks)
+		//_args.Services.CallbackLocks = make(CallbackLocks)
+		//_args.Services.Logs = make(Logs, 0)
+		_args.Services = make(Services)
 
 
 		*me = EventBroker(_args)
@@ -172,6 +174,7 @@ func (me *EventBroker) Start() error {
 
 
 func (me *EventBroker) Stop() error {
+
 	var err error
 
 	me.State.SetNewAction(states.ActionStop)
@@ -192,17 +195,18 @@ func (me *EventBroker) Stop() error {
 		eblog.Debug(me.EntityId, "ZeroConf shutdown error %v", err)
 	}
 
-	err = me.Channels.StopHandler()
-	if err != nil {
-		eblog.Debug(me.EntityId, "Channels shutdown error %v", err)
-	}
-
 	me.State.SetNewState(states.StateStopped, err)
 	me.Channels.PublishState(me.State)
 
 	// Add in wait thingy.
+	time.Sleep(time.Second * 2)
 
 	err = me.StopChannelHandler()
+	if err != nil {
+		eblog.Debug(me.EntityId, "Channels shutdown error %v", err)
+	}
+
+	err = me.Channels.StopHandler()
 	if err != nil {
 		eblog.Debug(me.EntityId, "Channels shutdown error %v", err)
 	}
@@ -235,13 +239,29 @@ func (me *EventBroker) Create() error {
 func (me *EventBroker) SimpleLoop() {
 
 	//var state states.Status
-	//var err error
+	var err error
 
 	fmt.Printf("SimpleLoop()\n")
 	//services := ServiceData{
 	//	Now: make(Entities),
 	//	Logs: []Log{},
 	//}
+
+	var Ret1 string
+
+	var sc1 *Service
+	sc1, _, err = me.AttachCallback(messages.MessageAddress("unfsd"), myCallback, &Ret1)
+	if err != nil {
+		fmt.Printf("Ooops\n")
+	}
+	_ = sc1.PrintState()
+
+	var sc2 *Service
+	sc2, _, err = me.AttachCallback(messages.MessageAddress("mqtt"), myCallback, &Ret1)
+	if err != nil {
+		fmt.Printf("Ooops\n")
+	}
+	_ = sc2.PrintState()
 
 	for i := 0; i < 1000; i++ {
 		fmt.Printf("\n############\n")
@@ -264,7 +284,7 @@ func (me *EventBroker) SimpleLoop() {
 		//	me.Services.States[entity.DaemonEntityName].Current.String(),
 		//	me.Services.States[entity.MqttClientEntityName].Current.String())
 
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 20)
 	}
 
 	//for i := 0; i < 1000; i++ {
@@ -291,6 +311,32 @@ func (me *EventBroker) SimpleLoop() {
 	//}
 
 	time.Sleep(time.Hour * 60)
+}
+
+var RetFunc string
+
+func myCallback(args interface{}, state states.Status) error {
+
+	var err error
+
+	ret := args.(string)
+
+	fmt.Printf("CB state: %s (%v)\n", state.ShortString(), ret)
+	//fmt.Printf("HELLO state: %s\n", PrintServiceState(&state))
+	//fmt.Printf("EntityId:%s  Name:%s  Parent:%s  Action:%s  Want:%s  Current:%s  Last:%s  LastWhen:%v  Error:%v\n",
+	//	state.EntityId.String(),
+	//	state.EntityName.String(),
+	//	state.ParentId.String(),
+	//	state.Action.String(),
+	//	state.Want.String(),
+	//	state.Current.String(),
+	//	state.Last.String(),
+	//	state.LastWhen.Unix(),
+	//	state.Error,
+	//)
+
+
+	return err
 }
 
 
@@ -332,6 +378,43 @@ func (me *EventBroker) StatusOf(client messages.MessageAddress) (states.Status, 
 	}
 
 	return ret, err
+}
+
+
+type SimpleState map[messages.MessageAddress]states.State
+func (me *EventBroker) GetSimpleStatus() (SimpleState, error) {
+
+	ret := make(SimpleState)
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		for _, v := range me.Services {
+			v.mutex.RLock()
+			ret[*v.State.EntityName] = v.State.Current
+			v.mutex.RUnlock()
+		}
+	}
+
+	return ret, err
+}
+
+
+func (me SimpleState) String() string {
+
+	var ret string
+
+	for range only.Once {
+		for k, v := range me {
+			ret += fmt.Sprintf("%s %s\n", k, v)
+		}
+	}
+
+	return ret
 }
 
 
