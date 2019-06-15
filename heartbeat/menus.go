@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"gearbox/box"
-	"gearbox/heartbeat/eventbroker/messages"
-	"gearbox/heartbeat/eventbroker/states"
+	"gearbox/eventbroker/entity"
+	"gearbox/eventbroker/messages"
 	"gearbox/only"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/getlantern/systray"
@@ -43,29 +43,29 @@ func (me *Heartbeat) CreateMenus() {
 	systray.AddSeparator()
 
 
-	me.menu["vm"] = &Menu{
+	me.menu[entity.VmEntityName] = &Menu{
 		MenuItem: systray.AddMenuItem("Gearbox OS: Idle", "Current state of Gearbox VM"),
 		PrefixToolTip: "",
 		PrefixMenu: "Gearbox OS: ",
 		CurrentIcon: DefaultLogo,
 	}
-	me.menu["vm"].MenuItem.SetIcon(me.getIcon(DefaultLogo))
+	me.menu[entity.VmEntityName].MenuItem.SetIcon(me.getIcon(me.menu[entity.VmEntityName].CurrentIcon))
 
-	me.menu["api"] = &Menu{
+	me.menu[entity.ApiEntityName] = &Menu{
 		MenuItem: systray.AddMenuItem("Gearbox API: Idle", "Current state of Gearbox API"),
 		PrefixToolTip: "",
 		PrefixMenu: "Gearbox API: ",
 		CurrentIcon: DefaultLogo,
 	}
-	me.menu["api"].MenuItem.SetIcon(me.getIcon(me.menu["api"].CurrentIcon))
+	me.menu[entity.ApiEntityName].MenuItem.SetIcon(me.getIcon(me.menu[entity.ApiEntityName].CurrentIcon))
 
-	me.menu["unfsd"] = &Menu{
+	me.menu[entity.UnfsdEntityName] = &Menu{
 		MenuItem: systray.AddMenuItem("Gearbox FS: Idle", "Current state of Gearbox NFS service"),
 		PrefixToolTip: "",
 		PrefixMenu: "Gearbox FS: ",
 		CurrentIcon: DefaultLogo,
 	}
-	me.menu["unfsd"].MenuItem.SetIcon(me.getIcon(me.menu["unfsd"].CurrentIcon))
+	me.menu[entity.UnfsdEntityName].MenuItem.SetIcon(me.getIcon(me.menu[entity.UnfsdEntityName].CurrentIcon))
 
 
 	systray.AddSeparator()
@@ -143,16 +143,16 @@ func (me *Heartbeat) UpdateMenus() {
 	}
 
 	for k, v := range s {
-		me.SetMenu(k, v)
+		me.SetStateMenu(k, v)
 	}
 
-	control := messages.MessageAddresses{"admin", "create", "update", "start", "stop", "ssh"}
-	for _, v := range control {
-		if me.menu.Exists(v) {
-			me.SetMenu(v, states.ActionIdle)
-		}
-
-	}
+	//control := messages.MessageAddresses{"admin", "create", "update", "start", "stop", "ssh"}
+	//for _, v := range control {
+	//	if me.menu.Exists(v) {
+	//		me.SetControlMenu(v, states.ActionIdle)
+	//	}
+	//
+	//}
 
 
 	// admin
@@ -540,11 +540,11 @@ func (me *Heartbeat) onReady() {
 			case <- me.menu["version"].MenuItem.ClickedCh:
 				fmt.Printf("Menu: Version\n")
 
-			case <- me.menu["vm"].MenuItem.ClickedCh:
+			case <- me.menu[entity.VmEntityName].MenuItem.ClickedCh:
 				// Ignore.
-			case <- me.menu["api"].MenuItem.ClickedCh:
+			case <- me.menu[entity.ApiEntityName].MenuItem.ClickedCh:
 				// Ignore.
-			case <- me.menu["unfsd"].MenuItem.ClickedCh:
+			case <- me.menu[entity.UnfsdEntityName].MenuItem.ClickedCh:
 				// Ignore.
 
 			case <- me.menu["start"].MenuItem.ClickedCh:

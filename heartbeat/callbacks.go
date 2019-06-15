@@ -1,8 +1,8 @@
 package heartbeat
 
 import (
-	"gearbox/heartbeat/eventbroker/messages"
-	"gearbox/heartbeat/eventbroker/states"
+	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/states"
 )
 
 
@@ -23,17 +23,8 @@ func myCallback(i interface{}, state states.Status) error {
 
 	name := state.EntityName
 	//fmt.Printf("%s\n", name)
-	me.SetMenu(*name, state.Current)
+	me.SetStateMenu(*name, state.Current)
 	//me.SetControl(name, state.Current)
-
-	//switch  {
-	//	case name == "unfsd":
-	//		me.SetMenuUnfsd(state.Current)
-	//	case name == "api":
-	//		me.SetMenuUnfsd(state.Current)
-	//	case name == "vm":
-	//		me.SetMenuUnfsd(state.Current)
-	//}
 
 
 	//fmt.Printf("Service %s moved to state '%s'\n", state.EntityName, state.Current)

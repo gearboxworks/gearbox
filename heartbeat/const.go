@@ -2,10 +2,10 @@ package heartbeat
 
 import (
 	"gearbox/box"
-	"gearbox/heartbeat/eventbroker"
-	"gearbox/heartbeat/eventbroker/daemon"
-	"gearbox/heartbeat/eventbroker/messages"
-	"gearbox/heartbeat/eventbroker/states"
+	"gearbox/eventbroker"
+	"gearbox/eventbroker/daemon"
+	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/states"
 	"gearbox/heartbeat/external/unfsd"
 	oss "gearbox/os_support"
 	"github.com/getlantern/systray"

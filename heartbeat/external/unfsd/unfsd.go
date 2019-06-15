@@ -2,7 +2,7 @@ package unfsd
 
 import (
 	"fmt"
-	"gearbox/heartbeat/eventbroker/daemon"
+	"gearbox/eventbroker/daemon"
 	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-status"
 	"os"
