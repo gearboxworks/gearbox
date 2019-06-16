@@ -28,7 +28,7 @@ type VmBox struct {
 	State           *states.Status
 	Task            *tasks.Task
 	Channels        *channels.Channels
-	Releases        Releases
+	Releases        *Releases
 
 	mutex           sync.RWMutex // Mutex control for map.
 	channelHandler  *channels.Subscriber
@@ -51,7 +51,9 @@ type Vm struct {
 	mutex          sync.RWMutex // Mutex control for this struct.
 	channels       *channels.Channels
 	channelHandler *channels.Subscriber
+	osRelease      *Release
 	osPaths        *ospaths.BasePaths
+	baseDir        *ospaths.Dir
 }
 
 type ServiceConfig struct {
@@ -63,8 +65,6 @@ type ServiceConfig struct {
 
 	retryMax       int
 	retryDelay     time.Duration
-	baseDir        *ospaths.Dir
-	osRelease      *Release
 	cmdStdout      bytes.Buffer
 	cmdStderr      bytes.Buffer
 	vmInfo         KeyValueMap
@@ -72,7 +72,7 @@ type ServiceConfig struct {
 }
 
 const (
-	Package                    = "vmBox"
+	Package                    = "vmbox"
 	InterfaceTypeVmBox    = "*" + Package + ".VmBox"
 	InterfaceTypeService       = "*" + Package + ".Service"
 	InterfaceTypeServiceConfig = "*" + Package + ".ServiceConfig"
@@ -100,7 +100,7 @@ const (
 
 
 const (
-	IconLogoPng = "heartbeat/img/IconLogo.png"
+	IconLogoPng = "dist/heartbeat/img/IconLogo.png"
 )
 
 

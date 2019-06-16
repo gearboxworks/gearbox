@@ -22,9 +22,10 @@ type Disk struct {
 type Disks []Disk
 
 
-func (me *Vm) vbCreate() error {
+func (me *Vm) vbCreate() (states.State, error) {
 
 	var err error
+	var state states.State
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -32,7 +33,6 @@ func (me *Vm) vbCreate() error {
 			break
 		}
 
-		var state states.State
 		state, err = me.cmdVmInfo()
 		switch state {
 			case states.StateError:
@@ -78,7 +78,7 @@ func (me *Vm) vbCreate() error {
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return state, err
 }
 
 
@@ -209,7 +209,7 @@ func (me *Vm) vbStop() error {
 
 			case states.StateStarted:
 				// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
-				_, err = me.Run("controlvm", me.EntityName.String(), "acpipowerbutton")
+				_, err = me.Run("controlvm", me.EntityName.String(), "poweroff")		// @stupid vbox "acpipowerbutton")
 				if err != nil {
 					break
 				}
@@ -412,7 +412,7 @@ func (me *Vm) cmdCreateVm() error {
 		}
 
 		// stdout, stderr, sts = me.Run("createvm", "--name", me.Boxname, "--ostype", "Linux26_64", "--register", "--basefolder", me.VmBaseDir)
-		_, err = me.Run("createvm", "--name", me.EntityName.String(), "--ostype", "Linux26_64", "--register", "--basefolder", me.Entry.baseDir.String())
+		_, err = me.Run("createvm", "--name", me.EntityName.String(), "--ostype", "Linux26_64", "--register", "--basefolder", me.baseDir.String())
 		if err != nil {
 			break
 		}
@@ -505,7 +505,7 @@ func (me *Vm) cmdModifyVmBasic() error {
 
 		// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsSupport.GetAdminRootDir()) + "/" + IconLogo)
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--description", me.EntityName.String() + " OS VM", "--iconfile", me.osPaths.AdminRootDir.String() + "/" + IconLogoPng)
+			"--description", me.EntityName.String() + " OS VM", "--iconfile", me.osPaths.UserConfigDir.AddFileToPath(IconLogoPng).String())
 		if err != nil {
 			break
 		}
@@ -667,7 +667,7 @@ func (me *Vm) cmdModifyVmStorage() error {
 		})
 
 		for index, disk := range disks {
-			fileName := me.Entry.baseDir.String() + "/" + me.EntityName.String() + "/" + disk.Name
+			fileName := me.baseDir.String() + "/" + me.EntityName.String() + "/" + disk.Name
 			order := strconv.Itoa(index)
 
 			_, err = me.Run("createmedium", "disk", "--filename", fileName, "--size", disk.Size, "--format", disk.Format, "--variant", "Stream")
@@ -710,7 +710,7 @@ func (me *Vm) cmdModifyVmIso() error {
 		}
 
 		_, err = me.Run("storageattach", me.EntityName.String(),
-			"--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--tempeject", "on", "--medium", me.Entry.osRelease.File.String())
+			"--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--tempeject", "on", "--medium", me.osRelease.File.String())
 		if err != nil {
 			break
 		}
@@ -816,7 +816,7 @@ func (me *Vm) Run(args ...string) (exitCode string, err error) {
 			}
 		}
 
-		eblog.Debug(me.EntityId, "started task handler")
+		//eblog.Debug(me.EntityId, "started task handler")
 	}
 
 	eblog.LogIfNil(me, err)

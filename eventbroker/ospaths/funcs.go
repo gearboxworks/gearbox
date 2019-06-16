@@ -89,15 +89,15 @@ func (me *Dir) AddToPath(dir ...string) *Dir {
 }
 
 
-func (me *Dir) AddFileToPath(format string, fn ...interface{}) *Dir {
+func (me *Dir) AddFileToPath(format string, fn ...interface{}) *File {
 
-	var ret Dir
+	var ret File
 	var d []string
 
 	d = append(d, string(*me))
 	d = append(d, fmt.Sprintf(format, fn...))
 
-	ret = Dir(filepath.FromSlash(strings.Join(d, "/")))
+	ret = File(filepath.FromSlash(strings.Join(d, "/")))
 
 	return &ret
 }

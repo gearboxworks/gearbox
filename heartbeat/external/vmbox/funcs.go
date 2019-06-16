@@ -1,11 +1,12 @@
 package vmbox
 
-
 import (
 	"errors"
 	"fmt"
+	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/only"
+	"gearbox/eventbroker/states"
 	"reflect"
 )
 
@@ -62,9 +63,21 @@ func (me *VmBox) IsExisting(client messages.MessageAddress) *Vm {
 
 	var ret *Vm
 
-	if _, ok := me.vms[client]; ok {
-		ret = me.vms[client]
+	for _, v := range me.vms {
+		if v.EntityName == client {
+			ret = v
+			break
+		}
+
+		if v.EntityId == client {
+			ret = v
+			break
+		}
 	}
+
+	//if _, ok := me.vms[client]; ok {
+	//	ret = me.vms[client]
+	//}
 
 	return ret
 }
@@ -204,3 +217,29 @@ func (me *Vm) Print() error {
 
 	return err
 }
+
+
+func ConstructVmMessage(me messages.MessageAddress, to messages.MessageAddress, a states.Action) messages.Message {
+
+	var err error
+	var msgTemplate messages.Message
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		msgTemplate = messages.Message{
+			Source: me,
+			Topic: messages.MessageTopic{
+				Address:  entity.VmBoxEntityName,
+				SubTopic: messages.SubTopic(a),
+			},
+			Text: messages.MessageText(to),
+		}
+	}
+
+	return msgTemplate
+}
+

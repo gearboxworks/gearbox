@@ -236,108 +236,108 @@ func (me *EventBroker) Create() error {
 }
 
 
-func (me *EventBroker) SimpleLoop() {
-
-	//var state states.Status
-	var err error
-
-	fmt.Printf("SimpleLoop()\n")
-	//services := ServiceData{
-	//	Now: make(Entities),
-	//	Logs: []Log{},
-	//}
-
-	var Ret1 string
-
-	var sc1 *Service
-	sc1, _, err = me.AttachCallback(messages.MessageAddress(entity.UnfsdEntityName), myCallback, &Ret1)
-	if err != nil {
-		fmt.Printf("Ooops\n")
-	}
-	_ = sc1.PrintState()
-
-	var sc2 *Service
-	sc2, _, err = me.AttachCallback(messages.MessageAddress(entity.MqttBrokerEntityName), myCallback, &Ret1)
-	if err != nil {
-		fmt.Printf("Ooops\n")
-	}
-	_ = sc2.PrintState()
-
-	for i := 0; i < 1000; i++ {
-		fmt.Printf("\n############\n")
-		//for _, e := range entity.PartialEntities {
-		//	services.Now[e].State, err = me.StatusOf(e)
-		//	if err != nil {
-		//		fmt.Printf("%s is at error %v\n", e.String(), err)
-		//	} else {
-		//		services.Logs = append(services.Logs, Log{
-		//			When: time.Now(),
-		//			State: services.Now[e].State,
-		//		})
-		//		//fmt.Printf("%s is at state '%s'\n", e.String(), state.Current.String())
-		//	}
-		//}
-
-		me.Services.PrintStates()
-		//fmt.Printf("States: N:'%s'\tD:'%s'\tM:'%s'\n",
-		//	me.Services.States[entity.NetworkEntityName].Current.String(),
-		//	me.Services.States[entity.DaemonEntityName].Current.String(),
-		//	me.Services.States[entity.MqttClientEntityName].Current.String())
-
-		time.Sleep(time.Second * 20)
-	}
-
-	//for i := 0; i < 1000; i++ {
-	//	fmt.Printf("\n############\n")
-	//	for _, e := range entity.PartialEntities {
-	//		services.Now[e].State, err = me.StatusOf(e)
-	//		if err != nil {
-	//			fmt.Printf("%s is at error %v\n", e.String(), err)
-	//		} else {
-	//			services.Logs = append(services.Logs, Log{
-	//				When: time.Now(),
-	//				Status: services.Now[e].State,
-	//			})
-	//			//fmt.Printf("%s is at state '%s'\n", e.String(), state.Current.String())
-	//		}
-	//	}
-	//
-	//	fmt.Printf("States: N:'%s'\tD:'%s'\tM:'%s'\n",
-	//		services.Now[entity.NetworkEntityName].State.Current.String(),
-	//		services.Now[entity.DaemonEntityName].State.Current.String(),
-	//		services.Now[entity.MqttClientEntityName].State.Current.String())
-	//
-	//	time.Sleep(time.Second * 3)
-	//}
-
-	time.Sleep(time.Hour * 60)
-}
-
-var RetFunc string
-
-func myCallback(args interface{}, state states.Status) error {
-
-	var err error
-
-	ret := args.(string)
-
-	fmt.Printf("CB state: %s (%v)\n", state.ShortString(), ret)
-	//fmt.Printf("HELLO state: %s\n", PrintServiceState(&state))
-	//fmt.Printf("EntityId:%s  Name:%s  Parent:%s  Action:%s  Want:%s  Current:%s  Last:%s  LastWhen:%v  Error:%v\n",
-	//	state.EntityId.String(),
-	//	state.EntityName.String(),
-	//	state.ParentId.String(),
-	//	state.Action.String(),
-	//	state.Want.String(),
-	//	state.Current.String(),
-	//	state.Last.String(),
-	//	state.LastWhen.Unix(),
-	//	state.Error,
-	//)
-
-
-	return err
-}
+//func (me *EventBroker) SimpleLoop() {
+//
+//	//var state states.Status
+//	var err error
+//
+//	fmt.Printf("SimpleLoop()\n")
+//	//services := ServiceData{
+//	//	Now: make(Entities),
+//	//	Logs: []Log{},
+//	//}
+//
+//	var Ret1 string
+//
+//	var sc1 *Service
+//	sc1, _, err = me.AttachCallback(messages.MessageAddress(entity.UnfsdEntityName), myCallback, &Ret1)
+//	if err != nil {
+//		fmt.Printf("Ooops\n")
+//	}
+//	_ = sc1.PrintState()
+//
+//	var sc2 *Service
+//	sc2, _, err = me.AttachCallback(messages.MessageAddress(entity.MqttBrokerEntityName), myCallback, &Ret1)
+//	if err != nil {
+//		fmt.Printf("Ooops\n")
+//	}
+//	_ = sc2.PrintState()
+//
+//	for i := 0; i < 1000; i++ {
+//		fmt.Printf("\n############\n")
+//		//for _, e := range entity.PartialEntities {
+//		//	services.Now[e].State, err = me.StatusOf(e)
+//		//	if err != nil {
+//		//		fmt.Printf("%s is at error %v\n", e.String(), err)
+//		//	} else {
+//		//		services.Logs = append(services.Logs, Log{
+//		//			When: time.Now(),
+//		//			State: services.Now[e].State,
+//		//		})
+//		//		//fmt.Printf("%s is at state '%s'\n", e.String(), state.Current.String())
+//		//	}
+//		//}
+//
+//		me.Services.PrintStates()
+//		//fmt.Printf("States: N:'%s'\tD:'%s'\tM:'%s'\n",
+//		//	me.Services.States[entity.NetworkEntityName].Current.String(),
+//		//	me.Services.States[entity.DaemonEntityName].Current.String(),
+//		//	me.Services.States[entity.MqttClientEntityName].Current.String())
+//
+//		time.Sleep(time.Second * 20)
+//	}
+//
+//	//for i := 0; i < 1000; i++ {
+//	//	fmt.Printf("\n############\n")
+//	//	for _, e := range entity.PartialEntities {
+//	//		services.Now[e].State, err = me.StatusOf(e)
+//	//		if err != nil {
+//	//			fmt.Printf("%s is at error %v\n", e.String(), err)
+//	//		} else {
+//	//			services.Logs = append(services.Logs, Log{
+//	//				When: time.Now(),
+//	//				Status: services.Now[e].State,
+//	//			})
+//	//			//fmt.Printf("%s is at state '%s'\n", e.String(), state.Current.String())
+//	//		}
+//	//	}
+//	//
+//	//	fmt.Printf("States: N:'%s'\tD:'%s'\tM:'%s'\n",
+//	//		services.Now[entity.NetworkEntityName].State.Current.String(),
+//	//		services.Now[entity.DaemonEntityName].State.Current.String(),
+//	//		services.Now[entity.MqttClientEntityName].State.Current.String())
+//	//
+//	//	time.Sleep(time.Second * 3)
+//	//}
+//
+//	time.Sleep(time.Hour * 60)
+//}
+//
+//var RetFunc string
+//
+//func myCallback(args interface{}, state states.Status) error {
+//
+//	var err error
+//
+//	ret := args.(string)
+//
+//	fmt.Printf("CB state: %s (%v)\n", state.ShortString(), ret)
+//	//fmt.Printf("HELLO state: %s\n", PrintServiceState(&state))
+//	//fmt.Printf("EntityId:%s  Name:%s  Parent:%s  Action:%s  Want:%s  Current:%s  Last:%s  LastWhen:%v  Error:%v\n",
+//	//	state.EntityId.String(),
+//	//	state.EntityName.String(),
+//	//	state.ParentId.String(),
+//	//	state.Action.String(),
+//	//	state.Want.String(),
+//	//	state.Current.String(),
+//	//	state.Last.String(),
+//	//	state.LastWhen.Unix(),
+//	//	state.Error,
+//	//)
+//
+//
+//	return err
+//}
 
 
 func (me *EventBroker) StatusOf(client messages.MessageAddress) (states.Status, error) {

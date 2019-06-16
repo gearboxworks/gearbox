@@ -2,10 +2,12 @@ package vmbox
 
 import (
 	"fmt"
+	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/ospaths"
+	"gearbox/eventbroker/states"
 	"gearbox/global"
 	"gearbox/only"
 	"github.com/cavaliercoder/grab"
@@ -21,19 +23,25 @@ import (
 type Releases struct {
 	Map             ReleasesMap
 	Latest	        *Release
+	Selected        *Release
 	BaseDir         *ospaths.Dir
+
+	channels        *channels.Channels
 }
 type ReleasesMap map[Version]*Release
 //type Release github.RepositoryRelease
 type Version string
 
 type Release struct {
-	Version  Version
-	File     ospaths.File
-	Url      string
-	Instance *github.RepositoryRelease
-	DlIndex  int
+	Version       Version
+	File          *ospaths.File
+	Size          int64
+	Url           string
+	Instance      *github.RepositoryRelease
+	DlIndex       int
+	IsDownloading bool
 
+	channels      *channels.Channels
 }
 
 type ReleaseSelector struct {
@@ -46,24 +54,30 @@ type ReleaseSelector struct {
 }
 
 
-func NewReleases() (*Releases, error) {
+func NewReleases(c *channels.Channels) (*Releases, error) {
 
-	var me Releases
+	var ret *Releases
 	var err error
 
 	for range only.Once {
 		p := ospaths.New("")
 
+		me := Releases{}
 		me.BaseDir = p.UserConfigDir.AddToPath("iso")
 		me.Map = make(ReleasesMap)
+		me.channels = c
+
+		err = me.UpdateReleases()
+
+		ret = &me
 
 		eblog.Debug(entity.VmBoxEntityName, "created new release structre")
 	}
 
-	eblog.LogIfNil(me, err)
+	eblog.LogIfNil(ret, err)
 	eblog.LogIfError(entity.VmBoxEntityName, err)
 
-	return &me, err
+	return ret, err
 }
 
 
@@ -186,20 +200,18 @@ func (me *Releases) UpdateReleases() error {
 
 			release := Release{
 				Version: name,
-				File: "",
 				Url: "",
 				Instance: rel,
+				channels: me.channels,
 			}
 
 			// rm[name].Url/File - Find the first ISO asset.
 			for _, asset := range rel.Assets {
 				if strings.HasSuffix(asset.GetBrowserDownloadURL(), ".iso") {
 					// Return the first ISO found.
-					if (release.Url == "") && (release.File.String() == "") {
-						release.Url = asset.GetBrowserDownloadURL()
-						release.File = ospaths.File(asset.GetName())
-					}
-
+					release.Url = asset.GetBrowserDownloadURL()
+					release.File = me.BaseDir.AddFileToPath(asset.GetName())
+					release.Size = int64(asset.GetSize())
 					break
 				}
 			}
@@ -249,13 +261,14 @@ func (me *Releases) SelectRelease(selector ReleaseSelector) (*Release, error) {
 			break
 		}
 
-		err = me.UpdateReleases()
-		if err != nil {
-			break
-		}
+		//err = me.UpdateReleases()
+		//if err != nil {
+		//	break
+		//}
 
 		// For now just select the latest.
-		r = me.Latest
+		me.Selected = me.Latest
+		r = me.Selected
 
 		eblog.Debug(entity.VmBoxEntityName, "selecting the latest release == %s", me.Latest.Version)
 	}
@@ -269,10 +282,6 @@ func (me *Releases) SelectRelease(selector ReleaseSelector) (*Release, error) {
 
 func (me *Release) GetIso() error {
 
-	// me.VmIsoFile
-	// me.VmIsoReleaseUrl
-	// me.VmIsoReleases
-
 	var err error
 
 	for range only.Once {
@@ -282,28 +291,33 @@ func (me *Release) GetIso() error {
 		}
 
 		if me.File.String() == "" {
-			err = messages.ProduceError(entity.VmBoxEntityName, "no Gearbox OS iso file found VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
-			break
-		}
-
-		err = me.IsIsoFilePresent()
-		if err != nil {
+			err = messages.ProduceError(entity.VmBoxEntityName, "no Gearbox OS iso file defined VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
 			break
 		}
 
 		if me.Url == "" {
-			err = messages.ProduceError(entity.VmBoxEntityName, "no Gearbox OS iso url found VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
+			err = messages.ProduceError(entity.VmBoxEntityName, "no Gearbox OS iso url defined VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
 			break
 		}
 
-		client := grab.NewClient()
-		req, _ := grab.NewRequest(me.File.String(), me.Url)
+
+		var state int
+		state, err = me.IsIsoFilePresent()
+		if state != IsoFileNeedsToDownload {
+			break
+		}
+
 
 		// Start download
+		me.DlIndex = 0
+		me.IsDownloading = true
+		client := grab.NewClient()
+		req, _ := grab.NewRequest(me.File.String(), me.Url)
 		fmt.Printf("Downloading %v...\n", req.URL())
 		resp := client.Do(req)
 		fmt.Printf("  %v\n", resp.HTTPResponse.Status)
 		fmt.Printf("%s VM - ISO fetching from '%s' and saved to '%s'. Size:%s.\n", global.Brandname, me.Url, me.File.String(), resp.Size)
+
 
 		// start UI loop
 		t := time.NewTicker(500 * time.Millisecond)
@@ -314,6 +328,7 @@ func (me *Release) GetIso() error {
 				select {
 					case <-t.C:
 						me.DlIndex = int(100*resp.Progress())
+						me.publishDownloadState()
 						fmt.Printf("File '%s' transferred %v / %v bytes (%d%%)\n", me.File.String(), resp.BytesComplete(), resp.Size, me.DlIndex)
 
 					case <-resp.Done:
@@ -327,11 +342,13 @@ func (me *Release) GetIso() error {
 			err = messages.ProduceError(entity.VmBoxEntityName, "ISO download failed VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
 			break
 		}
-
 		fmt.Printf("Download saved to ./%v \n", resp.Filename)
+
 
 		eblog.Debug(entity.VmBoxEntityName, "ISO fetched from '%s' and saved to '%s'. Size:%d", me.Url, me.File.String(), resp.Size)
 		me.DlIndex = 100
+		me.publishDownloadState()
+		me.IsDownloading = false
 	}
 
 	eblog.LogIfNil(me, err)
@@ -341,23 +358,73 @@ func (me *Release) GetIso() error {
 }
 
 
-func (me *Release) IsIsoFilePresent() error {
+func (me *Release) publishDownloadState() {
+
+	client := messages.MessageAddress(entity.VmUpdateEntityName)
+	state := states.New(&client, &client, entity.VmBoxEntityName)
+	state.SetWant("100%")
+	state.SetCurrent(states.State(fmt.Sprintf("%d%%", me.DlIndex)))
+
+	f := messages.MessageAddress(states.ActionUpdate)
+	msg := f.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, state.ToMessageText())
+	_ = me.channels.Publish(msg)
+}
+
+
+const IsoFileNeedsToDownload	= 0
+const IsoFileIsDownloading		= 1
+const IsoFileDownloaded			= 2
+func (me *Release) IsIsoFilePresent() (int, error) {
 
 	var err error
+	var ret int
+	var stat os.FileInfo
 
-	_, err = os.Stat(me.File.String())
-	if err == nil {
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		if me.File.String() == "" {
+			err = messages.ProduceError(entity.VmBoxEntityName, "no Gearbox OS iso file defined VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
+			break
+		}
+
+		stat, err = os.Stat(me.File.String())
+		if os.IsNotExist(err) {
+			err = messages.ProduceError("ISO file needs to download from GitHub VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
+			ret = IsoFileNeedsToDownload
+			break
+		}
+
+		if me.IsDownloading {
+			err = messages.ProduceError("ISO file still downloading VmIsoUrl:%s VmIsoFile:%s Percent:%d", me.Url, me.File.String(), me.DlIndex)
+			ret = IsoFileIsDownloading
+			break
+		}
+
+		if stat.Size() != me.Size {
+			err = messages.ProduceError("ISO file needs to re-download from GitHub VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
+			ret = IsoFileNeedsToDownload
+			break
+		}
+
+		//if me.DlIndex < 100 {
+		//	err = messages.ProduceError("ISO file needs to re-download from GitHub VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
+		//	ret = IsoFileNeedsToDownload
+		//	break
+		//}
+
+		ret = IsoFileDownloaded
 		me.DlIndex = 100
 		eblog.Debug(entity.VmBoxEntityName, "ISO already fetched from '%s' and saved to '%s'", me.Url, me.File.String())
-
-	} else {
-		err = messages.ProduceError("can't download me release from GitHub VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
 	}
 
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(entity.VmBoxEntityName, err)
 
-	return err
+	return ret, err
 }
 
 

@@ -31,7 +31,7 @@ func stopHandler(event *messages.Message, i channels.Argument, r channels.Return
 
 		if event.Text.String() == entity.SelfEntityName {
 			// Stop Daemon by default
-			err = me.StopHandler()
+			err = me.Stop()
 		} else {
 			// Stop of specific entity
 			sc := me.IsExisting(messages.MessageAddress(event.Text))
@@ -68,7 +68,7 @@ func startHandler(event *messages.Message, i channels.Argument, r channels.Retur
 
 		if event.Text.String() == entity.SelfEntityName {
 			// Start Daemon by default
-			err = me.StartHandler()
+			err = me.Start()
 		} else {
 			// Start of specific entity
 			sc := me.IsExisting(messages.MessageAddress(event.Text))
@@ -130,7 +130,6 @@ func updateHandler(event *messages.Message, i channels.Argument, r channels.Retu
 
 	var err error
 	var me *VmBox
-	var ret *states.Status
 
 	for range only.Once {
 		me, err = InterfaceToTypeVmBox(i)
@@ -139,22 +138,73 @@ func updateHandler(event *messages.Message, i channels.Argument, r channels.Retu
 		}
 
 		if event.Text.String() == "" {
-			// Get status of Daemon by default
-			ret = me.State.GetStatus()
-		} else {
-			// Get status of specific sub
-			//sc := me.IsExisting(messages.MessageAddress(event.Text))
-			//if sc != nil {
-			//	ret, err = sc.GetStatus()
-			//}
+			break
 		}
 
-		eblog.Debug(me.EntityId, "statusHandler() via channel")
+		//if event.Text.String() == entity.SelfEntityName {
+		//	// Get status of Daemon by default
+		//	ret = me.State.GetStatus()
+		//} else {
+		//	// Get status of specific entity
+		//	sc := me.IsExisting(messages.MessageAddress(event.Text))
+		//	if sc != nil {
+		//		ret, err = sc.GetStatus()
+		//	}
+		//}
+
+		if !me.Releases.Selected.IsDownloading {
+			err = me.Releases.Selected.GetIso()
+		}
+
+		eblog.Debug(me.EntityId, "updateHandler() via channel")
 	}
 
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return ret
+	return &err
+}
+
+
+// Non-exposed channel function that responds to a "update" channel request.
+func createHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+
+	var err error
+	var me *VmBox
+
+	for range only.Once {
+		me, err = InterfaceToTypeVmBox(i)
+		if err != nil {
+			break
+		}
+
+		if event.Text.String() == "" {
+			break
+		}
+
+		if event.Text.String() == entity.SelfEntityName {
+			// Get status of Daemon by default
+		} else {
+			// Get status of specific entity
+			sc := me.IsExisting(messages.MessageAddress(event.Text))
+			if sc == nil {
+				_, err = me.New(ServiceConfig{
+					Name: messages.MessageAddress(event.Text),
+					Version: "latest",
+				})
+			}
+		}
+
+		//if !me.Releases.Selected.IsDownloading {
+		//	err = me.Releases.Selected.GetIso()
+		//}
+
+		eblog.Debug(me.EntityId, "createHandler() via channel")
+	}
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return &err
 }
 

@@ -5,42 +5,38 @@ import (
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"gearbox/only"
-	"gearbox/os_support"
-
-	"time"
 )
 
 
-type Box struct {
-	Boxname         string
-	//State           BoxState
-	VmBaseDir       string
-	VmIsoDir        string
-	VmIsoVersion    string
-	VmIsoFile       string
-	VmIsoUrl 		string
-	VmIsoInfo	    Release
-	VmIsoDlIndex	int
-
-	// SSH related - Need to fix this. It's used within CreateBox()
-	SshUsername  string
-	SshPassword  string
-	SshPublicKey string
-
-	// State polling delays.
-	NoWait      bool
-	WaitDelay   time.Duration
-	WaitRetries int
-
-	// Console related.
-	ConsoleHost     string
-	ConsolePort     string
-	ConsoleOkString string
-	ConsoleReadWait time.Duration
-	ShowConsole     bool
-
-	OsSupport oss.OsSupporter
-}
+//type Box struct {
+//	Boxname         string
+//	VmBaseDir       string
+//	VmIsoDir        string
+//	VmIsoVersion    string
+//	VmIsoFile       string
+//	VmIsoUrl 		string
+//	VmIsoInfo	    Release
+//	VmIsoDlIndex	int
+//
+//	// SSH related - Need to fix this. It's used within CreateBox()
+//	SshUsername  string
+//	SshPassword  string
+//	SshPublicKey string
+//
+//	// State polling delays.
+//	NoWait      bool
+//	WaitDelay   time.Duration
+//	WaitRetries int
+//
+//	// Console related.
+//	ConsoleHost     string
+//	ConsolePort     string
+//	ConsoleOkString string
+//	ConsoleReadWait time.Duration
+//	ShowConsole     bool
+//
+//	OsSupport oss.OsSupporter
+//}
 
 
 func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
@@ -120,47 +116,53 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 		}
 
 
+		err = me.Releases.UpdateReleases()
+		if err != nil {
+			break
+		}
+
 		var rel *Release
 		rel, err = me.Releases.SelectRelease(ReleaseSelector{SpecificVersion: "latest"})
 		if err != nil {
 			break
 		}
 
-		err = me.Releases.ShowReleases()
-		if err != nil {
-			break
+		// Fetch ISO.
+		if !me.Releases.Selected.IsDownloading {
+			err = me.Releases.Selected.GetIso()
 		}
+
+		//err = me.Releases.ShowReleases()
+		//if err != nil {
+		//	break
+		//}
 
 
 		sc.EntityId = *messages.GenerateAddress()
 		sc.EntityName = c.Name
 		sc.EntityParent = &me.EntityId
 		sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
-		sc.State.SetNewAction(states.ActionRegister)
+		sc.State.SetNewAction(states.ActionStop)
 		sc.IsManaged = true
+		sc.osRelease = rel
+		sc.baseDir = me.OsPaths.UserConfigDir.AddToPath("vm")
 		sc.Entry = &ServiceConfig{
 			Name: sc.EntityName,
-			baseDir: me.OsPaths.UserConfigDir.AddToPath("vm"),
-			osRelease: rel,
 			ConsolePort: c.ConsolePort,
 			SshPort: c.SshPort,
 			retryMax: DefaultRetries,
 			retryDelay: DefaultVmWaitTime,
 		}
+		sc.osPaths = me.OsPaths
 		sc.channels = me.Channels
 		sc.channels.PublishState(sc.State)
 
 
-		var state states.Status
-		state, err = sc.Status()
-		if err != nil {
-			break
-		}
-
-		switch state.Current {
+		var state states.State
+		state, err = sc.vbCreate()
+		switch state {
 			case states.StateError:
 				eblog.Debug(me.EntityId, "%v", err)
-
 
 			case states.StateStopped:
 				err = me.AddEntity(sc.EntityId, &sc)
@@ -172,6 +174,10 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 
 			case states.StateStarted:
 				// VM already created but started.
+				err = me.AddEntity(sc.EntityId, &sc)
+				if err != nil {
+					break
+				}
 				sc.State.SetNewAction(states.ActionStart)
 
 			case states.StateUnregistered:
@@ -183,8 +189,9 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 		}
 
 
-		sc.State.SetNewState(state.Current, err)
-		sc.channels.PublishState(me.State)
+		sc.State.SetNewState(state, err)
+		sc.channels.PublishState(sc.State)
+		eblog.Debug(me.EntityId, "registered VM OK")
 	}
 
 	eblog.LogIfNil(me, err)
@@ -205,6 +212,15 @@ func (me *Vm) Start() error {
 			break
 		}
 
+
+		// Check for ISO image first.
+		var state int
+		state, err = me.osRelease.IsIsoFilePresent()
+		if state != IsoFileDownloaded {
+			break
+		}
+
+
 		me.State.SetNewAction(states.ActionStart)
 		me.channels.PublishState(me.State)
 
@@ -223,7 +239,7 @@ func (me *Vm) Start() error {
 
 		me.State.SetNewState(states.StateStarted, err)
 		me.channels.PublishState(me.State)
-		eblog.Debug(me.EntityId, "started VM")
+		eblog.Debug(me.EntityId, "started VM OK")
 	}
 
 	eblog.LogIfNil(me, err)
@@ -247,7 +263,7 @@ func (me *Vm) Stop() error {
 		me.State.SetNewAction(states.ActionStop)
 		me.channels.PublishState(me.State)
 
-		err = me.vbStart()
+		err = me.vbStop()
 		if err != nil {
 			break
 		}
@@ -262,7 +278,7 @@ func (me *Vm) Stop() error {
 
 		me.State.SetNewState(states.StateStopped, err)
 		me.channels.PublishState(me.State)
-		eblog.Debug(me.EntityId, "stopped VM")
+		eblog.Debug(me.EntityId, "stopped VM OK")
 	}
 
 	eblog.LogIfNil(me, err)

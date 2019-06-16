@@ -6,13 +6,11 @@ import (
 	"gearbox/box"
 	"gearbox/eventbroker"
 	"gearbox/eventbroker/daemon"
-	"gearbox/eventbroker/messages"
-	"gearbox/global"
+	"gearbox/eventbroker/entity"
 	"gearbox/heartbeat/external/vmbox"
 	"gearbox/help"
 	"gearbox/only"
 	"gearbox/os_support"
-	"gearbox/ssh"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/getlantern/systray"
@@ -50,71 +48,72 @@ func New(OsSupport oss.OsSupporter, args ...Args) (*Heartbeat, status.Status) {
 		}
 
 		// Start a new VM Box instance.
-		_args.BoxInstance = box.NewBox(OsSupport, foo)
-
-		if _args.Boxname == "" {
-			_args.BoxInstance.Boxname = global.Brandname
-		} else {
-			_args.BoxInstance.Boxname = _args.Boxname
-		}
-		_args.BoxInstance.Boxname = "harry" // DEBUG
-
-		if _args.WaitDelay == 0 {
-			_args.BoxInstance.WaitDelay = DefaultWaitDelay
-		} else {
-			_args.BoxInstance.WaitDelay = _args.WaitDelay
-		}
-
-		if _args.WaitRetries == 0 {
-			_args.BoxInstance.WaitRetries = DefaultWaitRetries
-		} else {
-			_args.BoxInstance.WaitRetries = _args.WaitRetries
-		}
-
-		if _args.ConsoleHost == "" {
-			_args.BoxInstance.ConsoleHost = DefaultConsoleHost
-		} else {
-			_args.BoxInstance.ConsoleHost = _args.ConsoleHost
-		}
-
-		if _args.ConsolePort == "" {
-			_args.BoxInstance.ConsolePort = DefaultConsolePort
-		} else {
-			_args.BoxInstance.ConsolePort = _args.ConsolePort
-		}
-
-		if _args.ConsoleOkString == "" {
-			_args.BoxInstance.ConsoleOkString = DefaultConsoleOkString
-		} else {
-			_args.BoxInstance.ConsoleOkString = _args.ConsoleOkString
-		}
-
-		if _args.ConsoleReadWait == 0 {
-			_args.BoxInstance.ConsoleReadWait = DefaultConsoleReadWait
-		} else {
-			_args.BoxInstance.ConsoleReadWait = _args.ConsoleReadWait
-		}
-
-		if _args.SshUsername == "" {
-			_args.BoxInstance.SshUsername = ssh.DefaultUsername
-		} else {
-			_args.BoxInstance.SshUsername = _args.SshUsername
-		}
-
-		if _args.SshPassword == "" {
-			_args.BoxInstance.SshPassword = ssh.DefaultPassword
-		} else {
-			_args.BoxInstance.SshPassword = _args.SshPassword
-		}
-
-		if _args.SshPublicKey == "" {
-			_args.BoxInstance.SshPublicKey = ssh.DefaultKeyFile
-		} else {
-			_args.BoxInstance.SshPublicKey = _args.SshPublicKey
-		}
+		//_args.BoxInstance = box.NewBox(OsSupport, foo)
+		//
+		//if _args.Boxname == "" {
+		//	_args.BoxInstance.Boxname = global.Brandname
+		//} else {
+		//	_args.BoxInstance.Boxname = _args.Boxname
+		//}
+		//_args.BoxInstance.Boxname = "harry" // DEBUG
+		//
+		//if _args.WaitDelay == 0 {
+		//	_args.BoxInstance.WaitDelay = DefaultWaitDelay
+		//} else {
+		//	_args.BoxInstance.WaitDelay = _args.WaitDelay
+		//}
+		//
+		//if _args.WaitRetries == 0 {
+		//	_args.BoxInstance.WaitRetries = DefaultWaitRetries
+		//} else {
+		//	_args.BoxInstance.WaitRetries = _args.WaitRetries
+		//}
+		//
+		//if _args.ConsoleHost == "" {
+		//	_args.BoxInstance.ConsoleHost = DefaultConsoleHost
+		//} else {
+		//	_args.BoxInstance.ConsoleHost = _args.ConsoleHost
+		//}
+		//
+		//if _args.ConsolePort == "" {
+		//	_args.BoxInstance.ConsolePort = DefaultConsolePort
+		//} else {
+		//	_args.BoxInstance.ConsolePort = _args.ConsolePort
+		//}
+		//
+		//if _args.ConsoleOkString == "" {
+		//	_args.BoxInstance.ConsoleOkString = DefaultConsoleOkString
+		//} else {
+		//	_args.BoxInstance.ConsoleOkString = _args.ConsoleOkString
+		//}
+		//
+		//if _args.ConsoleReadWait == 0 {
+		//	_args.BoxInstance.ConsoleReadWait = DefaultConsoleReadWait
+		//} else {
+		//	_args.BoxInstance.ConsoleReadWait = _args.ConsoleReadWait
+		//}
+		//
+		//if _args.SshUsername == "" {
+		//	_args.BoxInstance.SshUsername = ssh.DefaultUsername
+		//} else {
+		//	_args.BoxInstance.SshUsername = _args.SshUsername
+		//}
+		//
+		//if _args.SshPassword == "" {
+		//	_args.BoxInstance.SshPassword = ssh.DefaultPassword
+		//} else {
+		//	_args.BoxInstance.SshPassword = _args.SshPassword
+		//}
+		//
+		//if _args.SshPublicKey == "" {
+		//	_args.BoxInstance.SshPublicKey = ssh.DefaultKeyFile
+		//} else {
+		//	_args.BoxInstance.SshPublicKey = _args.SshPublicKey
+		//}
 
 		_args.baseDir = filepath.FromSlash(fmt.Sprintf("%s/dist/heartbeat", _args.OsSupport.GetUserConfigDir()))
 		_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.baseDir, DefaultPidFile))
+
 
 		//execPath, _ := os.Executable()
 		//execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/heartbeat" // os.Getwd()
@@ -173,6 +172,7 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		go func() {
 			<-sigs
+			_ = me.VmBox.Stop()
 			_ = me.EventBroker.Stop()
 			logger.Debug("Goodbye!")
 
@@ -187,19 +187,25 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 			break
 		}
 
-		//var sc1 *eventbroker.Service
-		_, _, err = me.EventBroker.AttachCallback(messages.MessageAddress("unfsd"), myCallback, me)
+		_, _, err = me.EventBroker.AttachCallback(entity.UnfsdEntityName, myCallback, me)
 		if err != nil {
 			fmt.Printf("Ooops\n")
 		}
-		//_ = sc1.PrintState()
 
-		//var sc2 *eventbroker.Service
-		_, _, err = me.EventBroker.AttachCallback(messages.MessageAddress("mqtt"), myCallback, me)
+		_, _, err = me.EventBroker.AttachCallback(entity.MqttBrokerEntityName, myCallback, me)
 		if err != nil {
 			fmt.Printf("Ooops\n")
 		}
-		//_ = sc2.PrintState()
+
+		_, _, err = me.EventBroker.AttachCallback(entity.VmEntityName, myCallback, me)
+		if err != nil {
+			fmt.Printf("Ooops\n")
+		}
+
+		_, _, err = me.EventBroker.AttachCallback(menuVmUpdate, myCallback, me)
+		if err != nil {
+			fmt.Printf("Ooops\n")
+		}
 
 
 		err = me.EventBroker.Start()
@@ -219,7 +225,7 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 			break
 		}
 
-		err = me.VmBox.StartHandler()
+		err = me.VmBox.Start()
 		if err != nil {
 			sts = status.Wrap(err).
 				SetMessage("VM manager was not able to start").
@@ -228,6 +234,10 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 				SetHelp(status.AllHelp, help.ContactSupportHelp())
 			break
 		}
+
+		//me.osRelease = me.VmBox.Releases.Selected
+		//me.menu["version"].MenuItem.SetTitle(fmt.Sprintf("Gearbox (v%s)", me.osRelease.Version))
+		//me.menu["version"].MenuItem.SetTooltip(fmt.Sprintf("Running v%s", me.osRelease.Version))
 
 
 		// Setup systray menus.
@@ -273,7 +283,7 @@ func (me *Heartbeat) StartHeartbeat() (sts status.Status) {
 //				break
 //			}
 //		}
-
+//
 //		if me.DaemonInstance.IsLoaded() {
 //			fmt.Printf("%s Heartbeat - Restarting service.\n", global.Brandname)
 //			sts = me.DaemonInstance.Unload()

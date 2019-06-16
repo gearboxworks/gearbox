@@ -1,7 +1,9 @@
 package vmbox
 
 import (
+	"fmt"
 	"gearbox/eventbroker/eblog"
+	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
@@ -48,6 +50,33 @@ func initVmBox(task *tasks.Task, i ...interface{}) error {
 			if err != nil {
 				break
 			}
+			err = me.channelHandler.Subscribe(states.ActionUpdate, updateHandler, me, states.InterfaceTypeError)
+			if err != nil {
+				break
+			}
+			err = me.channelHandler.Subscribe(states.ActionRegister, createHandler, me, states.InterfaceTypeStatus)
+			if err != nil {
+				break
+			}
+
+
+			// Hard coded for one Vm named "gearbox" for now...
+			sc := ServiceConfig{
+				Name: messages.MessageAddress(me.Boxname),
+				Version: "latest",
+			}
+			myVM, err := me.New(sc)
+			if err == nil {
+				fmt.Printf("VM: %v\n", myVM.State.GetStatus())
+			}
+
+			fmt.Printf("F: %v\n", me.vms)
+
+
+			//var state states.Status
+			//state, err = myVM.Status()
+			//fmt.Printf("Status: %s\n", state.String())
+
 
 			me.State.SetNewState(states.StateInitialized, err)
 			me.Channels.PublishState(me.State)
@@ -112,10 +141,49 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 		//	err = messages.ProduceError(entity.VmBoxEntityName, "task needs restarting")
 		//	break
 		//}
+		//
+		//var state int
+		////state, err = me.Releases.Selected.IsIsoFilePresent()
+		//state = IsoFileIsDownloading
+		//switch state {
+		//	case IsoFileNeedsToDownload:
+		//		// Leave it to the user.
+		//
+		//	case IsoFileIsDownloading:
+		//		// Send periodic messages to Heartbeat.
+		//		//msg := messages.Message{
+		//		//	Source: me.EntityId,
+		//		//	Topic: messages.MessageTopic{
+		//		//		Address:  entity.BroadcastEntityName,
+		//		//		SubTopic: states.ActionUpdate,
+		//		//	},
+		//		//	Text: messages.MessageText(fmt.Sprintf("%s:%d", me.Releases.Selected.File.String(), me.Releases.Selected.DlIndex)),
+		//		//}
+		//		//_ = me.Channels.Publish(msg)
+		//
+		//	case IsoFileDownloaded:
+		//		// Nothing to do.
+		//}
+		//if state != IsoFileDownloaded {
+		//	//
+		//}
+		//
+		//f := messages.MessageAddress("update")
+		//msg := f.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, "90%")
+		////fmt.Printf("EXPECTING: %s\n", msg.String())
+		//_ = me.Channels.Publish(msg)
 
 
 		// Next do something else.
 		for range only.Once {
+
+			for _, v := range me.vms {
+				state, err := v.Status()
+				if err != nil {
+					continue
+				}
+				v.channels.PublishState(&state)
+			}
 
 			me.Channels.PublishState(me.State)
 			eblog.Debug(me.EntityId, "task handler status OK")

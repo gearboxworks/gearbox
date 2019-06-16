@@ -3,7 +3,6 @@ package heartbeat
 import (
 	"gearbox/box"
 	"gearbox/eventbroker"
-	"gearbox/eventbroker/daemon"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"gearbox/heartbeat/external/unfsd"
@@ -26,8 +25,10 @@ type Heartbeat struct {
 	Boxname        string
 	EventBroker    *eventbroker.EventBroker
 	VmBox          *vmbox.VmBox
-	BoxInstance    *box.Box
-	DaemonInstance *daemon.Daemon
+	Version        string
+	//osRelease      *vmbox.Release
+	//BoxInstance    *box.Box
+	//DaemonInstance *daemon.Daemon
 	NfsInstance    *unfsd.Unfsd
 	State          State
 	PidFile        string

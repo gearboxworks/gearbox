@@ -1,8 +1,10 @@
 package heartbeat
 
 import (
-	"gearbox/eventbroker/messages"
+	"fmt"
+	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/states"
+	"gearbox/heartbeat/external/vmbox"
 )
 
 
@@ -22,10 +24,39 @@ func myCallback(i interface{}, state states.Status) error {
 	//}
 
 	name := state.EntityName
-	//fmt.Printf("%s\n", name)
-	me.SetStateMenu(*name, state.Current)
-	//me.SetControl(name, state.Current)
+	fmt.Printf("%s => %s\n", name, state.String())
+	//me.SetStateMenu(*name, state.Current)
+	//me.SetControlMenu(*name, state.Current)
 
+
+	switch *name {
+		case entity.VmEntityName:
+			var s int
+			err = me.VmBox.EnsureNotNil()
+			if err == nil {
+				s, _ = me.VmBox.Releases.Selected.IsIsoFilePresent()
+				if s != vmbox.IsoFileDownloaded {
+					state.Current = states.StateUpdating
+				}
+			}
+			me.SetStateMenu(entity.VmEntityName, state.Current)
+			me.SetControlMenu(entity.VmEntityName, state.Current)
+
+		case entity.ApiEntityName:
+			me.SetStateMenu(entity.ApiEntityName, state.Current)
+
+		case entity.UnfsdEntityName:
+			me.SetStateMenu(entity.UnfsdEntityName, state.Current)
+
+		case menuVmUpdate:
+			if state.Current.String() != "100%" {
+				me.menu[menuVmUpdate].MenuItem.SetTitle(me.menu[menuVmUpdate].PrefixMenu + " - " + state.Current.String())
+				me.menu[menuVmUpdate].MenuItem.SetTooltip(me.menu[menuVmUpdate].PrefixToolTip + " - " + state.Current.String())
+			} else {
+				me.menu[menuVmUpdate].MenuItem.SetTitle(me.menu[menuVmUpdate].PrefixMenu)
+				me.menu[menuVmUpdate].MenuItem.SetTooltip(me.menu[menuVmUpdate].PrefixToolTip)
+			}
+	}
 
 	//fmt.Printf("Service %s moved to state '%s'\n", state.EntityName, state.Current)
 
@@ -44,93 +75,6 @@ func myCallback(i interface{}, state states.Status) error {
 
 
 	return err
-}
-
-
-func (me *Heartbeat) SetStateMenu(m messages.MessageAddress, state states.State) {
-	// This can clearly be refactored a LOT.
-
-	if _, ok := me.menu[m]; !ok {
-		return
-	}
-
-	if me.menu[m].MenuItem == nil {
-		return
-	}
-
-	//if me.State.Unfsd.LastSts != nil {
-	//	me.menu.unfsdStatusEntry.SetTooltip(me.State.Unfsd.LastSts.Message())
-	//}
-
-	mi := me.menu[m]
-	switch state {
-		case states.StateUnknown:
-			mi.MenuItem.SetIcon(me.getIcon(IconError))
-
-		case states.StateStopping:
-			mi.MenuItem.SetIcon(me.getIcon(IconStopping))
-
-		case states.StateStarting:
-			mi.MenuItem.SetIcon(me.getIcon(IconStarting))
-
-		case states.StateStarted:
-			mi.MenuItem.SetIcon(me.getIcon(IconUp))
-
-		case states.StateStopped:
-			mi.MenuItem.SetIcon(me.getIcon(IconDown))
-
-		default:
-			mi.MenuItem.SetIcon(me.getIcon(IconWarning))
-	}
-	mi.MenuItem.SetTitle(mi.PrefixMenu + state.String())
-	mi.MenuItem.SetTooltip(mi.PrefixToolTip + state.String())
-
-	return
-}
-
-
-func (me *Heartbeat) SetControlMenu(m messages.MessageAddress, state states.State) {
-	// This can clearly be refactored a LOT.
-
-	if _, ok := me.menu[m]; !ok {
-		return
-	}
-
-	if me.menu[m].MenuItem == nil {
-		return
-	}
-
-	//if me.State.Unfsd.LastSts != nil {
-	//	me.menu.unfsdStatusEntry.SetTooltip(me.State.Unfsd.LastSts.Message())
-	//}
-
-	mi := me.menu[m]
-	switch state {
-		case states.StateIdle:
-			mi.MenuItem.Disabled()
-
-		case states.StateUnknown:
-			mi.MenuItem.Enable()
-
-		case states.StateStopping:
-			mi.MenuItem.Enable()
-
-		case states.StateStarting:
-			mi.MenuItem.Enable()
-
-		case states.StateStarted:
-			mi.MenuItem.Enable()
-
-		case states.StateStopped:
-			mi.MenuItem.Enable()
-
-		default:
-			mi.MenuItem.Enable()
-	}
-	mi.MenuItem.SetTitle(mi.PrefixMenu + state.String())
-	mi.MenuItem.SetTooltip(mi.PrefixToolTip + state.String())
-
-	return
 }
 
 

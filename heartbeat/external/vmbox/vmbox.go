@@ -1,16 +1,13 @@
 package vmbox
 
 import (
-	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"gearbox/global"
 	"github.com/jinzhu/copier"
-	"time"
 )
 
 
@@ -67,6 +64,8 @@ func New(args ...Args) (*VmBox, error) {
 			_args.waitTime = DefaultVmWaitTime
 		}
 
+		_args.Releases, _ = NewReleases(_args.Channels)
+
 		_args.vms = make(VmMap)
 
 		*me = VmBox(_args)
@@ -86,7 +85,7 @@ func New(args ...Args) (*VmBox, error) {
 
 
 // Start the VmBox handler.
-func (me *VmBox) StartHandler() error {
+func (me *VmBox) Start() error {
 
 	var err error
 
@@ -95,25 +94,6 @@ func (me *VmBox) StartHandler() error {
 		if err != nil {
 			break
 		}
-
-		sc := ServiceConfig{
-			Name: messages.MessageAddress(me.Boxname),
-			Version: "latest",
-			//ConsolePort: "",
-			//SshPort: "",
-		}
-		myVM, err := me.New(sc)
-		if err == nil {
-			fmt.Printf("VM: %v\n", myVM.State.GetStatus())
-		}
-
-		var state states.Status
-		state, err = myVM.Status()
-		fmt.Printf("Status: %s\n", state.String())
-
-
-		fmt.Printf("Waiting...\n")
-		time.Sleep(time.Hour * 2000)
 
 		me.State.SetNewAction(states.ActionStart)
 		me.Channels.PublishState(me.State)
@@ -139,7 +119,7 @@ func (me *VmBox) StartHandler() error {
 
 
 // Stop the VmBox handler.
-func (me *VmBox) StopHandler() error {
+func (me *VmBox) Stop() error {
 
 	var err error
 
@@ -181,12 +161,12 @@ func (me *VmBox) StopVms() error {
 			break
 		}
 
-		//for u, _ := range me.vms {
-		//	if me.vms[u].IsManaged {
-		//		_ = me[u].Stop()
-		//		// Ignore error, will clean up when program exits.
-		//	}
-		//}
+		for u, _ := range me.vms {
+			if me.vms[u].IsManaged {
+				_ = me.vms[u].Stop()
+				// Ignore error, will clean up when program exits.
+			}
+		}
 	}
 
 	eblog.LogIfNil(me, err)

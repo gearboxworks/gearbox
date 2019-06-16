@@ -3,18 +3,22 @@ package entity
 import "gearbox/eventbroker/messages"
 
 const (
-	ChannelEntityName = "eventbroker-channels"
-	DaemonEntityName = "eventbroker-daemon"
+	ChannelEntityName    = "eventbroker-channels"
+	DaemonEntityName     = "eventbroker-daemon"
 	MqttClientEntityName = "eventbroker-mqttclient"
-	NetworkEntityName = "eventbroker-network"
-	BroadcastEntityName = "broadcast"
-	SelfEntityName = "self"
-
-	UnfsdEntityName = "unfsd"
+	NetworkEntityName    = "eventbroker-network"
+	BroadcastEntityName  = "broadcast"
+	SelfEntityName       = "self"
+	UnfsdEntityName      = "unfsd"
 	MqttBrokerEntityName = "mqtt"
-	ApiEntityName = "api"
-	VmBoxEntityName = "vm"
+
+	HeartbeatEntityName  = "heartbeat"
+	ApiEntityName        = "api"
+	VmBoxEntityName      = "vm"
+	VmUpdateEntityName   = "update"
+	VmEntityName         = "Gearbox"
 )
+
 //var SelfEntityName = "self"
 
 var AllEntities = messages.MessageAddresses{ChannelEntityName, NetworkEntityName, DaemonEntityName, MqttClientEntityName}
