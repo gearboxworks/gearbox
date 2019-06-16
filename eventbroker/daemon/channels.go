@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/eblog"
+	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/only"
@@ -26,10 +27,25 @@ func stopHandler(event *messages.Message, i channels.Argument, r channels.Return
 			break
 		}
 
-		err = me.StopHandler()
-		if err != nil {
+		if event.Text.String() == "" {
 			break
 		}
+
+		if event.Text.String() == entity.SelfEntityName {
+			// Stop Daemon by default
+			err = me.StopHandler()
+		} else {
+			// Stop of specific entity
+			sc := me.IsExisting(messages.MessageAddress(event.Text))
+			if sc != nil {
+				err = sc.Stop()
+			}
+		}
+
+		//err = me.StopHandler()
+		//if err != nil {
+		//	break
+		//}
 
 		eblog.Debug(me.EntityId, "stopHandler() via channel")
 	}
@@ -53,10 +69,25 @@ func startHandler(event *messages.Message, i channels.Argument, r channels.Retur
 			break
 		}
 
-		err = me.StartHandler()
-		if err != nil {
+		if event.Text.String() == "" {
 			break
 		}
+
+		if event.Text.String() == entity.SelfEntityName {
+			// Start Daemon by default
+			err = me.StartHandler()
+		} else {
+			// Start of specific entity
+			sc := me.IsExisting(messages.MessageAddress(event.Text))
+			if sc != nil {
+				err = sc.Start()
+			}
+		}
+
+		//err = me.StartHandler()
+		//if err != nil {
+		//	break
+		//}
 
 		eblog.Debug(me.EntityId, "startHandler() via channel")
 	}

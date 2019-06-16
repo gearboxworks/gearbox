@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"gearbox/app/logger"
 	"gearbox/box"
-	"gearbox/global"
 	"gearbox/eventbroker"
 	"gearbox/eventbroker/daemon"
 	"gearbox/eventbroker/messages"
+	"gearbox/global"
+	"gearbox/heartbeat/external/vmbox"
 	"gearbox/help"
 	"gearbox/only"
 	"gearbox/os_support"
@@ -201,11 +202,27 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 		//_ = sc2.PrintState()
 
 
-		fmt.Printf("Dropping in.\n")
 		err = me.EventBroker.Start()
 		if err != nil {
 			sts = status.Wrap(err).
 				SetMessage("EventBroker was not able to start").
+				SetAdditional("").
+				SetData("").
+				SetHelp(status.AllHelp, help.ContactSupportHelp())
+			break
+		}
+
+
+		fmt.Printf("Dropping in.\n")
+		me.VmBox, err = vmbox.New(vmbox.Args{Channels: &me.EventBroker.Channels, OsPaths: me.EventBroker.OsPaths, Boxname: me.Boxname})
+		if err != nil {
+			break
+		}
+
+		err = me.VmBox.StartHandler()
+		if err != nil {
+			sts = status.Wrap(err).
+				SetMessage("VM manager was not able to start").
 				SetAdditional("").
 				SetData("").
 				SetHelp(status.AllHelp, help.ContactSupportHelp())

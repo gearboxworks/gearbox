@@ -28,6 +28,9 @@ const (
 	StateStarting      = "starting"
 	StateStarted       = "started"
 	StateStopping      = "stopping"
+	StateGetting       = "getting"
+	StatePutting       = "putting"
+	StateUpdating      = "updating"
 
 	StateIndexIdle          = 0
 	StateIndexUnknown       = iota
@@ -50,6 +53,9 @@ const (
 	StateIndexStarting      = iota
 	StateIndexStarted       = iota
 	StateIndexStopping      = iota
+	StateIndexGetting       = iota
+	StateIndexPutting       = iota
+	StateIndexUpdating      = iota
 )
 var StateName = map[int]Action{
 	StateIndexIdle:          StateIdle,
@@ -73,6 +79,9 @@ var StateName = map[int]Action{
 	StateIndexStarting:      StateStarting,
 	StateIndexStarted:       StateStarted,
 	StateIndexStopping:      StateStopping,
+	StateIndexGetting:       StateGetting,
+	StateIndexPutting:       StatePutting,
+	StateIndexUpdating:      StateUpdating,
 }
 
 
@@ -90,6 +99,9 @@ const (
 	ActionStart       = "start"
 	ActionStatus      = "status"
 	ActionAction      = "action"
+	ActionGet         = "get"
+	ActionPut         = "put"
+	ActionUpdate      = "update"
 	ActionError       = "error"
 	ActionGlob        = "*"
 
@@ -106,6 +118,9 @@ const (
 	ActionIndexStart       = iota
 	ActionIndexStatus      = iota
 	ActionIndexAction      = iota
+	ActionIndexGet         = iota
+	ActionIndexPut         = iota
+	ActionIndexUpdate      = iota
 	ActionIndexError       = iota
 	ActionIndexGlob        = iota
 )
@@ -123,6 +138,9 @@ var ActionName = map[int]Action{
 	ActionIndexStart:       ActionStart,
 	ActionIndexStatus:      ActionStatus,
 	ActionIndexAction:      ActionAction,
+	ActionIndexGet:         ActionGet,
+	ActionIndexPut:         ActionPut,
+	ActionIndexUpdate:      ActionUpdate,
 	ActionIndexError:       ActionError,
 	ActionIndexGlob:        ActionGlob,
 }

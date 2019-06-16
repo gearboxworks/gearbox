@@ -43,13 +43,13 @@ func (me *Heartbeat) CreateMenus() {
 	systray.AddSeparator()
 
 
-	me.menu[entity.VmEntityName] = &Menu{
+	me.menu[entity.VmBoxEntityName] = &Menu{
 		MenuItem: systray.AddMenuItem("Gearbox OS: Idle", "Current state of Gearbox VM"),
 		PrefixToolTip: "",
 		PrefixMenu: "Gearbox OS: ",
 		CurrentIcon: DefaultLogo,
 	}
-	me.menu[entity.VmEntityName].MenuItem.SetIcon(me.getIcon(me.menu[entity.VmEntityName].CurrentIcon))
+	me.menu[entity.VmBoxEntityName].MenuItem.SetIcon(me.getIcon(me.menu[entity.VmBoxEntityName].CurrentIcon))
 
 	me.menu[entity.ApiEntityName] = &Menu{
 		MenuItem: systray.AddMenuItem("Gearbox API: Idle", "Current state of Gearbox API"),
@@ -540,7 +540,7 @@ func (me *Heartbeat) onReady() {
 			case <- me.menu["version"].MenuItem.ClickedCh:
 				fmt.Printf("Menu: Version\n")
 
-			case <- me.menu[entity.VmEntityName].MenuItem.ClickedCh:
+			case <- me.menu[entity.VmBoxEntityName].MenuItem.ClickedCh:
 				// Ignore.
 			case <- me.menu[entity.ApiEntityName].MenuItem.ClickedCh:
 				// Ignore.

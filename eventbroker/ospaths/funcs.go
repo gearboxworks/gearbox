@@ -20,8 +20,8 @@ const (
 )
 
 type Path struct {
-	Dir
-	File
+	Dir Dir
+	File File
 }
 type Paths []Path
 
@@ -51,6 +51,10 @@ func New(subdir string) *BasePaths {
 
 	var ret BasePaths
 
+	if subdir == "" {
+		subdir = DefaultBaseDir
+	}
+
 	ret.UserHomeDir = Dir(oss.Get().GetUserHomeDir())
 	ret.SuggestedBasedir = Dir(oss.Get().GetSuggestedBasedir())
 	ret.UserConfigDir = Dir(oss.Get().GetUserConfigDir())
@@ -58,9 +62,9 @@ func New(subdir string) *BasePaths {
 	ret.CacheDir = Dir(oss.Get().GetCacheDir())
 
 	ret.LocalDir = Dir(filepath.FromSlash("/usr/local"))
-	ret.EventBrokerDir = *ret.UserConfigDir.AddToPath(DefaultBaseDir)
-	ret.EventBrokerLogDir = *ret.UserConfigDir.AddToPath(DefaultBaseDir, defaultLogBaseDir)
-	ret.EventBrokerEtcDir = *ret.UserConfigDir.AddToPath(DefaultBaseDir, defaultEtcBaseDir)
+	ret.EventBrokerDir = *ret.UserConfigDir.AddToPath(subdir)
+	ret.EventBrokerLogDir = *ret.UserConfigDir.AddToPath(subdir, defaultLogBaseDir)
+	ret.EventBrokerEtcDir = *ret.UserConfigDir.AddToPath(subdir, defaultEtcBaseDir)
 	ret.EventBrokerWorkingDir = ret.EventBrokerDir
 	//ret.EventBrokerDir = Dir(filepath.FromSlash(fmt.Sprintf("%s/dist/eventbroker", ret.UserConfigDir)))
 
@@ -213,7 +217,7 @@ func (me *BasePaths) CreateIfNotExists() (err error) {
 func (me *Paths) CreateIfNotExists() (err error) {
 
 	for _, p := range *me {
-		if p.String() == "" {
+		if p.Dir.String() == "" {
 			continue
 		}
 
@@ -232,7 +236,7 @@ func (me *Path) CreateIfNotExists() (created bool, err error) {
 	created, err = me.Dir.CreateIfNotExists()
 	if err != nil {
 		fmt.Printf("CreateFileIfNotExists PATH: '%s'\n", me.String())
-		err = os.MkdirAll(me.String(), os.ModePerm)
+		err = os.MkdirAll(me.Dir.String(), os.ModePerm)
 		created = true
 	}
 
@@ -256,6 +260,18 @@ func (me *Path) CreateIfNotExists() (created bool, err error) {
 func (me *Dir) String() string {
 
 	return string(*me)
+}
+
+
+func (me *File) String() string {
+
+	return string(*me)
+}
+
+
+func (me *Path) String() string {
+
+	return filepath.FromSlash(me.Dir.String() + "/"+ me.File.String())
 }
 
 

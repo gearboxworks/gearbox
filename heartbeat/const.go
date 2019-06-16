@@ -7,6 +7,7 @@ import (
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"gearbox/heartbeat/external/unfsd"
+	"gearbox/heartbeat/external/vmbox"
 	oss "gearbox/os_support"
 	"github.com/getlantern/systray"
 	"time"
@@ -24,6 +25,7 @@ type State struct {
 type Heartbeat struct {
 	Boxname        string
 	EventBroker    *eventbroker.EventBroker
+	VmBox          *vmbox.VmBox
 	BoxInstance    *box.Box
 	DaemonInstance *daemon.Daemon
 	NfsInstance    *unfsd.Unfsd

@@ -13,7 +13,7 @@ const (
 	UnfsdEntityName = "unfsd"
 	MqttBrokerEntityName = "mqtt"
 	ApiEntityName = "api"
-	VmEntityName = "vm"
+	VmBoxEntityName = "vm"
 )
 //var SelfEntityName = "self"
 

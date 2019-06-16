@@ -209,7 +209,6 @@ func PublishState(me *Channels, state *states.Status) {
 
 func (me *Channels) PublishState(state *states.Status) {
 
-	// PublishState(me, caller, state)
 	PublishState(me, state)
 
 	return
