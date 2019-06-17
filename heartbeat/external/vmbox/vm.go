@@ -1,10 +1,18 @@
 package vmbox
 
 import (
+	"bufio"
+	"fmt"
 	"gearbox/eventbroker/eblog"
+	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"gearbox/only"
+	"net"
+	"regexp"
+	"strings"
+	"sync"
+	"time"
 )
 
 
@@ -107,8 +115,28 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 			c.Version = "latest"
 		}
 
+		if c.ConsoleHost == "" {
+			c.ConsoleHost = "localhost"
+		}
+
 		if c.ConsolePort == "" {
-			c.ConsolePort = "2232"
+			c.ConsolePort = "2023"
+		}
+
+		if c.ConsoleReadWait == 0 {
+			c.ConsoleReadWait = DefaultConsoleReadWait
+		}
+
+		if c.ConsoleOkString == "" {
+			c.ConsoleOkString = DefaultConsoleOkString
+		}
+
+		if c.ConsoleWaitDelay == 0 {
+			c.ConsoleWaitDelay = DefaultConsoleWaitDelay
+		}
+
+		if c.SshHost == "" {
+			c.SshHost = "localhost"
 		}
 
 		if c.SshPort == "" {
@@ -122,7 +150,7 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 		}
 
 		var rel *Release
-		rel, err = me.Releases.SelectRelease(ReleaseSelector{SpecificVersion: "latest"})
+		rel, err = me.Releases.SelectRelease(ReleaseSelector{SpecificVersion: c.Version})
 		if err != nil {
 			break
 		}
@@ -143,15 +171,25 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 		sc.EntityParent = &me.EntityId
 		sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
 		sc.State.SetNewAction(states.ActionStop)
+		a := messages.MessageAddress(entity.ApiEntityName)
+		sc.ApiState = states.New(&sc.EntityId, &a, me.EntityId)
+		sc.ApiState.SetNewAction(states.ActionStop)
 		sc.IsManaged = true
 		sc.osRelease = rel
 		sc.baseDir = me.OsPaths.UserConfigDir.AddToPath("vm")
 		sc.Entry = &ServiceConfig{
-			Name: sc.EntityName,
-			ConsolePort: c.ConsolePort,
-			SshPort: c.SshPort,
-			retryMax: DefaultRetries,
-			retryDelay: DefaultVmWaitTime,
+			Name:             sc.EntityName,
+			Version:          string(rel.Version),
+			ConsoleHost:      c.ConsoleHost,
+			ConsolePort:      c.ConsolePort,
+			ConsoleReadWait:  c.ConsoleReadWait,
+			ConsoleOkString:  c.ConsoleOkString,
+			ConsoleWaitDelay: c.ConsoleWaitDelay,
+			consoleMutex:     sync.RWMutex{},
+			SshHost:          c.SshHost,
+			SshPort:          c.SshPort,
+			retryMax:         DefaultRetries,
+			retryDelay:       DefaultVmWaitTime,
 		}
 		sc.osPaths = me.OsPaths
 		sc.channels = me.Channels
@@ -214,31 +252,39 @@ func (me *Vm) Start() error {
 
 
 		// Check for ISO image first.
-		var state int
-		state, err = me.osRelease.IsIsoFilePresent()
-		if state != IsoFileDownloaded {
+		var i int
+		i, err = me.osRelease.IsIsoFilePresent()
+		if i != IsoFileDownloaded {
 			break
 		}
+
+
+		me.ChangeRequested = true
+		defer func() { me.ChangeRequested = false }()
 
 
 		me.State.SetNewAction(states.ActionStart)
 		me.channels.PublishState(me.State)
 
-		err = me.vbStart()
-		if err != nil {
-			break
-		}
-
-		ok, err = me.vbWaitForState(states.StateStarted)
-		if err != nil {
-			break
-		}
+		ok, err = me.vbStart(true)
 		if !ok {
 			break
 		}
 
+		// Publish new state.
 		me.State.SetNewState(states.StateStarted, err)
 		me.channels.PublishState(me.State)
+
+
+		// Now wait for API.
+		me.ApiState.SetNewAction(states.ActionStart)
+		me.channels.PublishState(me.ApiState)
+
+		var state states.State
+		state, err = me.waitForApiState(DefaultBootWaitTime, true)
+		me.ApiState.SetNewState(state, err)
+		me.channels.PublishState(me.ApiState)
+
 		eblog.Debug(me.EntityId, "started VM OK")
 	}
 
@@ -260,24 +306,27 @@ func (me *Vm) Stop() error {
 			break
 		}
 
+		me.ChangeRequested = true
+		defer func() { me.ChangeRequested = false }()
+
 		me.State.SetNewAction(states.ActionStop)
 		me.channels.PublishState(me.State)
+		me.ApiState.SetNewAction(states.ActionStop)
+		me.channels.PublishState(me.ApiState)
 
-		err = me.vbStop()
-		if err != nil {
-			break
-		}
-
-		ok, err = me.vbWaitForState(states.StateStopped)
-		if err != nil {
-			break
-		}
+		ok, err = me.vbStop(false, true)
 		if !ok {
+			ok, err = me.vbStop(true, true)
 			break
 		}
+
 
 		me.State.SetNewState(states.StateStopped, err)
 		me.channels.PublishState(me.State)
+
+		me.ApiState.SetNewState(states.StateStopped, err)
+		me.channels.PublishState(me.ApiState)
+
 		eblog.Debug(me.EntityId, "stopped VM OK")
 	}
 
@@ -313,9 +362,11 @@ func (me *Vm) Restart() error {
 }
 
 
-func (me *Vm) Status() (states.Status, error) {
+func (me *Vm) UpdateRealStatus() error {
 
 	var err error
+	//var vm states.Status
+	//var api states.Status
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -323,21 +374,162 @@ func (me *Vm) Status() (states.Status, error) {
 			break
 		}
 
-		var state states.State
-		state, err = me.vbStatus()
-		if err != nil {
-			break
-		}
 
-		me.State.SetNewState(state, err)
+		var v states.State
+		v, err = me.vbStatus()
+		me.State.SetNewState(v, err)
 		me.channels.PublishState(me.State)
-		eblog.Debug(me.EntityId, "started VM")
+
+
+		var a states.State
+		a, err = me.waitForApiState(DefaultRunWaitTime, false)
+		me.ApiState.SetNewState(a, err)
+		me.channels.PublishState(me.ApiState)
+
+
+		eblog.Debug(me.EntityId, "VM is in state %s, API is in state %s", v, a)
 	}
 
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return *me.State.GetStatus(), err
+	return err
+}
+
+
+func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.State, error) {
+
+	var err error
+	var state states.State
+
+	state = states.StateIdle
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+
+		if me.Entry.ConsoleHost == "" {
+			err = me.EntityName.ProduceError("no VM console host defined")
+			state = states.StateError
+			break
+		}
+
+		if me.Entry.ConsolePort == "" {
+			err = me.EntityName.ProduceError("no VM console port defined")
+			state = states.StateError
+			break
+		}
+
+
+		// Ensure we only have one at a time.
+		me.Entry.consoleMutex.Lock()
+		defer me.Entry.consoleMutex.Unlock()
+
+
+		// Connect to this console
+		conn, err := net.Dial("tcp", me.Entry.ConsoleHost + ":" + me.Entry.ConsolePort)
+		if err != nil {
+			err = me.EntityName.ProduceError("VM can't connect to console")
+			state = states.StateIdle
+			break
+		}
+		// defer closeDialConnection(conn)
+		defer func() {
+			if conn != nil {
+				_ = conn.Close()
+			}
+		}()
+
+		eblog.Debug(me.EntityId, "waiting for VM console")
+
+		exitWhen := time.Now().Add(waitFor)
+		readBuffer := make([]byte, 512)
+		for waitCount := 0; time.Now().Unix() < exitWhen.Unix(); waitCount++ {
+			err = conn.SetDeadline(time.Now().Add(me.Entry.ConsoleReadWait))
+			if err != nil {
+				err = me.EntityName.ProduceError("VM console deadline reached")
+				state = states.StateStopped	// states.StateUnknown
+				break
+			}
+
+			bytesRead, err := bufio.NewReader(conn).Read(readBuffer)
+			// bytesRead, err := conn.Read(readBuffer)
+			// readBuffer, err := bufio.NewReader(conn).ReadString('\n')
+			// bytesRead := len(readBuffer)
+			if err != nil {
+				err = me.EntityName.ProduceError("no VM console data")
+				state = states.StateStopped	// states.StateUnknown
+				break
+			}
+
+			if bytesRead > 0 {
+				if showConsole {
+					fmt.Printf("%s", string(readBuffer[:bytesRead]))
+				}
+
+				err = me.heartbeatOk(readBuffer, bytesRead)
+				if err != nil {
+					state = states.StateStarted
+					break
+
+				//} else {
+				//	if me.State.API.WantState == VmStatePowerOff {
+				//		me.State.API.CurrentState = VmStateStopping
+				//		sts = status.Success("%s API - stopping", global.Brandname)
+				//	} else if me.State.API.WantState == VmStateRunning {
+				//		me.State.API.CurrentState = VmStateStarting
+				//		sts = status.Success("%s API - starting", global.Brandname)
+				//	}
+				//	// Do not break.
+				}
+			}
+
+			time.Sleep(me.Entry.ConsoleWaitDelay)
+		}
+
+
+		//me.State.SetNewState(state, err)
+		//me.channels.PublishState(me.State)
+		eblog.Debug(me.EntityId, "VM console started OK")
+	}
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return state, err
+}
+
+
+func (me *Vm) heartbeatOk(b []byte, n int) error {
+
+	var err error
+
+	for range only.Once {
+		apiSplit := strings.Split(string(b[:n]), ";")
+		if len(apiSplit) <= 1 {
+			break
+		}
+
+		match, _ := regexp.MatchString(me.Entry.ConsoleOkString, apiSplit[1])
+		if !match {
+			break
+		}
+
+		// Expecting "1560783374 Gearbox Heartbeat OK"
+		//fmt.Printf("API[%d]:%v\n", len(apiSplit), apiSplit)
+		switch {
+			case len(apiSplit) < 4:
+				err = me.EntityName.ProduceError("did not see OK from console - '%s'", string(b[:n]))
+
+			case apiSplit[3] != "OK":
+				err = me.EntityName.ProduceError("did not see OK from console - '%s'", string(b[:n]))
+		}
+	}
+
+	return err
 }
 
 

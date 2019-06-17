@@ -64,6 +64,7 @@ func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 			s.Domain = DefaultDomain
 		}
 
+		// Consider using RegisterProxy() instead.
 		sc.instance, err = zeroconf.Register(
 			s.Name.String(),
 			s.Type.String(),

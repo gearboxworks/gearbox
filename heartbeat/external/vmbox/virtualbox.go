@@ -132,9 +132,10 @@ func (me *Vm) vbDestroy() error {
 }
 
 
-func (me *Vm) vbStart() error {
+func (me *Vm) vbStart(wait bool) (bool, error) {
 
 	var err error
+	var ok bool
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -156,8 +157,11 @@ func (me *Vm) vbStart() error {
 					break
 				}
 
-				state, err = me.cmdVmInfo()
+				ok, err = me.vbWaitForState(states.StateStarted)
 				if err != nil {
+					break
+				}
+				if !ok {
 					break
 				}
 
@@ -182,13 +186,14 @@ func (me *Vm) vbStart() error {
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return ok, err
 }
 
 
-func (me *Vm) vbStop() error {
+func (me *Vm) vbStop(force bool, wait bool) (bool, error) {
 
 	var err error
+	var ok bool
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -209,13 +214,20 @@ func (me *Vm) vbStop() error {
 
 			case states.StateStarted:
 				// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
-				_, err = me.Run("controlvm", me.EntityName.String(), "poweroff")		// @stupid vbox "acpipowerbutton")
+				if force {
+					_, err = me.Run("controlvm", me.EntityName.String(), "poweroff")
+				} else {
+					_, err = me.Run("controlvm", me.EntityName.String(), "acpipowerbutton")
+				}
 				if err != nil {
 					break
 				}
 
-				state, err = me.cmdVmInfo()
+				ok, err = me.vbWaitForState(states.StateStarted)
 				if err != nil {
+					break
+				}
+				if !ok {
 					break
 				}
 
@@ -235,7 +247,7 @@ func (me *Vm) vbStop() error {
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return err
+	return ok, err
 }
 
 
@@ -274,6 +286,10 @@ func (me *Vm) vbWaitForState(want states.State) (bool, error) {
 		var state states.State
 		for loop := 0; (state != want) && (loop < me.Entry.retryMax); loop++ {
 			state, err = me.cmdVmInfo()
+			if state == want {
+				ok = true
+			}
+
 			//switch state {
 			//	case states.StateError:
 			//		eblog.Debug(me.EntityId, "%v", err)
@@ -646,23 +662,23 @@ func (me *Vm) cmdModifyVmStorage() error {
 		// SIGH - Needs to be not hard-coded.
 		disks := Disks{}
 		disks = append(disks, Disk{
-			Name: "Gearbox-Opt.vmdk",
-			Format: "VMDK",
+			Name: "Gearbox-Opt.vdi",
+			Format: "VDI",
 			Size: "1024",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Docker.vmdk",
-			Format: "VMDK",
+			Name: "Gearbox-Docker.vdi",
+			Format: "VDI",
 			Size: "16384",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Projects.vmdk",
-			Format: "VMDK",
+			Name: "Gearbox-Projects.vdi",
+			Format: "VDI",
 			Size: "16384",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Config.vmdk",
-			Format: "VMDK",
+			Name: "Gearbox-Config.vdi",
+			Format: "VDI",
 			Size: "1024",
 		})
 
@@ -670,7 +686,8 @@ func (me *Vm) cmdModifyVmStorage() error {
 			fileName := me.baseDir.String() + "/" + me.EntityName.String() + "/" + disk.Name
 			order := strconv.Itoa(index)
 
-			_, err = me.Run("createmedium", "disk", "--filename", fileName, "--size", disk.Size, "--format", disk.Format, "--variant", "Stream")
+			// _, err = me.Run("createmedium", "disk", "--filename", fileName, "--size", disk.Size, "--format", disk.Format, "--variant", "Stream")
+			_, err = me.Run("createmedium", "disk", "--filename", fileName, "--size", disk.Size, "--format", disk.Format, "--variant", "Standard")
 			if err != nil {
 				break
 			}
@@ -791,7 +808,7 @@ func (me *Vm) Run(args ...string) (exitCode string, err error) {
 			vboxManagePath = VBOXMANAGE
 		}
 
-		eblog.Debug(me.EntityId, "EXEC:%v '%v'", vboxManagePath, strings.Join(args, `" "`))
+		eblog.Debug(me.EntityId, "EXEC:%v '%v'", vboxManagePath, strings.Join(args, ` `))
 		cmd := exec.Command(vboxManagePath, args...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

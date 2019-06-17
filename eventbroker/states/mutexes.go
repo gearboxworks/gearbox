@@ -11,6 +11,10 @@ func (me *Status) SetNewState(new State, err error) bool {
 
 	var ok bool
 
+	if new == "" {
+		return ok
+	}
+
 	if me.mutex != nil {
 		me.mutex.Lock()
 		defer me.mutex.Unlock()

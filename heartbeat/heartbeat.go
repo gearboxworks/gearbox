@@ -202,6 +202,11 @@ func (me *Heartbeat) HeartbeatDaemon() (sts status.Status) {
 			fmt.Printf("Ooops\n")
 		}
 
+		_, _, err = me.EventBroker.AttachCallback(entity.ApiEntityName, myCallback, me)
+		if err != nil {
+			fmt.Printf("Ooops\n")
+		}
+
 		_, _, err = me.EventBroker.AttachCallback(menuVmUpdate, myCallback, me)
 		if err != nil {
 			fmt.Printf("Ooops\n")

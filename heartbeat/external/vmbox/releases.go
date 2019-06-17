@@ -313,7 +313,7 @@ func (me *Release) GetIso() error {
 		me.IsDownloading = true
 		client := grab.NewClient()
 		req, _ := grab.NewRequest(me.File.String(), me.Url)
-		fmt.Printf("Downloading %v...\n", req.URL())
+		eblog.Debug("downloading ISO from URL %s", req.URL().String())
 		resp := client.Do(req)
 		fmt.Printf("  %v\n", resp.HTTPResponse.Status)
 		fmt.Printf("%s VM - ISO fetching from '%s' and saved to '%s'. Size:%s.\n", global.Brandname, me.Url, me.File.String(), resp.Size)

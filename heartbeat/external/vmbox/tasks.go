@@ -1,7 +1,6 @@
 package vmbox
 
 import (
-	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/only"
@@ -67,10 +66,8 @@ func initVmBox(task *tasks.Task, i ...interface{}) error {
 			}
 			myVM, err := me.New(sc)
 			if err == nil {
-				fmt.Printf("VM: %v\n", myVM.State.GetStatus())
+				eblog.Debug(me.EntityId, "VM: %v\n", myVM.State.GetStatus())
 			}
-
-			fmt.Printf("F: %v\n", me.vms)
 
 
 			//var state states.Status
@@ -178,11 +175,28 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 		for range only.Once {
 
 			for _, v := range me.vms {
-				state, err := v.Status()
-				if err != nil {
-					continue
+				if !v.ChangeRequested {
+					// If we are currently going through a state change,
+					// then ignore any state broadcasts.
+
+					var state states.State
+					state, err = v.vbStatus()
+					v.State.SetNewState(state, err)
+					v.channels.PublishState(v.State)
+
+					if state == states.StateStopped {
+						v.ApiState.SetNewState(state, err)
+						v.channels.PublishState(v.ApiState)
+						continue
+					}
+
+					state, err = v.waitForApiState(DefaultRunWaitTime, false)
+					//fmt.Printf("State: %v %v\n", state, err)
+					v.ApiState.SetNewState(state, err)
+					v.channels.PublishState(v.ApiState)
+				} else {
+					//fmt.Printf("Currently busy.\n")
 				}
-				v.channels.PublishState(&state)
 			}
 
 			me.Channels.PublishState(me.State)

@@ -24,10 +24,10 @@ const (
 	StateSubscribed    = "subscribed"
 	StateUnsubscribing = "unsubscribing"
 	StateUnsubscribed  = "unsubscribed"
+	StateStopping      = "stopping"
 	StateStopped       = "stopped"
 	StateStarting      = "starting"
 	StateStarted       = "started"
-	StateStopping      = "stopping"
 	StateGetting       = "getting"
 	StatePutting       = "putting"
 	StateUpdating      = "updating"
@@ -49,10 +49,10 @@ const (
 	StateIndexSubscribed    = iota
 	StateIndexUnsubscribing = iota
 	StateIndexUnsubscribed  = iota
+	StateIndexStopping      = iota
 	StateIndexStopped       = iota
 	StateIndexStarting      = iota
 	StateIndexStarted       = iota
-	StateIndexStopping      = iota
 	StateIndexGetting       = iota
 	StateIndexPutting       = iota
 	StateIndexUpdating      = iota
@@ -75,10 +75,10 @@ var StateName = map[int]Action{
 	StateIndexSubscribed:    StateSubscribed,
 	StateIndexUnsubscribing: StateUnsubscribing,
 	StateIndexUnsubscribed:  StateUnsubscribed,
+	StateIndexStopping:      StateStopping,
 	StateIndexStopped:       StateStopped,
 	StateIndexStarting:      StateStarting,
 	StateIndexStarted:       StateStarted,
-	StateIndexStopping:      StateStopping,
 	StateIndexGetting:       StateGetting,
 	StateIndexPutting:       StatePutting,
 	StateIndexUpdating:      StateUpdating,
