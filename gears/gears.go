@@ -6,6 +6,12 @@ import (
 	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
+<<<<<<< HEAD
+	"github.com/gearboxworks/go-osbridge"
+
+	//	"gearbox/os_support"
+=======
+>>>>>>> master
 	"gearbox/service"
 	"gearbox/types"
 	"gearbox/util"
@@ -33,7 +39,11 @@ type Gears struct {
 	GlobalOptions    global.Options      `json:"-"`
 	ServiceIds       service.Identifiers `json:"-"`
 	ServiceMap       ServiceMap          `json:"-"`
+<<<<<<< HEAD
+	OsSupport        osbridge.OsBridger     `json:"-"`
+=======
 	OsBridge         osbridge.OsBridger  `json:"-"`
+>>>>>>> master
 	serviceIds       serviceIdsMapGearspecIds
 	refreshed        bool
 }

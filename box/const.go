@@ -1,12 +1,89 @@
 package box
 
 import (
-	"fmt"
-	"gearbox/global"
-	"github.com/gearboxworks/go-status"
+	"gearbox/eventbroker"
+	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/ospaths"
+	"gearbox/eventbroker/states"
+	"gearbox/box/external/unfsd"
+	"gearbox/box/external/vmbox"
+	"github.com/gearboxworks/go-osbridge"
+
+	//	oss "gearbox/os_support"
+	"github.com/getlantern/systray"
 	"time"
 )
 
+<<<<<<< HEAD
+
+// This really needs to be refactored!
+//type State struct {
+//	Code    int
+//	Overall string
+//	Box     box.BoxState
+//	Unfsd   unfsd.UnfsdState
+//}
+
+type Box struct {
+	EntityId       messages.MessageAddress
+	EntityName     messages.MessageAddress
+	Boxname        string
+	Version        string
+	NfsInstance    *unfsd.Unfsd
+	State          *states.Status
+	menu           Menus
+	EventBroker    *eventbroker.EventBroker
+	VmBox          *vmbox.VmBox
+
+	// SSH related - Need to fix this. It's used within CreateBox()
+	SshUsername  string
+	SshPassword  string
+	SshPublicKey string
+
+	// State polling delays.
+	NoWait      bool
+	WaitDelay   time.Duration
+	WaitRetries int
+
+	// Console related.
+	ConsoleHost     string
+	ConsolePort     string
+	ConsoleOkString string
+	ConsoleReadWait time.Duration
+	ShowConsole     bool
+
+	baseDir         *ospaths.Dir
+	pidFile         string
+	osBridge 		osbridge.OsBridger
+	osPaths         *ospaths.BasePaths
+}
+type Args Box
+
+
+type Menus map[messages.MessageAddress]*Menu
+type Menu struct {
+	MenuItem         *systray.MenuItem
+	PrefixToolTip    string
+	PrefixMenu       string
+	CurrentIcon      string
+	State            states.State
+
+	//vmStatusEntry    *systray.MenuItem
+	//apiStatusEntry   *systray.MenuItem
+	//unfsdStatusEntry *systray.MenuItem
+	//
+	//startEntry       *systray.MenuItem
+	//stopEntry        *systray.MenuItem
+	//adminEntry       *systray.MenuItem
+	//updateEntry      *systray.MenuItem
+	//createEntry      *systray.MenuItem
+	//sshEntry         *systray.MenuItem
+	//quitEntry        *systray.MenuItem
+	//restartEntry     *systray.MenuItem
+	//
+	//helpEntry        *systray.MenuItem
+	//versionEntry     *systray.MenuItem
+=======
 const (
 	Basedir = "/home/gearbox/projects"
 )
@@ -68,8 +145,15 @@ type VmDisplayState struct {
 	Title string
 	Hint  string
 	Sts   status.Status
+>>>>>>> master
 }
+type MenuItem             systray.MenuItem
 
+<<<<<<< HEAD
+const (
+	UnknownState = "unknown"
+)
+=======
 type VmFsmState struct {
 	Name        string
 	VmState     string
@@ -323,19 +407,12 @@ UP		UP		RunningApiState
 
 
 */
+>>>>>>> master
 
-/*
-var StateMeaning = map[string]string{
-	UnknownState: fmt.Sprintf("%s VM & Heartbeat in an unknown state", global.Brandname),
-	HaltedState:  fmt.Sprintf("%s VM & Heartbeat halted", global.Brandname),
-	RunningState: fmt.Sprintf("%s VM running, Heartbeat halted", global.Brandname),
-	StartedState: fmt.Sprintf("%s VM running, Heartbeat halted", global.Brandname),
-	NotOkState:   fmt.Sprintf("%s VM running, Heartbeat halted", global.Brandname),
-	OkState:      fmt.Sprintf("%s VM running, Heartbeat running", global.Brandname),
-}
-*/
 
 const (
+	DefaultEntityName      = "Heartbeat"
+
 	DefaultWaitDelay       = time.Second
 	DefaultWaitRetries     = 90
 	DefaultConsoleHost     = "127.0.0.1"
@@ -343,4 +420,25 @@ const (
 	DefaultConsoleOkString = "Gearbox Heartbeat"
 	DefaultShowConsole     = false
 	DefaultConsoleReadWait = time.Second * 5
+	DefaultPidFile         = "heartbeat.pid"
+	DefaultBaseDir         = "appdist/heartbeat"
 )
+
+
+const pidName = "[Gearbox]"
+
+
+const (
+	DefaultLogo = "img/IconLogo.ico"
+	DefaultUp = "img/UpArrow.ico"
+	DefaultDown = "img/DownArrow.ico"
+
+	IconLogo = "img/IconLogo.ico"
+	IconError = "img/IconError.ico"
+	IconWarning = "img/IconWarning.ico"
+	IconUp = "img/IconUp.ico"
+	IconDown = "img/IconDown.ico"
+	IconStarting = "img/IconStarting.ico"
+	IconStopping = "img/IconStopping.ico"
+)
+

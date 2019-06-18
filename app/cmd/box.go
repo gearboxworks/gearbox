@@ -5,6 +5,7 @@ import (
 	"gearbox/box"
 	"gearbox/gearbox"
 	"gearbox/ssh"
+	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/spf13/cobra"
 )
@@ -115,6 +116,24 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			sts := gearbox.Instance.CreateBox(boxArgs)
 			if is.Error(sts) {
+				fmt.Println(sts.Message())
+			}
+		},
+	})
+
+	boxCmd.AddCommand(&cobra.Command{
+		Use: "daemon",
+		SuggestFor: []string{
+			"systray",
+		},
+		Short: "Gearbox Heartbeat daemon",
+		Long: "The `gearbox heartbeat daemon` command is used to run the Heartbeat daemon. " +
+			"This maintains low-level communications with important Gearbox applications and tools. " +
+			"It also provides a user systray for control of Gearbox. ",
+		Run: func(cmd *cobra.Command, args []string) {
+			sts := gearbox.Instance.BoxDaemon(boxArgs)
+			if is.Error(sts) {
+				status.Log(sts)
 				fmt.Println(sts.Message())
 			}
 		},

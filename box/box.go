@@ -1,24 +1,39 @@
 package box
 
 import (
-	"bufio"
 	"fmt"
+	"gearbox/app/logger"
+	"gearbox/eventbroker"
+	"gearbox/eventbroker/daemon"
+	"gearbox/eventbroker/eblog"
+	"gearbox/eventbroker/entity"
+	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/ospaths"
+	"gearbox/eventbroker/states"
 	"gearbox/global"
-	"gearbox/help"
+	"gearbox/box/external/vmbox"
 	"gearbox/only"
+<<<<<<< HEAD
+	"github.com/gearboxworks/go-osbridge"
+
+	//	"gearbox/os_support"
+=======
 	"gearbox/ssh"
 	"gearbox/util"
 	"github.com/gearboxworks/go-osbridge"
+>>>>>>> master
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
-	// dmvb "github.com/docker/machine/drivers/virtualbox"
-	// "github.com/docker/machine/libmachine/drivers/plugin"
-	"net"
-	"regexp"
-	"strings"
-	"time"
+	"github.com/getlantern/systray"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
+<<<<<<< HEAD
+
+func New(OsBridge osbridge.OsBridger, args ...Args) (*Box, status.Status) {
+=======
 type Box struct {
 	Boxname      string
 	State        State
@@ -52,10 +67,11 @@ type Box struct {
 type Args Box
 
 func NewBox(OsBridge osbridge.OsBridger, args ...Args) *Box {
+>>>>>>> master
 
 	var _args Args
 	var sts status.Status
-	box := &Box{}
+	hb := &Box{}
 
 	for range only.Once {
 
@@ -63,6 +79,14 @@ func NewBox(OsBridge osbridge.OsBridger, args ...Args) *Box {
 			_args = args[0]
 		}
 
+<<<<<<< HEAD
+		//foo := box.Args{}
+		//err := copier.Copy(&foo, &_args)
+		//if err != nil {
+		//	sts = status.Wrap(err).SetMessage("unable to copy Box config")
+		//	break
+		//}
+=======
 		_args.OsBridge = OsBridge
 
 		if _args.Boxname == "" {
@@ -72,39 +96,40 @@ func NewBox(OsBridge osbridge.OsBridger, args ...Args) *Box {
 		if _args.WaitDelay == 0 {
 			_args.WaitDelay = DefaultWaitDelay
 		}
+>>>>>>> master
 
-		if _args.WaitRetries == 0 {
-			_args.WaitRetries = DefaultWaitRetries
+		if _args.EntityId == "" {
+			_args.EntityId = *messages.GenerateAddress()
 		}
 
-		if _args.ConsoleHost == "" {
-			_args.ConsoleHost = DefaultConsoleHost
+		if _args.EntityName == "" {
+			_args.EntityName = DefaultEntityName
 		}
 
-		if _args.ConsolePort == "" {
-			_args.ConsolePort = DefaultConsolePort
+		if _args.Boxname == "" {
+			_args.Boxname = global.Brandname
 		}
 
-		if _args.ConsoleOkString == "" {
-			_args.ConsoleOkString = DefaultConsoleOkString
+		if _args.Version == "" {
+			_args.Version = "latest"
 		}
 
-		if _args.ConsoleReadWait == 0 {
-			_args.ConsoleReadWait = DefaultConsoleReadWait
-		}
+		_args.osBridge = OsBridge
+		_args.osPaths = ospaths.New("")
+		_args.baseDir = _args.osPaths.UserConfigDir.AddToPath(DefaultBaseDir)
+		_args.pidFile = _args.baseDir.AddFileToPath(DefaultPidFile).String()
 
-		if _args.SshUsername == "" {
-			_args.SshUsername = ssh.DefaultUsername
-		}
+		_args.State = states.New(&_args.EntityId, &_args.EntityName, entity.SelfEntityName)
 
-		if _args.SshPassword == "" {
-			_args.SshPassword = ssh.DefaultPassword
-		}
 
-		if _args.SshPublicKey == "" {
-			_args.SshPublicKey = ssh.DefaultKeyFile
-		}
+		*hb = Box(_args)
+	}
 
+<<<<<<< HEAD
+	return hb, sts
+}
+
+=======
 		if _args.VmBaseDir == "" {
 			_args.VmBaseDir = string(OsBridge.GetUserConfigDir() + "/box/vm")
 		}
@@ -112,59 +137,73 @@ func NewBox(OsBridge osbridge.OsBridger, args ...Args) *Box {
 		if _args.VmIsoDir == "" {
 			_args.VmIsoDir = string(OsBridge.GetUserConfigDir() + "/box/iso")
 		}
+>>>>>>> master
 
-		_args.VmIsoDlIndex = 100
+func (me *Box) BoxDaemon() (sts status.Status) {
 
-		*box = Box(_args)
+	var err error
 
-		sts = box.SelectRelease(ReleaseSelector{})
+	for range only.Once {
+		sts = me.EnsureNotNil()
 		if is.Error(sts) {
 			break
 		}
 
-		sts = box.VmIsoInfo.ShowRelease()
-		if is.Error(sts) {
+		if daemon.IsParentInit() {
+		//if !daemon.IsParentInit() {
+			fmt.Printf("Gearbox: Sub-command not available for user.\n")
+			sts = status.Fail().SetMessage("daemon mode cannot be run by user specifically")
 			break
 		}
-	}
-	//sts = box.GetIso()
-	//fmt.Printf("STS:%v\n", sts)
+		fmt.Printf("Gearbox: Starting Box daemon.\n")
 
-	//os.Exit(0)
-
+<<<<<<< HEAD
+		// Doesn't seem to work properly - need a workaround of some sort.
+		//		if !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
+		//			fmt.Printf("Sub-command not available for user.\n")
+		//			//break
+		//		}
+=======
 	return box
 }
 
 func (me *Box) Initialize() (sts status.Status) {
+>>>>>>> master
 
-	return sts
-}
 
+<<<<<<< HEAD
+		// Handle exit signals.
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+		go func() {
+			<-sigs
+			_ = me.VmBox.Stop()
+			_ = me.EventBroker.Stop()
+			logger.Debug("Goodbye!")
+
+			os.Exit(0)
+		}()
+=======
 func (me *Box) WaitForVmState(displayString string) bool {
+>>>>>>> master
 
-	found := false
-	var waitCount int
 
-	spinner := util.NewSpinner(util.SpinnerArgs{
-		Text:    displayString,
-		ExitOK:  displayString + " - OK",
-		ExitNOK: displayString + " - FAILED",
-	})
-	spinner.Start()
-
-	for waitCount = 0; waitCount < me.WaitRetries; waitCount++ {
-
-		_, sts := me.GetState()
-		if is.Error(sts) {
-			found = false
+		me.EventBroker, err = eventbroker.New(eventbroker.Args{Boxname: me.Boxname})
+		if err != nil {
 			break
 		}
 
-		if me.State.VM.CurrentState == me.State.VM.WantState {
-			found = true
+		_, _, err = me.EventBroker.AttachCallback(entity.UnfsdEntityName, myCallback, me)
+		if err != nil {
+			eblog.Debug(me.EntityId, "failed to attach callback")
 			break
 		}
 
+<<<<<<< HEAD
+		_, _, err = me.EventBroker.AttachCallback(entity.MqttBrokerEntityName, myCallback, me)
+		if err != nil {
+			eblog.Debug(me.EntityId, "failed to attach callback")
+=======
 		time.Sleep(me.WaitDelay)
 		spinner.Update(fmt.Sprintf("%s [%d]", displayString, waitCount))
 	}
@@ -191,35 +230,37 @@ func (me *Box) heartbeatOk(b []byte, n int) (sts status.Status) {
 	for range only.Once {
 		apiSplit := strings.Split(string(b[:n]), ";")
 		if len(apiSplit) <= 1 {
+>>>>>>> master
 			break
 		}
 
-		match, _ := regexp.MatchString(me.ConsoleOkString, apiSplit[1])
-		if !match {
+		_, _, err = me.EventBroker.AttachCallback(entity.VmEntityName, myCallback, me)
+		if err != nil {
+			eblog.Debug(me.EntityId, "failed to attach callback")
 			break
 		}
 
-		fmt.Printf("API:%v\n", apiSplit)
-		if len(apiSplit) < 2 {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("did not receive 'OK' from console: %s",
-					apiSplit[2],
-				),
-				Data: NotOkState,
-			})
+		_, _, err = me.EventBroker.AttachCallback(entity.ApiEntityName, myCallback, me)
+		if err != nil {
+			eblog.Debug(me.EntityId, "failed to attach callback")
 			break
 		}
 
-		if apiSplit[2] != "OK" {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("did not receive 'OK' from console: %s",
-					apiSplit[2],
-				),
-				Data: NotOkState,
-			})
+		_, _, err = me.EventBroker.AttachCallback(menuVmUpdate, myCallback, me)
+		if err != nil {
+			eblog.Debug(me.EntityId, "failed to attach callback")
 			break
 		}
 
+<<<<<<< HEAD
+
+		err = me.EventBroker.Start()
+		if err != nil {
+			sts = status.Wrap(err).SetMessage("EventBroker was not able to start")
+			break
+		}
+
+=======
 		sts = status.Success("received 'OK' from console")
 		_ = sts.SetData(OkState)
 	}
@@ -228,18 +269,35 @@ func (me *Box) heartbeatOk(b []byte, n int) (sts status.Status) {
 }
 
 func (me *Box) Start() (sts status.Status) {
+>>>>>>> master
 
-	for range only.Once {
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
+		fmt.Printf("Dropping in.\n")
+		me.VmBox, err = vmbox.New(vmbox.Args{Channels: &me.EventBroker.Channels, OsPaths: me.EventBroker.OsPaths, Boxname: me.Boxname})
+		if err != nil {
 			break
 		}
 
-		_, sts := me.GetState()
-		if is.Error(sts) {
+		err = me.VmBox.Start()
+		if err != nil {
+			sts = status.Wrap(err).SetMessage("VM manager was not able to start")
 			break
 		}
 
+<<<<<<< HEAD
+		//me.osRelease = me.VmBox.Releases.Selected
+		//me.menu["version"].MenuItem.SetTitle(fmt.Sprintf("Gearbox (v%s)", me.osRelease.Version))
+		//me.menu["version"].MenuItem.SetTooltip(fmt.Sprintf("Running v%s", me.osRelease.Version))
+
+
+		// Setup systray menus.
+		fmt.Printf("Gearbox: Starting systray.\n")
+		systray.Run(me.onReady, me.onExit)
+
+
+		//time.Sleep(time.Second * 10)
+		//state, _ := me.EventBroker.GetSimpleStatus()
+		//fmt.Printf("STATUS:\n%s", state.String())
+=======
 		/*
 			switch {
 				case me.State.VM.CurrentState == VmStateUnknown:
@@ -262,37 +320,64 @@ func (me *Box) Start() (sts status.Status) {
 					// fall-through
 			}
 		*/
+>>>>>>> master
 
-		_, sts = me.StartBox()
-		if is.Error(sts) {
-			break
-		}
+		//me.EventBroker.SimpleLoop()
 
-		if me.NoWait != false {
-			break
-		}
+		//fmt.Printf("Breaking out.\n")
+		//time.Sleep(time.Second * 2)
+		//_ = me.EventBroker.Stop()
 
-		if me.WaitForVmState(fmt.Sprintf("%s VM: Starting", global.Brandname)) == true {
-			sts = me.GetApiStatus(fmt.Sprintf("%s API: Starting", global.Brandname), 30)
-		}
+		// Create a new VM Box instance.
+		//fmt.Printf("Gearbox: Creating unfsd instance.\n")
+		//me.NfsInstance, sts = unfsd.NewUnfsd(me.OsBridge)
+
+		// Should never exit, unless we get a signal to do so.
+	}
+
+	//eblog.LogIfNil(me, err)
+	//eblog.LogIfError(me.EntityId, err)
+
+	if err != nil {
+		sts = status.Fail().
+			SetMessage("Box terminated with error").
+			SetData(err)
 	}
 
 	return sts
 }
 
+<<<<<<< HEAD
+
+func (me *Box) StartBox() (sts status.Status) {
+=======
 func (me *Box) Stop() (sts status.Status) {
+>>>>>>> master
 
 	for range only.Once {
-		sts = EnsureNotNil(me)
+
+		sts = me.EnsureNotNil()
 		if is.Error(sts) {
 			break
 		}
 
-		_, sts := me.GetState()
-		if is.Error(sts) {
-			break
-		}
-
+<<<<<<< HEAD
+//		if me.DaemonInstance.IsRunning() {
+//			fmt.Printf("%s Box - Restarting service.\n", global.Brandname)
+//			sts = me.DaemonInstance.Unload()
+//			if is.Error(sts) {
+//				break
+//			}
+//		}
+//
+//		if me.DaemonInstance.IsLoaded() {
+//			fmt.Printf("%s Box - Restarting service.\n", global.Brandname)
+//			sts = me.DaemonInstance.Unload()
+//			if is.Error(sts) {
+//				break
+//			}
+//		}
+=======
 		/*
 			switch {
 				case me.State.VM.CurrentState == VmStateUnknown:
@@ -320,32 +405,55 @@ func (me *Box) Stop() (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
+>>>>>>> master
 
-		if me.NoWait != false {
+		//sts = me.DaemonInstance.Load()
+		fmt.Printf("For now, we're running in the forground.\n")
+		err = me.BoxDaemon()
+		if err != nil {
 			break
 		}
+		fmt.Printf("%s\n", sts.Message())
 
-		if me.WaitForVmState(fmt.Sprintf("%s VM: Stopping", global.Brandname)) == true {
-			break
-		}
 	}
 
+<<<<<<< HEAD
+	//eblog.LogIfNil(me, err)
+	//eblog.LogIfError(me.EntityId, err)
+
+	if err != nil {
+		sts = status.Fail().
+			SetMessage("Box terminated with error").
+			SetData(err)
+=======
 	if !is.Error(sts) {
 		sts = status.Success("%s VM stopped", global.Brandname)
+>>>>>>> master
 	}
 
 	return sts
 }
 
+<<<<<<< HEAD
+
+func (me *Box) StopBox() (sts status.Status) {
+
+	var err error
+=======
 func (me *Box) Restart() (sts status.Status) {
+>>>>>>> master
 
 	for range only.Once {
 
-		sts = EnsureNotNil(me)
+		sts = me.EnsureNotNil()
 		if is.Error(sts) {
 			break
 		}
 
+<<<<<<< HEAD
+		//sts = me.DaemonInstance.Unload()
+		if err != nil {
+=======
 		sts = me.Stop()
 		if is.Error(sts) {
 			break
@@ -355,9 +463,14 @@ func (me *Box) Restart() (sts status.Status) {
 				Message: fmt.Sprintf("%s VM in an unknown state: %s", global.Brandname, me.State),
 				Data:    VmStateUnknown,
 			})
+>>>>>>> master
 			break
 		}
+		//fmt.Printf("%s\n", sts.Message())
+		// fmt.Printf("%s Box - Started service.\n", global.Brandname)
 
+<<<<<<< HEAD
+=======
 		sts = me.Start()
 		if is.Error(sts) {
 			break
@@ -369,29 +482,36 @@ func (me *Box) Restart() (sts status.Status) {
 			})
 			break
 		}
+>>>>>>> master
 	}
 
-	if me.State.VM.CurrentState == me.State.VM.WantState {
-		sts = status.Success("%s VM restarted OK", global.Brandname)
+	//eblog.LogIfNil(me, err)
+	//eblog.LogIfError(me.EntityId, err)
+
+	if err != nil {
+		sts = status.Fail().
+			SetMessage("Box terminated with error").
+			SetData(err)
 	}
 
 	return sts
 }
 
+<<<<<<< HEAD
+
+func (me *Box) RestartBox() (sts status.Status) {
+=======
 func (me *Box) GetCachedState() (state State, sts status.Status) {
 
 	// This is required so that not more than one process bashes VB at the same time.
 	// This causes no end of issues.
+>>>>>>> master
 
 	for range only.Once {
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
-			break
-		}
 
-		state = me.State
-	}
-
+<<<<<<< HEAD
+		sts = me.StopBox()
+=======
 	return
 }
 
@@ -407,14 +527,17 @@ func (me *Box) GetState() (State, status.Status) {
 
 	for range only.Once {
 		sts = EnsureNotNil(me)
+>>>>>>> master
 		if is.Error(sts) {
 			break
 		}
 
-		sts = me.GetVmStatus()
+		sts = me.StartBox()
 		if is.Error(sts) {
 			break
 		}
+<<<<<<< HEAD
+=======
 		if me.State.VM.CurrentState != VmStateRunning {
 			me.State.API.CurrentState = VmStatePowerOff
 			break
@@ -435,41 +558,46 @@ func (me *Box) GetState() (State, status.Status) {
 		//			sts.SetData(state)
 		//
 		//		}
+>>>>>>> master
 
-		//sts = me.State.LastSts
-		//fmt.Printf("STATE2: %v\n", sts)
 	}
 
-	return me.State, sts
+	return sts
 }
 
+<<<<<<< HEAD
+
+func (me *Box) GetState() (sts status.Status) {
+=======
 func (me *Box) GetVmStatus() status.Status {
+>>>>>>> master
 
-	// Possible VM states:
-	// running
-	// paused
-	// saved
-	// poweroff
-
-	var sts status.Status
-	// var kvm KeyValueMap
+	var err error
 
 	for range only.Once {
-		sts = EnsureNotNil(me)
+
+		sts = me.EnsureNotNil()
 		if is.Error(sts) {
 			break
 		}
 
-		_, sts = me.cmdListVm()
-		// fmt.Printf("Box '%s' is in state: '%s'\n", kvm["name"], kvm["VMState"])
-		if is.Error(sts) {
-			me.State.VM.CurrentState = VmStateNotPresent
+		if me == nil {
+			sts = status.Fail().
+				SetMessage("Box terminated with error").
+				SetData(err)
+			break
 		}
 
-		if me.State.VM.WantState == VmStateInit {
-			me.State.VM.WantState = me.State.VM.CurrentState
+		//sts = me.DaemonInstance.GetState()
+		if err != nil {
+			break
 		}
+	}
 
+<<<<<<< HEAD
+	//eblog.LogIfNil(me, err)
+	//eblog.LogIfError(me.EntityId, err)
+=======
 		/*
 			// First check on the VM.
 			// state, err := me.VmInstance.GetState()
@@ -524,126 +652,39 @@ func (me *Box) GetVmStatus() status.Status {
 					// Don't break here - need to check on the API.
 			}
 		*/
+>>>>>>> master
 
-		// fmt.Printf("vmState: %v\n", sts)
+	if err != nil {
+		sts = status.Fail().
+			SetMessage("Box terminated with error").
+			SetData(err)
 	}
 
 	return sts
 }
 
+<<<<<<< HEAD
+
+func (me *Box) CreateBox() (sts status.Status) {
+=======
 // We have to have some way to block access to other concurrent processes/threads
 // So, we're simply establishing a boolean that indicates this fact.
 // var alreadyRunning = false
 // @TODO - OK, so that's not working out.
 func (me *Box) GetApiStatus(displayString string, waitFor time.Duration) (sts status.Status) {
+>>>>>>> master
 
 	for range only.Once {
-		sts = EnsureNotNil(me)
-		if is.Error(sts) {
-			break
-		}
 
-		spinner := newSpinner(displayString)
-		displaySpinner := !me.ShowConsole && displayString != ""
+	fmt.Printf("Not implemented.\n")
 
-		if displaySpinner {
-			// We want to display just a spinner instead of console output.
-			spinner.Start()
-		}
-
-		// Connect to this console
-		conn, err := net.Dial("tcp", me.ConsoleHost+":"+me.ConsolePort)
-		if err != nil {
-			me.State.API.CurrentState = VmStatePowerOff
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("%s API - timeout", global.Brandname),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    me.State.API.CurrentState,
-			})
-			break
-		}
-		// defer closeDialConnection(conn)
-		defer conn.Close()
-
-		// Set default state before we begin.
-		me.State.API.CurrentState = VmStateUnknown
-		sts = status.Fail(&status.Args{
-			Message: fmt.Sprintf("%s API - no data", global.Brandname),
-			Help:    help.ContactSupportHelp(), // @TODO need better support here
-			Data:    me.State.API.CurrentState,
-		})
-
-		exitWhen := time.Now().Add(time.Second * waitFor)
-		readBuffer := make([]byte, 512)
-		for waitCount := 0; time.Now().Unix() < exitWhen.Unix(); waitCount++ {
-			err = conn.SetDeadline(time.Now().Add(me.ConsoleReadWait))
-			if err != nil {
-				me.State.API.CurrentState = VmStateUnknown
-				sts = status.Fail(&status.Args{
-					Message: fmt.Sprintf("%s API - deadline", global.Brandname),
-					Help:    help.ContactSupportHelp(), // @TODO need better support here
-					Data:    me.State.API.CurrentState,
-				})
-				break
-			}
-
-			bytesRead, err := bufio.NewReader(conn).Read(readBuffer)
-			// bytesRead, err := conn.Read(readBuffer)
-			// readBuffer, err := bufio.NewReader(conn).ReadString('\n')
-			// bytesRead := len(readBuffer)
-			if err != nil {
-				me.State.API.CurrentState = VmStateUnknown
-				sts = status.Fail(&status.Args{
-					Message: fmt.Sprintf("%s API - no data", global.Brandname),
-					Help:    help.ContactSupportHelp(), // @TODO need better support here
-					Data:    me.State.API.CurrentState,
-				})
-				break
-			}
-
-			if bytesRead > 0 {
-				if me.ShowConsole {
-					fmt.Printf("%s", string(readBuffer[:bytesRead]))
-				}
-
-				sts = me.heartbeatOk(readBuffer, bytesRead)
-				if sts != nil {
-					me.State.API.CurrentState = VmStateRunning
-					sts = status.Success("%s API - running", global.Brandname)
-					break
-
-				} else {
-					if me.State.API.WantState == VmStatePowerOff {
-						me.State.API.CurrentState = VmStateStopping
-						sts = status.Success("%s API - stopping", global.Brandname)
-					} else if me.State.API.WantState == VmStateRunning {
-						me.State.API.CurrentState = VmStateStarting
-						sts = status.Success("%s API - starting", global.Brandname)
-					}
-					// Do not break.
-				}
-			}
-
-			time.Sleep(me.WaitDelay)
-			if displaySpinner {
-				spinner.Update(fmt.Sprintf("%s [%d]", displayString, waitCount))
-			}
-		}
-
-		if me.ShowConsole {
-			fmt.Printf("\n\n# Exiting Console.\n")
-		}
-
-		if displaySpinner {
-			spinner.Stop(false)
-		}
 	}
-
-	// fmt.Printf("apiState: %v\n", sts)
 
 	return sts
 }
 
+<<<<<<< HEAD
+=======
 func EnsureNotNil(bx *Box) (sts status.Status) {
 	if bx == nil {
 		sts = status.Fail(&status.Args{
@@ -655,3 +696,4 @@ func EnsureNotNil(bx *Box) (sts status.Status) {
 
 	return sts
 }
+>>>>>>> master

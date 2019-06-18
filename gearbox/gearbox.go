@@ -9,7 +9,6 @@ import (
 	"gearbox/dockerhub"
 	"gearbox/gears"
 	"gearbox/global"
-	"gearbox/heartbeat"
 	"gearbox/only"
 	"gearbox/project"
 	"gearbox/service"
@@ -68,19 +67,13 @@ type Gearboxer interface {
 	RequestAvailableContainers(...*dockerhub.ContainerQuery) (dockerhub.ContainerNames, status.Status)
 
 	// VM related.
-	CreateBox(box.Args) status.Status
+	BoxDaemon(box.Args) status.Status
 	StartBox(box.Args) status.Status
 	StopBox(box.Args) status.Status
 	RestartBox(box.Args) status.Status
+	CreateBox(box.Args) status.Status
 	PrintBoxStatus(box.Args) status.Status
 	ConnectSSH(ssh.Args) status.Status
-
-	// Heartbeat related.
-	HeartbeatDaemon(heartbeat.Args) status.Status
-	StartHeartbeat(heartbeat.Args) status.Status
-	StopHeartbeat(heartbeat.Args) status.Status
-	RestartHeartbeat(heartbeat.Args) status.Status
-	PrintHeartbeatStatus(heartbeat.Args) status.Status
 
 	SetConfig(config.Configer)
 	SetApi(api api.Apier)
@@ -102,6 +95,7 @@ type Gearbox struct {
 	Gears         *gears.Gears
 	errorLog      *ErrorLog
 }
+
 
 type Args Gearbox
 

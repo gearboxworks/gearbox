@@ -1,0 +1,25 @@
+#ifndef UDPbind_OVT_INCLUDED
+#define UDPbind_OVT_INCLUDED
+
+#if !OV_SYSTEM_NT
+#ifndef __USE_XOPEN2K
+#define __USE_XOPEN2K
+#endif
+#include <sys/socket.h>
+#include <sys/types.h>
+#else
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x501
+#ifndef IPV6_V6ONLY
+#define IPV6_V6ONLY 27
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
+
+/* 
+	sockaddr_storage is large enough for ipv4 and ipv6
+*/
+typedef struct sockaddr_storage OV_SOCKADDR;
+
+#endif
