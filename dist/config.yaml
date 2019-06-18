@@ -1,0 +1,102 @@
+project_name: Gearbox
+env:
+- GO111MODULE=on
+release:
+  github:
+    owner: gearboxworks
+    name: gearbox
+  draft: true
+  prerelease: auto
+  name_template: '{{ .Tag }}'
+brew:
+  name: Gearbox
+  commit_author:
+    name: goreleaserbot
+    email: goreleaser@carlosbecker.com
+  install: bin.install "gearbox"
+scoop:
+  name: Gearbox
+  commit_author:
+    name: goreleaserbot
+    email: goreleaser@carlosbecker.com
+  url_template: https://github.com/gearboxworks/gearbox/releases/download/{{ .Tag
+    }}/{{ .ArtifactName }}
+builds:
+- id: gearbox
+  goos:
+  - darwin
+  goarch:
+  - amd64
+  goarm:
+  - "6"
+  targets:
+  - darwin_amd64
+  main: ./app/main.go
+  ldflags:
+  - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+  binary: gearbox
+  env:
+  - CGO_ENABLED=0
+  lang: go
+archives:
+- id: default
+  builds:
+  - gearbox
+  name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+    }}v{{ .Arm }}{{ end }}'
+  replacements:
+    "386": i386
+    amd64: x86_64
+    darwin: Darwin
+    linux: Linux
+    windows: Windows
+  format: tar.gz
+  files:
+  - licence*
+  - LICENCE*
+  - license*
+  - LICENSE*
+  - readme*
+  - README*
+  - changelog*
+  - CHANGELOG*
+nfpms:
+- name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+    }}v{{ .Arm }}{{ end }}'
+  id: default
+  builds:
+  - gearbox
+  bindir: /usr/local/bin
+snapcraft:
+  name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+    }}v{{ .Arm }}{{ end }}'
+snapshot:
+  name_template: '{{ .Tag }}'
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+changelog:
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+  sort: asc
+dist: dist
+sign:
+  cmd: gpg
+  args:
+  - --output
+  - $signature
+  - --detach-sig
+  - $artifact
+  signature: ${artifact}.sig
+  artifacts: none
+env_files:
+  github_token: ~/.config/goreleaser/github_token
+before:
+  hooks:
+  - /tmp/test.sh
+  - go-bindata -o gearbox/dist.go -pkg gearbox appdist/... admin/dist/...
+  - echo {{ .Version }} > VERSION
+github_urls:
+  download: https://github.com

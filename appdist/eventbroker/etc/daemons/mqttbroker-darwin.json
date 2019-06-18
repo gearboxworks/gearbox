@@ -1,0 +1,37 @@
+{
+	"RunOnPlatform": "darwin_amd64",
+	"EntityName": "mqtt",
+	"Name": "com.gearbox.mqttBroker",
+	"DisplayName": "Gearbox [mqttBroker]",
+	"Description": "mqttBroker is required to support Gearbox",
+
+	"Url": "tcp://0.0.0.0:0",
+	"MdnsType": "mqtt",
+
+	"WorkingDirectory": "{{.EventBrokerWorkingDir}}",
+	"Executable": "{{.EventBrokerDir}}/mqttbroker/bin/{{.Platform}}/hmq",
+	"Arguments": [
+		"--host", "{{.Host}}",
+		"--port", "{{.Port}}",
+		"-d"
+	],
+	"Env": [
+		"PROJECTS={{.UserHomeDir}}/Sites",
+		"HOME={{.UserHomeDir}}",
+		"HOMEDIR={{.UserHomeDir}}",
+		"ADMINROOTDIR={{.AdminRootDir}}",
+		"CACHEDIR={{.CacheDir}}",
+		"BASEDIR={{.UserHomeDir}}",
+		"USERCONFIGDIR={{.UserConfigDir}}"
+	],
+
+	"Option": {
+		"KeepAlive": true,
+		"RunAtLoad": false,
+		"SessionCreate": false,
+		"UserService": true
+	},
+
+	"Stderr": "",
+	"Stdout": ""
+}

@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"gearbox/box"
 	"gearbox/help"
 	"gearbox/only"
 	"gearbox/types"
@@ -76,6 +75,8 @@ func UnmarshalConfig(b []byte) Configer {
 	return &c
 }
 
+const newBaseDir = "/home/gearbox/projects"
+
 func NewConfig(OsBridge OsBridger) Configer {
 	c := &Config{
 		About:         "This is a Gearbox user configuration file.",
@@ -85,7 +86,7 @@ func NewConfig(OsBridge OsBridger) Configer {
 		BasedirMap:    make(BasedirMap, 1),
 		ProjectMap:    make(ProjectMap, 0),
 		Candidates:    make(Candidates, 0),
-		BoxBasedir:    box.Basedir,
+		BoxBasedir:    newBaseDir,
 	}
 	c.BasedirMap[DefaultBasedirNickname] = NewBasedir(
 		DefaultBasedirNickname,

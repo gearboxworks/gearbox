@@ -1,0 +1,94 @@
+/*
+*   Copyright (C) 2015
+*   Chair of Process Control Engineering,
+*   D-52056 Aachen, Germany.
+*   All rights reserved.
+*
+*
+*   This file is part of the ACPLT/OV Package 
+*   Licensed under the Apache License, Version 2.0 (the "License");
+*   you may not use this file except in compliance with the License.
+*   You may obtain a copy of the License at
+*
+*       http://www.apache.org/licenses/LICENSE-2.0
+*
+*   Unless required by applicable law or agreed to in writing, software
+*   distributed under the License is distributed on an "AS IS" BASIS,
+*   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*   See the License for the specific language governing permissions and
+*   limitations under the License.
+*
+***********************************************************************/
+
+#ifndef cshmi_OVT_INCLUDED
+#define cshmi_OVT_INCLUDED
+
+/**
+ *	Cache information for every single object
+ */
+typedef struct{
+	OV_BOOL cacheDirty;			//status of this cache. Will be set TRUE on a variable change of all objects
+	OV_STRING asJSON;			//own config as JSON in heap. Will be updated on request of downloadApplication singleton
+	OV_STRING identifier;		//holds the full name of the object, to detect renaming of its own or a parent
+	OV_POINTER parentObject;	//holds the pointer to the parent, to detect moving
+} CSHMI_INSTANCECACHE;
+
+/**
+ *	Cache information for every single object in heap memory
+ */
+typedef struct{
+	OV_BOOL cacheGroupDirty;
+	OV_STRING strGroup;
+	OV_BOOL cacheTemplateDefinitionDirty;
+	OV_STRING strTemplateDefinition;
+	OV_BOOL cacheInstantiateTemplateDirty;
+	OV_STRING strInstantiateTemplate;
+	OV_BOOL cacheRectangleDirty;
+	OV_STRING strRectangle;
+	OV_BOOL cacheCircleDirty;
+	OV_STRING strCircle;
+	OV_BOOL cacheTextDirty;
+	OV_STRING strText;
+	OV_BOOL cacheLineDirty;
+	OV_STRING strLine;
+	OV_BOOL cachePolylineDirty;
+	OV_STRING strPolyline;
+	OV_BOOL cachePolygonDirty;
+	OV_STRING strPolygon;
+	OV_BOOL cachePathDirty;
+	OV_STRING strPath;
+	OV_BOOL cacheEllipseDirty;
+	OV_STRING strEllipse;
+	OV_BOOL cacheSetValueDirty;
+	OV_STRING strSetValue;
+	OV_BOOL cacheSetConcatValueDirty;
+	OV_STRING strSetConcatValue;
+	OV_BOOL cacheSetMathValueDirty;
+	OV_STRING strSetMathValue;
+	OV_BOOL cacheGetValueDirty;
+	OV_STRING strGetValue;
+	OV_BOOL cacheChildrenIteratorDirty;
+	OV_STRING strChildrenIterator;
+	OV_BOOL cacheIfThenElseDirty;
+	OV_STRING strIfThenElse;
+	OV_BOOL cacheCompareDirty;
+	OV_STRING strCompare;
+	OV_BOOL cacheCompareIteratedChildDirty;
+	OV_STRING strCompareIteratedChild;
+	OV_BOOL cacheTimeEventDirty;
+	OV_STRING strTimeEvent;
+	OV_BOOL cacheRoutePolylineDirty;
+	OV_STRING strRoutePolyline;
+	OV_BOOL cacheTranslationSourceDirty;
+	OV_STRING strTranslationSource;
+	OV_BOOL cacheCreateObjectDirty;
+	OV_STRING strCreateObject;
+	OV_BOOL cacheVibrateDirty;
+	OV_STRING strVibrate;
+	
+	OV_BOOL cacheChildlistDirty;
+	OV_STRING strChildlist;
+} CSHMI_CLASSCACHE;
+ 
+#endif //cshmi_OVT_INCLUDED
+ 	

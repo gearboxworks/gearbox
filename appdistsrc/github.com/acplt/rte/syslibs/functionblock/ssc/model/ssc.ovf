@@ -1,0 +1,15 @@
+
+#ifndef ssc_OVF_INCLUDE
+#define ssc_OVF_INCLUDE
+
+
+typedef OV_RESULT SSC_FNC_RESETSSC(
+	OV_INSTPTR_ssc_SequentialStateChart       pSSC
+);
+typedef OV_RESULT SSC_FNC_RESETSTEP(
+	OV_INSTPTR_ssc_step       pStep
+);
+typedef OV_BOOL SSC_FNC_CHECKACTION(
+	OV_INSTPTR_ssc_actionBlock	pActionBlock
+);
+#endif

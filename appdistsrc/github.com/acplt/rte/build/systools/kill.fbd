@@ -1,0 +1,7 @@
+
+ INSTANCE  /vendor :
+    CLASS /acplt/ov/domain;
+    VARIABLE_VALUES
+      server_run : INPUT BOOL = FALSE;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
