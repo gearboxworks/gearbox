@@ -42,7 +42,7 @@
       <b-form-group>
         <label :for="`${gearControlId}-input`">{{gearspec.attributes.role}}:</label>
         <b-form-select
-          :id="`${gearControlId}-input`"
+          :ref="`${gearControlId}-select`"
           :value="preselectClosestGearServiceId"
           :tabindex="projectIndex*100+stackIndex*10+itemIndex+9"
           @change="onChangeService($event)"
@@ -50,9 +50,11 @@
           <option value="" v-if="!defaultService">Do not run this service</option>
           <option disabled :value="null">Select service...</option>
           <optgroup v-for="(services, groupLabel) in servicesGroupedByRole" :label="groupLabel" :key="groupLabel">
-            <option v-for="serviceId in services" :value="serviceId" :key="serviceId">{{serviceId.replace('gearboxworks/','')}}</option>
+            <option v-for="serviceId in services" :value="serviceId" :key="serviceId" :disabled="project.attributes.enabled">{{serviceId.replace('gearboxworks/','')}}</option>
           </optgroup>
         </b-form-select>
+        <b-alert :show="!stackItem.service" variant="warning">Note, the currently selected version of the service is different from what is in project specification!</b-alert>
+        <b-alert :show="project.attributes.enabled">Note, you cannot change this service while the project is running!</b-alert>
       </b-form-group>
     </b-popover>
   </div>
@@ -65,8 +67,8 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'StackGear',
   props: {
-    'projectId': {
-      type: String,
+    'project': {
+      type: Object,
       required: true
     },
     'stackItem': {
@@ -97,7 +99,7 @@ export default {
   computed: {
     ...mapGetters(['serviceBy', 'gearspecBy', 'stackBy', 'stackDefaultServiceByRole', 'stackServicesByRole', 'preselectServiceId']),
     projectBase () {
-      return 'gb-' + this.escAttr(this.projectId) + '-'
+      return 'gb-' + this.escAttr(this.project.id) + '-'
     },
     gearspec () {
       return this.stackItem.gearspec
@@ -171,6 +173,7 @@ export default {
       const previousId = this.service ? this.service.id : ''
       const program1 = previousId ? previousId.split('/')[1].split(':')[0] : ''
       const program2 = selectedServiceId ? selectedServiceId.split('/')[1].split(':')[0] : ''
+
       if (program1 !== program2) {
         this.isLoaded = false
         this.isSwitching = true
@@ -187,7 +190,7 @@ export default {
           }
         }
       }
-      this.$store.dispatch('changeProjectService', { 'projectId': this.projectId, gearspecId: this.gearspec.id, serviceId: selectedServiceId })
+      this.$store.dispatch('changeProjectService', { 'projectId': this.project.id, gearspecId: this.gearspec.id, serviceId: selectedServiceId })
       this.closePopover()
     },
     closePopover () {
@@ -287,6 +290,12 @@ export default {
     100% {
       transform: scale(0.75);
     }
+  }
+
+  .alert {
+    margin-top: 1rem;
+    margin-bottom: 0;
+    padding: 0.5rem;
   }
 
 </style>

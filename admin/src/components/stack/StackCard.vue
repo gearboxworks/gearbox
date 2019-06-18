@@ -22,7 +22,7 @@
             :key="id + item.gearspec.attributes.role"
             class="service-item"
         >
-          <stack-gear :projectId="project.id" :stackItem="item" :projectIndex="projectIndex" :stackIndex="stackIndex" :itemIndex="itemIndex"></stack-gear>
+          <stack-gear :project="project" :stackItem="item" :projectIndex="projectIndex" :stackIndex="stackIndex" :itemIndex="itemIndex"></stack-gear>
         </li>
       </ul>
       <b-alert
