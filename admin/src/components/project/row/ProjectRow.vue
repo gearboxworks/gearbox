@@ -18,7 +18,6 @@
     </td>
 
     <td class="td--notes">
-      <project-note-list :project="project" :projectIndex="projectIndex"></project-note-list>
       <project-note :project="project" :projectIndex="projectIndex"></project-note>
     </td>
 
@@ -32,8 +31,7 @@ import { mapActions } from 'vuex'
 import ProjectHostname from '../ProjectHostname'
 import ProjectToolbar from '../ProjectToolbar'
 import ProjectLocation from '../ProjectLocation'
-import ProjectNote from '../ProjectNoteAdd'
-import ProjectNoteList from '../ProjectNoteList'
+import ProjectNote from '../ProjectNote'
 import ProjectStackAdd from '../ProjectStackAdd'
 import ProjectStackList from '../ProjectStackList'
 
@@ -66,8 +64,7 @@ export default {
     ProjectLocation,
     ProjectNote,
     ProjectStackAdd,
-    ProjectStackList,
-    ProjectNoteList
+    ProjectStackList
   },
   computed: {
     projectBase () {

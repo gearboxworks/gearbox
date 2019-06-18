@@ -23,9 +23,7 @@
 
       <project-location :project="project" :projectIndex="projectIndex"></project-location>
 
-      <project-note-list :project="project" :projectIndex="projectIndex"></project-note-list>
-
-      <project-note-add :project="project" :projectIndex="projectIndex"></project-note-add>
+      <project-note :project="project" :projectIndex="projectIndex"></project-note>
 
     </div>
 
@@ -39,8 +37,7 @@ import { mapActions } from 'vuex'
 import ProjectToolbar from '../ProjectToolbar'
 import ProjectHostname from '../ProjectHostname'
 import ProjectLocation from '../ProjectLocation'
-import ProjectNoteAdd from '../ProjectNoteAdd'
-import ProjectNoteList from '../ProjectNoteList'
+import ProjectNote from '../ProjectNote'
 import ProjectStackAdd from '../ProjectStackAdd'
 import ProjectStackList from '../ProjectStackList'
 
@@ -74,8 +71,7 @@ export default {
     ProjectLocation,
     ProjectStackList,
     ProjectStackAdd,
-    ProjectNoteList,
-    ProjectNoteAdd
+    ProjectNote
   },
   computed: {
     projectBase () {
@@ -232,6 +228,15 @@ export default {
      */
     width: calc(100% - 50px);
   }
+
+  .input-group--note.is-collapsed{
+    margin-right: 0;
+  }
+
+  .input-group--note {
+    float: right;
+  }
+
 </style>
 
 <style>

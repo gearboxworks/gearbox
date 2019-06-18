@@ -1,6 +1,6 @@
 <template>
   <b-input-group
-    :class="{'input-group--note': true, 'is-collapsed': isCollapsed, 'is-modified': isModified, 'is-updating': isUpdating}"
+    :class="{'input-group--note': true, 'is-collapsed': isCollapsed, 'is-modified': isModified, 'is-updating': isUpdating, 'is-empty': !!notes}"
     role="tabpanel"
   >
     <b-form-input
@@ -16,8 +16,8 @@
     />
     <b-input-group-append>
       <b-button
-        variant="outline-info"
-        :title="isCollapsed ? 'Add a note' : (isModified ? 'Submit the new note': 'Please enter some text first or Click to cancel')"
+        :variant="isCollapsed ? (notes ? 'outline-warning': 'outline-info') : 'outline-info'"
+        :title="isCollapsed ? ( notes ? notes: 'Add a note' ) : (isModified ? 'Submit the note': 'Please enter some text first or Click to cancel')"
         v-b-tooltip.hover
         :class="{'btn--submit': true, 'btn--add': isCollapsed}"
         @click.prevent="onButtonClicked"
@@ -32,16 +32,17 @@
           v-else
           :icon="['fa', isCollapsed ? 'sticky-note': (isModified ? 'check': 'times')]"
         />
-        <span v-if="!isUpdating">{{isCollapsed ? '+' : ''}}</span>
+        <span v-if="!isUpdating && !notes">{{isCollapsed ? '+' : ''}}</span>
       </b-button>
     </b-input-group-append>
   </b-input-group>
+
 </template>
 
 <script>
 import { mapActions } from 'vuex'
 export default {
-  name: 'ProjectNoteAdd',
+  name: 'ProjectNote',
   props: {
     project: {
       type: Object,
@@ -131,6 +132,7 @@ export default {
     top: -2px;
   }
 
+  .is-collapsed .btn-outline-warning,
   .is-collapsed .btn-outline-info {
     border-color: transparent;
     border-top-left-radius: 0.25rem;
