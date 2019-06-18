@@ -72,7 +72,7 @@ require (
 	github.com/vmware/govcloudair v0.0.2
 	github.com/vmware/govmomi v0.20.1
 	github.com/z7zmey/php-parser v0.6.0
-	github.com/zserge/lorca v0.1.6
+	github.com/zserge/lorca v0.1.7
 	github.com/zserge/webview v0.0.0-20190123072648-16c93bcaeaeb
 	golang.org/x/crypto v0.0.0-20190422183909-d864b10871cd
 	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c
