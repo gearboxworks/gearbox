@@ -75,11 +75,8 @@ func UnmarshalConfig(b []byte) Configer {
 	return &c
 }
 
-<<<<<<< HEAD
 const newBaseDir = "/home/gearbox/projects"
 
-=======
->>>>>>> master
 func NewConfig(OsBridge OsBridger) Configer {
 	c := &Config{
 		About:         "This is a Gearbox user configuration file.",

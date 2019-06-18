@@ -1,13 +1,10 @@
 module gearbox
 
 require (
-<<<<<<< HEAD
 	github.com/Azure/azure-sdk-for-go v30.1.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.2.0
 	github.com/Azure/go-autorest/autorest/to v0.2.0
-=======
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
->>>>>>> master
 	github.com/apcera/util v0.0.0-20180322191801-7a50bc84ee48
 	github.com/aws/aws-sdk-go v1.20.2
 	github.com/cavaliercoder/grab v2.0.0+incompatible
@@ -22,11 +19,8 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/exoscale/egoscale v0.18.1
 	github.com/fatih/color v1.7.0
-<<<<<<< HEAD
 	github.com/fhmq/hmq v0.0.0-20190424074534-daf4a0e0f564
-=======
 	github.com/gearboxworks/go-jsoncache v1.0.0
->>>>>>> master
 	github.com/gearboxworks/go-osbridge v0.0.0-20190605062119-0e1c68c1c70f
 	github.com/gearboxworks/go-status v0.0.0-20190528175348-42860fb9e78f
 	github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813
@@ -39,11 +33,6 @@ require (
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f // indirect
 	github.com/getlantern/systray v0.0.0-20190131073753-26d5b920200d
 	github.com/go-bindata/go-bindata v1.0.0
-<<<<<<< HEAD
-=======
-	github.com/go-ole/go-ole v1.2.4 // indirect
-	github.com/go-stack/stack v1.8.0 // indirect
->>>>>>> master
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/gotk3/gotk3 v0.0.0-20190614104930-c157952b53bd // indirect
@@ -73,11 +62,8 @@ require (
 	github.com/sebest/logrusly v0.0.0-20180315190218-3235eccb8edc
 	github.com/segmentio/go-loggly v0.5.0 // indirect
 	github.com/shirou/gopsutil v2.18.12+incompatible
-<<<<<<< HEAD
-	github.com/sirupsen/logrus v1.4.2
-=======
 	github.com/shirou/w32 v0.0.0-20160930032740-bb4de0191aa4 // indirect
->>>>>>> master
+	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/sqweek/dialog v0.0.0-20190609154315-3cf53be95497
@@ -95,5 +81,4 @@ require (
 	google.golang.org/grpc v1.20.1
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/guregu/null.v2 v2.1.2 // indirect
-
 )
