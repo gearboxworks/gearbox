@@ -13,7 +13,7 @@
       required
       @click.prevent="onInputClicked"
       placeholder=""
-      :readonly="isUpdating"
+      :readonly="isUpdating || project.attributes.enabled"
       autocomplete="off"
     />
     <b-input-group-append v-if="isEditing">
@@ -87,8 +87,12 @@ export default {
       return dir + ((dir.indexOf('/') !== -1) ? '/' : '\\') + path
     },
     onInputClicked () {
-      if (this.isMultimodal && !this.isEditing) {
-        this.isEditing = true
+      if (!this.isEditing) {
+        if (this.project.attributes.enabled) {
+          this.$emit('show-alert', 'Hostname cannot be changed while the project is running!')
+        } else if (this.isMultimodal) {
+          this.isEditing = true
+        }
       }
     },
     onButtonClicked () {

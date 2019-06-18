@@ -214,7 +214,7 @@ func (me *Daemon) TestMe() error {
 	fmt.Printf("DEBUG STARTED\n")
 
 	var s *Service
-	s, err = me.RegisterByFile("/Users/mick/.gearbox/appdist/eventbroker/unfsd/unfsd.json")
+	s, err = me.RegisterByFile("/Users/mick/.gearbox/dist/eventbroker/unfsd/unfsd.json")
 
 	time.Sleep(time.Second * 8)
 	if err == nil {

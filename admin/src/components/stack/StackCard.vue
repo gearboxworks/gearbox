@@ -13,7 +13,7 @@
       {{stackId.replace('gearbox.works/', '')}}
     </h2>
 
-    <stack-toolbar v-if="!isCollapsed" :project="project" :projectIndex="projectIndex" :stackId="stackId"></stack-toolbar>
+    <stack-toolbar v-if="!isCollapsed" :project="project" :projectIndex="projectIndex" :stackId="stackId" @show-alert="showAlert"></stack-toolbar>
 
     <div class="stack-content">
       <ul class="service-list" v-if="!isCollapsible || !isCollapsed">
@@ -231,7 +231,7 @@ export default {
     padding-left: 10px;
     padding-bottom: 10px;
     position: relative;
-    top: -14px;
+    top: 0;
     box-shadow: 0px 1px 3px rgba(0,0,0,0.1);
   }
 </style>

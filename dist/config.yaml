@@ -96,7 +96,7 @@ env_files:
 before:
   hooks:
   - /tmp/test.sh
-  - go-bindata -o gearbox/dist.go -pkg gearbox appdist/... admin/dist/...
+  - go-bindata -o gearbox/dist.go -pkg gearbox dist/... admin/dist/...
   - echo {{ .Version }} > VERSION
 github_urls:
   download: https://github.com

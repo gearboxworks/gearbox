@@ -146,6 +146,7 @@ export default {
         this.isCollapsed = true
         this.selectedStack = ''
         this.isModified = false
+        this.$emit('maybe-hide-alert', 'Please add some stacks first!')
       })
     },
     onButtonClicked () {
@@ -163,6 +164,7 @@ export default {
       }
     }
   }
+  ///
 }
 </script>
 <style scoped>

@@ -115,7 +115,11 @@ export default {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
     removeProjectStack (stackId) {
-      this.$store.dispatch('removeProjectStack', { 'projectId': this.project.id, 'stackId': this.stackId })
+      if (this.project.attributes.enabled) {
+        this.$emit('show-alert', 'Cannot remove stack while the project is running!')
+      } else {
+        this.$store.dispatch('removeProjectStack', { 'projectId': this.project.id, 'stackId': this.stackId })
+      }
     }
   }
 }

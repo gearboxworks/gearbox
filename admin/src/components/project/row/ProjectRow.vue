@@ -5,7 +5,7 @@
     </td>
 
     <td class="td--hostname">
-      <project-hostname :project="project" :projectIndex="projectIndex" :is-multimodal="false"></project-hostname>
+      <project-hostname :project="project" :projectIndex="projectIndex" :is-multimodal="false" @show-alert="showAlert"></project-hostname>
     </td>
 
     <td class="td--location">

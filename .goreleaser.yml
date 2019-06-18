@@ -8,7 +8,7 @@ before:
   hooks:
     - /tmp/test.sh
 #    - go mod download
-    - go-bindata -o gearbox/dist.go -pkg gearbox appdist/... admin/dist/...
+    - go-bindata -o gearbox/dist.go -pkg gearbox app/dist/... admin/dist/...
     - echo {{ .Version }} > VERSION
 
 builds:

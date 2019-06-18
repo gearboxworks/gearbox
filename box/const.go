@@ -84,7 +84,7 @@ const (
 	DefaultShowConsole     = false
 	DefaultConsoleReadWait = time.Second * 5
 	DefaultPidFile         = "heartbeat.pid"
-	DefaultBaseDir         = "appdist/heartbeat"
+	DefaultBaseDir         = "dist/heartbeat"
 )
 
 

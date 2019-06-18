@@ -113,7 +113,7 @@ const (
 
 
 const (
-	IconLogoPng = "appdist/heartbeat/img/IconLogo.png"
+	IconLogoPng = "dist/heartbeat/img/IconLogo.png"
 )
 
 

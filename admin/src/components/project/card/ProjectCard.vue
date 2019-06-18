@@ -3,7 +3,7 @@
     class="card--project"
   >
     <div class="clearfix">
-      <project-hostname :project="project" :projectIndex="projectIndex" :is-multimodal="true"></project-hostname>
+      <project-hostname :project="project" :projectIndex="projectIndex" :is-multimodal="true" @show-alert="showAlert"></project-hostname>
       <project-toolbar :project="project" :projectIndex="projectIndex" @run-stop="onRunStop" :isUpdating="isUpdating"></project-toolbar>
     </div>
 
@@ -19,7 +19,7 @@
 
       <project-stack-list :project="project" :projectIndex="projectIndex"></project-stack-list>
 
-      <project-stack-add :project="project" :projectIndex="projectIndex"></project-stack-add>
+      <project-stack-add :project="project" :projectIndex="projectIndex" @maybe-hide-alert="maybeHideAlert"></project-stack-add>
 
       <project-location :project="project" :projectIndex="projectIndex"></project-location>
 
@@ -96,12 +96,22 @@ export default {
       }
       this.alertShow = true
     },
+    hideAlert () {
+      this.alertContent = ''
+      this.alertShow = false
+    },
+    maybeHideAlert (alert) {
+      if (this.alertContent === alert) {
+        this.hideAlert()
+      }
+    },
     onRunStop () {
       if (this.project.attributes.stack && this.project.attributes.stack.length > 0) {
         this.isUpdating = true
         this.changeProjectState({ 'projectId': this.id, 'isEnabled': !this.isRunning })
           .then((status) => {
             this.isUpdating = false
+            this.hideAlert()
           })
       } else {
         this.showAlert('Please add some stacks first!')

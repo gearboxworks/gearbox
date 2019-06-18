@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	DefaultBaseDir = "appdist/eventbroker"
+	DefaultBaseDir = "dist/eventbroker"
 
 	defaultLogBaseDir = "logs"
 	defaultEtcBaseDir = "etc"
@@ -79,7 +79,7 @@ func New(subdir string) *BasePaths {
 	ret.EventBrokerLogDir = *ret.EventBrokerDir.AddToPath(defaultLogBaseDir)
 	ret.EventBrokerEtcDir = *ret.EventBrokerDir.AddToPath(defaultEtcBaseDir)
 	ret.EventBrokerWorkingDir = ret.EventBrokerDir
-	//ret.EventBrokerDir = Dir(filepath.FromSlash(fmt.Sprintf("%s/appdist/eventbroker", ret.UserConfigDir)))
+	//ret.EventBrokerDir = Dir(filepath.FromSlash(fmt.Sprintf("%s/dist/eventbroker", ret.UserConfigDir)))
 
 	//ret.ChannelsDir = Dir(filepath.FromSlash(fmt.Sprintf("%s", ret.EventBrokerDir)))
 	//ret.MqttClientDir = Dir(filepath.FromSlash(fmt.Sprintf("%s", ret.EventBrokerDir)))
