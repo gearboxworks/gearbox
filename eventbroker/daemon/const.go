@@ -22,7 +22,7 @@ const (
     defaultWaitTime = time.Millisecond * 2000
 	defaultDomain   = "local"
 	defaultRetries  = 12
-	DefaultRetryDelay = time.Second * 10
+	DefaultRetryDelay = time.Second * 8
 
 	PublishState    = true
 	DontPublishState    = false
@@ -70,6 +70,7 @@ type ServiceConfig struct {
 	service.Config
 
 	EntityName     string
+	RunOnPlatform	string
 	Stdout    string
 	Stderr    string
 	Stdin     string

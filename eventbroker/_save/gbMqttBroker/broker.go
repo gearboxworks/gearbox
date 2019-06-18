@@ -10,7 +10,7 @@ import (
 	"gearbox/eventbroker/tasks"
 	"gearbox/help"
 	"gearbox/eventbroker/only"
-	oss "gearbox/os_support"
+	//	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/fhmq/hmq/broker"
 	"github.com/gearboxworks/go-status"
@@ -21,7 +21,7 @@ import (
 )
 
 
-func (me *Mqtt) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
+func (me *Mqtt) New(OsBridge osbridge.OsBridger, args ...Args) status.Status {
 
 	var _args Args
 	var sts status.Status
@@ -32,7 +32,7 @@ func (me *Mqtt) New(OsSupport oss.OsSupporter, args ...Args) status.Status {
 			_args = args[0]
 		}
 
-		_args.OsSupport = OsSupport
+		_args.OsBridge = OsBridge
 		foo := box.Args{}
 		err := copier.Copy(&foo, &_args)
 		if err != nil {
@@ -158,9 +158,6 @@ func (me *Mqtt) StartBrokerHandler() status.Status {
 			sts = me.Broker.Sts
 			break
 		}
-
-		//time.Sleep(time.Second * 10)
-		//me.Broker.Task.Stop()
 
 
 		time.Sleep(time.Hour * 24)

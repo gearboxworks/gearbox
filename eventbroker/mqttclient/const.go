@@ -18,7 +18,7 @@ const (
 	defaultWaitTime = time.Millisecond * 1000
 	defaultDomain   = "local"
 	DefaultRetries  = 12
-	DefaultRetryDelay = time.Second * 10
+	DefaultRetryDelay = time.Second * 8
 	DefaultServer = "tcp://127.0.0.1:1883"
 )
 

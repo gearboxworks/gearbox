@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gearbox/config"
 	"gearbox/gearbox"
-	"gearbox/test/mock"
 	"gearbox/types"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
@@ -23,9 +22,9 @@ var ProjectPaths = map[types.RelativePath]bool{
 
 func TestEmptyConfig(t *testing.T) {
 	gb := &gearbox.Gearbox{
-		OsSupport: mock.NewOsSupport(t),
+		OsBridge: mock.NewOsBridge(t),
 	}
-	c := config.NewConfig(gb.GetOsSupport())
+	c := config.NewConfig(gb.GetOsBridge())
 	gb.SetConfig(c)
 
 	t.Run("Initialize", func(t *testing.T) {

@@ -7,17 +7,17 @@
 
           <b-form-checkbox-group
             class="form-group--states"
-            v-model="show_states"
-            name="show_states"
+            v-model="showStates"
+            name="showStates"
             label=""
             label-for="filter-state"
             description="State"
             switches
             stack
           >
-            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggle_state('running')">Running</b-form-checkbox>
-            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggle_state('stopped')">Stopped</b-form-checkbox>
-            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggle_state('candidates')">Candidates</b-form-checkbox>
+            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggleState($event, 'running')">Running</b-form-checkbox>
+            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggleState($event, 'stopped')">Stopped</b-form-checkbox>
+            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggleState($event, 'candidates')">Candidates</b-form-checkbox>
             <small tabindex="-1" class="form-text text-muted">Project State</small>
           </b-form-checkbox-group>
 
@@ -28,7 +28,7 @@
             description="Location"
             v-if="hasExtraBasedirs"
           >
-            <b-select id="filter-location" variant="secondary" v-model="show_locations" :options="basedirsAsOptions">
+            <b-select id="filter-basedirs" variant="secondary" v-model="showBasedirs" :options="basedirsAsOptions" @change="changeFilter($event, 'basedir')">
               <template slot="first">
                 <option :value="null" disabled>Show projects from...</option>
                 <option value="all">All known locations</option>
@@ -42,13 +42,29 @@
             label-for="filter-stacks"
             description="Used Stacks"
           >
-            <b-select id="filter-stacks" variant="secondary" v-model="show_stacks">
+            <b-select id="filter-stacks" variant="secondary" v-model="showStacks" @change="changeFilter($event, 'stacks')">
               <option :value="null" disabled>Filter by stacks...</option>
               <option value="all">Any stack</option>
               <optgroup label="Specific Stacks">
                 <option v-for="item in stacksAsOptions" :key="item.value" :value="item.value">{{item.text.toUpperCase()}}</option>
               </optgroup>
               <option value="none">No stacks assigned</option>
+            </b-select>
+          </b-form-group>
+
+          <b-form-group
+            class="form-group--programs"
+            label=""
+            label-for="filter-programs"
+            description="Used Programs"
+          >
+            <b-select id="filter-programs" variant="secondary" v-model="showPrograms" @change="changeFilter($event, 'programs')">
+              <option :value="null" disabled>Filter by programs...</option>
+              <option value="all">Any program</option>
+              <optgroup label="Specific Program">
+                <option v-for="item in programsAsOptions" :key="item.value" :value="item.value">{{item.text.toUpperCase()}}</option>
+              </optgroup>
+              <option value="none">No programs assigned</option>
             </b-select>
           </b-form-group>
         </b-form>
@@ -62,7 +78,7 @@
             label-for="sort-by"
             description="Sort by"
           >
-            <b-select id="sort-by" variant="secondary" v-model="sort_by">
+            <b-select id="sort-by" variant="secondary" v-model="sortBy">
               <option :value="null" disabled>Sort by...</option>
               <option value="access-date">Access date</option>
               <option value="creation-date">Creation date</option>
@@ -79,10 +95,10 @@
                href="#"
                title="Sort Order"
                class="view-mode view-mode--order"
-               @click.prevent="sort_ascending = !sort_ascending"
+               @click.prevent="sortAscending = !sortAscending"
             >
               <font-awesome-icon
-                :icon="['fa', sort_ascending ? 'sort-alpha-down': 'sort-alpha-up']"
+                :icon="['fa', sortAscending ? 'sort-alpha-down': 'sort-alpha-up']"
               />
             </a>
           </b-form-group>
@@ -98,8 +114,8 @@
             <a target="_blank"
                href="#"
                title="Cards View"
-               :class="{'view-mode': true, 'view-mode--cards': true, 'is-inactive': (view_mode != 'cards')}"
-               @click.prevent="view_mode = 'cards'; $emit('switch-view-mode', $event, 'cards')"
+               :class="{'view-mode': true, 'view-mode--cards': true, 'is-inactive': (viewMode != 'cards')}"
+               @click.prevent="viewMode = 'cards'; $emit('switch-view-mode', $event, 'cards')"
             >
               <font-awesome-icon
                 :icon="['fa', 'columns']"
@@ -108,8 +124,8 @@
             <a target="_blank"
                href="#"
                title="Table View"
-               :class="{'view-mode': true, 'view-mode--table': true, 'is-inactive': (view_mode != 'table')}"
-               @click.prevent="view_mode = 'table'; $emit('switch-view-mode', $event, 'table')"
+               :class="{'view-mode': true, 'view-mode--table': true, 'is-inactive': (viewMode != 'table')}"
+               @click.prevent="viewMode = 'table'; $emit('switch-view-mode', $event, 'table')"
             >
               <font-awesome-icon
                 :icon="['fa', 'th-list']"
@@ -133,10 +149,11 @@
       </div>
 
       <div class="current-filter">
-        <b-badge title="Project State" :variant="states_variant">{{states_label}}</b-badge>
-        <b-badge title="Project Locations" :variant="(show_locations == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{locations_label}}</b-badge>
-        <b-badge title="Stacks" :variant="(show_stacks == 'all') ? 'secondary' : 'warning'">{{stacks_label}}</b-badge>
-        <b-badge title="Sorting">{{sorting_label}}</b-badge>
+        <b-badge title="Project State" :variant="statesVariant">{{labelStates}}</b-badge>
+        <b-badge title="Project Locations" :variant="(showBasedirs == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{labelBasedirs}}</b-badge>
+        <b-badge title="Stacks" :variant="(showStacks == 'all') ? 'secondary' : 'warning'">{{labelStacks}}</b-badge>
+        <b-badge title="Programs" :variant="(showPrograms == 'all') ? 'secondary' : 'warning'">{{labelPrograms}}</b-badge>
+        <b-badge title="Sorting">{{labelSorting}}</b-badge>
       </div>
     </div>
   </div>
@@ -150,9 +167,9 @@ export default {
   name: 'ProjectsDrawer',
   props: {},
   computed: {
-    ...mapGetters([ 'basedirBy', 'stackBy', 'basedirsAsOptions', 'stacksAsOptions', 'hasExtraBasedirs' ]),
-    states_label () {
-      const states = this.show_states
+    ...mapGetters([ 'basedirBy', 'stackBy', 'basedirsAsOptions', 'stacksAsOptions', 'programsAsOptions', 'hasExtraBasedirs' ]),
+    labelStates () {
+      const states = this.showStates
       const running = (states.indexOf('running') !== -1) ? 'Running projects' : ''
       const stopped = states.indexOf('stopped') !== -1 ? 'Stopped projects' : ''
       const candidates = states.indexOf('candidates') !== -1
@@ -167,8 +184,8 @@ export default {
         ? projects + ((candidates && (running || stopped)) ? '' : ' (no candidates)')
         : (candidates ? 'Project candidates' : '')
     },
-    states_variant () {
-      const states = this.show_states
+    statesVariant () {
+      const states = this.showStates
       const running = (states.indexOf('running') !== -1) ? 'Running projects' : ''
       const stopped = states.indexOf('stopped') !== -1 ? 'Stopped projects' : ''
       const candidates = states.indexOf('candidates') !== -1
@@ -176,41 +193,54 @@ export default {
         ? 'secondary'
         : 'warning'
     },
-    locations_label () {
-      const basedir = (this.show_locations !== 'all') ? this.basedirBy('id', this.show_locations) : null
+    labelBasedirs () {
+      const basedir = (this.showBasedirs !== 'all') ? this.basedirBy('id', this.showBasedirs) : null
       return 'From ' + (basedir ? basedir.attributes.basedir : 'all known locations')
     },
-    stacks_label () {
+    labelStacks () {
       let label
-      if (this.show_stacks === 'none') {
+      if (this.showStacks === 'none') {
         label = 'With no stacks assigned'
       } else {
-        const stack = (this.show_stacks !== 'all') ? this.stackBy('id', this.show_stacks) : null
+        const stack = (this.showStacks !== 'all') ? this.stackBy('id', this.showStacks) : null
         label = 'Using ' + (stack ? (stack.attributes.stackname.toUpperCase() + ' stack') : 'any stack')
       }
       return label
     },
-    sorting_label () {
-      return 'Sorted by ' + this.sort_by.replace('-', ' ') + (this.sort_ascending ? '' : ' (reverse)')
+    labelPrograms () {
+      let label
+      if (this.showPrograms === 'none') {
+        label = 'With no programs assigned'
+      } else {
+        const program = (this.showPrograms !== 'all') ? this.showPrograms : null
+        label = 'Using ' + (program ? program.toUpperCase() : 'any program')
+      }
+      return label
+    },
+    labelSorting () {
+      return 'Sorted by ' + this.sortBy.replace('-', ' ') + (this.sortAscending ? '' : ' (reverse)')
     }
   },
   data () {
     return {
       expanded: false,
-      show_states: ['running', 'stopped', 'candidates'],
-      show_locations: 'all',
-      show_stacks: 'all',
-      sort_by: 'access-date',
-      sort_ascending: true,
-      view_mode: 'cards'
+
+      showStates: ['running', 'stopped', 'candidates'],
+      showBasedirs: 'all',
+      showStacks: 'all',
+      showPrograms: 'all',
+
+      sortBy: 'access-date',
+      sortAscending: true,
+      viewMode: 'cards'
     }
   },
   methods: {
     // escAttr (value) {
     //   return value.replace(/\//g, '-').replace(/\./g, '-')
     // }
-    toggle_state (attribute) {
-      const states = this.show_states
+    toggleState (value, attribute) {
+      const states = this.showStates
       const running = states.indexOf('running') !== -1
       const stopped = states.indexOf('stopped') !== -1
       const candidates = states.indexOf('candidates') !== -1
@@ -220,12 +250,20 @@ export default {
        * make sure either candidates or running/stopped is selected
        */
       if ((attribute === 'candidates') && !running && !stopped && candidates) {
-        this.show_states = ['running', 'stopped']
+        this.showStates = ['running', 'stopped']
       } else if ((attribute === 'running') && running && !stopped && !candidates) {
-        this.show_states = ['candidates']
+        this.showStates = ['candidates']
       } else if ((attribute === 'stopped') && !running && stopped && !candidates) {
-        this.show_states = ['candidates']
+        this.showStates = ['candidates']
       }
+    },
+    changeFilter (values, field) {
+      this.$store.dispatch('setProjectsFilter', { field, values })
+    }
+  },
+  watch: {
+    showStates: function (val, oldVal) {
+      this.$store.dispatch('setProjectsFilter', { field: 'states', values: this.showStates })
     }
   }
 }
@@ -360,7 +398,7 @@ export default {
 @media (max-width: 1200px) {
 }
 
-@media (max-width: 990px) {
+@media (max-width: 1515px) {
   .right-panel{
     float: left;
   }

@@ -35,6 +35,12 @@ export default new Vuex.Store({
     connectionStatus: {
       networkError: null,
       remainingRetries: 5
+    },
+    showProjectsHaving: {
+      'states': ['running', 'stopped', 'candidates'],
+      'basedir': 'all',
+      'stacks': 'all',
+      'programs': 'all'
     }
   },
   getters: {
@@ -62,6 +68,52 @@ export default new Vuex.Store({
       return (fieldName === 'id')
         ? state.projects.records.find(p => p.id === fieldValue)
         : state.projects.records.find(p => p.attributes[fieldName] === fieldValue)
+    },
+    filterProjectsBy: (state) => (fieldName, allowedValues) => {
+      const attrs = ['basedir', 'enabled', 'filepath', 'hostname', 'path', 'project_dir']
+      let valuesArray = Array.isArray(allowedValues) ? allowedValues : [allowedValues]
+      // 'notes' and 'stack' are not included on purpose because simple comparison does not work on them
+      let projects = []
+
+      if (fieldName === 'id') {
+        projects = state.projects.records.filter(p => valuesArray.indexOf(p.id) !== -1)
+      } else if (attrs.indexOf(fieldName) !== -1) {
+        projects = state.projects.records.filter(p => valuesArray.indexOf(p.attributes[fieldName]) !== -1)
+      } else if (fieldName === 'stacks') {
+        projects = state.projects.records.filter(p => p.attributes.stack.some(s => valuesArray.some(val => s.gearspec_id.indexOf(val) > -1)))
+      } else if (fieldName === 'programs') {
+        projects = state.projects.records.filter(p => p.attributes.stack.some(s => valuesArray.some(val => s.service_id.split('/')[1].split(':')[0] === val)))
+      }
+
+      return projects
+    },
+    filteredProjects: (state, getters) => {
+      let projects = state.projects.records
+      for (const field in state.showProjectsHaving) {
+        const values = state.showProjectsHaving[field]
+        if (values === 'all') {
+          continue
+        }
+        if (field === 'states') {
+          if (values.length === 3) {
+            continue
+          } else {
+            if (values.indexOf('running') > -1) {
+              projects = projects.filter(p => getters.filterProjectsBy('enabled', true).includes(p))
+            }
+            if (values.indexOf('stopped') > -1) {
+              projects = projects.filter(p => getters.filterProjectsBy('enabled', false).includes(p))
+            }
+            // TODO merge candidates into projects array
+            // if (values.indexOf('candidates') > -1) {
+            //   projects = projects.filter(p => getters.filterProjectsBy('candidate', true).includes(p))
+            // }
+          }
+          continue
+        }
+        projects = projects.filter(p => getters.filterProjectsBy(field, values).includes(p))
+      }
+      return projects
     },
     projectStackItemIndexBy: (state) => (project, fieldName, fieldValue) => {
       let memberIndex = -1
@@ -109,6 +161,31 @@ export default new Vuex.Store({
       })
       return options
     },
+    servicesAsOptions: (state) => {
+      const options = []
+      state.services.records.forEach((el, idx) => {
+        options.push({
+          value: el.id,
+          text: el.id
+        })
+      })
+      return options
+    },
+    programsAsOptions: (state) => {
+      const programs = []
+      const options = []
+      state.services.records.forEach((el, idx) => {
+        const program = el.attributes.program
+        if (programs.indexOf(program) === -1) {
+          programs.push(program)
+          options.push({
+            value: program,
+            text: program
+          })
+        }
+      })
+      return options
+    },
     basedirsAsOptions: (state) => {
       const options = []
       state.basedirs.records.forEach((el, idx) => {
@@ -122,7 +199,7 @@ export default new Vuex.Store({
     hasExtraBasedirs: (state) => {
       return state.basedirs.records.length > 1
     },
-    preselectService: (state) => (serviceIds, defaultServiceId, providedServiceId) => {
+    preselectServiceId: (state) => (serviceIds, defaultServiceId, providedServiceId) => {
       /**
        * Resolve default option:
        * - if exact match is found, use it
@@ -196,7 +273,9 @@ export default new Vuex.Store({
             .then(r => r ? r.data : null)
             .then(response => {
               const project = response.data
-              commit('SET_PROJECT', project)
+              setTimeout(() => {
+                commit('SET_PROJECT', project)
+              }, 1000)
               if (response.included.length) {
                 for (const idx in response.included) {
                   const item = response.included[idx]
@@ -251,14 +330,39 @@ export default new Vuex.Store({
     addProjectStack ({ commit }, payload) {
       /**
        * TODO: call the API and commit when it returns
+       * TODO: remove delay
        */
-      commit('ADD_PROJECT_STACK', payload)
+      console.log('TODO: call API method to add project stack')
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          commit('ADD_PROJECT_STACK', payload)
+          resolve()
+        }, 2000)
+      })
     },
     removeProjectStack ({ commit }, payload) {
       /**
        * TODO: call the API and commit when it returns
        */
       commit('REMOVE_PROJECT_STACK', payload)
+    },
+    addProjectNote ({ commit }, payload) {
+      console.log('TODO: call API method to add a note to the project')
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          commit('ADD_PROJECT_NOTE', payload)
+          resolve()
+        }, 2000)
+      })
+    },
+    updateProjectHostname ({ commit }, payload) {
+      console.log('TODO: call API method to update project hostname')
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          commit('UPDATE_PROJECT_HOSTNAME', payload)
+          resolve()
+        }, 2000)
+      })
     },
     changeProjectService ({ commit }, payload) {
       /**
@@ -272,9 +376,17 @@ export default new Vuex.Store({
       /**
        * TODO: call the API and commit when it returns
        */
-      commit('CHANGE_PROJECT_STATE', payload)
+      console.log('TODO: call the API to change project state')
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          commit('CHANGE_PROJECT_STATE', payload)
+          resolve()
+        }, 2000)
+      })
+    },
+    setProjectsFilter ({ commit }, payload) {
+      commit('SET_PROJECTS_FILTER', payload)
     }
-
   },
   mutations: {
     /**
@@ -333,7 +445,7 @@ export default new Vuex.Store({
           Vue.set(project.attributes, 'stack', [])
         }
         stack.attributes.members.forEach((el, idx) => {
-          const serviceId = this.getters.preselectService(el.services, el.default_service)
+          const serviceId = this.getters.preselectServiceId(el.services, el.default_service)
           if (el.gearspec_id) {
             // reactive!
             project.attributes.stack.push({
@@ -384,6 +496,19 @@ export default new Vuex.Store({
       if (project) {
         project.attributes.enabled = !!isEnabled
       }
+    },
+    SET_PROJECTS_FILTER (state, payload) {
+      const { field, values } = payload
+      Vue.set(state.showProjectsHaving, field, values)
+    },
+    ADD_PROJECT_NOTE (state, payload) {
+      // const { projectId, text } = payload
+      /**
+       * TODO: update model to support multiple notes per project (/w timestamps)
+       */
+    },
+    UPDATE_PROJECT_HOSTNAME (state, payload) {
+      // const { projectId, hostname } = payload
     }
   }
 

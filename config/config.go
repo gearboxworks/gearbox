@@ -3,10 +3,8 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"gearbox/box"
 	"gearbox/help"
 	"gearbox/only"
-	"gearbox/os_support"
 	"gearbox/types"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
@@ -62,7 +60,7 @@ var ProjectRootAddCmd *cobra.Command
 type Config struct {
 	About         string            `json:"about"`
 	LearnMore     string            `json:"learn_more"`
-	OsSupport     oss.OsSupporter   `json:"-"`
+	OsBridge      OsBridger         `json:"-"`
 	SchemaVersion string            `json:"schema_version"`
 	BasedirMap    BasedirMap        `json:"basedirs"`
 	ProjectMap    ProjectMap        `json:"projects"`
@@ -77,20 +75,22 @@ func UnmarshalConfig(b []byte) Configer {
 	return &c
 }
 
-func NewConfig(OsSupport oss.OsSupporter) Configer {
+const newBaseDir = "/home/gearbox/projects"
+
+func NewConfig(OsBridge OsBridger) Configer {
 	c := &Config{
 		About:         "This is a Gearbox user configuration file.",
 		LearnMore:     "To learn about Gearbox visit https://gearbox.works",
-		OsSupport:     OsSupport,
+		OsBridge:      OsBridge,
 		SchemaVersion: SchemaVersion,
 		BasedirMap:    make(BasedirMap, 1),
 		ProjectMap:    make(ProjectMap, 0),
 		Candidates:    make(Candidates, 0),
-		BoxBasedir:    box.Basedir,
+		BoxBasedir:    newBaseDir,
 	}
 	c.BasedirMap[DefaultBasedirNickname] = NewBasedir(
 		DefaultBasedirNickname,
-		c.OsSupport.GetSuggestedBasedir(),
+		c.OsBridge.GetProjectDir(),
 	)
 	return c
 }
@@ -101,21 +101,26 @@ func init() {
 	sanitizer = regexp.MustCompile("[^a-z0-9 ]+")
 }
 
-func (me *Config) MakeUniqueBasedirNickname(basedir types.AbsoluteDir) (nn types.Nickname) {
-	try := strings.ToLower(filepath.Base(string(basedir)))
+func (me *Config) MakeUniqueBasedirNickname(dir types.AbsoluteDir) (nn types.Nickname) {
+	try := strings.ToLower(filepath.Base(string(dir)))
 	try = sanitizer.ReplaceAllString(try, "")
 	try = strings.Replace(try, " ", "-", -1)
 	base := try
 	i := 2
-	for nn = range me.GetBasedirMap() {
-		if nn != types.Nickname(try) {
-			nn = types.Nickname(try)
+	bdm := me.GetBasedirMap()
+	for {
+		nn = types.Nickname(try)
+		bd, ok := bdm[nn]
+		if !ok {
+			break
+		}
+		if bd.Basedir == dir {
 			break
 		}
 		try = fmt.Sprintf("%s%d", base, i)
 		i++
 	}
-	return types.Nickname(nn)
+	return nn
 }
 
 func (me *Config) AddProject(p *Project) (sts Status) {
@@ -265,11 +270,11 @@ func (me *Config) Bytes() []byte {
 }
 
 func (me *Config) GetDir() types.AbsoluteDir {
-	return me.OsSupport.GetUserConfigDir()
+	return me.OsBridge.GetUserConfigDir()
 }
 
 func (me *Config) GetFilepath() types.AbsoluteFilepath {
-	fp := filepath.FromSlash(fmt.Sprintf("%s/config.json", me.OsSupport.GetUserConfigDir()))
+	fp := filepath.FromSlash(fmt.Sprintf("%s/config.json", me.OsBridge.GetUserConfigDir()))
 	return types.AbsoluteFilepath(fp)
 }
 
@@ -278,7 +283,7 @@ func (me *Config) WriteFile() (sts Status) {
 		j, err := json.MarshalIndent(me, "", "    ")
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
-				Message: fmt.Sprintf("unable to marhsal config"),
+				Message: fmt.Sprintf("unable to marshal config"),
 				Help:    help.ContactSupportHelp(),
 			})
 			break
@@ -487,7 +492,7 @@ func (me *Config) AddBasedir(args *BasedirArgs) (bd *Basedir, sts Status) {
 	for range only.Once {
 		if args.Nickname != "" {
 			sts = status.YourBad("nickname must be empty").
-				SetAdditional("invalid nickname set as '%s'", args.Nickname)
+				SetDetail("invalid nickname set as '%s'", args.Nickname)
 			break
 		}
 		if args.Basedir == "" {

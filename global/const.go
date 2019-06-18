@@ -3,10 +3,11 @@ package global
 import "gearbox/types"
 
 const (
-	DefaultAuthority = "gearbox.works"
-	DefaultOrgName   = "gearboxworks"
-	Brandname        = "Gearbox"
-	RelPrefix        = "gearbox"
+	DefaultAuthority                    = "gearbox.works"
+	DefaultOrgName                      = "gearboxworks"
+	Brandname                           = "Gearbox"
+	RelPrefix                           = "gearbox"
+	UserDataPath     types.RelativePath = ".gearbox"
 )
 
 const (

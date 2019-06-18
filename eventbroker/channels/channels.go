@@ -1,13 +1,11 @@
 package channels
 
 import (
-	"gearbox/box"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/only"
-	"github.com/jinzhu/copier"
 	"github.com/olebedev/emitter"
 	"sync"
 )
@@ -22,13 +20,6 @@ func (me *Channels) New(args ...Args) error {
 
 		if len(args) > 0 {
 			_args = args[0]
-		}
-
-		foo := box.Args{}
-		err = copier.Copy(&foo, &_args)
-		if err != nil {
-			err = me.EntityId.ProduceError("unable to copy config args")
-			break
 		}
 
 		if _args.OsPaths == nil {

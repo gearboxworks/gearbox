@@ -1,40 +1,44 @@
 <template>
   <div class="projects-container">
     <projects-drawer visible="false" @switch-view-mode="switchViewMode"></projects-drawer>
-    <b-card-group columns class="pl-3 pr-3" v-if="viewMode==='cards'">
-      <project-card
-        v-for="(project, projectIndex) in projects"
-        :key="project.id"
-        :project="project"
-        :projectIndex="projectIndex"
-      >
-      </project-card>
-    </b-card-group>
-    <table v-else>
-      <thead>
-        <tr>
-          <th>Project ID</th><th>Status<th/>
-        </tr>
-      </thead>
-      <tbody>
-      <tr
-        v-for="(project, projectIndex) in projects"
-        :key="project.id"
-        :project="project"
-        :projectIndex="projectIndex"
-      >
-        <td>{{project.id}}</td>
-        <td>{{project.attributes.enabled ? 'Running': 'Stopped'}}</td>
-      </tr>
-      </tbody>
-    </table>
+    <div v-if="projects.length" class="filtered-projects">
+      <b-card-group columns class="pl-3 pr-3" v-if="viewMode==='cards'">
+        <project-card
+          v-for="(project, projectIndex) in projects"
+          :key="project.id"
+          :project="project"
+          :projectIndex="projectIndex"
+        >
+        </project-card>
+      </b-card-group>
+      <table class="projects-table" v-else>
+        <thead>
+          <tr>
+            <th class="th--state">State</th><th class="th--hostname">Project Name</th><th class="th--location">Location</th><th class="th--stack">Stack</th><th class="th--notes">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <project-row
+            v-for="(project, projectIndex) in projects"
+            :key="project.id"
+            :project="project"
+            :projectIndex="projectIndex"
+          >
+          </project-row>
+        </tbody>
+      </table>
+    </div>
+    <div v-else class="filtered-projects is-empty">
+      <h5>No projects match the current criteria.</h5>
+    </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 import ProjectsDrawer from '../components/ProjectsDrawer'
-import ProjectCard from '../components/ProjectCard'
+import ProjectCard from '../components/project/card/ProjectCard'
+import ProjectRow from '../components/project/row/ProjectRow'
 
 export default {
   name: 'ProjectList',
@@ -45,16 +49,16 @@ export default {
   },
   components: {
     ProjectsDrawer,
-    ProjectCard
+    ProjectCard,
+    ProjectRow
   },
   computed: {
     ...mapGetters({
-      'projects': 'projects/all'
+      'projects': 'filteredProjects'
     })
   },
   methods: {
     switchViewMode ($ev, viewMode) {
-      console.log(viewMode)
       this.viewMode = viewMode
     }
   },
@@ -141,4 +145,35 @@ export default {
       column-count: 6;
     }
   }
+
+  .filtered-projects{
+    padding-left: 0;
+    padding-right: 1rem;
+  }
+
+  .projects-table {
+    width: calc(100% - 1rem);
+    margin-left: 1rem;
+  }
+
+  .th--state {
+    width: 50px;
+  }
+
+  .th--hostname {
+    width: 200px;
+  }
+
+  .th--location {
+    width: 400px;
+  }
+
+  .th--notes {
+    width: 300px;
+  }
+
+  .is-empty{
+    margin-left: 1rem;
+  }
+
 </style>

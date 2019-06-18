@@ -42,6 +42,12 @@ func (me *Api) WireRoutes() {
 			continue
 		}
 
+		me.WireHeadRoute(
+			me.Echo,
+			ctlr,
+			itempath,
+		).SetSingularName("head-%s", prefix)
+
 		me.WireGetItemRoute(
 			me.Echo,
 			ctlr,
@@ -97,6 +103,36 @@ func (me *Api) WireListRoute(e *echo.Echo, lc ListController, path string) *Rout
 	}
 }
 
+func (me *Api) WireHeadRoute(e *echo.Echo, lc ListController, path string) *Route {
+
+	return &Route{
+		Route: e.HEAD(path, func(ec echo.Context) error {
+			var sts status.Status
+			rd, ctx := getRootDocumentAndContext(ec, lc, global.ItemResponse)
+			for range only.Once {
+				var id ItemId
+				id, sts = apiworks.GetIdFromUrl(ctx, lc)
+				if is.Error(sts) {
+					break
+				}
+				var ro *ResourceObject
+				ro, sts = getResourceObject(rd)
+				if is.Error(sts) {
+					break
+				}
+				var item ItemModeler
+				item, sts = lc.GetItemDetails(ctx, id) //@TODO Maybe make this lighter weight for HEAD request
+				if is.Error(sts) {
+					break
+				}
+				sts = me.setItemData(ctx, ro, item, nil)
+				rd.Data = ro
+			}
+			return me.Handler(ctx, sts)
+		}),
+	}
+}
+
 func (me *Api) WireGetItemRoute(e *echo.Echo, lc ListController, path string) *Route {
 
 	return &Route{
@@ -104,7 +140,8 @@ func (me *Api) WireGetItemRoute(e *echo.Echo, lc ListController, path string) *R
 			var sts status.Status
 			rd, ctx := getRootDocumentAndContext(ec, lc, global.ItemResponse)
 			for range only.Once {
-				id, sts := apiworks.GetIdFromUrl(ctx, lc)
+				var id ItemId
+				id, sts = apiworks.GetIdFromUrl(ctx, lc)
 				if is.Error(sts) {
 					break
 				}
@@ -118,7 +155,6 @@ func (me *Api) WireGetItemRoute(e *echo.Echo, lc ListController, path string) *R
 				if is.Error(sts) {
 					break
 				}
-
 				var list List
 				list, sts = item.GetRelatedItems(ctx)
 				if is.Error(sts) {
@@ -231,6 +267,10 @@ func (me *Api) setItemData(ctx *Context, ro *ResourceObject, item ItemModeler, l
 
 		sts = ro.SetType(item.GetType())
 		if is.Error(sts) {
+			break
+		}
+
+		if ctx.Contexter.Request().Method == http.MethodHead {
 			break
 		}
 

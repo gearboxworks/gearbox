@@ -23,7 +23,7 @@ import (
 func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 
 	var err error
-	var sc Service
+	sc := &Service{}
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -46,6 +46,13 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 			}
 
 			fmt.Printf("PIP! %v\n", time.Now().Unix())
+			break
+		}
+
+		// Check platform.
+		if c.SkipPlatform() {
+			// err = me.EntityId.ProduceError("service shouldn't run on this host")
+			sc = nil
 			break
 		}
 
@@ -118,7 +125,7 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 				break
 			}
 
-			err = me.AddEntity(sc.EntityId, &sc)
+			err = me.AddEntity(sc.EntityId, sc)
 			if err != nil {
 				break
 			}
@@ -133,7 +140,7 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
-	return &sc, err
+	return sc, err
 }
 
 
@@ -216,10 +223,15 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 			break
 		}
 
+
 		s, err = me.Register(*sc)
 		if err != nil {
 			break
 		}
+		if s == nil {
+			break
+		}
+
 
 		info, err := os.Stat(f)
 		if err != nil {

@@ -63,8 +63,10 @@ func (me *Controller) AddLinks(links LinkMap) {
 		me.AddLink(rel, link)
 	}
 }
-func (me *Controller) GetListLinkMap(*Context, ...FilterPath) (lm LinkMap, sts status.Status) {
-	return me.LinkMap, sts
+func (me *Controller) GetListLinkMap(*Context, ...FilterPath) (lm LinkMap, sts Status) {
+	return LinkMap{
+		//RelatedRelType: Link("foobarbaz"),
+	}, sts
 }
 
 func (me *Controller) CanAddItem(*Context) bool {
@@ -88,12 +90,14 @@ func (me *Controller) GetIdParams() IdParams {
 }
 
 func (me *Controller) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts status.Status) {
+	for range only.Once {
+		list = make(List, 0)
+	}
 	return list, sts
 }
 
 func (me *Controller) FilterList(ctx *Context, filterPath FilterPath) (list List, sts status.Status) {
-	list = make(List, 0)
-	return list, sts
+	return me.GetList(ctx, filterPath)
 }
 
 func (me *Controller) GetListIds(ctx *Context, filterPath ...FilterPath) (itemids ItemIds, sts status.Status) {

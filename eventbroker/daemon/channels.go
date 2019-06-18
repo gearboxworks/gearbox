@@ -158,6 +158,9 @@ func registerService(event *messages.Message, i channels.Argument, r channels.Re
 		if err != nil {
 			break
 		}
+		if sc == nil {
+			break
+		}
 
 		eblog.Debug(me.EntityId, "registered service by channel %s OK", sc.EntityId.String())
 	}

@@ -1,13 +1,11 @@
 package network
 
 import (
-	"gearbox/box"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
-	"github.com/jinzhu/copier"
 )
 
 
@@ -20,13 +18,6 @@ func (me *ZeroConf) New(args ...Args) error {
 
 		if len(args) > 0 {
 			_args = args[0]
-		}
-
-		foo := box.Args{}
-		err = copier.Copy(&foo, &_args)
-		if err != nil {
-			err = me.EntityId.ProduceError("unable to copy config args")
-			break
 		}
 
 		if _args.Channels == nil {

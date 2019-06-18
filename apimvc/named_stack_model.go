@@ -24,6 +24,7 @@ type NamedStackModel struct {
 	Authority types.AuthorityDomain `json:"authority"`
 	Stackname types.Stackname       `json:"stackname"`
 	Members   StackMembers          `json:"members,omitempty"`
+	Model
 }
 
 func (me *NamedStackModel) GetAttributeMap() apiworks.AttributeMap {
@@ -70,10 +71,6 @@ func NewNamedStackModel(ns *gears.NamedStack) *NamedStackModel {
 	}
 }
 
-func (me *NamedStackModel) GetItemLinkMap(*Context) (LinkMap, Status) {
-	return LinkMap{}, nil
-}
-
 func (me *NamedStackModel) GetType() ItemType {
 	return NamedStackType
 }
@@ -106,45 +103,9 @@ func (me *NamedStackModel) SetId(itemid ItemId) (sts Status) {
 	return sts
 }
 
-func (me *NamedStackModel) GetItem() (ItemModeler, Status) {
-	return me, nil
-}
-
 func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStackModel) (gbns *gears.NamedStack, sts Status) {
 	//	gbns = gears.NewNamedStackModel(gb.GetGears(), types.StackId(ns.GetId()))
 	gbns = gears.NewNamedStack(types.StackId(ns.GetId()))
 	sts = gbns.Refresh(gb.GetGears())
 	return gbns, sts
-}
-
-func (me *NamedStackModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
-	//for range only.Once {
-	//	list = make(List, 0)
-	//	for _, si := range me.ProjectStackItems {
-	//		gsgs := gearspec.NewGearspec()
-	//		sts = gsgs.Parse(si.GearspecId)
-	//		if is.Error(sts) {
-	//			break
-	//		}
-	//		gsm, sts := NewGearspecModelFromGearspecGearspec(ctx, gsgs)
-	//		if is.Error(sts) {
-	//			break
-	//		}
-	//		list = append(list, gsm)
-	//
-	//		ss := service.NewService()
-	//		sts = ss.Parse(si.ServiceId)
-	//		if is.Error(sts) {
-	//			break
-	//		}
-	//		sm, sts := NewModelFromServiceServicer(ctx, ss)
-	//		if is.Error(sts) {
-	//			break
-	//		}
-	//		sm.GearspecId = gsm.GearspecId
-	//		list = append(list, sm)
-	//	}
-	//}
-	return list, sts
-
 }

@@ -2,14 +2,12 @@ package daemon
 
 import (
 	"fmt"
-	"gearbox/box"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
-	"github.com/jinzhu/copier"
 	"time"
 )
 
@@ -23,13 +21,6 @@ func (me *Daemon) New(args ...Args) error {
 
 		if len(args) > 0 {
 			_args = args[0]
-		}
-
-		foo := box.Args{}
-		err = copier.Copy(&foo, &_args)
-		if err != nil {
-			err = me.EntityId.ProduceError("unable to copy config args")
-			break
 		}
 
 		if _args.Channels == nil {
@@ -223,9 +214,9 @@ func (me *Daemon) TestMe() error {
 	fmt.Printf("DEBUG STARTED\n")
 
 	var s *Service
-	s, err = me.RegisterByFile("/Users/mick/.gearbox/admin/dist/eventbroker/unfsd/unfsd.json")
+	s, err = me.RegisterByFile("/Users/mick/.gearbox/appdist/eventbroker/unfsd/unfsd.json")
 
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 8)
 	if err == nil {
 		var state states.Status
 

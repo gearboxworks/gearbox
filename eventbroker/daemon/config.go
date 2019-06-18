@@ -8,6 +8,7 @@ import (
 	"gearbox/eventbroker/only"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -57,7 +58,7 @@ func (me *Daemon) ParsePaths(sc ServiceConfig, i string) string {
 		"{{.UserHomeDir}}":           me.OsPaths.UserHomeDir.String(),
 		"{{.AdminRootDir}}":          me.OsPaths.AdminRootDir.String(),
 		"{{.CacheDir}}":              me.OsPaths.CacheDir.String(),
-		"{{.SuggestedBasedir}}":      me.OsPaths.SuggestedBasedir.String(),
+		"{{.ProjectBaseDir}}":        me.OsPaths.ProjectBaseDir.String(),
 		"{{.UserConfigDir}}":         me.OsPaths.UserConfigDir.String(),
 		"{{.EventBrokerDir}}":        me.OsPaths.EventBrokerDir.String(),
 		"{{.EventBrokerWorkingDir}}": me.OsPaths.EventBrokerWorkingDir.String(),
@@ -65,6 +66,7 @@ func (me *Daemon) ParsePaths(sc ServiceConfig, i string) string {
 		"{{.EventBrokerEtcDir}}":     me.OsPaths.EventBrokerEtcDir.String(),
 		"{{.Port}}":                  sc.autoPort,	// sc.UrlPtr.Port(),
 		"{{.Host}}":                  sc.autoHost,	// sc.UrlPtr.Hostname(),
+		"{{.Platform}}":              runtime.GOOS + "_" + runtime.GOARCH,
 	}
 
 	for k, v := range strReplace {
@@ -111,4 +113,24 @@ func (me *Daemon) CreateDirPaths(file string) error {
 	return err
 }
 
-// /Users/mick/.gearbox/admin/dist/eventbroker/logs/
+
+func (c *ServiceConfig) SkipPlatform() (skip bool) {
+
+	// Check platform.
+	myPlatform := runtime.GOOS + "_" + runtime.GOARCH
+
+	switch {
+		case c.RunOnPlatform == "":
+			skip = false
+
+		case c.RunOnPlatform == myPlatform:
+			skip = false
+
+		default:
+			skip = true
+	}
+
+	return
+}
+
+

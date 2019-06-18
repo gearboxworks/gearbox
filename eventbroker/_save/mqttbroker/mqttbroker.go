@@ -7,12 +7,12 @@ import (
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/only"
-	oss "gearbox/os_support"
+	//	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
 )
 
 
-func (me *MqttBroker) New(OsSupport oss.OsSupporter, args ...Args) error {
+func (me *MqttBroker) New(OsBridge osbridge.OsBridger, args ...Args) error {
 
 	var _args Args
 	var err error
@@ -23,7 +23,7 @@ func (me *MqttBroker) New(OsSupport oss.OsSupporter, args ...Args) error {
 			_args = args[0]
 		}
 
-		_args.osSupport = OsSupport
+		_args.osSupport = OsBridge
 		foo := box.Args{}
 		err = copier.Copy(&foo, &_args)
 		if err != nil {

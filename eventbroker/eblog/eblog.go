@@ -3,10 +3,14 @@ package eblog
 import (
 	"fmt"
 	"gearbox/eventbroker/messages"
-	"github.com/gearboxworks/go-status"
+	"gearbox/eventbroker/only"
+	"gearbox/eventbroker/ospaths"
+	"github.com/rifflock/lfshook"
+	"github.com/sebest/logrusly"
+	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"reflect"
 	"runtime"
-	"strconv"
 )
 
 
@@ -146,7 +150,7 @@ func IsNotNil(i interface{}) bool {
 // Check for a nil type.
 func LogIfNil(i interface{}, format ...interface{}) bool {
 
-	rn := true
+	var ret bool
 
 	switch {
 		case reflect.ValueOf(i).String() == "":
@@ -154,26 +158,32 @@ func LogIfNil(i interface{}, format ...interface{}) bool {
 		case i == nil:
 			fallthrough
 		case reflect.ValueOf(i).IsNil():
-			rn = false
+			ret = true
 
-			callers := " NIL:["
-			// Fetch last two callers.
-			for _, d := range *MyCallers(CallerParent, howMany) {
-				callers += " <- " + d.Function + ":" + strconv.Itoa(d.LineNumber)
-			}
-			callers += "] "
+			//callers := " NIL:["
+			//// Fetch last two callers.
+			//for _, d := range *MyCallers(CallerParent, howMany) {
+			//	callers += " <- " + d.Function + ":" + strconv.Itoa(d.LineNumber)
+			//}
+			//callers += "] "
 
-			status.Success("nil interface" + callers).Log()
+			localLogger.printLog(logrus.ErrorLevel, "nil interface")
+			//status.Success("nil interface" + callers).Log()
 		}
 
-	return rn
+	return ret
 }
 
 
 func Debug(client messages.MessageAddress, format string, a ...interface{}) {
-	//fn, ln := daemon.MyCaller(daemon.CallerParent)
-	//status.Success(fmt.Sprintf("DEBUG '%s':[%d] ", fn, ln) + format, a).Log()
-	status.Success(string(client) + ": " + format, a...).Log()
+
+	if localLogger == nil {
+		return
+	}
+
+	fn, ln := MyCaller(CallerParent)
+
+	localLogger.printLogOld(logrus.DebugLevel, fn, ln, string(client) + ": " + format, a...)
 }
 
 
@@ -182,27 +192,182 @@ const howMany = 2
 // Check for a nil type or err and log.
 func LogIfError(address messages.MessageAddress, err error, format ...interface{}) bool {
 
-	rn := true
+	var ret bool
+
 	if err != nil {
-		callers := "%s ERROR:["
+		ret = true
+		//callers := "%s ERROR:["
 		// callers := address.String() + " ERROR:%s ["
 		// Fetch last two callers.
-		for _, d := range *MyCallers(CallerParent, howMany) {
-			callers += " <- " + d.Function + ":" + strconv.Itoa(d.LineNumber)
-		}
-		callers += "] "
+		//for _, d := range *MyCallers(CallerParent, howMany) {
+		//	callers += " <- " + d.Function + ":" + strconv.Itoa(d.LineNumber)
+		//}
+		//callers += "] "
 
 		if len(format) == 0 {
-			status.Success(callers, err).Log()
+			localLogger.printLog(logrus.ErrorLevel, "%v", err)
+			//status.Success(callers, err).Log()
 			//fmt.Printf(callers + "\n", err)
 		} else {
-			status.Success(format[0].(string) + callers, format[1:]...).Log()
+			localLogger.printLog(logrus.ErrorLevel, format[0].(string), format[1:]...)
+			//status.Success(format[0].(string) + callers, format[1:]...).Log()
 			//fmt.Printf(format[0].(string) + callers + "\n", format[1:]...)
 		}
 	}
 
-	return rn
+	return ret
 }
+
+
+var localLogger *Logger
+
+func NewLogger(OsPaths *ospaths.BasePaths, args ...Logger) (*Logger, error) {
+
+	var _args Logger
+	var err error
+	se := &Logger{}
+
+	for range only.Once {
+
+		if len(args) > 0 {
+			_args = args[0]
+		}
+
+		if _args.EntityName == "" {
+			_args.EntityName = DefaultEntityName
+		}
+
+		if _args.EntityId == nil {
+			_args.EntityId = &_args.EntityName // messages.GenerateAddress()
+		}
+
+		_args.OsPaths = ospaths.New("")
+		//_args.baseDir = _args.osPaths.UserConfigDir.AddToPath(DefaultBaseDir)
+		//_args.pidFile = _args.baseDir.AddFileToPath(DefaultPidFile).String()
+
+		_args.DebugMode = true
+
+		_args.logrusInstance = logrus.New()
+		_args.logrusInstance.SetFormatter(&logrus.JSONFormatter{})
+		_args.currentLevel = DebugLevel
+		_args.logrusInstance.SetLevel(_args.currentLevel)
+
+		_args.LogFile.Enabled = true
+
+		// Set sane values for File based logging.
+		if _args.LogFile.Enabled == true {
+			// fmt.Printf("Setting up file logging.")
+
+			// Set sane defaults for permissions
+			switch _args.LogFile.Permissions {
+			case "":
+				// fmt.Printf("Setting default permissions to '644'. Was '%s'", _args.LogFile.Permissions)
+				_args.LogFile.Permissions = "644"
+			}
+
+			if _args.LogFile.Name == "" {
+				_args.LogFile.Name = _args.OsPaths.EventBrokerLogDir.AddFileToPath(defaultLogFile).String()
+			}
+
+			// fmt.Printf("Logging to files.")
+			pathMap := lfshook.PathMap{
+				logrus.DebugLevel: _args.LogFile.Name,
+				logrus.InfoLevel: _args.LogFile.Name,
+				logrus.WarnLevel: _args.LogFile.Name,
+				logrus.ErrorLevel: _args.LogFile.Name,
+				logrus.FatalLevel: _args.LogFile.Name,
+				logrus.PanicLevel: _args.LogFile.Name,
+			}
+			_args.logrusInstance.Hooks.Add(lfshook.NewHook(pathMap, &logrus.TextFormatter{})) // &logrus.JSONFormatter{},))
+			// _args.logrusInstance.SetOutput(os.Stderr)
+			// _args.logrusInstance.SetOutput(os.Stdout)
+			_args.logrusInstance.SetOutput(ioutil.Discard)
+		}
+
+
+		// Disabled to work on GOOS=windows
+		// Set sane values for Syslog based logging.
+		//if _args.Syslog.Enabled == true { // Set sane defaults for Protocol
+		//	switch _args.Syslog.Protocol {
+		//		case "udp":
+		//		case "tcp":
+		//
+		//		default:
+		//			//LogInfo("Setting default syslog protocol to 'udp'. Was '%s'", _args.Syslog.Protocol)
+		//			_args.Syslog.Protocol = "udp"
+		//	}
+		//
+		//	// Set sane defaults for Port
+		//	switch _args.Syslog.Port {
+		//		case "":
+		//			//LogInfo("Setting default syslog port to '514'. Was '%s'", _args.Syslog.Port)
+		//			_args.Syslog.Port = "514"
+		//	}
+		//
+		//	// Setup syslog based logging.
+		//	switch _args.Syslog.Hostname {
+		//		case "":
+		//
+		//		default:
+		//			var err error
+		//
+		//			_args.Syslog.hook, err = lSyslog.NewSyslogHook(_args.Syslog.Protocol,
+		//				_args.Syslog.Hostname+":"+_args.Syslog.Port,
+		//				syslog.LOG_INFO,
+		//				_args.Syslog.Tag)
+		//
+		//			if err != nil {
+		//				fmt.Printf("Error establishing connection to syslog server '%s' - %s",
+		//					_args.Syslog.Hostname+":"+_args.Syslog.Port,
+		//					err)
+		//
+		//			} else {
+		//				fmt.Printf("Established connection to syslog server '%s'",
+		//					_args.Syslog.Hostname+":"+_args.Syslog.Port)
+		//				_args.logrusInstance.Hooks.Add(_args.Syslog.hook)
+		//			}
+		//	}
+		//}
+
+
+		// Set defaults for Loggly based logging.
+		if _args.Loggly.Enabled == true {
+			if _args.Loggly.Token != "" {
+				_args.Loggly.hook = logrusly.NewLogglyHook(_args.Loggly.Token, _args.Loggly.Server, logrus.InfoLevel, _args.Loggly.Tag)
+				_args.logrusInstance.Hooks.Add(_args.Loggly.hook)
+
+			} else {
+				fmt.Printf("# Error: Loggly requires a customer token.\n")
+			}
+		}
+
+
+		*se = Logger(_args)
+
+		if localLogger == nil {
+			localLogger = se
+		}
+	}
+
+	//status.Logger = se
+
+	return se, err
+}
+
+
+func (me *Logger) SetLevel(sl string) {
+	me.currentLevel = me.GetLevel(sl)
+	me.logrusInstance.SetLevel(me.currentLevel)
+}
+
+
+func (me *Logger) GetLevel(getLevel string) (returnLevel logrus.Level) {
+	returnLevel, _ = logrus.ParseLevel(getLevel)
+
+	return
+}
+
+
 
 /*
 	if eblog.LogIfError(me, err) {

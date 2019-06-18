@@ -9,13 +9,12 @@ import (
 	"gearbox/dockerhub"
 	"gearbox/gears"
 	"gearbox/global"
-	"gearbox/heartbeat"
 	"gearbox/only"
-	"gearbox/os_support"
 	"gearbox/project"
 	"gearbox/service"
 	"gearbox/ssh"
 	"gearbox/types"
+	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"log"
@@ -56,7 +55,7 @@ type Gearboxer interface {
 	GetNamedStackMap() (gears.NamedStackMap, status.Status)
 	GetServiceMap() (gears.ServiceMap, status.Status)
 	GetNamedStackRoleMap(types.StackId) (gears.StackRoleMap, status.Status)
-	GetOsSupport() oss.OsSupporter
+	GetOsBridge() osbridge.OsBridger
 	GetProjectMap() (project.Map, status.Status)
 	GetRouteName() types.RouteName
 	GetStackRoleMap() (gears.StackRoleMap, status.Status)
@@ -68,19 +67,13 @@ type Gearboxer interface {
 	RequestAvailableContainers(...*dockerhub.ContainerQuery) (dockerhub.ContainerNames, status.Status)
 
 	// VM related.
-	CreateBox(box.Args) status.Status
+	BoxDaemon(box.Args) status.Status
 	StartBox(box.Args) status.Status
 	StopBox(box.Args) status.Status
 	RestartBox(box.Args) status.Status
+	CreateBox(box.Args) status.Status
 	PrintBoxStatus(box.Args) status.Status
 	ConnectSSH(ssh.Args) status.Status
-
-	// Heartbeat related.
-	HeartbeatDaemon(heartbeat.Args) status.Status
-	StartHeartbeat(heartbeat.Args) status.Status
-	StopHeartbeat(heartbeat.Args) status.Status
-	RestartHeartbeat(heartbeat.Args) status.Status
-	PrintHeartbeatStatus(heartbeat.Args) status.Status
 
 	SetConfig(config.Configer)
 	SetApi(api api.Apier)
@@ -93,7 +86,7 @@ type Gearboxer interface {
 
 type Gearbox struct {
 	Config        config.Configer
-	OsSupport     oss.OsSupporter
+	OsBridge      osbridge.OsBridger
 	StackMap      gears.NamedStackMap
 	ServiceMap    gears.ServiceMap
 	GlobalOptions *global.Options
@@ -103,17 +96,18 @@ type Gearbox struct {
 	errorLog      *ErrorLog
 }
 
+
 type Args Gearbox
 
 func NewGearbox(args *Args) Gearboxer {
 	gb := Gearbox{
-		OsSupport:     args.OsSupport,
+		OsBridge:      args.OsBridge,
 		GlobalOptions: args.GlobalOptions,
 		Config:        args.Config,
 		errorLog:      &ErrorLog{},
 	}
 	if args.Config == nil {
-		gb.Config = config.NewConfig(args.OsSupport)
+		gb.Config = config.NewConfig(args.OsBridge)
 	}
 	if args.GlobalOptions == nil {
 		gb.GlobalOptions = &global.Options{}
@@ -123,7 +117,7 @@ func NewGearbox(args *Args) Gearboxer {
 		gb.Api.SetParent(&gb)
 	}
 	if args.Gears == nil {
-		gb.Gears = gears.NewGears(gb.OsSupport)
+		gb.Gears = gears.NewGears(gb.OsBridge)
 	}
 	return &gb
 }
@@ -256,8 +250,8 @@ func (me *Gearbox) SetRouteName(routeName types.RouteName) {
 	me.RouteName = routeName
 }
 
-func (me *Gearbox) GetOsSupport() oss.OsSupporter {
-	return me.OsSupport
+func (me *Gearbox) GetOsBridge() osbridge.OsBridger {
+	return me.OsBridge
 }
 
 func (me *Gearbox) GetApi() api.Apier {
@@ -288,9 +282,9 @@ func (me *Gearbox) Initialize() (sts status.Status) {
 }
 
 func (me *Gearbox) WriteAssetsToAdminWebRoot() {
-	hc := me.OsSupport
+	hc := me.OsBridge
 	if hc == nil {
-		log.Fatal("Gearbox has no os_support connector. (End users should never see this; it is a programming error.)")
+		log.Fatal("Gearbox has no osbridge connector. (End users should never see this; it is a programming error.)")
 	}
 	for _, afn := range AssetNames() {
 		afn = filepath.FromSlash(afn)

@@ -29,6 +29,7 @@ type ProjectModel struct {
 	Aliases       project.HostnameAliases `json:"aliases,omitempty"`
 	Stack         ProjectStackItems       `json:"stack,omitempty"`
 	ConfigProject *config.Project         `json:"-"`
+	Model
 }
 
 func (me *ProjectModel) GetAttributeMap() apiworks.AttributeMap {
@@ -70,16 +71,6 @@ func (me *ProjectModel) GetId() ItemId {
 func (me *ProjectModel) SetId(hostname ItemId) Status {
 	me.Hostname = types.Hostname(hostname)
 	return nil
-}
-
-func (me *ProjectModel) GetItem() (ItemModeler, Status) {
-	return me, nil
-}
-
-func (me *ProjectModel) GetItemLinkMap(*Context) (lm LinkMap, sts Status) {
-	return LinkMap{
-		//RelatedRelType: Link("https://example.com"),
-	}, sts
 }
 
 func (me *ProjectModel) AddDetails(ctx *Context) (sts Status) {

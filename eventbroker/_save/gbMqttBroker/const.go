@@ -3,7 +3,7 @@ package gbMqttBroker
 import (
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/tasks"
-	oss "gearbox/os_support"
+	//	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/fhmq/hmq/broker"
 	"github.com/gearboxworks/go-status"
@@ -12,7 +12,7 @@ import (
 
 type Mqtt struct {
 	EntityId      messages.MessageAddress
-	OsSupport     oss.OsSupporter
+	OsBridge     osbridge.OsBridger
 	ServerURL     *url.URL
 	BrokerWorkers int
 	Broker        Broker

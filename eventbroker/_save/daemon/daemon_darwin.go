@@ -7,7 +7,7 @@ import (
 	"gearbox/global"
 	"gearbox/help"
 	"gearbox/eventbroker/only"
-	"gearbox/os_support"
+	//	"gearbox/os_support"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"regexp"
@@ -56,13 +56,13 @@ var PlistTemplate = `
 `
 
 
-func NewDaemon(OsSupport oss.OsSupporter, args ...Args) *Daemon {
+func NewDaemon(OsBridge osbridge.OsBridger, args ...Args) *Daemon {
 	var _args Args
 	if len(args) > 0 {
 		_args = args[0]
 	}
 
-	OsSupport = OsSupport
+	OsBridge = OsBridge
 
 	if _args.Boxname == "" {
 		_args.Boxname = global.Brandname
@@ -80,7 +80,7 @@ func NewDaemon(OsSupport oss.OsSupporter, args ...Args) *Daemon {
 	if _args.ServiceData.Path == "" {
 		execCwd, _ := os.Getwd()
 		if execCwd == "/" {
-			execCwd = string(OsSupport.GetAdminRootDir())
+			execCwd = string(OsBridge.GetAdminRootDir())
 		}
 		_args.ServiceData.Path = execCwd
 	}
@@ -256,7 +256,7 @@ func (me *Daemon) Unload() (sts status.Status) {
 
 func (me *Daemon) getFile(s string) []byte {
 
-	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), s))
+	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), s))
 	if fp == "" {
 		return nil
 	}
@@ -310,7 +310,7 @@ func (me *Daemon) GetState() (sts status.Status) {
 */
 
 /*
-	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), s))
+	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), s))
 	if fp == "" {
 		return nil
 	}

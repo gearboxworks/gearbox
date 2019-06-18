@@ -6,7 +6,7 @@ import (
 	"gearbox/api"
 	"gearbox/global"
 	"gearbox/only"
-	"gearbox/os_support"
+	"github.com/gearboxworks/go-osbridge"
 	"github.com/zserge/lorca"
 	"github.com/zserge/webview"
 	"io/ioutil"
@@ -42,7 +42,7 @@ type UiWindow struct {
 type ViewerType string
 
 const (
-	DefaultViewer ViewerType = LorcaViewer
+	DefaultViewer            = LorcaViewer
 	WebViewViewer ViewerType = "webview"
 	LorcaViewer   ViewerType = "lorca"
 )
@@ -50,7 +50,7 @@ const (
 type AdminUi struct {
 	ViewerType  ViewerType
 	webListener net.Listener
-	OsSupport   oss.OsSupporter
+	OsBridge    osbridge.OsBridger
 	Gearbox     Gearboxer
 	webServer   *http.Server
 	api         api.Apier
@@ -86,7 +86,7 @@ func NewUiWindow(args *UiWindowArgs) *UiWindow {
 func NewAdminUi(gearbox Gearboxer, viewer ViewerType) *AdminUi {
 	ui := AdminUi{
 		Gearbox:    gearbox,
-		OsSupport:  gearbox.GetOsSupport(),
+		OsBridge:   gearbox.GetOsBridge(),
 		ViewerType: viewer,
 		Window: NewUiWindow(&UiWindowArgs{
 			Title: "%s - " + fmt.Sprintf("[%s]", viewer),
@@ -197,7 +197,7 @@ func (me *AdminUi) GetWebRootFileUrl() string {
 }
 
 func (me *AdminUi) GetWebRootDir() http.Dir {
-	return http.Dir(me.OsSupport.GetAdminRootDir())
+	return http.Dir(me.OsBridge.GetAdminRootDir())
 }
 
 func (me *AdminUi) GetWebRootFileDir() string {

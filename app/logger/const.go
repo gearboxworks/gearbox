@@ -1,13 +1,15 @@
 package logger
 
 import (
-	oss "gearbox/os_support"
+	"github.com/gearboxworks/go-osbridge"
+	//	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-status"
 	"github.com/sebest/logrusly"
 	"github.com/sirupsen/logrus"
-	lSyslog "github.com/sirupsen/logrus/hooks/syslog"
-	"log/syslog"
 )
+
+// Disabled to work on GOOS=windows
+//lSyslog "github.com/sirupsen/logrus/hooks/syslog"
 
 
 const (
@@ -26,12 +28,13 @@ var _ status.MsgLogger = (*Logger)(nil)
 
 type Logger struct {
 	Boxname   string
-	OsSupport oss.OsSupporter
+	OsBridge  osbridge.OsBridger
 	Sts       status.Status
 	DebugMode bool    `json:"debug"`
 	Loggly    Loggly  `json:"loggly"`
-	Syslog    Syslog  `json:"syslog"`
 	LogFile   LogFile `json:"logfile"`
+	// Disabled to work on GOOS=windows
+	//Syslog    Syslog  `json:"syslog"`
 
 	status.L
 	logrusInstance *logrus.Logger
@@ -47,15 +50,16 @@ type Loggly struct {
 	hook *logrusly.LogglyHook
 }
 
-type Syslog struct {
-	Enabled  bool            `json:"enabled"`
-	Hostname string          `json:"hostname"`
-	Port     string          `json:"port"`
-	Protocol string          `json:"protocol"`
-	Priority syslog.Priority `json:"priority"`
-	Tag      string          `json:"tag"`
-	hook     *lSyslog.SyslogHook
-}
+// Disabled to work on GOOS=windows
+//type Syslog struct {
+//	Enabled  bool            `json:"enabled"`
+//	Hostname string          `json:"hostname"`
+//	Port     string          `json:"port"`
+//	Protocol string          `json:"protocol"`
+//	Priority syslog.Priority `json:"priority"`
+//	Tag      string          `json:"tag"`
+//	hook     *lSyslog.SyslogHook
+//}
 
 type LogFile struct {
 	Enabled     bool   `json:"enabled"`

@@ -5,7 +5,7 @@ import (
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
-	oss "gearbox/os_support"
+	//	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"net/url"
 	"time"
@@ -68,7 +68,7 @@ type MqttBroker struct {
 	Channels        *channels.Channels
 	channelHandler  *channels.Subscriber
 
-	osSupport       oss.OsSupporter
+	osSupport       osbridge.OsBridger
 }
 type Args MqttBroker
 

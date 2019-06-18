@@ -482,7 +482,7 @@ func (me *Service) IsRegistered() bool {
 
 //execCwd, _ := os.Getwd()
 //if execCwd == "/" {
-//execCwd = string(OsSupport.GetAdminRootDir())
+//execCwd = string(OsBridge.GetAdminRootDir())
 //}
 //_args.ServiceData.Path = execCwd
 

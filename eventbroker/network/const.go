@@ -19,7 +19,7 @@ const (
 	DefaultWaitTime = time.Millisecond * 1000
 	DefaultDomain   = "local"
 	DefaultRetries  = 12
-	DefaultRetryDelay = time.Second * 10
+	DefaultRetryDelay = time.Second * 8
 
 	SelectRandomPort = "0"
 )

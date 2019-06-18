@@ -3,6 +3,7 @@ package eventbroker
 import (
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/daemon"
+	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/mqttClient"
 	"gearbox/eventbroker/network"
@@ -44,6 +45,7 @@ type EventBroker struct {
 	MqttClient     mqttClient.MqttClient
 
 	Services       Services
+	Logger         *eblog.Logger
 
 	OsPaths        *ospaths.BasePaths
 	channelHandler *channels.Subscriber

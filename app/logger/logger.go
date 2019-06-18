@@ -2,27 +2,24 @@ package logger
 
 import (
 	"fmt"
-	"gearbox/box"
-	"gearbox/help"
 	"gearbox/only"
-	oss "gearbox/os_support"
+	"github.com/gearboxworks/go-osbridge"
+
+	//	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-status"
-	"github.com/jinzhu/copier"
 	"github.com/rifflock/lfshook"
 	"github.com/sebest/logrusly"
 	"github.com/sirupsen/logrus"
-	lSyslog "github.com/sirupsen/logrus/hooks/syslog"
 	"io/ioutil"
-	"log/syslog"
 	"path/filepath"
 	"strconv"
 )
 
 
-func NewLogger(OsSupport oss.OsSupporter, args ...Logger) (Logger, status.Status) {
+func NewLogger(OsBridge osbridge.OsBridger, args ...Logger) (Logger, error) {
 
 	var _args Logger
-	var sts status.Status
+	var err error
 	se := &Logger{}
 
 	for range only.Once {
@@ -31,24 +28,19 @@ func NewLogger(OsSupport oss.OsSupporter, args ...Logger) (Logger, status.Status
 			_args = args[0]
 		}
 
-		_args.OsSupport = OsSupport
-		foo := box.Args{}
-		err := copier.Copy(&foo, &_args)
-		if err != nil {
-			sts = status.Wrap(err).
-				SetMessage("unable to copy Logger config").
-				SetAdditional("", ).
-				SetData("").
-				SetCause(err).
-				SetHelp(status.AllHelp, help.ContactSupportHelp())
-			break
-		}
+		//foo := box.Args{}
+		//err := copier.Copy(&foo, &_args)
+		//if err != nil {
+		//	err = errors.New("unable to copy Logger config")
+		//	break
+		//}
 
 //		if _args.DebugMode == nil {
 //			*_args.DebugMode = false
 //		}
 
 
+		_args.OsBridge = OsBridge
 		_args.logrusInstance = logrus.New()
 		_args.logrusInstance.SetFormatter(&logrus.JSONFormatter{})
 		_args.currentLevel = InfoLevel
@@ -68,7 +60,7 @@ func NewLogger(OsSupport oss.OsSupporter, args ...Logger) (Logger, status.Status
 			}
 
 			if _args.LogFile.Name == "" {
-				_args.LogFile.Name = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetUserConfigDir(), defaultLogFile))
+				_args.LogFile.Name = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsBridge.GetUserConfigDir(), defaultLogFile))
 			}
 
 			// fmt.Printf("Logging to files.")
@@ -87,48 +79,49 @@ func NewLogger(OsSupport oss.OsSupporter, args ...Logger) (Logger, status.Status
 		}
 
 
+		// Disabled to work on GOOS=windows
 		// Set sane values for Syslog based logging.
-		if _args.Syslog.Enabled == true { // Set sane defaults for Protocol
-			switch _args.Syslog.Protocol {
-				case "udp":
-				case "tcp":
-
-				default:
-					//LogInfo("Setting default syslog protocol to 'udp'. Was '%s'", _args.Syslog.Protocol)
-					_args.Syslog.Protocol = "udp"
-			}
-
-			// Set sane defaults for Port
-			switch _args.Syslog.Port {
-				case "":
-					//LogInfo("Setting default syslog port to '514'. Was '%s'", _args.Syslog.Port)
-					_args.Syslog.Port = "514"
-			}
-
-			// Setup syslog based logging.
-			switch _args.Syslog.Hostname {
-				case "":
-
-				default:
-					var err error
-
-					_args.Syslog.hook, err = lSyslog.NewSyslogHook(_args.Syslog.Protocol,
-						_args.Syslog.Hostname+":"+_args.Syslog.Port,
-						syslog.LOG_INFO,
-						_args.Syslog.Tag)
-
-					if err != nil {
-						fmt.Printf("Error establishing connection to syslog server '%s' - %s",
-							_args.Syslog.Hostname+":"+_args.Syslog.Port,
-							err)
-
-					} else {
-						fmt.Printf("Established connection to syslog server '%s'",
-							_args.Syslog.Hostname+":"+_args.Syslog.Port)
-						_args.logrusInstance.Hooks.Add(_args.Syslog.hook)
-					}
-			}
-		}
+		//if _args.Syslog.Enabled == true { // Set sane defaults for Protocol
+		//	switch _args.Syslog.Protocol {
+		//		case "udp":
+		//		case "tcp":
+		//
+		//		default:
+		//			//LogInfo("Setting default syslog protocol to 'udp'. Was '%s'", _args.Syslog.Protocol)
+		//			_args.Syslog.Protocol = "udp"
+		//	}
+		//
+		//	// Set sane defaults for Port
+		//	switch _args.Syslog.Port {
+		//		case "":
+		//			//LogInfo("Setting default syslog port to '514'. Was '%s'", _args.Syslog.Port)
+		//			_args.Syslog.Port = "514"
+		//	}
+		//
+		//	// Setup syslog based logging.
+		//	switch _args.Syslog.Hostname {
+		//		case "":
+		//
+		//		default:
+		//			var err error
+		//
+		//			_args.Syslog.hook, err = lSyslog.NewSyslogHook(_args.Syslog.Protocol,
+		//				_args.Syslog.Hostname+":"+_args.Syslog.Port,
+		//				syslog.LOG_INFO,
+		//				_args.Syslog.Tag)
+		//
+		//			if err != nil {
+		//				fmt.Printf("Error establishing connection to syslog server '%s' - %s",
+		//					_args.Syslog.Hostname+":"+_args.Syslog.Port,
+		//					err)
+		//
+		//			} else {
+		//				fmt.Printf("Established connection to syslog server '%s'",
+		//					_args.Syslog.Hostname+":"+_args.Syslog.Port)
+		//				_args.logrusInstance.Hooks.Add(_args.Syslog.hook)
+		//			}
+		//	}
+		//}
 
 
 		// Set defaults for Loggly based logging.
@@ -142,17 +135,12 @@ func NewLogger(OsSupport oss.OsSupporter, args ...Logger) (Logger, status.Status
 			}
 		}
 
-		//execPath, _ := os.Executable()
-		//execCwd := string(_args.OsSupport.GetAdminRootDir()) + "/heartbeat" // os.Getwd()
-
-		//_args.PidFile = filepath.FromSlash(fmt.Sprintf("%s/%s", _args.OsSupport.GetAdminRootDir(), defaultPidFile))
-
 		*se = Logger(_args)
 	}
 
 	status.Logger = se
 
-	return *se, sts
+	return *se, err
 }
 
 

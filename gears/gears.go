@@ -7,7 +7,9 @@ import (
 	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
-	"gearbox/os_support"
+	"github.com/gearboxworks/go-osbridge"
+
+	//	"gearbox/os_support"
 	"gearbox/service"
 	"gearbox/types"
 	"gearbox/util"
@@ -33,12 +35,12 @@ type Gears struct {
 	GlobalOptions    global.Options      `json:"-"`
 	ServiceIds       service.Identifiers `json:"-"`
 	ServiceMap       ServiceMap          `json:"-"`
-	OsSupport        oss.OsSupporter     `json:"-"`
+	OsSupport        osbridge.OsBridger     `json:"-"`
 	serviceIds       serviceIdsMapGearspecIds
 	refreshed        bool
 }
 
-func NewGears(ossup oss.OsSupporter) *Gears {
+func NewGears(ossup osbridge.OsBridger) *Gears {
 	return &Gears{
 		OsSupport:        ossup,
 		Authorities:      make(types.Authorities, 0),

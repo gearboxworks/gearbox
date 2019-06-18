@@ -2,7 +2,7 @@ package mock
 
 import (
 	"fmt"
-	"gearbox/os_support"
+	//	"gearbox/os_support"
 	"gearbox/test/user-home"
 	"gearbox/types"
 	"strings"
@@ -16,7 +16,7 @@ const (
 
 var NilOsSupport = (*OsSupport)(nil)
 
-var _ oss.OsSupporter = NilOsSupport
+var _ osbridge.OsBridger = NilOsSupport
 
 type OsSupport struct {
 	oss.Base
@@ -27,7 +27,7 @@ type OsSupport struct {
 	CachePath         string
 }
 
-func NewOsSupport(t *testing.T) oss.OsSupporter {
+func NewOsSupport(t *testing.T) osbridge.OsBridger {
 	return &OsSupport{
 		T: t,
 	}

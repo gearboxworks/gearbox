@@ -16,7 +16,7 @@ func (me *ErrorLog) Write(b []byte) (nn int, err error) {
 		if me.Gearbox.IsDebug() {
 			fmt.Print(string(b))
 		}
-		file := filepath.FromSlash(fmt.Sprintf("%s/error.log", me.Gearbox.GetOsSupport().GetUserConfigDir()))
+		file := filepath.FromSlash(fmt.Sprintf("%s/error.log", me.Gearbox.GetOsBridge().GetUserConfigDir()))
 		f, err := os.OpenFile(file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stdout, "Could not open '%s'", file)

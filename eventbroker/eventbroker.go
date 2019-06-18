@@ -2,7 +2,6 @@ package eventbroker
 
 import (
 	"fmt"
-	"gearbox/box"
 	"gearbox/global"
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/daemon"
@@ -14,7 +13,6 @@ import (
 	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/ospaths"
 	"gearbox/eventbroker/states"
-	"github.com/jinzhu/copier"
 	"time"
 )
 
@@ -30,13 +28,6 @@ func New(args ...Args) (*EventBroker, error) {
 
 		if len(args) > 0 {
 			_args = args[0]
-		}
-
-		foo := box.Args{}
-		err = copier.Copy(&foo, &_args)
-		if err != nil {
-			err = me.EntityId.ProduceError("unable to copy config args")
-			break
 		}
 
 		if _args.Boxname == "" {
@@ -57,6 +48,7 @@ func New(args ...Args) (*EventBroker, error) {
 			break
 		}
 
+
 		//_args.Services.States = make(States)
 		//_args.Services.Callbacks = make(Callbacks)
 		//_args.Services.CallbackLocks = make(CallbackLocks)
@@ -65,6 +57,13 @@ func New(args ...Args) (*EventBroker, error) {
 
 
 		*me = EventBroker(_args)
+
+
+		// 0. Logger - enable logging.
+		me.Logger, err = eblog.NewLogger(me.OsPaths, )
+		if err != nil {
+			break
+		}
 
 
 		// 1. Channel - provides inter-thread communications.

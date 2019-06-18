@@ -25,6 +25,7 @@ type GearspecModel struct {
 	Stackname  types.Stackname       `json:"stackname,omitempty"`
 	Role       types.StackRole       `json:"role,omitempty"`
 	Revision   types.Revision        `json:"revision"`
+	Model
 }
 
 func (me *GearspecModel) GetAttributeMap() apiworks.AttributeMap {
@@ -44,10 +45,6 @@ func NewGearspecModelFromGearspecGearspec(ctx *Context, gsgs *gearspec.Gearspec)
 
 func NewGearspecModel() *GearspecModel {
 	return &GearspecModel{}
-}
-
-func (me *GearspecModel) GetItemLinkMap(*Context) (LinkMap, Status) {
-	return LinkMap{}, nil
 }
 
 func (me *GearspecModel) GetType() ItemType {
@@ -80,12 +77,4 @@ func (me *GearspecModel) SetId(itemid ItemId) (sts Status) {
 		me.Stackname = types.Stackname(parts[1])
 	}
 	return sts
-}
-
-func (me *GearspecModel) GetItem() (ItemModeler, Status) {
-	return me, nil
-}
-
-func (me *GearspecModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
-	return make(List, 0), sts
 }
