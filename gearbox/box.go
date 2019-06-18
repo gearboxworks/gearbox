@@ -8,8 +8,14 @@ import (
 )
 
 func newBox(me Gearboxer, args box.Args) (bx *box.Box, sts status.Status) {
+<<<<<<< HEAD
 	bx, _ = box.New(me.GetOsBridge(), args)
 	//sts = bx.Initialize()
+=======
+
+	bx = box.NewBox(me.GetOsBridge(), args)
+	sts = bx.Initialize()
+>>>>>>> master
 
 	return bx, sts
 }
@@ -89,6 +95,19 @@ func (me *Gearbox) RestartBox(args box.Args) (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
+<<<<<<< HEAD
+=======
+
+		//		// var state string
+		//		state, sts = sts.GetString()
+		//		meaning := box.GetStateMeaning(box.State(state))
+		//		if meaning == "" {
+		//			fmt.Println(box.GetStateMeaning(box.UnknownState))
+		//			break
+		//		}
+		//		fmt.Println(meaning)
+		fmt.Printf(">%s\n", state)
+>>>>>>> master
 	}
 	status.Log(sts)
 

@@ -1,0 +1,143 @@
+diff --git a/.DS_Store b/.DS_Store
+new file mode 100644
+index 0000000..5ebde79
+Binary files /dev/null and b/.DS_Store differ
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+index bd91207..5488a9f 100644
+--- a/.idea/workspace.xml
++++ b/.idea/workspace.xml
+@@ -4,19 +4,7 @@
+     <bookmark url="file://$PROJECT_DIR$/gearbox/config.go" />
+   </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="5c53b2af-a3db-411f-a8ae-07a7ab65b7ee" name="Default Changelist" comment="">
+-      <change afterPath="$PROJECT_DIR$/admin/js/gearbox.js" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/admin/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/admin/index.html" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/bin/gearbox" beforeDir="false" afterPath="$PROJECT_DIR$/bin/gearbox" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/cmd/admin.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/admin.go" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/gearbox/admin.go" beforeDir="false" />
+-      <change beforePath="$PROJECT_DIR$/gearbox/asset.go" beforeDir="false" />
+-      <change beforePath="$PROJECT_DIR$/gearbox/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/gearbox/config.go" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/gearbox/gearbox.go" beforeDir="false" afterPath="$PROJECT_DIR$/gearbox/gearbox.go" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/gearbox/project.go" beforeDir="false" afterPath="$PROJECT_DIR$/gearbox/project.go" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+-    </list>
++    <list default="true" id="5c53b2af-a3db-411f-a8ae-07a7ab65b7ee" name="Default Changelist" comment="" />
+     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -34,16 +22,16 @@
+           </provider>
+         </entry>
+       </file>
+-      <file pinned="false" current-in-tab="false">
++      <file pinned="false" current-in-tab="true">
+         <entry file="file://$PROJECT_DIR$/gearbox/gearbox.go">
+           <provider selected="true" editor-type-id="text-editor">
+-            <state relative-caret-position="236">
+-              <caret line="24" selection-start-line="24" selection-end-line="24" />
++            <state relative-caret-position="252">
++              <caret line="22" column="26" lean-forward="true" selection-start-line="22" selection-start-column="26" selection-end-line="22" selection-end-column="26" />
+             </state>
+           </provider>
+         </entry>
+       </file>
+-      <file pinned="false" current-in-tab="true">
++      <file pinned="false" current-in-tab="false">
+         <entry file="file://$PROJECT_DIR$/main.go">
+           <provider selected="true" editor-type-id="text-editor">
+             <state relative-caret-position="162">
+@@ -190,14 +178,15 @@
+         <option value="$PROJECT_DIR$/main.go" />
+         <option value="$PROJECT_DIR$/admin/index.html" />
+         <option value="$PROJECT_DIR$/admin/js/gearbox.js" />
+-        <option value="$PROJECT_DIR$/gearbox/gearbox.go" />
+         <option value="$PROJECT_DIR$/gearbox/candidate.go" />
+         <option value="$PROJECT_DIR$/gearbox/project.go" />
+         <option value="$PROJECT_DIR$/gearbox/config.go" />
++        <option value="$PROJECT_DIR$/gearbox/admin_bridge.go" />
++        <option value="$PROJECT_DIR$/gearbox/gearbox.go" />
+       </list>
+     </option>
+   </component>
+-  <component name="ProjectFrameBounds">
++  <component name="ProjectFrameBounds" extendedState="1">
+     <option name="y" value="23" />
+     <option name="width" value="2560" />
+     <option name="height" value="1417" />
+@@ -321,15 +310,16 @@
+     </todo-panel>
+   </component>
+   <component name="ToolWindowManager">
+-    <frame x="0" y="23" width="2560" height="1417" extended-state="0" />
++    <frame x="0" y="23" width="2560" height="1417" extended-state="1" />
++    <editor active="true" />
+     <layout>
+-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.26171565" />
++      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.26171565" />
+       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+       <window_info id="Favorites" order="2" side_tool="true" />
+       <window_info anchor="bottom" id="Message" order="0" />
+       <window_info anchor="bottom" id="Find" order="1" weight="0.32949308" />
+-      <window_info anchor="bottom" id="Run" order="2" weight="0.17050691" />
+-      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.4170507" />
++      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.17050691" />
++      <window_info anchor="bottom" id="Debug" order="3" weight="0.4170507" />
+       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+       <window_info anchor="bottom" id="TODO" order="6" weight="0.32949308" />
+@@ -357,7 +347,8 @@
+     <MESSAGE value="Adding in Webview and a `gearbox admin` command." />
+     <MESSAGE value="More work on the admin console" />
+     <MESSAGE value="Added objects for Gearbox, Projects, and Config." />
+-    <option name="LAST_COMMIT_MESSAGE" value="Added objects for Gearbox, Projects, and Config." />
++    <MESSAGE value="Proof-of-concept working for passing data from Go to JS." />
++    <option name="LAST_COMMIT_MESSAGE" value="Proof-of-concept working for passing data from Go to JS." />
+   </component>
+   <component name="VgoProject">
+     <integration-enabled>true</integration-enabled>
+@@ -366,12 +357,6 @@
+   <component name="XDebuggerManager">
+     <breakpoint-manager>
+       <breakpoints>
+-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+-          <url>file://$PROJECT_DIR$/gearbox/gearbox.go</url>
+-          <line>72</line>
+-          <properties />
+-          <option name="timeStamp" value="44" />
+-        </line-breakpoint>
+         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+           <url>file://$PROJECT_DIR$/gearbox/config.go</url>
+           <line>145</line>
+@@ -1106,17 +1091,24 @@
+         </state>
+       </provider>
+     </entry>
+-    <entry file="file://$PROJECT_DIR$/gearbox/gearbox.go">
++    <entry file="file://$PROJECT_DIR$/main.go">
+       <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="236">
+-          <caret line="24" selection-start-line="24" selection-end-line="24" />
++        <state relative-caret-position="162">
++          <caret line="15" selection-start-line="15" selection-end-line="15" />
+         </state>
+       </provider>
+     </entry>
+-    <entry file="file://$PROJECT_DIR$/main.go">
++    <entry file="file://$PROJECT_DIR$/gearbox/admin_bridge.go">
+       <provider selected="true" editor-type-id="text-editor">
+-        <state relative-caret-position="162">
+-          <caret line="15" selection-start-line="15" selection-end-line="15" />
++        <state relative-caret-position="126">
++          <caret line="7" column="13" lean-forward="true" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
++        </state>
++      </provider>
++    </entry>
++    <entry file="file://$PROJECT_DIR$/gearbox/gearbox.go">
++      <provider selected="true" editor-type-id="text-editor">
++        <state relative-caret-position="252">
++          <caret line="22" column="26" lean-forward="true" selection-start-line="22" selection-start-column="26" selection-end-line="22" selection-end-column="26" />
+         </state>
+       </provider>
+     </entry>

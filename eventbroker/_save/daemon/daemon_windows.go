@@ -2,17 +2,28 @@
 package daemon
 
 import (
+	"bytes"
 	"fmt"
 	"gearbox/global"
 	"gearbox/help"
+<<<<<<< HEAD:eventbroker/_save/daemon/daemon_windows.go
 	"gearbox/eventbroker/only"
 	//	"gearbox/os_support"
+=======
+	"gearbox/only"
+	oss "github.com/gearboxworks/go-osbridge"
+>>>>>>> master:heartbeat/daemon/daemon_windows.go
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/process"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"syscall"
+	"text/template"
 )
 
 // @TODO Consider using https://github.com/kardianos/service
@@ -21,27 +32,27 @@ import (
 // @TODO These should be stubs, but it's just a copy of daemon_darwin.go
 
 type Daemon struct {
-	Boxname      string
-	ServiceFile  string
-	ServiceData	 plistData
+	Boxname     string
+	ServiceFile string
+	ServiceData PlistData
 
+<<<<<<< HEAD:eventbroker/_save/daemon/daemon_windows.go
 	OsBridge    osbridge.OsBridger
+=======
+	OsBridge oss.OsBridger
+>>>>>>> master:heartbeat/daemon/daemon_windows.go
 }
 type Args Daemon
-
-type plistData struct {
-	Label     string
-	Program   string
-	Path      string
-	KeepAlive bool
-	RunAtLoad bool
-}
 
 var plistTemplate = `
 `
 
+<<<<<<< HEAD:eventbroker/_save/daemon/daemon_windows.go
 
 func NewDaemon(OsBridge osbridge.OsBridger, args ...Args) *Daemon {
+=======
+func NewDaemon(OsBridge oss.OsBridger, args ...Args) *Daemon {
+>>>>>>> master:heartbeat/daemon/daemon_windows.go
 	var _args Args
 	if len(args) > 0 {
 		_args = args[0]
@@ -56,7 +67,7 @@ func NewDaemon(OsBridge osbridge.OsBridger, args ...Args) *Daemon {
 	execPath, _ := os.Executable()
 	execCwd, _ := os.Getwd()
 
-	_args.ServiceData = plistData{
+	_args.ServiceData = PlistData{
 		Label:     "com.gearbox.heartbeat", // Reverse-DNS naming convention
 		Program:   execPath,
 		Path:      execCwd,
@@ -73,7 +84,6 @@ func NewDaemon(OsBridge osbridge.OsBridger, args ...Args) *Daemon {
 
 	return daemon
 }
-
 
 func (me *Daemon) CreatePlist() (sts status.Status) {
 
@@ -107,7 +117,6 @@ func (me *Daemon) CreatePlist() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Daemon) Load() (sts status.Status) {
 
@@ -154,7 +163,6 @@ func (me *Daemon) Load() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Daemon) Unload() (sts status.Status) {
 
 	for range only.Once {
@@ -195,7 +203,6 @@ func (me *Daemon) Unload() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Daemon) getFile(s string) []byte {
 
 	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), s))
@@ -210,7 +217,6 @@ func (me *Daemon) getFile(s string) []byte {
 
 	return b
 }
-
 
 func (me *Daemon) GetState() (sts status.Status) {
 
@@ -263,7 +269,6 @@ func (me *Daemon) GetState() (sts status.Status) {
 	return sts
 }
 
-
 func EnsureNotNil(bx *Daemon) (sts status.Status) {
 	if bx == nil {
 		sts = status.Fail(&status.Args{
@@ -275,8 +280,7 @@ func EnsureNotNil(bx *Daemon) (sts status.Status) {
 	return sts
 }
 
-
-func (me *Daemon) IsParentInit() (bool) {
+func (me *Daemon) IsParentInit() bool {
 
 	ppid := os.Getppid()
 	if ppid == 1 {
@@ -286,8 +290,7 @@ func (me *Daemon) IsParentInit() (bool) {
 	return false
 }
 
-
-func (me *Daemon) IsRunning() (bool) {
+func (me *Daemon) IsRunning() bool {
 
 	fmt.Printf("PPID:%v:\n", me.IsParentInit())
 
@@ -310,7 +313,6 @@ func (me *Daemon) IsRunning() (bool) {
 
 	return false
 }
-
 
 func (me *Daemon) IsLoaded() (yesNo bool) {
 
@@ -348,8 +350,8 @@ func (me *Daemon) IsLoaded() (yesNo bool) {
 	return yesNo
 }
 
-
 const defaultFailedCode = 1
+
 func (me *Daemon) RunCommand(name string, args ...string) (sts status.Status, stdout string, stderr string, exitCode int) {
 
 	var outbuf, errbuf bytes.Buffer

@@ -6,8 +6,13 @@ import (
 	"fmt"
 	"gearbox/global"
 	"gearbox/help"
+<<<<<<< HEAD:eventbroker/_save/daemon/daemon_darwin.go
 	"gearbox/eventbroker/only"
 	//	"gearbox/os_support"
+=======
+	"gearbox/only"
+	"github.com/gearboxworks/go-osbridge"
+>>>>>>> master:heartbeat/daemon/daemon_darwin.go
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"regexp"
@@ -20,9 +25,12 @@ import (
 	"text/template"
 )
 
+// @TODO Mick - Any reason we can't move all OS-specific logic to osbridge?
+
 // @TODO Consider using https://github.com/kardianos/service
 // 	Daemon "github.com/kardianos/service"
 
+<<<<<<< HEAD:eventbroker/_save/daemon/daemon_darwin.go
 type PlistData struct {
 	Label       string
 	Program     string
@@ -32,6 +40,16 @@ type PlistData struct {
 	RunAtLoad   bool
 	PidFile		string
 }
+=======
+type Daemon struct {
+	Boxname     string
+	ServiceFile string
+	ServiceData PlistData
+
+	OsBridge osbridge.OsBridger
+}
+type Args Daemon
+>>>>>>> master:heartbeat/daemon/daemon_darwin.go
 
 var PlistTemplate = `
 <?xml version='1.0' encoding='UTF-8'?>
@@ -55,14 +73,21 @@ var PlistTemplate = `
 </plist>
 `
 
+<<<<<<< HEAD:eventbroker/_save/daemon/daemon_darwin.go
 
+=======
+>>>>>>> master:heartbeat/daemon/daemon_darwin.go
 func NewDaemon(OsBridge osbridge.OsBridger, args ...Args) *Daemon {
 	var _args Args
 	if len(args) > 0 {
 		_args = args[0]
 	}
 
+<<<<<<< HEAD:eventbroker/_save/daemon/daemon_darwin.go
 	OsBridge = OsBridge
+=======
+	_args.OsBridge = OsBridge
+>>>>>>> master:heartbeat/daemon/daemon_darwin.go
 
 	if _args.Boxname == "" {
 		_args.Boxname = global.Brandname
@@ -96,37 +121,36 @@ func NewDaemon(OsBridge osbridge.OsBridger, args ...Args) *Daemon {
 	daemon := &Daemon{}
 	*daemon = Daemon(_args)
 
-/*
-	svcConfig := &SysSvc.Config{
-		Name:        daemon.Boxname,
-		DisplayName: "Gearbox",
-		Description: "This is an example Go service.",
-		Executable:	 daemon.ServiceData.Program,
-		Arguments: daemon.ServiceData.ProgramArgs,
-		Option: SysSvc.KeyValue{
-			"KeepAlive": true,
-			"RunAtLoad": true,
-			"PIDFile": daemon.ServiceData.PidFile,
-		},
-	}
+	/*
+		svcConfig := &SysSvc.Config{
+			Name:        daemon.Boxname,
+			DisplayName: "Gearbox",
+			Description: "This is an example Go service.",
+			Executable:	 daemon.ServiceData.Program,
+			Arguments: daemon.ServiceData.ProgramArgs,
+			Option: SysSvc.KeyValue{
+				"KeepAlive": true,
+				"RunAtLoad": true,
+				"PIDFile": daemon.ServiceData.PidFile,
+			},
+		}
 
-	prg := &program{}
-	s, err := SysSvc.New(prg, svcConfig)
-	if err != nil {
-		//		log.Fatal(err)
-	}
-	//	logger, err = s.Logger(nil)
-	if err != nil {
-		//		log.Fatal(err)
-	}
-	err = s.Run()
-	if err != nil {
-		//		logger.Error(err)
-	}
-*/
+		prg := &program{}
+		s, err := SysSvc.New(prg, svcConfig)
+		if err != nil {
+			//		log.Fatal(err)
+		}
+		//	logger, err = s.Logger(nil)
+		if err != nil {
+			//		log.Fatal(err)
+		}
+		err = s.Run()
+		if err != nil {
+			//		logger.Error(err)
+		}
+	*/
 	return daemon
 }
-
 
 func (me *Daemon) CreatePlist() (sts status.Status) {
 
@@ -160,7 +184,6 @@ func (me *Daemon) CreatePlist() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Daemon) Load() (sts status.Status) {
 
@@ -212,7 +235,6 @@ func (me *Daemon) Load() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Daemon) Unload() (sts status.Status) {
 
 	for range only.Once {
@@ -253,7 +275,6 @@ func (me *Daemon) Unload() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Daemon) getFile(s string) []byte {
 
 	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), s))
@@ -268,7 +289,6 @@ func (me *Daemon) getFile(s string) []byte {
 
 	return b
 }
-
 
 func (me *Daemon) GetState() (sts status.Status) {
 
@@ -290,43 +310,50 @@ func (me *Daemon) GetState() (sts status.Status) {
 		displayString += fmt.Sprintf("%s Heartbeat - Service NOT running [%s]\n", global.Brandname, me.ServiceData.Label)
 	}
 
-/*
-	foo1, _ := process.Pids()
-	for i, p := range foo1 {
-		fmt.Printf("process.Pids:%v:	%v:\n", i, p)
-	}
+	/*
+		foo1, _ := process.Pids()
+		for i, p := range foo1 {
+			fmt.Printf("process.Pids:%v:	%v:\n", i, p)
+		}
 
-	foo2, _ := process.Processes()
-	for _, p := range foo2 {
-		c, _ := p.Cmdline()
-		fmt.Printf("process.Processes:%v:	'%s'\n", p.Pid, c)
-	}
+		foo2, _ := process.Processes()
+		for _, p := range foo2 {
+			c, _ := p.Cmdline()
+			fmt.Printf("process.Processes:%v:	'%s'\n", p.Pid, c)
+		}
 
-	infoStat, _ := host.Info()
-	fmt.Printf("Total processes: %v\n", infoStat.Procs)
+		infoStat, _ := host.Info()
+		fmt.Printf("Total processes: %v\n", infoStat.Procs)
 
-	miscStat, _ := load.Misc()
-	fmt.Printf("Running processes: %v\n", miscStat.ProcsRunning)
-*/
+		miscStat, _ := load.Misc()
+		fmt.Printf("Running processes: %v\n", miscStat.ProcsRunning)
+	*/
 
+<<<<<<< HEAD:eventbroker/_save/daemon/daemon_darwin.go
 /*
 	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), s))
 	if fp == "" {
 		return nil
 	}
+=======
+	/*
+		fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), s))
+		if fp == "" {
+			return nil
+		}
+>>>>>>> master:heartbeat/daemon/daemon_darwin.go
 
-	b, err := ioutil.ReadFile(fp)
-	if err != nil {
-		fmt.Print(err)
-	}
+		b, err := ioutil.ReadFile(fp)
+		if err != nil {
+			fmt.Print(err)
+		}
 
-	return b
-*/
+		return b
+	*/
 	sts = status.Success(displayString)
 
 	return sts
 }
-
 
 func EnsureNotNil(bx *Daemon) (sts status.Status) {
 	if bx == nil {
@@ -338,7 +365,6 @@ func EnsureNotNil(bx *Daemon) (sts status.Status) {
 	}
 	return sts
 }
-
 
 func (me *Daemon) IsLoaded() (yesNo bool) {
 
@@ -381,7 +407,6 @@ func (me *Daemon) IsLoaded() (yesNo bool) {
 
 	return yesNo
 }
-
 
 func (me *Daemon) IsRunning() (yesNo bool) {
 
@@ -430,38 +455,38 @@ func (me *Daemon) IsRunning() (yesNo bool) {
 
 	return yesNo
 
-/*
-	for range only.Once {
-		sts := EnsureNotNil(me)
-		if is.Error(sts) {
-			break
+	/*
+		for range only.Once {
+			sts := EnsureNotNil(me)
+			if is.Error(sts) {
+				break
+			}
+
+			fmt.Printf("PPID:%v:\n", IsParentInit())
+
+			foo1, _ := process.Pids()
+			for i, p := range foo1 {
+				fmt.Printf("process.Pids:%v:	%v:\n", i, p)
+			}
+
+			foo2, _ := process.Processes()
+			for _, p := range foo2 {
+				c, _ := p.Cmdline()
+				fmt.Printf("process.Processes:%v:	'%s'\n", p.Pid, c)
+			}
+
+			infoStat, _ := host.Info()
+			fmt.Printf("Total processes: %v\n", infoStat.Procs)
+
+			miscStat, _ := load.Misc()
+			fmt.Printf("Running processes: %v\n", miscStat.ProcsRunning)
+
 		}
-
-		fmt.Printf("PPID:%v:\n", IsParentInit())
-
-		foo1, _ := process.Pids()
-		for i, p := range foo1 {
-			fmt.Printf("process.Pids:%v:	%v:\n", i, p)
-		}
-
-		foo2, _ := process.Processes()
-		for _, p := range foo2 {
-			c, _ := p.Cmdline()
-			fmt.Printf("process.Processes:%v:	'%s'\n", p.Pid, c)
-		}
-
-		infoStat, _ := host.Info()
-		fmt.Printf("Total processes: %v\n", infoStat.Procs)
-
-		miscStat, _ := load.Misc()
-		fmt.Printf("Running processes: %v\n", miscStat.ProcsRunning)
-
-	}
-*/
+	*/
 }
 
-
 const defaultFailedCode = 1
+
 func (me *Daemon) RunCommand(name string, args ...string) (sts status.Status, stdout string, stderr string, exitCode int) {
 
 	var outbuf, errbuf bytes.Buffer

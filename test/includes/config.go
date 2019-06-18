@@ -14,7 +14,7 @@ type TestConfig struct {
 
 func NewTestConfig(gb gearbox.Gearboxer) config.Configer {
 	return &TestConfig{
-		Configer: config.NewConfig(gb.GetOsSupport()),
+		Configer: config.NewConfig(gb.GetOsBridge()),
 	}
 }
 

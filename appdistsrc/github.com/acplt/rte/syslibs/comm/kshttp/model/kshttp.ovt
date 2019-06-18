@@ -1,0 +1,191 @@
+/*
+*	Copyright (C) 2015
+*	Chair of Process Control Engineering,
+*	Aachen University of Technology.
+*	All rights reserved.
+*
+*	Redistribution and use in source and binary forms, with or without
+*	modification, are permitted provided that the following conditions
+*	are met:
+*	1. Redistributions of source code must retain the above copyright
+*	   notice, this list of conditions and the following disclaimer.
+*	2. Redistributions in binary form must print or display the above
+*	   copyright notice either during startup or must have a means for
+*	   the user to view the copyright notice.
+*	3. Redistributions in binary form must reproduce the above copyright
+*	   notice, this list of conditions and the following disclaimer in
+*		the documentation and/or other materials provided with the
+*		distribution.
+*	4. Neither the name of the Chair of Process Control Engineering nor
+*		the name of the Aachen University of Technology may be used to
+*		endorse or promote products derived from this software without
+*		specific prior written permission.
+*
+*	THIS SOFTWARE IS PROVIDED BY THE CHAIR OF PROCESS CONTROL ENGINEERING
+*	``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+*	LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+*	A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE CHAIR OF
+*	PROCESS CONTROL ENGINEERING BE LIABLE FOR ANY DIRECT, INDIRECT,
+*	INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+*	BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+*	OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+*	AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+*	LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
+*	WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+*	POSSIBILITY OF SUCH DAMAGE.
+*
+***********************************************************************/
+
+#ifndef KSHTTP_OVT_INCLUDED
+#define KSHTTP_OVT_INCLUDED
+
+
+/*
+ * KS_HTTP identifier
+ */
+#define KSHTTP_IDENTIFIER		"KSHTTP"
+
+//State of registration: 0 not registered, 1 waiting for answer, 2 registered, 128 register error
+#define HTTP_MNGRCOM_REGISTERSTATE_NOTREGISTERED 0
+#define HTTP_MNGRCOM_REGISTERSTATE_WAITING 1
+#define HTTP_MNGRCOM_REGISTERSTATE_REGISTERED 2
+#define HTTP_MNGRCOM_REGISTERSTATE_ERROR 128
+
+/*
+ * KSHTTP specific client states
+ */
+
+#define HTTPCL_WAITINGFORSENDING	(1<<18)
+#define HTTPCL_WAITINGFORPORT	(1<<19)
+#define HTTPCL_SERVERNOTFOUND	(1<<24)
+#define HTTPCL_MANAGERNOTFOUND	(1<<25)
+#define HTTPCL_TIMEOUT			(1<<26)
+
+/*
+ * HTTP Acceptance codes
+ */
+
+#define HTTP_MSG_NEW				(0)
+#define HTTP_MSG_INCOMPLETE			(100)
+#define HTTP_MSG_HEADERACCEPTED		(206)
+#define HTTP_MSG_ACCEPTED			(200)
+#define HTTP_MSG_DENIED				(400)
+#define HTTP_MSG_HEAPOUTOFMEMORY	(500)
+#define HTTP_MSG_DBOUTOFMEMORY		(507)
+
+
+
+//"HTTP/1.x " will be appended before header
+#define HTTP_200_HEADER "200 OK\r\n"
+#define HTTP_400_HEADER "400 Bad Request\r\n"
+#define HTTP_400_BODY   "error 400: Bad Name or Path requested\r\n"
+#define HTTP_401_HEADER "401 Unauthorized\r\n"
+#define HTTP_401_BODY   "error 401: unauthorized\r\n"
+#define HTTP_403_HEADER "403 Forbidden\r\n"
+#define HTTP_403_BODY   "error 403: Forbidden\r\n"
+#define HTTP_404_HEADER "404 Not Found\r\n"
+#define HTTP_404_BODY   "error 404: path not found\r\n"
+#define HTTP_406_HEADER "406 Not Acceptable\r\n"
+#define HTTP_406_BODY   "error 406: Bad Value requested\r\n"
+#define HTTP_409_HEADER "406 Conflict\r\n"
+#define HTTP_409_BODY   "error 409: Conflict\r\n"
+#define HTTP_412_HEADER "412 Precondition Failed\r\n"
+#define HTTP_412_BODY   "error 412: Precondition Failed\r\n"
+#define HTTP_413_HEADER "413 Request Entity Too Large\r\n"
+#define HTTP_413_BODY   "error 414: Request Entity Too Large\r\n"
+#define HTTP_414_HEADER "414 Request-URL Too Long\r\n"
+#define HTTP_414_BODY   "error 414: Request-URL Too Long\r\n"
+#define HTTP_500_HEADER "500 Internal Server Error\r\n"
+#define HTTP_500_BODY   "error 500: internal server error\r\n"
+#define HTTP_501_HEADER "501 Not Implemented\r\n"
+#define HTTP_501_BODY 	"error 501: service not implemented\r\n"
+#define HTTP_503_HEADER "503 Service Unavailable\r\n"
+#define HTTP_503_BODY 	"error 503: service not available\r\n"
+
+
+/**
+ *	HTTP_RESPONSEFORMAT
+ *	output format for response
+ **/
+typedef enum HTTP_RESPONSEFORMAT {
+	FORMATUNDEFINED=0,KSTCL=1,PLAIN=2,KSX=3,KSJSON=4,XML=5,FORMATDEFAULT=KSTCL
+} HTTP_RESPONSEFORMAT;
+
+typedef enum KSHTTP_RESPONSE_GENERATEDBY {
+	KSHTTP_RGB_NONE,
+	KSHTTP_RGB_GETVAR,
+	KSHTTP_RGB_GETVARPUSH,
+	KSHTTP_RGB_SETVAR,
+	KSHTTP_RGB_GETEP,
+	KSHTTP_RGB_GETHANDLE,
+	KSHTTP_RGB_DELHANDLE,
+	KSHTTP_RGB_HTTPAUTH,
+	KSHTTP_RGB_CORSOPTION,
+	KSHTTP_RGB_STATICFILE,
+	KSHTTP_RGB_CREATEOBJECT,
+	KSHTTP_RGB_DELETEOBJECT,
+	KSHTTP_RGB_RENAMEOBJECT,
+	KSHTTP_RGB_LINK,
+	KSHTTP_RGB_UNLINK,
+	KSHTTP_RGB_GETSERVER,
+	KSHTTP_RGB_REGISTER,
+	KSHTTP_RGB_UNREGISTER,
+	KSHTTP_RGB_GETLOGFILE,
+	KSHTTP_RGB_CLIENTHANDLEREXT
+} KSHTTP_RESPONSE_GENERATEDBY;
+
+typedef enum HTTP_COMMUNICATIONSTATUS{
+	HTTP_CS_INITIAL = 0,
+	HTTP_CS_REQUESTHEADERPARSED = 10,
+	HTTP_CS_REQUESTPARSED = 20,
+	HTTP_CS_RESPONSEBODYGENERATED = 30,
+	HTTP_CS_RESPONSEHEADERGENERATED = 40,
+	HTTP_CS_RESPONSEHEADERSEND = 50,
+	HTTP_CS_RESPONSEBODYSEND = 60,
+	HTTP_CS_CHANNELRESPONSIBILITYRELEASED = 4242,
+	HTTP_CS_SHUTDOWN = 9999
+} HTTP_COMMUNICATIONSTATUS;
+
+/**
+ *	HTTP_REQUEST
+ *	This structure is used for decoded transmitted data.
+ *	All Strings are located in the OV database, only the messageBody is in the Heap
+ *	example http 1.1 GET request of /getVar?format=ksx&path[0]=/vendor/database_free&path[1]=/vendor/database_size
+ *	to the server localhost:7509 results in this values:
+ */
+typedef struct{
+	OV_STRING requestHeader;	/* the full, unprocessed http header */
+	OV_STRING requestMethod;	/* GET */
+	OV_STRING urlPath;			/* /getVar */
+	OV_STRING httpVersion;		/* 1.1 */
+	OV_STRING host;				/* localhost:7509 */
+	OV_STRING_VEC urlQuery;		/* {"format", "ksx", "path[0]", "/vendor/database_free", "path[1]", "/vendor/database_size"} */
+	HTTP_RESPONSEFORMAT response_format /* KSX, XML, JSON,... */;
+	OV_STRING Accept;			/* Accept: text/ksx */
+	OV_UINT headerLength;		/* 1342 for example */
+	OV_UINT contentLength;		/* length of the messageBody */
+	OV_BYTE* messageBody;		/* located in the Heap! */
+} HTTP_REQUEST;
+
+/**
+ *	HTTP_RESPONSE
+ *	This structure is used for decoded transmitted data.
+ *	All Strings and Bytes must be located in the OV database (and will be freed except if it points to a static file)
+ */
+typedef struct{
+	OV_STRING httpVersion;		/* 1.1 */
+	OV_UINT statusCode;			/* 200, hopefully */
+	OV_UINT headerLength;		/* 1342 for example */
+	OV_STRING header;			/* the full http header */
+	OV_STRING contentString; 	/* convenience contentString will be moved to contentBinary in generateHttpHeader */
+	OV_BYTE* contentBinary; 	/* content send from the server back to the client */
+	OV_UINT contentLength;		/* length of the contentBinary */
+	OV_STRING contentType;		/*  */
+	OV_STRING contentEncoding;	/*  */
+	OV_BOOL transferEncodingChunked;	/* FALSE for OV Servers */
+	OV_BOOL compressionGzip;	/* compression will be used in the response */
+	OV_BOOL keepAlive;			/* keep alive will be used in the response */
+	KSHTTP_RESPONSE_GENERATEDBY requestHandledBy;
+} HTTP_RESPONSE;
+
+#endif

@@ -21,7 +21,6 @@ type Disk struct {
 }
 type Disks []Disk
 
-
 func (me *Box) CreateBox() (sts status.Status) {
 
 	// fmt.Printf("CreateBox() ENTRY.\n")
@@ -32,23 +31,24 @@ func (me *Box) CreateBox() (sts status.Status) {
 		}
 		steps := 0
 
-/*
-		// 0. Destroy existing VM.
-		fmt.Printf("#### %d. Destroy VM - ", steps); steps++
-		destroyVm, sts := me.cmdDestroyVm()
-		if !is.Success(sts) {
-			fmt.Printf("VM still exists:%v\n", destroyVm["name"])
-			// Convert to warning message.
-			sts = sts.SetWarning(true)
-			fmt.Printf("sts:%v\n", sts)
-			break
-		} else {
-			fmt.Printf("\n")
-		}
-*/
+		/*
+			// 0. Destroy existing VM.
+			fmt.Printf("#### %d. Destroy VM - ", steps); steps++
+			destroyVm, sts := me.cmdDestroyVm()
+			if !is.Success(sts) {
+				fmt.Printf("VM still exists:%v\n", destroyVm["name"])
+				// Convert to warning message.
+				sts = sts.SetWarning(true)
+				fmt.Printf("sts:%v\n", sts)
+				break
+			} else {
+				fmt.Printf("\n")
+			}
+		*/
 
 		// 1. Check if a VM already exists by that name.
-		fmt.Printf("#### %d. Check for VM - ", steps); steps++
+		fmt.Printf("#### %d. Check for VM - ", steps)
+		steps++
 		listVm, sts := me.cmdListVm()
 		if is.Success(sts) {
 			fmt.Printf("VM exists:%v\n", listVm["name"])
@@ -61,7 +61,8 @@ func (me *Box) CreateBox() (sts status.Status) {
 		}
 
 		// 2. Create VM OVA file.
-		fmt.Printf("#### %d. Create VM - ", steps); steps++
+		fmt.Printf("#### %d. Create VM - ", steps)
+		steps++
 		createVm, sts := me.cmdCreateVm()
 		if !is.Success(sts) {
 			// Convert to warning message.
@@ -73,7 +74,8 @@ func (me *Box) CreateBox() (sts status.Status) {
 		}
 
 		// 3. Modify VM OVA file.
-		fmt.Printf("#### %d. Modify VM.\n", steps); steps++
+		fmt.Printf("#### %d. Modify VM.\n", steps)
+		steps++
 		modifyVm, sts := me.cmdModifyVm()
 		if !is.Success(sts) {
 			// Convert to warning message.
@@ -92,7 +94,6 @@ func (me *Box) CreateBox() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Box) StartBox() (KeyValueMap, status.Status) {
 
@@ -125,7 +126,6 @@ func (me *Box) StartBox() (KeyValueMap, status.Status) {
 	return kvm, sts
 }
 
-
 func (me *Box) StopBox() (KeyValueMap, status.Status) {
 
 	//var stdout string
@@ -157,7 +157,6 @@ func (me *Box) StopBox() (KeyValueMap, status.Status) {
 	return kvm, sts
 }
 
-
 func (kvs *KeyValues) decodeBridgeIfs() (KeyValuesMap, bool) {
 
 	ok := false
@@ -185,7 +184,6 @@ func (kvs *KeyValues) decodeBridgeIfs() (KeyValuesMap, bool) {
 	return kvm, ok
 }
 
-
 func (kvs *KeyValues) decodeShowVmInfo() (KeyValueMap, bool) {
 
 	ok := false
@@ -203,7 +201,6 @@ func (kvs *KeyValues) decodeShowVmInfo() (KeyValueMap, bool) {
 
 	return kvm, ok
 }
-
 
 func (me *Box) cmdListVm() (KeyValueMap, status.Status) {
 
@@ -252,7 +249,6 @@ func (me *Box) cmdListVm() (KeyValueMap, status.Status) {
 	return kvm, sts
 }
 
-
 func (me *Box) cmdCreateVm() (KeyValueMap, status.Status) {
 
 	// var stdout string
@@ -293,7 +289,6 @@ func (me *Box) cmdCreateVm() (KeyValueMap, status.Status) {
 	return kvm, sts
 }
 
-
 func (me *Box) cmdDestroyVm() (KeyValueMap, status.Status) {
 
 	//var stdout string
@@ -323,7 +318,6 @@ func (me *Box) cmdDestroyVm() (KeyValueMap, status.Status) {
 	return kvm, sts
 }
 
-
 func (me *Box) cmdModifyVmBasic() (KeyValueMap, status.Status) {
 
 	//var stdout string
@@ -343,9 +337,9 @@ func (me *Box) cmdModifyVmBasic() (KeyValueMap, status.Status) {
 			break
 		}
 
-		// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsSupport.GetAdminRootDir()) + "/" + IconLogo)
+		// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsBridge.GetAdminRootDir()) + "/" + IconLogo)
 		_, _, sts = me.Run("modifyvm", me.Boxname,
-			"--description", me.Boxname + " OS VM", "--iconfile", string(me.OsSupport.GetAdminRootDir()) + "/" + IconLogoPng)
+			"--description", me.Boxname+" OS VM", "--iconfile", string(me.OsBridge.GetAdminRootDir())+"/"+IconLogoPng)
 		if is.Error(sts) {
 			break
 		}
@@ -409,7 +403,6 @@ func (me *Box) cmdModifyVmBasic() (KeyValueMap, status.Status) {
 	return kvm, sts
 }
 
-
 func (me *Box) cmdModifyVmNetwork() (KeyValueMap, status.Status) {
 
 	//var stdout string
@@ -429,17 +422,17 @@ func (me *Box) cmdModifyVmNetwork() (KeyValueMap, status.Status) {
 			break
 		}
 
-/*
-		nic, sts := me.findFirstNic()
-		if is.Error(sts) {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("%s VM - No NIC found '%s'.\n", global.Brandname, me.Boxname),
-				Help:    help.ContactSupportHelp(), // @TODO need better support here
-				Data:    "",
-			})
-			break
-		}
-*/
+		/*
+			nic, sts := me.findFirstNic()
+			if is.Error(sts) {
+				sts = status.Fail(&status.Args{
+					Message: fmt.Sprintf("%s VM - No NIC found '%s'.\n", global.Brandname, me.Boxname),
+					Help:    help.ContactSupportHelp(), // @TODO need better support here
+					Data:    "",
+				})
+				break
+			}
+		*/
 
 		_, _, sts = me.Run("modifyvm", me.Boxname,
 			"--nic1", "nat", "--nictype1", "82540EM", "--cableconnected1", "on", "--macaddress1", "auto")
@@ -489,7 +482,6 @@ func (me *Box) cmdModifyVmNetwork() (KeyValueMap, status.Status) {
 	return kvm, sts
 }
 
-
 func (me *Box) cmdModifyVmStorage() (KeyValueMap, status.Status) {
 
 	//var stdout string
@@ -518,24 +510,24 @@ func (me *Box) cmdModifyVmStorage() (KeyValueMap, status.Status) {
 		// SIGH - Needs to be not hard-coded.
 		disks := Disks{}
 		disks = append(disks, Disk{
-			Name: "Gearbox-Opt.vmdk",
+			Name:   "Gearbox-Opt.vmdk",
 			Format: "VMDK",
-			Size: "1024",
+			Size:   "1024",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Docker.vmdk",
+			Name:   "Gearbox-Docker.vmdk",
 			Format: "VMDK",
-			Size: "16384",
+			Size:   "16384",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Projects.vmdk",
+			Name:   "Gearbox-Projects.vmdk",
 			Format: "VMDK",
-			Size: "16384",
+			Size:   "16384",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Config.vmdk",
+			Name:   "Gearbox-Config.vmdk",
 			Format: "VMDK",
-			Size: "1024",
+			Size:   "1024",
 		})
 
 		for index, disk := range disks {
@@ -562,7 +554,6 @@ func (me *Box) cmdModifyVmStorage() (KeyValueMap, status.Status) {
 
 	return kvm, sts
 }
-
 
 func (me *Box) cmdModifyVmIso() (KeyValueMap, status.Status) {
 
@@ -607,7 +598,6 @@ func (me *Box) cmdModifyVmIso() (KeyValueMap, status.Status) {
 	return kvm, sts
 }
 
-
 func (me *Box) cmdModifyVm() (KeyValueMap, status.Status) {
 
 	var sts status.Status
@@ -646,7 +636,6 @@ func (me *Box) cmdModifyVm() (KeyValueMap, status.Status) {
 
 	return kvm, sts
 }
-
 
 func (me *Box) findFirstNic() (KeyValueMap, status.Status) {
 
@@ -699,7 +688,6 @@ func (me *Box) findFirstNic() (KeyValueMap, status.Status) {
 	return nic, sts
 }
 
-
 // Run runs a VBoxManage command.
 func (me *Box) Run(args ...string) (string, string, status.Status) {
 
@@ -726,31 +714,30 @@ func (me *Box) Run(args ...string) (string, string, status.Status) {
 	if err != nil {
 		returnCode := strings.TrimPrefix(err.Error(), "exit status ")
 		switch returnCode {
-			case "1":
-				sts = status.Fail(&status.Args{
-					Message: fmt.Sprintf("%s VM - No such Box called '%s'.\n", global.Brandname, me.Boxname),
-					Help:    help.ContactSupportHelp(), // @TODO need better support here
-					Data:    stderr.String(),
-				})
-				//fmt.Printf("stdout:%v\n", stdout.String())
-				//fmt.Printf("stderr:%v\n", stderr.String())
-				//fmt.Printf("returnCode:'%v'\n", returnCode)
+		case "1":
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("%s VM - No such Box called '%s'.\n", global.Brandname, me.Boxname),
+				Help:    help.ContactSupportHelp(), // @TODO need better support here
+				Data:    stderr.String(),
+			})
+			//fmt.Printf("stdout:%v\n", stdout.String())
+			//fmt.Printf("stderr:%v\n", stderr.String())
+			//fmt.Printf("returnCode:'%v'\n", returnCode)
 
-			default:
-				sts = status.Fail(&status.Args{
-					Message: fmt.Sprintf("%s VM - Failed to run command '%v'.\n", global.Brandname, err.Error()),
-					Help:    help.ContactSupportHelp(), // @TODO need better support here
-					Data:    returnCode,
-				})
-				fmt.Printf("stdout:%v\n", stdout.String())
-				fmt.Printf("stderr:%v\n", stderr.String())
-				fmt.Printf("returnCode:'%v'\n", returnCode)
+		default:
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("%s VM - Failed to run command '%v'.\n", global.Brandname, err.Error()),
+				Help:    help.ContactSupportHelp(), // @TODO need better support here
+				Data:    returnCode,
+			})
+			fmt.Printf("stdout:%v\n", stdout.String())
+			fmt.Printf("stderr:%v\n", stderr.String())
+			fmt.Printf("returnCode:'%v'\n", returnCode)
 		}
 	}
 
 	return stdout.String(), stderr.String(), sts
 }
-
 
 // RunCombinedError runs a VBoxManage command.  The output is stdout and the the
 // combined err/stderr from the command.
@@ -766,7 +753,6 @@ func (me *Box) RunCombinedError(args ...string) (string, error) {
 
 	return wout, nil
 }
-
 
 /*
 #!/bin/bash

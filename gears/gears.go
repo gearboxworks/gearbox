@@ -3,16 +3,20 @@ package gears
 import (
 	"encoding/json"
 	"fmt"
-	"gearbox/cache"
 	"gearbox/gearspec"
 	"gearbox/global"
 	"gearbox/only"
+<<<<<<< HEAD
 	"github.com/gearboxworks/go-osbridge"
 
 	//	"gearbox/os_support"
+=======
+>>>>>>> master
 	"gearbox/service"
 	"gearbox/types"
 	"gearbox/util"
+	"github.com/gearboxworks/go-jsoncache"
+	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"io/ioutil"
@@ -35,14 +39,18 @@ type Gears struct {
 	GlobalOptions    global.Options      `json:"-"`
 	ServiceIds       service.Identifiers `json:"-"`
 	ServiceMap       ServiceMap          `json:"-"`
+<<<<<<< HEAD
 	OsSupport        osbridge.OsBridger     `json:"-"`
+=======
+	OsBridge         osbridge.OsBridger  `json:"-"`
+>>>>>>> master
 	serviceIds       serviceIdsMapGearspecIds
 	refreshed        bool
 }
 
 func NewGears(ossup osbridge.OsBridger) *Gears {
 	return &Gears{
-		OsSupport:        ossup,
+		OsBridge:         ossup,
 		Authorities:      make(types.Authorities, 0),
 		NamedStackIds:    make(types.StackIds, 0),
 		StackRoleMap:     make(StackRoleMap, 0),
@@ -88,8 +96,8 @@ func (me *Gears) Initialize() (sts status.Status) {
 		return sts
 	}
 	for range only.Once {
-		cacheDir := me.OsSupport.GetCacheDir()
-		store := cache.NewCache(cacheDir)
+		cacheDir := me.OsBridge.GetCacheDir()
+		store := jsoncache.New(cacheDir)
 
 		store.Disable = me.GlobalOptions.NoCache
 		var ok bool
@@ -101,7 +109,7 @@ func (me *Gears) Initialize() (sts status.Status) {
 		b, sc, sts = util.HttpRequest(JsonUrl)
 		if status.IsError(sts) || sc != http.StatusOK { // @TODO Bundle these as Assets so we will always have some options
 			log.Print("Could not download 'gears.json' and no options have previously been stored.")
-			fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsSupport.GetAdminRootDir(), JsonFilename))
+			fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), JsonFilename))
 			var err error
 			log.Printf("Loading included '%s'.", fp)
 			b, err = ioutil.ReadFile(fp)
