@@ -1,18 +1,15 @@
 // +build darwin
+
 package daemon
 
 import (
 	"bytes"
 	"fmt"
 	"gearbox/global"
+	"gearbox/heartbeat/daemon"
 	"gearbox/help"
-<<<<<<< HEAD:eventbroker/_save/daemon/daemon_darwin.go
-	"gearbox/eventbroker/only"
-	//	"gearbox/os_support"
-=======
 	"gearbox/only"
 	"github.com/gearboxworks/go-osbridge"
->>>>>>> master:heartbeat/daemon/daemon_darwin.go
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"regexp"
@@ -30,26 +27,14 @@ import (
 // @TODO Consider using https://github.com/kardianos/service
 // 	Daemon "github.com/kardianos/service"
 
-<<<<<<< HEAD:eventbroker/_save/daemon/daemon_darwin.go
-type PlistData struct {
-	Label       string
-	Program     string
-	ProgramArgs []string
-	Path        string
-	KeepAlive   bool
-	RunAtLoad   bool
-	PidFile		string
-}
-=======
 type Daemon struct {
 	Boxname     string
 	ServiceFile string
-	ServiceData PlistData
+	ServiceData daemon.PlistData
 
 	OsBridge osbridge.OsBridger
 }
 type Args Daemon
->>>>>>> master:heartbeat/daemon/daemon_darwin.go
 
 var PlistTemplate = `
 <?xml version='1.0' encoding='UTF-8'?>
@@ -73,21 +58,13 @@ var PlistTemplate = `
 </plist>
 `
 
-<<<<<<< HEAD:eventbroker/_save/daemon/daemon_darwin.go
-
-=======
->>>>>>> master:heartbeat/daemon/daemon_darwin.go
 func NewDaemon(OsBridge osbridge.OsBridger, args ...Args) *Daemon {
 	var _args Args
 	if len(args) > 0 {
 		_args = args[0]
 	}
 
-<<<<<<< HEAD:eventbroker/_save/daemon/daemon_darwin.go
-	OsBridge = OsBridge
-=======
 	_args.OsBridge = OsBridge
->>>>>>> master:heartbeat/daemon/daemon_darwin.go
 
 	if _args.Boxname == "" {
 		_args.Boxname = global.Brandname
@@ -118,8 +95,8 @@ func NewDaemon(OsBridge osbridge.OsBridger, args ...Args) *Daemon {
 		_args.ServiceFile = fmt.Sprintf("%s/Library/LaunchAgents/%s.plist", os.Getenv("HOME"), _args.ServiceData.Label)
 	}
 
-	daemon := &Daemon{}
-	*daemon = Daemon(_args)
+	d := &Daemon{}
+	*d = Daemon(_args)
 
 	/*
 		svcConfig := &SysSvc.Config{
@@ -149,7 +126,7 @@ func NewDaemon(OsBridge osbridge.OsBridger, args ...Args) *Daemon {
 			//		logger.Error(err)
 		}
 	*/
-	return daemon
+	return d
 }
 
 func (me *Daemon) CreatePlist() (sts status.Status) {
@@ -294,7 +271,7 @@ func (me *Daemon) GetState() (sts status.Status) {
 
 	displayString := ""
 
-	if IsParentInit() {
+	if me.IsParentInit() {
 		displayString += fmt.Sprintf("%s Heartbeat: Running from init\n", global.Brandname)
 	}
 
@@ -329,19 +306,11 @@ func (me *Daemon) GetState() (sts status.Status) {
 		fmt.Printf("Running processes: %v\n", miscStat.ProcsRunning)
 	*/
 
-<<<<<<< HEAD:eventbroker/_save/daemon/daemon_darwin.go
-/*
-	fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), s))
-	if fp == "" {
-		return nil
-	}
-=======
 	/*
 		fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), s))
 		if fp == "" {
 			return nil
 		}
->>>>>>> master:heartbeat/daemon/daemon_darwin.go
 
 		b, err := ioutil.ReadFile(fp)
 		if err != nil {
@@ -353,6 +322,16 @@ func (me *Daemon) GetState() (sts status.Status) {
 	sts = status.Success(displayString)
 
 	return sts
+}
+
+func (me *Daemon) IsParentInit() bool {
+
+	ppid := os.Getppid()
+	if ppid == 1 {
+		return true
+	}
+
+	return false
 }
 
 func EnsureNotNil(bx *Daemon) (sts status.Status) {

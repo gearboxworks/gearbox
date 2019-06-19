@@ -17,14 +17,13 @@ import (
 	"time"
 )
 
-
 func (me *Daemon) EnsureNotNil() error {
 
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("Daemon instance is nil")
+	case me == nil:
+		err = errors.New("daemon instance is nil")
 	}
 
 	return err
@@ -33,14 +32,13 @@ func EnsureNotNil(me *Daemon) error {
 	return me.EnsureNotNil()
 }
 
-
 func (me *ServicesMap) EnsureNotNil() error {
 
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("Daemon ServicesMap instance is nil")
+	case me == nil:
+		err = errors.New("daemon servicesmap instance is nil")
 	}
 
 	return err
@@ -49,19 +47,18 @@ func EnsureServicesMapNotNil(me *ServicesMap) error {
 	return me.EnsureNotNil()
 }
 
-
 func (me *Service) EnsureNotNil() error {
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("Daemon Service instance is nil")
-		case (me.IsManaged == true) && me.instance.cmd == nil:
-			err = me.EntityId.ProduceError("service cmd instance nil")
-		case (me.IsManaged == true) && me.instance.exit == nil:
-			err = me.EntityId.ProduceError("service exit func is nil")
-		case (me.IsManaged == true) && me.instance.service == nil:
-			err = me.EntityId.ProduceError("service instance is nil")
+	case me == nil:
+		err = errors.New("daemon service instance is nil")
+	case (me.IsManaged == true) && me.instance.cmd == nil:
+		err = me.EntityId.ProduceError("service cmd instance nil")
+	case (me.IsManaged == true) && me.instance.exit == nil:
+		err = me.EntityId.ProduceError("service exit func is nil")
+	case (me.IsManaged == true) && me.instance.service == nil:
+		err = me.EntityId.ProduceError("service instance is nil")
 	}
 
 	return err
@@ -70,8 +67,7 @@ func EnsureServiceNotNil(me *Service) error {
 	return me.EnsureNotNil()
 }
 
-
-func IsParentInit() (bool) {
+func IsParentInit() bool {
 
 	ppid := os.Getppid()
 	if ppid == 1 {
@@ -80,7 +76,6 @@ func IsParentInit() (bool) {
 
 	return false
 }
-
 
 // This function will cause a Go() thread to sit and wait until
 // a signal has been sent to the process.
@@ -98,7 +93,6 @@ func WaitForSignal() os.Signal {
 	return s
 }
 
-
 // Wait for an ever increasing period of time - a very simple retry back-off system.
 // This is used with processes that die too quickly and will ensure that retries don't hammer the system.
 func WaitDelay(retry int) {
@@ -108,7 +102,6 @@ func WaitDelay(retry int) {
 	// And so on...
 	time.Sleep(time.Millisecond * 100 * time.Duration(retry))
 }
-
 
 // This function will cause a Go() thread to sit and wait until
 // a signal has been sent to the process.
@@ -127,17 +120,16 @@ func WaitForTimeout(wt time.Duration) bool {
 	}
 
 	select {
-		case <-sig:
-			exitState = false
-			// Exit by user
-		case <-tc:
-			exitState = true
-			// Exit by timeout
+	case <-sig:
+		exitState = false
+		// Exit by user
+	case <-tc:
+		exitState = true
+		// Exit by timeout
 	}
 
 	return exitState
 }
-
 
 // This function will cause a Go() thread to sit and wait until
 // a signal has been sent to the process.
@@ -152,12 +144,10 @@ func SimpleWaitLoop(t string, i int, d time.Duration) {
 	return
 }
 
-
 func (me *Daemon) GetId() messages.MessageAddress {
 
 	return me.EntityId
 }
-
 
 func InterfaceToTypeDaemon(i interface{}) (*Daemon, error) {
 
@@ -188,7 +178,6 @@ func InterfaceToTypeDaemon(i interface{}) (*Daemon, error) {
 	return me, err
 }
 
-
 func InterfaceToTypeService(i interface{}) (*Service, error) {
 
 	var err error
@@ -217,7 +206,6 @@ func InterfaceToTypeService(i interface{}) (*Service, error) {
 	return s, err
 }
 
-
 func (me *ServiceConfig) Print() error {
 
 	var err error
@@ -228,42 +216,41 @@ func (me *ServiceConfig) Print() error {
 			break
 		}
 
-//		sn,_ := me.ServiceName()
-//		sin,_ := me.ServiceInstanceName()
-//		stn,_ := me.ServiceTypeName()
-//
-//		//
-//		fmt.Printf(` me.Instance = %v
-// me.Service = %v
-// me.Domain = %v
-// me.Port = %v
-// me.Text = %v
-// me.AddrIPv4 = %v
-// me.AddrIPv6 = %v
-// me.HostName = %v
-// me.TTL = %v
-// me.ServiceName() = %v
-// me.ServiceInstanceName() = %v
-// me.ServiceTypeName() = %v
-//`,
-//			me.Instance,
-//			me.Service,
-//			me.Domain,
-//			me.Port,
-//			me.Text,
-//			me.AddrIPv4,
-//			me.AddrIPv6,
-//			me.HostName,
-//			me.TTL,
-//			sn,
-//			sin,
-//			stn,
-//		)
+		//		sn,_ := me.ServiceName()
+		//		sin,_ := me.ServiceInstanceName()
+		//		stn,_ := me.ServiceTypeName()
+		//
+		//		//
+		//		fmt.Printf(` me.Instance = %v
+		// me.Service = %v
+		// me.Domain = %v
+		// me.Port = %v
+		// me.Text = %v
+		// me.AddrIPv4 = %v
+		// me.AddrIPv6 = %v
+		// me.HostName = %v
+		// me.TTL = %v
+		// me.ServiceName() = %v
+		// me.ServiceInstanceName() = %v
+		// me.ServiceTypeName() = %v
+		//`,
+		//			me.Instance,
+		//			me.Service,
+		//			me.Domain,
+		//			me.Port,
+		//			me.Text,
+		//			me.AddrIPv4,
+		//			me.AddrIPv6,
+		//			me.HostName,
+		//			me.TTL,
+		//			sn,
+		//			sin,
+		//			stn,
+		//		)
 	}
 
 	return err
 }
-
 
 func (me *ServicesMap) Print() error {
 
@@ -287,7 +274,6 @@ func (me *ServicesMap) Print() error {
 	return err
 }
 
-
 func (me *Service) Print() error {
 
 	var err error
@@ -301,7 +287,7 @@ func (me *Service) Print() error {
 		//if (me.instance == nil) && (me.IsManaged == true) {
 		//	fmt.Printf("# Entry(deleted): %v", me.EntityId)
 		//} else {
-			fmt.Printf("# Entry: %v", me.EntityId)
+		fmt.Printf("# Entry: %v", me.EntityId)
 		//}
 
 		//err = me.Entry.Print()
@@ -312,7 +298,6 @@ func (me *Service) Print() error {
 
 	return err
 }
-
 
 //func (me *ServiceConfig) IsTheSame(e ServiceConfig) (bool, error) {
 //
@@ -336,7 +321,6 @@ func (me *Service) Print() error {
 //
 //	return same, err
 //}
-
 
 func (me *programInstance) Start(s service.Service) error {
 	panic("implement me")
@@ -362,28 +346,27 @@ func (me *Service) IsExisting(him ServiceConfig) error {
 	}
 
 	switch {
-		case me.Entry.Config.Name == him.Config.Name:
-			err = me.EntityId.ProduceError("Daemon service Name:%s already exists", me.Entry.Config.Name)
+	case me.Entry.Config.Name == him.Config.Name:
+		err = me.EntityId.ProduceError("Daemon service Name:%s already exists", me.Entry.Config.Name)
 
-		case me.Entry.Config.DisplayName == him.Config.DisplayName:
-			err = me.EntityId.ProduceError("Daemon service DisplayName:%s already exists", me.Entry.DisplayName)
+	case me.Entry.Config.DisplayName == him.Config.DisplayName:
+		err = me.EntityId.ProduceError("Daemon service DisplayName:%s already exists", me.Entry.DisplayName)
 
-		case me.Entry.Config.Executable == him.Config.Executable:
-			err = me.EntityId.ProduceError("Daemon service Executable:%s already exists", me.Entry.Config.Executable)
+	case me.Entry.Config.Executable == him.Config.Executable:
+		err = me.EntityId.ProduceError("Daemon service Executable:%s already exists", me.Entry.Config.Executable)
 
-		case me.Entry.UrlPtr == him.UrlPtr:
-			err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.UrlPtr)
+	case me.Entry.UrlPtr == him.UrlPtr:
+		err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.UrlPtr)
 
-		case me.Entry.Url == him.Url:
-			err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.UrlPtr)
+	case me.Entry.Url == him.Url:
+		err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.UrlPtr)
 
-		case (me.Entry.UrlPtr.Hostname() == him.UrlPtr.Hostname()) && (me.Entry.UrlPtr.Port() == him.UrlPtr.Port()):
-			err = me.EntityId.ProduceError("Daemon service Host:%s:%s already exists", me.Entry.UrlPtr.Hostname(), me.Entry.UrlPtr.Port())
+	case (me.Entry.UrlPtr.Hostname() == him.UrlPtr.Hostname()) && (me.Entry.UrlPtr.Port() == him.UrlPtr.Port()):
+		err = me.EntityId.ProduceError("Daemon service Host:%s:%s already exists", me.Entry.UrlPtr.Hostname(), me.Entry.UrlPtr.Port())
 	}
 
 	return err
 }
-
 
 func (me *Daemon) HasFileChanged(fn string) (changed bool, err error) {
 
@@ -409,7 +392,6 @@ func (me *Daemon) HasFileChanged(fn string) (changed bool, err error) {
 	return changed, err
 }
 
-
 func (me *Daemon) IsFileRegistered(fn string) (ok bool) {
 
 	jc := me.GetServiceFiles()
@@ -417,7 +399,6 @@ func (me *Daemon) IsFileRegistered(fn string) (ok bool) {
 
 	return ok
 }
-
 
 func (me *Daemon) DoesFileExist(fn string) (exists bool, err error) {
 
@@ -432,7 +413,6 @@ func (me *Daemon) DoesFileExist(fn string) (exists bool, err error) {
 
 	return exists, err
 }
-
 
 func (me *Daemon) RemoveFileIfExist(fn string) (err error) {
 
@@ -451,7 +431,6 @@ func (me *Daemon) RemoveFileIfExist(fn string) (err error) {
 	return err
 }
 
-
 // Ensure we don't duplicate services.
 func (me *Service) IsRegistered() bool {
 
@@ -459,26 +438,25 @@ func (me *Service) IsRegistered() bool {
 
 	state, _ := me.Status(DontPublishState)
 	switch state.Current {
-		case states.StateIdle:
-			fallthrough
-		case states.StateUnknown:
-			fallthrough
-		case states.StateError:
-			fallthrough
-		case states.StateInitializing:
-			fallthrough
-		case states.StateInitialized:
-			fallthrough
-		case states.StateUnregistered:
-			ret = false
+	case states.StateIdle:
+		fallthrough
+	case states.StateUnknown:
+		fallthrough
+	case states.StateError:
+		fallthrough
+	case states.StateInitializing:
+		fallthrough
+	case states.StateInitialized:
+		fallthrough
+	case states.StateUnregistered:
+		ret = false
 
-		default:
-			ret = true
+	default:
+		ret = true
 	}
 
 	return ret
 }
-
 
 //execCwd, _ := os.Getwd()
 //if execCwd == "/" {
@@ -497,7 +475,6 @@ func (j *ServiceUrl) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-
 // Yup
 func (me *Service) CreateMdnsEntry() (*network.ServiceConfig, error) {
 
@@ -514,12 +491,12 @@ func (me *Service) CreateMdnsEntry() (*network.ServiceConfig, error) {
 		foo := strings.ReplaceAll(me.Entry.Config.Name, ".", "_")
 		zc = network.ServiceConfig{
 			// Name:   network.Name(strings.ToLower("_" + global.Brandname + "-" + me.Entry.Config.Name)),
-			EntityId: *messages.GenerateAddress(),
-			EntityName: me.EntityName,	// + "-zeroconf",
-			Name:   network.Name(strings.ToLower("_" + foo)),
-			Type:   network.Type(fmt.Sprintf("_%s._tcp", me.Entry.MdnsType)),
-			Domain: network.DefaultDomain,
-			Port:   network.Port(me.Entry.UrlPtr.Port()),
+			EntityId:   *messages.GenerateAddress(),
+			EntityName: me.EntityName, // + "-zeroconf",
+			Name:       network.Name(strings.ToLower("_" + foo)),
+			Type:       network.Type(fmt.Sprintf("_%s._tcp", me.Entry.MdnsType)),
+			Domain:     network.DefaultDomain,
+			Port:       network.Port(me.Entry.UrlPtr.Port()),
 		}
 	}
 

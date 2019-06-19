@@ -1,18 +1,15 @@
 // +build windows
+
 package daemon
 
 import (
 	"bytes"
 	"fmt"
 	"gearbox/global"
+	"gearbox/heartbeat/daemon"
 	"gearbox/help"
-<<<<<<< HEAD:eventbroker/_save/daemon/daemon_windows.go
-	"gearbox/eventbroker/only"
-	//	"gearbox/os_support"
-=======
 	"gearbox/only"
-	oss "github.com/gearboxworks/go-osbridge"
->>>>>>> master:heartbeat/daemon/daemon_windows.go
+	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/shirou/gopsutil/host"
@@ -34,25 +31,15 @@ import (
 type Daemon struct {
 	Boxname     string
 	ServiceFile string
-	ServiceData PlistData
-
-<<<<<<< HEAD:eventbroker/_save/daemon/daemon_windows.go
+	ServiceData daemon.PlistData
 	OsBridge    osbridge.OsBridger
-=======
-	OsBridge oss.OsBridger
->>>>>>> master:heartbeat/daemon/daemon_windows.go
 }
 type Args Daemon
 
 var plistTemplate = `
 `
 
-<<<<<<< HEAD:eventbroker/_save/daemon/daemon_windows.go
-
 func NewDaemon(OsBridge osbridge.OsBridger, args ...Args) *Daemon {
-=======
-func NewDaemon(OsBridge oss.OsBridger, args ...Args) *Daemon {
->>>>>>> master:heartbeat/daemon/daemon_windows.go
 	var _args Args
 	if len(args) > 0 {
 		_args = args[0]
