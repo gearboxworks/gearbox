@@ -79,11 +79,10 @@ type menuStruct struct {
 	createEntry  *systray.MenuItem
 }
 
-func New(OsBridge osbridge.OsBridger, args ...Args) (*Heartbeat, status.Status) {
+func New(OsBridge osbridge.OsBridger, args ...Args) (hb *Heartbeat, sts status.Status) {
 
 	var _args Args
-	var sts status.Status
-	hb := &Heartbeat{}
+	hb = &Heartbeat{}
 
 	for range only.Once {
 
@@ -93,7 +92,12 @@ func New(OsBridge osbridge.OsBridger, args ...Args) (*Heartbeat, status.Status) 
 
 		_args.OsBridge = OsBridge
 		foo := box.Args{}
-		copier.Copy(&foo, &_args)
+		err := copier.Copy(&foo, &_args)
+		if err != nil {
+			sts = status.Wrap(err).SetMessage("Failed to copy new heartbeat args")
+			sts.Log()
+			break
+		}
 
 		// Start a new VM Box instance.
 		_args.BoxInstance = box.NewBox(OsBridge, foo)
