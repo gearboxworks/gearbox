@@ -14,7 +14,6 @@ import (
 	"time"
 )
 
-
 // This really needs to be refactored!
 //type State struct {
 //	Code    int
@@ -24,15 +23,15 @@ import (
 //}
 
 type Box struct {
-	EntityId       messages.MessageAddress
-	EntityName     messages.MessageAddress
-	Boxname        string
-	Version        string
-	NfsInstance    *unfsd.Unfsd
-	State          *states.Status
-	menu           Menus
-	EventBroker    *eventbroker.EventBroker
-	VmBox          *vmbox.VmBox
+	EntityId    messages.MessageAddress
+	EntityName  messages.MessageAddress
+	Boxname     string
+	Version     string
+	NfsInstance *unfsd.Unfsd
+	State       *states.Status
+	menu        Menus
+	EventBroker *eventbroker.EventBroker
+	VmBox       *vmbox.VmBox
 
 	// SSH related - Need to fix this. It's used within CreateBox()
 	SshUsername  string
@@ -51,30 +50,29 @@ type Box struct {
 	ConsoleReadWait time.Duration
 	ShowConsole     bool
 
-	baseDir         *ospaths.Dir
-	pidFile         string
-	osBridge 		osbridge.OsBridger
-	osPaths         *ospaths.BasePaths
+	baseDir  *ospaths.Dir
+	pidFile  string
+	osBridge osbridge.OsBridger
+	osPaths  *ospaths.BasePaths
 }
 type Args Box
 
-
 type Menus map[messages.MessageAddress]*Menu
 type Menu struct {
-	MenuItem         *systray.MenuItem
-	PrefixToolTip    string
-	PrefixMenu       string
-	CurrentIcon      string
-	State            states.State
+	MenuItem      *systray.MenuItem
+	PrefixToolTip string
+	PrefixMenu    string
+	CurrentIcon   string
+	State         states.State
 }
-type MenuItem             systray.MenuItem
+type MenuItem systray.MenuItem
 
 const (
 	UnknownState = "unknown"
 )
 
 const (
-	DefaultEntityName      = "Heartbeat"
+	DefaultEntityName = "Heartbeat"
 
 	DefaultWaitDelay       = time.Second
 	DefaultWaitRetries     = 90
@@ -84,24 +82,21 @@ const (
 	DefaultShowConsole     = false
 	DefaultConsoleReadWait = time.Second * 5
 	DefaultPidFile         = "heartbeat.pid"
-	DefaultBaseDir         = "dist/heartbeat"
+	DefaultBaseDir         = "app/dist/heartbeat"
 )
-
 
 const pidName = "[Gearbox]"
 
-
 const (
 	DefaultLogo = "img/IconLogo.ico"
-	DefaultUp = "img/UpArrow.ico"
+	DefaultUp   = "img/UpArrow.ico"
 	DefaultDown = "img/DownArrow.ico"
 
-	IconLogo = "img/IconLogo.ico"
-	IconError = "img/IconError.ico"
-	IconWarning = "img/IconWarning.ico"
-	IconUp = "img/IconUp.ico"
-	IconDown = "img/IconDown.ico"
+	IconLogo     = "img/IconLogo.ico"
+	IconError    = "img/IconError.ico"
+	IconWarning  = "img/IconWarning.ico"
+	IconUp       = "img/IconUp.ico"
+	IconDown     = "img/IconDown.ico"
 	IconStarting = "img/IconStarting.ico"
 	IconStopping = "img/IconStopping.ico"
 )
-
