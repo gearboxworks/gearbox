@@ -96,7 +96,6 @@ type Gearbox struct {
 	errorLog      *ErrorLog
 }
 
-
 type Args Gearbox
 
 func NewGearbox(args *Args) Gearboxer {
@@ -291,7 +290,7 @@ func (me *Gearbox) WriteAssetsToAdminWebRoot() {
 		err := RestoreAsset(string(hc.GetUserConfigDir()), afn)
 		if err != nil {
 			afn = fmt.Sprintf("'%s/%s'", hc.GetUserConfigDir(), afn)
-			log.Fatal(fmt.Sprintf("Could not restore asset '%s'", afn))
+			log.Printf("Could not restore asset '%s': %v\n", afn, err.Error())
 		}
 	}
 
