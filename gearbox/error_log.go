@@ -2,7 +2,7 @@ package gearbox
 
 import (
 	"fmt"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 	"os"
 	"path/filepath"
 )

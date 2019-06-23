@@ -3,11 +3,11 @@ package gear
 import (
 	"fmt"
 	"gearbox/global"
-	"gearbox/only"
 	"gearbox/types"
 	"gearbox/util"
 	"gearbox/version"
 	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/only"
 	"strings"
 )
 

@@ -5,16 +5,14 @@ import (
 	"gearbox/apiworks"
 	"gearbox/config"
 	"gearbox/gearbox"
-	"gearbox/only"
 	"gearbox/project"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 	"reflect"
 )
-
-const HostnameIdParam IdParam = "hostname"
 
 const ProjectControllerName types.RouteName = "projects"
 const ProjectsBasepath types.Basepath = "/projects"
@@ -52,7 +50,7 @@ func (me *ProjectController) GetRelatedFields() RelatedFields {
 		},
 		&RelatedField{
 			Fieldname:   ProjectsServicesField,
-			IncludeType: ServiceModelType,
+			IncludeType: GearModelType,
 		},
 	}
 }
@@ -73,10 +71,6 @@ func (me *ProjectController) GetBasepath() types.Basepath {
 
 func (me *ProjectController) GetItemType() reflect.Kind {
 	return reflect.Struct
-}
-
-func (me *ProjectController) GetIdParams() IdParams {
-	return IdParams{HostnameIdParam}
 }
 
 func (me *ProjectController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
@@ -190,48 +184,30 @@ func (me *ProjectController) DeleteItem(ctx *Context, hostname ItemId) (sts Stat
 	return sts
 }
 
-func (me *ProjectController) GetItem(ctx *Context, hostname ItemId) (list ItemModeler, sts Status) {
-	var p *ProjectModel
+func (me *ProjectController) GetItem(ctx *Context, hostname ItemId) (item ItemModeler, sts Status) {
+	var pm *ProjectModel
 	for range only.Once {
 		cp, sts := me.Gearbox.GetConfig().FindProject(types.Hostname(hostname))
 		if is.Error(sts) {
 			break
 		}
 		if cp == nil {
-			sts = status.Fail(&status.Args{
-				Message:    fmt.Sprintf("project '%s' not found", hostname),
-				HttpStatus: http.StatusNotFound,
-			})
+			sts = status.Fail().
+				SetHttpStatus(http.StatusNotFound).
+				SetMessage("project '%s' not found", hostname)
 			break
 		}
-		p, sts = NewModelFromConfigProject(cp)
+		pm, sts = NewModelFromConfigProject(cp)
+		if is.Error(sts) {
+			break
+		}
+		sts = pm.AddDetails(ctx)
 		if is.Error(sts) {
 			break
 		}
 		sts = status.Success("project '%s' found", hostname)
 	}
-	return p, sts
-}
-
-func (me *ProjectController) GetItemDetails(ctx *Context, itemid ItemId) (item ItemModeler, sts Status) {
-	for range only.Once {
-		item, sts = me.GetItem(ctx, itemid)
-		if is.Error(sts) {
-			break
-		}
-		p, ok := item.(*ProjectModel)
-		if !ok {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("item '%s' not a project.Project", itemid),
-			})
-			break
-		}
-		sts = p.AddDetails(ctx)
-		if is.Error(sts) {
-			break
-		}
-	}
-	return item, sts
+	return pm, sts
 }
 
 func (me *ProjectController) FilterItem(in ItemModeler, filterPath FilterPath) (out ItemModeler, sts Status) {

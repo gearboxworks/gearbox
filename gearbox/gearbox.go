@@ -9,7 +9,6 @@ import (
 	"gearbox/dockerhub"
 	"gearbox/gears"
 	"gearbox/global"
-	"gearbox/only"
 	"gearbox/project"
 	"gearbox/service"
 	"gearbox/ssh"
@@ -17,6 +16,7 @@ import (
 	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"log"
 	"path/filepath"
 )
@@ -33,11 +33,6 @@ var _ Gearboxer = (*Gearbox)(nil)
 var Instance Gearboxer
 
 type Gearboxer interface {
-	//AddNamedStackToProject(gears.StackId, types.Hostname) status.Status
-	//GetNamedStackNames() (Stacknames, status.Status)
-	//GetProjectFilepath(string, string) (string, status.Status)
-	//GetProjectWithDetails(config.Hostname) (*config.Project, status.Status)
-	//ValidateBasedirNickname(string, *config.ValidateArgs) status.Status
 	AddBasedir(types.Dir, ...types.Nickname) status.Status
 	AddNamedStack(*gears.NamedStack) status.Status
 	AddProject(*project.Project) status.Status
@@ -46,19 +41,17 @@ type Gearboxer interface {
 	DeleteNamedStack(stackid types.StackId) status.Status
 	DeleteProject(hostname types.Hostname) status.Status
 	FindNamedStack(stackid types.StackId) (*gears.NamedStack, status.Status)
-	FindService(serviceid service.Identifier) (*gears.Service, status.Status)
+	FindService(serviceid service.Identifier) (*gears.Gear, status.Status)
 	FindProject(hostname types.Hostname) (*project.Project, status.Status)
 	GetConfig() config.Configer
-	GetGears() *gears.Gears
+	GetGearRegistry() *gears.GearRegistry
 	GetGlobalOptions() *global.Options
 	GetApi() api.Apier
 	GetNamedStacks() (gears.NamedStacks, status.Status)
-	GetServices() (gears.Services, status.Status)
-	//GetNamedStackRoleMap(types.StackId) (gears.StackRoles, status.Status)
+	GetServices() (gears.Gears, status.Status)
 	GetOsBridge() osbridge.OsBridger
 	GetProjectMap() (project.Map, status.Status)
 	GetRouteName() types.RouteName
-	//GetStackRoleMap() (gears.StackRoles, status.Status)
 	Initialize() status.Status
 	IsDebug() bool
 	BasedirExists(types.Nickname) bool
@@ -88,11 +81,11 @@ type Gearbox struct {
 	Config        config.Configer
 	OsBridge      osbridge.OsBridger
 	StackMap      gears.NamedStackMap
-	Services      gears.Services
+	Services      gears.Gears
 	GlobalOptions *global.Options
 	Api           api.Apier
 	RouteName     types.RouteName
-	Gears         *gears.Gears
+	GearRegistry  *gears.GearRegistry
 	errorLog      *ErrorLog
 }
 
@@ -115,8 +108,8 @@ func NewGearbox(args *Args) Gearboxer {
 		gb.Api = args.Api
 		gb.Api.SetParent(&gb)
 	}
-	if args.Gears == nil {
-		gb.Gears = gears.NewGears(gb.OsBridge)
+	if args.GearRegistry == nil {
+		gb.GearRegistry = gears.NewGearRegistry(gb.OsBridge)
 	}
 	return &gb
 }
@@ -131,14 +124,14 @@ func (me *Gearbox) GetNamedStacks() (nss gears.NamedStacks, sts status.Status) {
 	return nss, sts
 }
 
-func (me *Gearbox) GetServices() (nsm gears.Services, sts status.Status) {
+func (me *Gearbox) GetServices() (nsm gears.Gears, sts status.Status) {
 	for range only.Once {
-		if me.Gears == nil {
+		if me.GearRegistry == nil {
 			sts = status.Fail().SetMessage("gears property can not be nil")
 			sts.Log()
 			break
 		}
-		me.Services = me.Gears.GetServices()
+		me.Services = me.GearRegistry.GetGears()
 	}
 	return me.Services, sts
 }
@@ -156,11 +149,11 @@ func (me *Gearbox) DeleteNamedStack(stackid types.StackId) status.Status {
 }
 
 func (me *Gearbox) FindNamedStack(stackid types.StackId) (stack *gears.NamedStack, sts status.Status) {
-	return me.Gears.FindNamedStack(stackid)
+	return me.GearRegistry.FindNamedStack(stackid)
 }
 
-func (me *Gearbox) FindService(serviceid service.Identifier) (service *gears.Service, sts status.Status) {
-	return me.Gears.FindService(serviceid)
+func (me *Gearbox) FindService(serviceid service.Identifier) (service *gears.Gear, sts status.Status) {
+	return me.GearRegistry.FindGear(serviceid)
 }
 
 func (me *Gearbox) FindProject(hostname types.Hostname) (pp *project.Project, sts status.Status) {
@@ -217,8 +210,8 @@ func (me *Gearbox) GetGlobalOptions() *global.Options {
 	return me.GlobalOptions
 }
 
-func (me *Gearbox) GetGears() *gears.Gears {
-	return me.Gears
+func (me *Gearbox) GetGearRegistry() *gears.GearRegistry {
+	return me.GearRegistry
 }
 
 func (me *Gearbox) GetRouteName() types.RouteName {
@@ -252,7 +245,7 @@ func (me *Gearbox) Initialize() (sts status.Status) {
 	for range only.Once {
 		me.WriteAssetsToAdminWebRoot()
 
-		sts = me.Gears.Initialize()
+		sts = me.GearRegistry.Initialize()
 		if is.Error(sts) {
 			break
 		}

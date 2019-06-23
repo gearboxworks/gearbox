@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"gearbox/gearspec"
 	"gearbox/global"
-	"gearbox/only"
 	"github.com/gearboxworks/go-osbridge"
+	"github.com/gearboxworks/go-status/only"
 
 	//	"gearbox/os_support"
 	"gearbox/service"
@@ -21,68 +21,68 @@ import (
 	"path/filepath"
 )
 
-type Gear interface {
+type GearRegistrar interface {
 	GetName() string
 }
 
 type serviceIdsMapGearspecIds map[service.Identifier]gearspec.Identifier
 
-type Gears struct {
-	Authorities    Authorities         `json:"authorities"`
-	NamedStacks    NamedStacks         `json:"named_stacks"`
-	StackRoles     StackRoles          `json:"stack_roles"`
-	ServiceOptions ServiceOptions      `json:"service_options"`
-	GlobalOptions  global.Options      `json:"-"`
-	serviceids     service.Identifiers `json:"-"`
-	services       Services            `json:"-"`
-	OsBridge       osbridge.OsBridger  `json:"-"`
-	serviceIds     serviceIdsMapGearspecIds
-	refreshed      bool
+type GearRegistry struct {
+	Authorities   Authorities         `json:"authorities"`
+	NamedStacks   NamedStacks         `json:"named_stacks"`
+	Gearspecs     Gearspecs           `json:"gearspecs"`
+	GearOptions   GearOptions         `json:"service_options"`
+	GlobalOptions global.Options      `json:"-"`
+	serviceids    service.Identifiers `json:"-"`
+	services      Gears               `json:"-"`
+	OsBridge      osbridge.OsBridger  `json:"-"`
+	serviceIds    serviceIdsMapGearspecIds
+	refreshed     bool
 }
 
-func NewGears(ossup osbridge.OsBridger) *Gears {
-	return &Gears{
-		OsBridge:       ossup,
-		Authorities:    make(Authorities, 0),
-		NamedStacks:    make(NamedStacks, 0),
-		StackRoles:     make(StackRoles, 0),
-		ServiceOptions: make(ServiceOptions, 0),
+func NewGearRegistry(ossup osbridge.OsBridger) *GearRegistry {
+	return &GearRegistry{
+		OsBridge:    ossup,
+		Authorities: make(Authorities, 0),
+		NamedStacks: make(NamedStacks, 0),
+		Gearspecs:   make(Gearspecs, 0),
+		GearOptions: make(GearOptions, 0),
 	}
 }
 
-func (me *Gears) GetAuthorityDomains() (as types.AuthorityDomains, sts status.Status) {
+func (me *GearRegistry) GetAuthorityDomains() (as types.AuthorityDomains, sts Status) {
 	as = make(types.AuthorityDomains, 0)
 	am := make(map[types.AuthorityDomain]bool, 0)
-	for _, sr := range me.StackRoles {
-		_, ok := am[sr.AuthorityDomain]
+	for _, gs := range me.Gearspecs {
+		_, ok := am[gs.AuthorityDomain]
 		if ok {
 			continue
 		}
-		am[sr.AuthorityDomain] = true
-		as = append(as, sr.AuthorityDomain)
+		am[gs.AuthorityDomain] = true
+		as = append(as, gs.AuthorityDomain)
 	}
 	return as, nil
 }
-func (me *Gears) FindAuthority(authority types.AuthorityDomain) (ad types.AuthorityDomain, sts status.Status) {
+func (me *GearRegistry) FindAuthority(authority types.AuthorityDomain) (ad types.AuthorityDomain, sts Status) {
 	return authority, nil
 }
-func (me *Gears) GetStackRoles() (StackRoles, status.Status) {
-	return me.StackRoles, nil
+func (me *GearRegistry) GetGearspecs() (Gearspecs, Status) {
+	return me.Gearspecs, nil
 }
 
-func (me *Gears) GetNamedServiceOptions(stackid types.StackId) (sos ServiceOptions, sts status.Status) {
-	return me.ServiceOptions.FilterForNamedStack(stackid)
+func (me *GearRegistry) GetNamedGearOptions(stackid types.StackId) (sos GearOptions, sts Status) {
+	return me.GearOptions.FilterForNamedStack(stackid)
 }
 
-func (me *Gears) GetNamedStackRoles(stackid types.StackId) (StackRoles, status.Status) {
-	return me.StackRoles.FilterByNamedStack(stackid)
+func (me *GearRegistry) GetNamedRegistries(stackid types.StackId) (Gearspecs, Status) {
+	return me.Gearspecs.FilterByNamedStack(stackid)
 }
 
-func (me *Gears) NeedsRefresh() bool {
+func (me *GearRegistry) NeedsRefresh() bool {
 	return !me.refreshed
 }
 
-func (me *Gears) Initialize() (sts status.Status) {
+func (me *GearRegistry) Initialize() (sts Status) {
 	var b []byte
 	if !me.NeedsRefresh() {
 		return sts
@@ -126,8 +126,8 @@ func (me *Gears) Initialize() (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
-		for _, sr := range me.StackRoles {
-			sts = sr.Fixup()
+		for _, gs := range me.Gearspecs {
+			sts = gs.Fixup()
 			if status.IsError(sts) {
 				break
 			}
@@ -135,7 +135,7 @@ func (me *Gears) Initialize() (sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
-		for _, so := range me.ServiceOptions {
+		for _, so := range me.GearOptions {
 			sts = so.Fixup()
 			if is.Error(sts) {
 				break
@@ -149,11 +149,11 @@ func (me *Gears) Initialize() (sts status.Status) {
 	return sts
 }
 
-func (me *Gears) String() string {
+func (me *GearRegistry) String() string {
 	return string(me.Bytes())
 }
 
-func (me *Gears) Bytes() []byte {
+func (me *GearRegistry) Bytes() []byte {
 	bytes, err := json.Marshal(me)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Could not unserialize '%s' cache file.\n", JsonFilename))
@@ -161,7 +161,7 @@ func (me *Gears) Bytes() []byte {
 	return bytes
 }
 
-func (me *Gears) Unmarshal(b []byte) (sts status.Status) {
+func (me *GearRegistry) Unmarshal(b []byte) (sts Status) {
 	err := json.Unmarshal(b, &me)
 	if err != nil {
 		// @TODO Provide a link to upgrade once we have that established
@@ -172,11 +172,19 @@ func (me *Gears) Unmarshal(b []byte) (sts status.Status) {
 	return sts
 }
 
-func (me *Gears) FindGearspec(gsid gearspec.Identifier) (gs *gearspec.Gearspec, sts status.Status) {
-	return nil, nil
+func (me *GearRegistry) FindGearspec(gsid gearspec.Identifier) (gs *gearspec.Gearspec, sts Status) {
+	for range only.Once {
+		var grgs *Gearspec
+		grgs, sts = me.Gearspecs.Find(gsid)
+		if is.Error(sts) {
+			break
+		}
+		gs = gearspec.NewGearspecFromGearspecer(grgs)
+	}
+	return gs, sts
 }
 
-func (me *Gears) GetNamedStackIds() (nsids types.StackIds) {
+func (me *GearRegistry) GetNamedStackIds() (nsids types.StackIds) {
 	nsids = make(types.StackIds, len(me.NamedStacks))
 	for _, ns := range me.NamedStacks {
 		nsids = append(nsids, ns.GetIdentifier())
@@ -185,7 +193,7 @@ func (me *Gears) GetNamedStackIds() (nsids types.StackIds) {
 	return nsids
 }
 
-func (me *Gears) ValidateNamedStackId(stackid types.StackId) (sts status.Status) {
+func (me *GearRegistry) ValidateNamedStackId(stackid types.StackId) (sts Status) {
 	for range only.Once {
 		var ok bool
 		for _, nsid := range me.NamedStacks {
@@ -207,7 +215,7 @@ func (me *Gears) ValidateNamedStackId(stackid types.StackId) (sts status.Status)
 	return sts
 }
 
-func (me *Gears) FindNamedStack(stackid types.StackId) (stack *NamedStack, sts status.Status) {
+func (me *GearRegistry) FindNamedStack(stackid types.StackId) (stack *NamedStack, sts Status) {
 	var tmp *NamedStack
 	for range only.Once {
 		sts = me.ValidateNamedStackId(stackid)
@@ -224,24 +232,24 @@ func (me *Gears) FindNamedStack(stackid types.StackId) (stack *NamedStack, sts s
 	if !status.IsError(sts) && tmp != nil {
 		stack = &NamedStack{}
 		*stack = *tmp
-		stack.Gears = me
+		stack.GearRegistry = me
 	}
 	return stack, sts
 }
 
-func (me *Gears) GetServices() (sm Services) {
+func (me *GearRegistry) GetGears() (sm Gears) {
 	return me.services
 }
 
-func (me *Gears) GetServiceIds() (sids service.Identifiers, sts status.Status) {
+func (me *GearRegistry) GetGearIds() (sids service.Identifiers, sts Status) {
 	for range only.Once {
 		if me.serviceids != nil {
 			break
 		}
-		ss := me.GetServices()
+		ss := me.GetGears()
 		me.serviceids = make(service.Identifiers, len(ss))
 		for i, s := range ss {
-			me.serviceids[i] = s.ServiceId
+			me.serviceids[i] = s.GearId
 		}
 		me.serviceids.Sort()
 	}
@@ -251,43 +259,43 @@ func (me *Gears) GetServiceIds() (sids service.Identifiers, sts status.Status) {
 	return me.serviceids, sts
 }
 
-func (me *Gears) ValidateServiceId(serviceid service.Identifier) (sts status.Status) {
+func (me *GearRegistry) ValidateGearId(gearid service.Identifier) (sts Status) {
 	for range only.Once {
 		var ok bool
 		for _, nsid := range me.serviceids {
-			if nsid == serviceid {
+			if nsid == gearid {
 				ok = true
 				break
 			}
 		}
 		if !ok {
 			sts = status.Fail(&status.Args{
-				Message:    fmt.Sprintf("service ID '%s' not found", serviceid),
+				Message:    fmt.Sprintf("service ID '%s' not found", gearid),
 				HttpStatus: http.StatusNotFound,
 				Help:       fmt.Sprintf("see valid service IDs at %s", JsonUrl),
 			})
 		} else {
-			sts = status.Success("service ID '%s' found", serviceid)
+			sts = status.Success("service ID '%s' found", gearid)
 		}
 	}
 	return sts
 }
 
-func (me *Gears) FindService(serviceid service.Identifier) (service *Service, sts status.Status) {
-	var tmp *Service
+func (me *GearRegistry) FindGear(gearid service.Identifier) (service *Gear, sts Status) {
+	var tmp *Gear
 	for range only.Once {
-		sts = me.ValidateServiceId(serviceid)
+		sts = me.ValidateGearId(gearid)
 		if is.Error(sts) {
 			break
 		}
-		tmp = NewService()
-		sts = tmp.Parse(serviceid)
+		tmp = NewGear()
+		sts = tmp.Parse(gearid)
 		if is.Error(sts) {
 			break
 		}
 	}
 	if !status.IsError(sts) && tmp != nil {
-		service = &Service{}
+		service = &Gear{}
 		*service = *tmp
 	}
 	return service, sts

@@ -6,11 +6,10 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 	//	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
 )
-
 
 func (me *mqttBroker) New(OsBridge osbridge.OsBridger, args ...Args) error {
 
@@ -45,7 +44,6 @@ func (me *mqttBroker) New(OsBridge osbridge.OsBridger, args ...Args) error {
 
 		*me = mqttBroker(_args)
 
-
 		eblog.Debug(me.EntityId, "init complete")
 	}
 
@@ -54,7 +52,6 @@ func (me *mqttBroker) New(OsBridge osbridge.OsBridger, args ...Args) error {
 
 	return err
 }
-
 
 // Start the MQTT handler.
 func (me *mqttBroker) StartHandler() error {
@@ -89,7 +86,6 @@ func (me *mqttBroker) StartHandler() error {
 	return err
 }
 
-
 // Stop the MQTT handler.
 func (me *mqttBroker) StopHandler() error {
 
@@ -122,7 +118,6 @@ func (me *mqttBroker) StopHandler() error {
 	return err
 }
 
-
 func (me *mqttBroker) StopServices() error {
 
 	var err error
@@ -133,7 +128,7 @@ func (me *mqttBroker) StopServices() error {
 			break
 		}
 
-		for u, _ := range me.services {
+		for u := range me.services {
 			if me.services[u].IsManaged {
 				_ = me.UnsubscribeByUuid(u)
 				// Ignore error, will clean up when program exits.
@@ -147,4 +142,3 @@ func (me *mqttBroker) StopServices() error {
 
 	return err
 }
-

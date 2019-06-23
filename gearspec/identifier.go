@@ -2,10 +2,10 @@ package gearspec
 
 import (
 	"gearbox/global"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 )
 
 //
@@ -39,7 +39,7 @@ func (me Identifier) GetIdentifier() (gs Identifier, sts status.Status) {
 }
 
 //
-// StackRole.GetPersistableIdentifier()
+// Specname.GetPersistableIdentifier()
 //
 // Returns a Gearspec without authority if authority is "gearbox.works"
 //

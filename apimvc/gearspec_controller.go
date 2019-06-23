@@ -5,18 +5,16 @@ import (
 	"gearbox/apiworks"
 	"gearbox/gearbox"
 	"gearbox/gearspec"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
-	"net/http"
+	"github.com/gearboxworks/go-status/only"
 	"reflect"
 	"sort"
 )
 
 const GearspecControllerName types.RouteName = "gearspecs"
 const GearspecsBasepath types.Basepath = "/gearspecs"
-const RoleIdParam IdParam = "role"
 
 var NilGearspecController = (*GearspecController)(nil)
 var _ ListController = NilGearspecController
@@ -62,21 +60,13 @@ func (me *GearspecController) GetItemType() reflect.Kind {
 	return reflect.Struct
 }
 
-func (me *GearspecController) GetIdParams() IdParams {
-	return IdParams{
-		AuthorityIdParam,
-		StacknameIdParam,
-		RoleIdParam,
-	}
-}
-
 func (me *GearspecController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
 	for range only.Once {
-		srs, sts := me.Gearbox.GetGears().GetStackRoles()
+		gss, sts := me.Gearbox.GetGearRegistry().GetGearspecs()
 		if is.Error(sts) {
 			break
 		}
-		for _, sr := range srs {
+		for _, sr := range gss {
 			gs := gearspec.NewGearspec()
 			sts := gs.Parse(sr.GearspecId)
 			if is.Error(sts) {
@@ -119,15 +109,12 @@ func (me *GearspecController) GetListIds(ctx *apiworks.Context, filterPath ...ap
 	return itemids, sts
 }
 
-func (me *GearspecController) GetItem(ctx *apiworks.Context, gearspecid apiworks.ItemId) (list apiworks.ItemModeler, sts Status) {
+func (me *GearspecController) GetItem(ctx *apiworks.Context, gearspecid apiworks.ItemId) (item ItemModeler, sts Status) {
 	var ns *GearspecModel
 	for range only.Once {
-		gbgs, sts := me.Gearbox.GetGears().FindGearspec(gearspec.Identifier(gearspecid))
+		var gbgs *gearspec.Gearspec
+		gbgs, sts = me.Gearbox.GetGearRegistry().FindGearspec(gearspec.Identifier(gearspecid))
 		if is.Error(sts) {
-			sts = status.Wrap(sts, &status.Args{
-				Message:    fmt.Sprintf("Gearspec '%s' not found", gearspecid),
-				HttpStatus: http.StatusNotFound,
-			})
 			break
 		}
 		ns, sts = NewGearspecModelFromGearspecGearspec(ctx, gbgs)
@@ -137,10 +124,6 @@ func (me *GearspecController) GetItem(ctx *apiworks.Context, gearspecid apiworks
 		sts = status.Success("Gearspec '%s' found", gearspecid)
 	}
 	return ns, sts
-}
-
-func (me *GearspecController) GetItemDetails(ctx *apiworks.Context, itemid apiworks.ItemId) (apiworks.ItemModeler, Status) {
-	return me.GetItem(ctx, itemid)
 }
 
 func (me *GearspecController) FilterItem(in apiworks.ItemModeler, filterPath apiworks.FilterPath) (out apiworks.ItemModeler, sts Status) {

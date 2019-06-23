@@ -5,10 +5,10 @@ import (
 	"gearbox/gear"
 	"gearbox/gearspec"
 	"gearbox/global"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 )
 
 type Servicer interface {
@@ -60,7 +60,7 @@ func (me *Service) GetServiceId() (id Identifier, sts status.Status) {
 }
 
 //
-// ServiceId.GetPersistableGearspecId()
+// GearId.GetPersistableGearspecId()
 //
 // Returns a Gearspec without authority if authority is "gearbox.works"
 //

@@ -3,10 +3,10 @@ package test
 import (
 	"fmt"
 	"gearbox/apiworks"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 )
 
 var NilTestableModel = (*TestableModel)(nil)

@@ -8,10 +8,10 @@ import (
 	"gearbox/global"
 	"gearbox/heartbeat/daemon"
 	"gearbox/help"
-	"gearbox/only"
 	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"regexp"
 
 	"io/ioutil"

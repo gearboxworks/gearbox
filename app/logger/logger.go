@@ -2,8 +2,8 @@ package logger
 
 import (
 	"fmt"
-	"gearbox/only"
 	"github.com/gearboxworks/go-osbridge"
+	"github.com/gearboxworks/go-status/only"
 
 	//	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-status"
@@ -14,7 +14,6 @@ import (
 	"path/filepath"
 	"strconv"
 )
-
 
 func NewLogger(OsBridge osbridge.OsBridger, args ...Logger) (Logger, error) {
 
@@ -35,10 +34,9 @@ func NewLogger(OsBridge osbridge.OsBridger, args ...Logger) (Logger, error) {
 		//	break
 		//}
 
-//		if _args.DebugMode == nil {
-//			*_args.DebugMode = false
-//		}
-
+		//		if _args.DebugMode == nil {
+		//			*_args.DebugMode = false
+		//		}
 
 		_args.OsBridge = OsBridge
 		_args.logrusInstance = logrus.New()
@@ -47,16 +45,15 @@ func NewLogger(OsBridge osbridge.OsBridger, args ...Logger) (Logger, error) {
 		_args.logrusInstance.SetLevel(_args.currentLevel)
 		_args.LogFile.Enabled = true
 
-
 		// Set sane values for File based logging.
 		if _args.LogFile.Enabled == true {
 			// fmt.Printf("Setting up file logging.")
 
 			// Set sane defaults for permissions
 			switch _args.LogFile.Permissions {
-				case "":
-					// fmt.Printf("Setting default permissions to '644'. Was '%s'", _args.LogFile.Permissions)
-					_args.LogFile.Permissions = "644"
+			case "":
+				// fmt.Printf("Setting default permissions to '644'. Was '%s'", _args.LogFile.Permissions)
+				_args.LogFile.Permissions = "644"
 			}
 
 			if _args.LogFile.Name == "" {
@@ -66,8 +63,8 @@ func NewLogger(OsBridge osbridge.OsBridger, args ...Logger) (Logger, error) {
 			// fmt.Printf("Logging to files.")
 			pathMap := lfshook.PathMap{
 				logrus.DebugLevel: _args.LogFile.Name,
-				logrus.InfoLevel: _args.LogFile.Name,
-				logrus.WarnLevel: _args.LogFile.Name,
+				logrus.InfoLevel:  _args.LogFile.Name,
+				logrus.WarnLevel:  _args.LogFile.Name,
 				logrus.ErrorLevel: _args.LogFile.Name,
 				logrus.FatalLevel: _args.LogFile.Name,
 				logrus.PanicLevel: _args.LogFile.Name,
@@ -77,7 +74,6 @@ func NewLogger(OsBridge osbridge.OsBridger, args ...Logger) (Logger, error) {
 			// _args.logrusInstance.SetOutput(os.Stdout)
 			_args.logrusInstance.SetOutput(ioutil.Discard)
 		}
-
 
 		// Disabled to work on GOOS=windows
 		// Set sane values for Syslog based logging.
@@ -123,7 +119,6 @@ func NewLogger(OsBridge osbridge.OsBridger, args ...Logger) (Logger, error) {
 		//	}
 		//}
 
-
 		// Set defaults for Loggly based logging.
 		if _args.Loggly.Enabled == true {
 			if _args.Loggly.Token != "" {
@@ -143,12 +138,10 @@ func NewLogger(OsBridge osbridge.OsBridger, args ...Logger) (Logger, error) {
 	return *se, err
 }
 
-
 func (me *Logger) SetLevel(sl string) {
 	me.currentLevel = me.GetLevel(sl)
 	me.logrusInstance.SetLevel(me.currentLevel)
 }
-
 
 func (me *Logger) GetLevel(getLevel string) (returnLevel logrus.Level) {
 	returnLevel, _ = logrus.ParseLevel(getLevel)
@@ -156,8 +149,8 @@ func (me *Logger) GetLevel(getLevel string) (returnLevel logrus.Level) {
 	return
 }
 
-
 const howMany = 2
+
 func (me *Logger) Log(err error) {
 
 	if err == nil {
@@ -173,8 +166,7 @@ func (me *Logger) Log(err error) {
 	me.logrusInstance.WithFields(fields).Infof("%s", err)
 }
 
-
-func (me *Logger) Debug(msg status.Msg) {		// , opt ...interface{}) {
+func (me *Logger) Debug(msg status.Msg) { // , opt ...interface{}) {
 
 	if msg == "" {
 		return
@@ -185,7 +177,6 @@ func (me *Logger) Debug(msg status.Msg) {		// , opt ...interface{}) {
 
 	me.printLog(DebugLevel, filename, linenumber, msg)
 }
-
 
 func (me *Logger) Warn(msg status.Msg) {
 
@@ -222,7 +213,6 @@ func (me *Logger) Fatal(msg status.Msg) {
 
 	me.printLog(FatalLevel, filename, linenumber, msg)
 }
-
 
 func (me *Logger) Cause() error {
 	panic("implement me")

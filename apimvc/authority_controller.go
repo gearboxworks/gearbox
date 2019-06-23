@@ -3,11 +3,10 @@ package apimvc
 import (
 	"fmt"
 	"gearbox/gearbox"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
-	"net/http"
+	"github.com/gearboxworks/go-status/only"
 	"reflect"
 	"sort"
 )
@@ -59,17 +58,9 @@ func (me *AuthorityController) GetItemType() reflect.Kind {
 	return reflect.Struct
 }
 
-func (me *AuthorityController) GetIdParams() IdParams {
-	return IdParams{
-		AuthorityIdParam,
-		StacknameIdParam,
-		RoleIdParam,
-	}
-}
-
 func (me *AuthorityController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
 	for range only.Once {
-		gbgas, sts := me.Gearbox.GetGears().GetAuthorityDomains()
+		gbgas, sts := me.Gearbox.GetGearRegistry().GetAuthorityDomains()
 		if is.Error(sts) {
 			break
 		}
@@ -113,12 +104,8 @@ func (me *AuthorityController) GetListIds(ctx *Context, filterPath ...FilterPath
 func (me *AuthorityController) GetItem(ctx *Context, authorityid ItemId) (list ItemModeler, sts Status) {
 	var ns *AuthorityModel
 	for range only.Once {
-		gbgs, sts := me.Gearbox.GetGears().FindAuthority(types.AuthorityDomain(authorityid))
+		gbgs, sts := me.Gearbox.GetGearRegistry().FindAuthority(types.AuthorityDomain(authorityid))
 		if is.Error(sts) {
-			sts = status.Wrap(sts, &status.Args{
-				Message:    fmt.Sprintf("AuthorityModel '%s' not found", authorityid),
-				HttpStatus: http.StatusNotFound,
-			})
 			break
 		}
 		ns, sts = NewFromGearsAuthority(ctx, gbgs)
@@ -128,10 +115,6 @@ func (me *AuthorityController) GetItem(ctx *Context, authorityid ItemId) (list I
 		sts = status.Success("AuthorityModel '%s' found", authorityid)
 	}
 	return ns, sts
-}
-
-func (me *AuthorityController) GetItemDetails(ctx *Context, itemid ItemId) (ItemModeler, Status) {
-	return me.GetItem(ctx, itemid)
 }
 
 func (me *AuthorityController) FilterItem(in ItemModeler, filterPath FilterPath) (out ItemModeler, sts Status) {

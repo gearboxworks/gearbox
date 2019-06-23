@@ -30,12 +30,12 @@
          "stackname": "wordpress"
       }
    ],
-   "stack_roles": [
+   "gearspecs": [
       {
          "gearspec_id": "gearbox.works/elasticsearch/elasticsearch",
          "authority": "gearbox.works",
          "stackname": "elasticsearch",
-         "role": "elasticsearch",
+         "specname": "elasticsearch",
          "label": "Elasticsearch",
          "described": "Search engine component of the Elasticsearch stack",
          "default": "elasticsearch",
@@ -47,7 +47,7 @@
          "gearspec_id": "gearbox.works/lamp/apache",
          "authority": "gearbox.works",
          "stackname": "lamp",
-         "role": "apache",
+         "specname": "apache",
          "label": "Apache",
          "described": "LAMP Apache Web Server",
          "default": "apache",
@@ -59,7 +59,7 @@
          "gearspec_id": "gearbox.works/lamp/mysql",
          "authority": "gearbox.works",
          "stackname": "lamp",
-         "role": "mysql",
+         "specname": "mysql",
          "described": "LAMP MySQL database server",
          "label": "MySQL",
          "default": "mysql",
@@ -71,7 +71,7 @@
          "gearspec_id": "gearbox.works/lemp/scripting",
          "authority": "gearbox.works",
          "stackname": "lamp",
-         "role": "scripting",
+         "specname": "scripting",
          "label": "server-side scripting",
          "described": "Server-side scripting of the LAMP stack; PHP, Python or Perl",
          "default": "php",
@@ -83,7 +83,7 @@
          "gearspec_id": "gearbox.works/lemp/nginx",
          "authority": "gearbox.works",
          "stackname": "lemp",
-         "role": "nginx",
+         "specname": "nginx",
          "label": "Nginx",
          "described": "Nginx Web server of the LEMP stack",
          "default": "nginx",
@@ -95,7 +95,7 @@
          "gearspec_id": "gearbox.works/lemp/mysql",
          "authority": "gearbox.works",
          "stackname": "lemp",
-         "role": "mysql",
+         "specname": "mysql",
          "label": "DB server",
          "described": "Database server of the LEMP stack; MySQL or MariaDB",
          "default": "mariadb",
@@ -108,7 +108,7 @@
          "gearspec_id": "gearbox.works/lemp/scripting",
          "authority": "gearbox.works",
          "stackname": "lemp",
-         "role": "scripting",
+         "specname": "scripting",
          "label": "server-side scripting",
          "described": "Server-side scripting of the LEMP stack; PHP, Python or Perl",
          "default": "php",
@@ -120,7 +120,7 @@
          "gearspec_id": "gearbox.works/wordpress/webserver",
          "authority": "gearbox.works",
          "stackname": "wordpress",
-         "role": "webserver",
+         "specname": "webserver",
          "label": "Web server",
          "described": "Web server for WordPress",
          "default": "nginx",
@@ -135,7 +135,7 @@
          "gearspec_id": "gearbox.works/wordpress/dbserver",
          "authority": "gearbox.works",
          "stackname": "wordpress",
-         "role": "dbserver",
+         "specname": "dbserver",
          "label": "DB server",
          "described": "Database server for WordPress",
          "default": "mysql",
@@ -149,7 +149,7 @@
          "gearspec_id": "gearbox.works/wordpress/processvm",
          "authority": "gearbox.works",
          "stackname": "wordpress",
-         "role": "processvm",
+         "specname": "processvm",
          "label": "PHP",
          "described": "ProcessVM (PHP) for WordPress",
          "default": "php",
@@ -162,7 +162,7 @@
          "gearspec_id": "gearbox.works/wordpress/cacheserver",
          "authority": "gearbox.works",
          "stackname": "wordpress",
-         "role": "cacheserver",
+         "specname": "cacheserver",
          "name": "Cache server for WordPress",
          "described": "Cache server",
          "default": "",
@@ -174,7 +174,7 @@
          "max": 1
       }
    ],
-   "service_options": [
+   "gear_options": [
       {
          "orgname": "gearboxworks",
          "default": "elasticsearch",
@@ -274,7 +274,6 @@
          ]
       }
    ]
-
 }
 
 

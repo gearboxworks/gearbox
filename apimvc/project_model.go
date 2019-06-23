@@ -4,11 +4,11 @@ import (
 	"gearbox/apiworks"
 	"gearbox/config"
 	"gearbox/gearspec"
-	"gearbox/only"
 	"gearbox/project"
 	"gearbox/service"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 )
 
 const ProjectModelType ItemType = "projects"
@@ -87,7 +87,7 @@ func (me *ProjectModel) AddDetails(ctx *Context) (sts Status) {
 		}
 		me.Aliases = pp.Aliases
 		me.Filepath = pp.Filepath
-		var sms ServiceModels
+		var sms GearModels
 		sms, sts = GetServiceModelsFromServiceServicerMap(ctx, pp.GetServicerMap())
 		if is.Error(sts) {
 			break
@@ -302,7 +302,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
 //	"fmt"
 //	"gearbox/gearbox"
 //	"gearbox/api"
-//	"gearbox/only"
+//	"github.com/gearboxworks/go-status/only"
 //	"gearbox/apimvc"
 //	"github.com/gearboxworks/go-status"
 //	"net/http"

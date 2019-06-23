@@ -5,12 +5,12 @@ import (
 	"gearbox/config"
 	"gearbox/gears"
 	"gearbox/jsonfile"
-	"gearbox/only"
 	"gearbox/service"
 	"gearbox/types"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 	"path/filepath"
 )
@@ -31,7 +31,7 @@ func NewProject(cp *config.Project) (p *Project) {
 		Project: cp,
 
 		//Stack: ConvertServiceMap(p.GetServicerMap()),
-		//ServiceIds: ConvertServices(pp.GetServicerMap()),
+		//GearIds: ConvertServices(pp.GetServicerMap()),
 		//
 		//Aliases:    pp.GetAliases(),
 	}

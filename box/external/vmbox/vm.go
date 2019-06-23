@@ -7,14 +7,13 @@ import (
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 	"net"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
 )
-
 
 //type Box struct {
 //	Boxname         string
@@ -45,7 +44,6 @@ import (
 //
 //	OsBridge osbridge.OsBridger
 //}
-
 
 func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 
@@ -105,7 +103,6 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 		//
 		//_args.VmIsoDlIndex = 100
 
-
 		if c.Name == "" {
 			err = me.EntityName.ProduceError("VM doesn't have a name")
 			break
@@ -143,7 +140,6 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 			c.SshPort = "2222"
 		}
 
-
 		err = me.Releases.UpdateReleases()
 		if err != nil {
 			break
@@ -164,7 +160,6 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 		//if err != nil {
 		//	break
 		//}
-
 
 		sc.EntityId = *messages.GenerateAddress()
 		sc.EntityName = c.Name
@@ -195,37 +190,34 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 		sc.channels = me.Channels
 		sc.channels.PublishState(sc.State)
 
-
 		var state states.State
 		state, err = sc.vbCreate()
 		switch state {
-			case states.StateError:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateError:
+			eblog.Debug(me.EntityId, "%v", err)
 
-			case states.StateStopped:
-				err = me.AddEntity(sc.EntityId, &sc)
-				if err != nil {
-					break
-				}
-				sc.State.SetNewAction(states.ActionStop)
-				eblog.Debug(me.EntityId, "VM registered OK")
+		case states.StateStopped:
+			err = me.AddEntity(sc.EntityId, &sc)
+			if err != nil {
+				break
+			}
+			sc.State.SetNewAction(states.ActionStop)
+			eblog.Debug(me.EntityId, "VM registered OK")
 
-			case states.StateStarted:
-				// VM already created but started.
-				err = me.AddEntity(sc.EntityId, &sc)
-				if err != nil {
-					break
-				}
-				sc.State.SetNewAction(states.ActionStart)
+		case states.StateStarted:
+			// VM already created but started.
+			err = me.AddEntity(sc.EntityId, &sc)
+			if err != nil {
+				break
+			}
+			sc.State.SetNewAction(states.ActionStart)
 
-			case states.StateUnregistered:
-				eblog.Debug(me.EntityId, "VM not created")
+		case states.StateUnregistered:
+			eblog.Debug(me.EntityId, "VM not created")
 
-
-			case states.StateUnknown:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateUnknown:
+			eblog.Debug(me.EntityId, "%v", err)
 		}
-
 
 		sc.State.SetNewState(state, err)
 		sc.channels.PublishState(sc.State)
@@ -238,7 +230,6 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 	return &sc, err
 }
 
-
 func (me *Vm) Start() error {
 
 	var err error
@@ -250,7 +241,6 @@ func (me *Vm) Start() error {
 			break
 		}
 
-
 		// Check for ISO image first.
 		var i int
 		i, err = me.osRelease.IsIsoFilePresent()
@@ -258,10 +248,8 @@ func (me *Vm) Start() error {
 			break
 		}
 
-
 		me.ChangeRequested = true
 		defer func() { me.ChangeRequested = false }()
-
 
 		me.State.SetNewAction(states.ActionStart)
 		me.channels.PublishState(me.State)
@@ -274,7 +262,6 @@ func (me *Vm) Start() error {
 		// Publish new state.
 		me.State.SetNewState(states.StateStarted, err)
 		me.channels.PublishState(me.State)
-
 
 		// Now wait for API.
 		me.ApiState.SetNewAction(states.ActionStart)
@@ -293,7 +280,6 @@ func (me *Vm) Start() error {
 
 	return err
 }
-
 
 func (me *Vm) Stop() error {
 
@@ -320,7 +306,6 @@ func (me *Vm) Stop() error {
 			break
 		}
 
-
 		me.State.SetNewState(states.StateStopped, err)
 		me.channels.PublishState(me.State)
 
@@ -335,7 +320,6 @@ func (me *Vm) Stop() error {
 
 	return err
 }
-
 
 func (me *Vm) Restart() error {
 
@@ -361,7 +345,6 @@ func (me *Vm) Restart() error {
 	return err
 }
 
-
 func (me *Vm) UpdateRealStatus() error {
 
 	var err error
@@ -374,18 +357,15 @@ func (me *Vm) UpdateRealStatus() error {
 			break
 		}
 
-
 		var v states.State
 		v, err = me.vbStatus()
 		me.State.SetNewState(v, err)
 		me.channels.PublishState(me.State)
 
-
 		var a states.State
 		a, err = me.waitForApiState(DefaultRunWaitTime, false)
 		me.ApiState.SetNewState(a, err)
 		me.channels.PublishState(me.ApiState)
-
 
 		eblog.Debug(me.EntityId, "VM is in state %s, API is in state %s", v, a)
 	}
@@ -395,7 +375,6 @@ func (me *Vm) UpdateRealStatus() error {
 
 	return err
 }
-
 
 func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.State, error) {
 
@@ -410,7 +389,6 @@ func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.S
 			break
 		}
 
-
 		if me.Entry.ConsoleHost == "" {
 			err = me.EntityName.ProduceError("no VM console host defined")
 			state = states.StateError
@@ -423,14 +401,12 @@ func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.S
 			break
 		}
 
-
 		// Ensure we only have one at a time.
 		me.Entry.consoleMutex.Lock()
 		defer me.Entry.consoleMutex.Unlock()
 
-
 		// Connect to this console
-		conn, err := net.Dial("tcp", me.Entry.ConsoleHost + ":" + me.Entry.ConsolePort)
+		conn, err := net.Dial("tcp", me.Entry.ConsoleHost+":"+me.Entry.ConsolePort)
 		if err != nil {
 			err = me.EntityName.ProduceError("VM can't connect to console")
 			state = states.StateIdle
@@ -451,7 +427,7 @@ func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.S
 			err = conn.SetDeadline(time.Now().Add(me.Entry.ConsoleReadWait))
 			if err != nil {
 				err = me.EntityName.ProduceError("VM console deadline reached")
-				state = states.StateStopped	// states.StateUnknown
+				state = states.StateStopped // states.StateUnknown
 				break
 			}
 
@@ -461,7 +437,7 @@ func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.S
 			// bytesRead := len(readBuffer)
 			if err != nil {
 				err = me.EntityName.ProduceError("no VM console data")
-				state = states.StateStopped	// states.StateUnknown
+				state = states.StateStopped // states.StateUnknown
 				break
 			}
 
@@ -475,21 +451,20 @@ func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.S
 					state = states.StateStarted
 					break
 
-				//} else {
-				//	if me.State.API.WantState == VmStatePowerOff {
-				//		me.State.API.CurrentState = VmStateStopping
-				//		sts = status.Success("%s API - stopping", global.Brandname)
-				//	} else if me.State.API.WantState == VmStateRunning {
-				//		me.State.API.CurrentState = VmStateStarting
-				//		sts = status.Success("%s API - starting", global.Brandname)
-				//	}
-				//	// Do not break.
+					//} else {
+					//	if me.State.API.WantState == VmStatePowerOff {
+					//		me.State.API.CurrentState = VmStateStopping
+					//		sts = status.Success("%s API - stopping", global.Brandname)
+					//	} else if me.State.API.WantState == VmStateRunning {
+					//		me.State.API.CurrentState = VmStateStarting
+					//		sts = status.Success("%s API - starting", global.Brandname)
+					//	}
+					//	// Do not break.
 				}
 			}
 
 			time.Sleep(me.Entry.ConsoleWaitDelay)
 		}
-
 
 		//me.State.SetNewState(state, err)
 		//me.channels.PublishState(me.State)
@@ -501,7 +476,6 @@ func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.S
 
 	return state, err
 }
-
 
 func (me *Vm) heartbeatOk(b []byte, n int) error {
 
@@ -521,17 +495,16 @@ func (me *Vm) heartbeatOk(b []byte, n int) error {
 		// Expecting "1560783374 Gearbox Heartbeat OK"
 		//fmt.Printf("API[%d]:%v\n", len(apiSplit), apiSplit)
 		switch {
-			case len(apiSplit) < 4:
-				err = me.EntityName.ProduceError("did not see OK from console - '%s'", string(b[:n]))
+		case len(apiSplit) < 4:
+			err = me.EntityName.ProduceError("did not see OK from console - '%s'", string(b[:n]))
 
-			case apiSplit[3] != "OK":
-				err = me.EntityName.ProduceError("did not see OK from console - '%s'", string(b[:n]))
+		case apiSplit[3] != "OK":
+			err = me.EntityName.ProduceError("did not see OK from console - '%s'", string(b[:n]))
 		}
 	}
 
 	return err
 }
-
 
 //func (me *Vm) WaitForVmState(displayString string) bool {
 //
@@ -566,7 +539,6 @@ func (me *Vm) heartbeatOk(b []byte, n int) error {
 //
 //	return found
 //}
-
 
 //func closeDialConnection(conn net.Conn) {
 //	_ = conn.Close()

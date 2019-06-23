@@ -3,10 +3,10 @@ package ssh
 import (
 	"fmt"
 	"gearbox/help"
-	"gearbox/only"
 	"github.com/fatih/color"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"

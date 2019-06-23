@@ -9,9 +9,21 @@ import (
 	"gearbox/types"
 )
 
-func NewStackMemberFromGearsServiceOptions(ctx *apiworks.Context, gsr *gears.StackRole, sids service.Identifiers) (rss *StackMember) {
+type StackMembers []*StackMember
+type StackMember struct {
+	GearspecId       gearspec.Identifier    `json:"gearspec_id"`
+	AuthorityDomain  types.AuthorityDomain  `json:"authority"`
+	Stackname        types.Stackname        `json:"stackname"`
+	Specname         types.Specname         `json:"specname,omitempty"`
+	Revision         types.Revision         `json:"revision,omitempty"`
+	DefaultServiceId service.Identifier     `json:"default_service,omitempty"`
+	Shareable        global.ShareableChoice `json:"shareable,omitempty"`
+	GearIds          service.Identifiers    `json:"available_gears,omitempty"`
+}
+
+func NewStackMemberFromGearOptions(ctx *apiworks.Context, gsr *gears.Gearspec, gids service.Identifiers) (rss *StackMember) {
 	var dsi service.Identifier
-	ds := gsr.GetDefaultService()
+	ds := gsr.GetDefaultGear()
 	if ds != nil {
 		dsi = ds.GetIdentifier()
 	}
@@ -20,21 +32,9 @@ func NewStackMemberFromGearsServiceOptions(ctx *apiworks.Context, gsr *gears.Sta
 		GearspecId:       gsr.GetGearspecId(),
 		AuthorityDomain:  gsr.AuthorityDomain,
 		Stackname:        gsr.Stackname,
-		Role:             gsr.Role,
+		Specname:         gsr.Specname,
 		Revision:         gsr.Revision,
 		Shareable:        gsr.Shareable,
-		ServiceIds:       sids,
+		GearIds:          gids,
 	}
-}
-
-type StackMembers []*StackMember
-type StackMember struct {
-	GearspecId       gearspec.Identifier    `json:"gearspec_id"`
-	AuthorityDomain  types.AuthorityDomain  `json:"authority"`
-	Stackname        types.Stackname        `json:"stackname"`
-	Role             types.StackRole        `json:"role,omitempty"`
-	Revision         types.Revision         `json:"revision,omitempty"`
-	DefaultServiceId service.Identifier     `json:"default_service,omitempty"`
-	Shareable        global.ShareableChoice `json:"shareable,omitempty"`
-	ServiceIds       service.Identifiers    `json:"services,omitempty"`
 }

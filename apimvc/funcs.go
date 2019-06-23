@@ -2,8 +2,8 @@ package apimvc
 
 import (
 	"gearbox/gearbox"
-	"gearbox/only"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 )
 
 func noop(i ...interface{}) interface{} {
@@ -17,7 +17,7 @@ func AddControllers(gb gearbox.Gearboxer) (sts Status) {
 			NewDirectoryController(),
 			NewProjectController(gb),
 			NewStackController(gb),
-			NewServiceController(gb),
+			NewGearController(gb),
 			NewGearspecController(gb),
 			NewAuthorityController(gb),
 			NewBasedirController(gb.GetConfig()),

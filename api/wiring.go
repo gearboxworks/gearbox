@@ -6,11 +6,11 @@ import (
 	"gearbox/apiworks"
 	"gearbox/global"
 	"gearbox/jsonapi"
-	"gearbox/only"
 	"gearbox/types"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/labstack/echo"
 	"io/ioutil"
 	"log"
@@ -121,7 +121,7 @@ func (me *Api) WireHeadRoute(e *echo.Echo, lc ListController, path string) *Rout
 					break
 				}
 				var item ItemModeler
-				item, sts = lc.GetItemDetails(ctx, id) //@TODO Maybe make this lighter weight for HEAD request
+				item, sts = lc.GetItem(ctx, id) //@TODO Maybe make this lighter weight for HEAD request
 				if is.Error(sts) {
 					break
 				}
@@ -151,7 +151,7 @@ func (me *Api) WireGetItemRoute(e *echo.Echo, lc ListController, path string) *R
 					break
 				}
 				var item ItemModeler
-				item, sts = lc.GetItemDetails(ctx, id)
+				item, sts = lc.GetItem(ctx, id)
 				if is.Error(sts) {
 					break
 				}

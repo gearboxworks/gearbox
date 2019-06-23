@@ -3,6 +3,7 @@ package box
 import (
 	"fmt"
 	"gearbox/app/logger"
+	"gearbox/box/external/vmbox"
 	"gearbox/eventbroker"
 	"gearbox/eventbroker/daemon"
 	"gearbox/eventbroker/eblog"
@@ -11,17 +12,15 @@ import (
 	"gearbox/eventbroker/ospaths"
 	"gearbox/eventbroker/states"
 	"gearbox/global"
-	"gearbox/box/external/vmbox"
-	"gearbox/only"
 	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/getlantern/systray"
 	"os"
 	"os/signal"
 	"syscall"
 )
-
 
 func New(OsBridge osbridge.OsBridger, args ...Args) (*Box, status.Status) {
 
@@ -65,13 +64,11 @@ func New(OsBridge osbridge.OsBridger, args ...Args) (*Box, status.Status) {
 
 		_args.State = states.New(&_args.EntityId, &_args.EntityName, entity.SelfEntityName)
 
-
 		*hb = Box(_args)
 	}
 
 	return hb, sts
 }
-
 
 func (me *Box) BoxDaemon() (sts status.Status) {
 
@@ -84,7 +81,7 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 		}
 
 		if daemon.IsParentInit() {
-		//if !daemon.IsParentInit() {
+			//if !daemon.IsParentInit() {
 			fmt.Printf("Gearbox: Sub-command not available for user.\n")
 			sts = status.Fail().SetMessage("daemon mode cannot be run by user specifically")
 			break
@@ -97,7 +94,6 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 		//			//break
 		//		}
 
-
 		// Handle exit signals.
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -109,7 +105,6 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 
 			os.Exit(0)
 		}()
-
 
 		me.EventBroker, err = eventbroker.New(eventbroker.Args{Boxname: me.Boxname})
 		if err != nil {
@@ -146,13 +141,11 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 			break
 		}
 
-
 		err = me.EventBroker.Start()
 		if err != nil {
 			sts = status.Wrap(err).SetMessage("EventBroker was not able to start")
 			break
 		}
-
 
 		fmt.Printf("Dropping in.\n")
 		me.VmBox, err = vmbox.New(vmbox.Args{Channels: &me.EventBroker.Channels, OsPaths: me.EventBroker.OsPaths, Boxname: me.Boxname})
@@ -170,11 +163,9 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 		//me.menu["version"].MenuItem.SetTitle(fmt.Sprintf("Gearbox (v%s)", me.osRelease.Version))
 		//me.menu["version"].MenuItem.SetTooltip(fmt.Sprintf("Running v%s", me.osRelease.Version))
 
-
 		// Setup systray menus.
 		fmt.Printf("Gearbox: Starting systray.\n")
 		systray.Run(me.onReady, me.onExit)
-
 
 		//time.Sleep(time.Second * 10)
 		//state, _ := me.EventBroker.GetSimpleStatus()
@@ -205,7 +196,6 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Box) StartBox() (sts status.Status) {
 
 	var err error
@@ -217,21 +207,21 @@ func (me *Box) StartBox() (sts status.Status) {
 			break
 		}
 
-//		if me.DaemonInstance.IsRunning() {
-//			fmt.Printf("%s Box - Restarting service.\n", global.Brandname)
-//			sts = me.DaemonInstance.Unload()
-//			if is.Error(sts) {
-//				break
-//			}
-//		}
-//
-//		if me.DaemonInstance.IsLoaded() {
-//			fmt.Printf("%s Box - Restarting service.\n", global.Brandname)
-//			sts = me.DaemonInstance.Unload()
-//			if is.Error(sts) {
-//				break
-//			}
-//		}
+		//		if me.DaemonInstance.IsRunning() {
+		//			fmt.Printf("%s Box - Restarting service.\n", global.Brandname)
+		//			sts = me.DaemonInstance.Unload()
+		//			if is.Error(sts) {
+		//				break
+		//			}
+		//		}
+		//
+		//		if me.DaemonInstance.IsLoaded() {
+		//			fmt.Printf("%s Box - Restarting service.\n", global.Brandname)
+		//			sts = me.DaemonInstance.Unload()
+		//			if is.Error(sts) {
+		//				break
+		//			}
+		//		}
 
 		//sts = me.DaemonInstance.Load()
 		fmt.Printf("For now, we're running in the forground.\n")
@@ -254,7 +244,6 @@ func (me *Box) StartBox() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Box) StopBox() (sts status.Status) {
 
@@ -288,7 +277,6 @@ func (me *Box) StopBox() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Box) RestartBox() (sts status.Status) {
 
 	for range only.Once {
@@ -306,7 +294,6 @@ func (me *Box) RestartBox() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Box) GetState() (sts status.Status) {
 
@@ -344,15 +331,13 @@ func (me *Box) GetState() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Box) CreateBox() (sts status.Status) {
 
 	for range only.Once {
 
-	fmt.Printf("Not implemented.\n")
+		fmt.Printf("Not implemented.\n")
 
 	}
 
 	return sts
 }
-

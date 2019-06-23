@@ -15,49 +15,49 @@ func TestId(t *testing.T) {
 func (me *SpecTest) GetData() test.Table {
 	return test.Table{
 		test.NewFixture(&test.Fixture{
-			Label: "AuthorityDomain and Role w/invalid Stackname",
+			Label: "AuthorityDomain and Specname w/invalid Stackname",
 			In:    "@gearbox.works/wordpress/dbserver",
 			Out: test.Out{
 				getSpec: test.Args{Fail: T, Want: "invalid authority '@gearbox.works' in '@gearbox.works/wordpress/dbserver'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "AuthorityDomain and Role w/invalid Stackname",
+			Label: "AuthorityDomain and Specname w/invalid Stackname",
 			In:    "gearbox.works/word.press/dbserver",
 			Out: test.Out{
 				getSpec: test.Args{Fail: T, Want: "invalid stack name 'word.press' in stack ID 'gearbox.works/word.press/dbserver'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Stackname w/invalid Role",
+			Label: "Stackname w/invalid Specname",
 			In:    "wordpress/@dbserver",
 			Out: test.Out{
 				getSpec: test.Args{Fail: T, Want: "invalid role '@dbserver' in 'wordpress/@dbserver'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "invalid Stackname w/Role",
+			Label: "invalid Stackname w/Specname",
 			In:    "gearbox.works/word#press/dbserver",
 			Out: test.Out{
 				getSpec: test.Args{Fail: T, Want: "invalid stack name 'word#press' in stack ID 'gearbox.works/word#press/dbserver'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Stackname/Role/Revision w/invalid AuthorityDomain",
+			Label: "Stackname/Specname/Revision w/invalid AuthorityDomain",
 			In:    "gearbox.works!/wordpress/dbserver:2",
 			Out: test.Out{
 				getSpec: test.Args{Fail: T, Want: "invalid authority 'gearbox.works!' in 'gearbox.works!/wordpress/dbserver:2'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Stackname/Role w/invalid Revision",
+			Label: "Stackname/Specname w/invalid Revision",
 			In:    "wordpress/dbserver:1a",
 			Out: test.Out{
 				getSpec: test.Args{Fail: T, Want: "invalid version in 'wordpress/dbserver:1a'"},
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Stackname/Role/Revision",
+			Label: "Stackname/Specname/Revision",
 			In:    "wordpress/dbserver:2",
 			Out: test.Out{
 				getSpec:         test.Args{Fail: F, Want: global.DefaultAuthorityDomain + "/wordpress/dbserver:2"},
@@ -69,7 +69,7 @@ func (me *SpecTest) GetData() test.Table {
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "AuthorityDomain/Stackname/Role/Revision",
+			Label: "AuthorityDomain/Stackname/Specname/Revision",
 			In:    global.DefaultAuthorityDomain + "/wordpress/dbserver:2",
 			Out: test.Out{
 				getSpec:         test.Args{Fail: F, Want: global.DefaultAuthorityDomain + "/wordpress/dbserver:2"},
@@ -81,7 +81,7 @@ func (me *SpecTest) GetData() test.Table {
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Stackname/Role",
+			Label: "Stackname/Specname",
 			In:    "wordpress/dbserver",
 			Out: test.Out{
 				getSpec:         test.Args{Fail: F, Want: global.DefaultAuthorityDomain + "/wordpress/dbserver"},
@@ -93,7 +93,7 @@ func (me *SpecTest) GetData() test.Table {
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "Role Only",
+			Label: "Specname Only",
 			In:    "dbserver",
 			Out: test.Out{
 				getSpec:         test.Args{Fail: T, Want: "invalid gearspec ID 'dbserver'"},
@@ -105,7 +105,7 @@ func (me *SpecTest) GetData() test.Table {
 			},
 		}),
 		test.NewFixture(&test.Fixture{
-			Label: "AuthorityDomain/Stackname/Role",
+			Label: "AuthorityDomain/Stackname/Specname",
 			In:    "gearbox.works/wordpress/dbserver",
 			Out: test.Out{
 				getSpec:         test.Args{Fail: F, Want: "gearbox.works/wordpress/dbserver"},
@@ -157,7 +157,7 @@ func (me *SpecTest) GetOutput(f *test.Fixture) (got string) {
 		got = string(gsi.GetStackname())
 
 	case getServiceType:
-		got = string(gsi.GetRole())
+		got = string(gsi.GetSpecname())
 
 	case getSpecRevision:
 		got = string(gsi.GetRevision())

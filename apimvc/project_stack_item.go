@@ -21,17 +21,17 @@ type ProjectStackItem struct {
 	ServiceId  service.Identifier  `json:"service_id"`
 }
 
-func NewProjectStackItemFromServiceModel(sm *ServiceModel) (si *ProjectStackItem) {
+func NewProjectStackItemFromServiceModel(sm *GearModel) (si *ProjectStackItem) {
 	return &ProjectStackItem{
 		//GearspecId: sm.GearspecId,
-		ServiceId: sm.ServiceId,
+		ServiceId: sm.GearId,
 	}
 }
-func NewProjectStackItemDetailFromServiceModel(sm *ServiceModel) (sid *ProjectStackItemDetail) {
+func NewProjectStackItemDetailFromServiceModel(sm *GearModel) (sid *ProjectStackItemDetail) {
 	return &ProjectStackItemDetail{
 		ProjectStackItem: &ProjectStackItem{
 			//GearspecId: sm.GearspecId,
-			ServiceId: sm.ServiceId,
+			ServiceId: sm.GearId,
 		},
 		Shareable: "no", //@TODO fix it so this is initialized
 	}

@@ -9,20 +9,20 @@ import (
 	"github.com/gearboxworks/go-status/only"
 )
 
-type ServiceOptions []*ServiceOption
+type GearOptions []*GearOption
 
-type ServiceOption struct {
+type GearOption struct {
 	Orgname    types.Orgname        `json:"orgname,omitempty"`
 	Options    service.Identifiers  `json:"options"`
 	Default    service.Identifier   `json:"default"`
 	Implements gearspec.Identifiers `json:"implements,omitempty"`
 
-	Services       Services           `json:"-"`
-	Gearspecs      gearspec.Gearspecs `json:"-"`
-	DefaultService *Service           `json:"-"`
+	Gears       Gears              `json:"-"`
+	Gearspecs   gearspec.Gearspecs `json:"-"`
+	DefaultGear *Gear              `json:"-"`
 }
 
-func (me ServiceOptions) FilterForNamedStack(stackid types.StackId) (sos ServiceOptions, sts Status) {
+func (me GearOptions) FilterForNamedStack(stackid types.StackId) (sos GearOptions, sts Status) {
 	for range only.Once {
 		// The next 4 lines just validates the stack ID.
 		// Should probably great a more explicit func to do that.
@@ -32,9 +32,9 @@ func (me ServiceOptions) FilterForNamedStack(stackid types.StackId) (sos Service
 			break
 		}
 		stackid = gsi.GetStackId()
-		sos = make(ServiceOptions, 0)
+		sos = make(GearOptions, 0)
 		for _, so := range me {
-			for _, s := range so.Services {
+			for _, s := range so.Gears {
 				if s.GetStackId() != stackid {
 					continue
 				}
@@ -45,28 +45,28 @@ func (me ServiceOptions) FilterForNamedStack(stackid types.StackId) (sos Service
 	return sos, sts
 }
 
-func (me *ServiceOption) Fixup() (sts status.Status) {
+func (me *GearOption) Fixup() (sts status.Status) {
 	for range only.Once {
-		if me.Default != "" {
-			me.DefaultService, sts = me.FixupService(me.Default)
+		if me.Default != ZeroString {
+			me.DefaultGear, sts = me.FixupGear(me.Default)
 			if is.Error(sts) {
 				break
 			}
 		}
-		me.Default = ""
+		me.Default = ZeroString
 
-		me.Services = make(Services, 0)
-		s := NewService()
+		me.Gears = make(Gears, 0)
+		s := NewGear()
 		for _, o := range me.Options {
 			sts = s.Parse(o)
 			if is.Error(sts) {
 				break
 			}
-			s, sts = me.FixupService(s.ServiceId)
+			s, sts = me.FixupGear(s.GearId)
 			if is.Error(sts) {
 				break
 			}
-			me.Services = append(me.Services, s)
+			me.Gears = append(me.Gears, s)
 		}
 		me.Options = nil
 
@@ -84,8 +84,9 @@ func (me *ServiceOption) Fixup() (sts status.Status) {
 	return sts
 }
 
-func (me *ServiceOption) FixupService(serviceid service.Identifier) (s *Service, sts status.Status) {
-	s = NewService()
-	sts = s.Parse(serviceid)
-	return s, sts
+//
+func (me *GearOption) FixupGear(gearid service.Identifier) (g *Gear, sts status.Status) {
+	g = NewGear()
+	sts = g.Parse(gearid)
+	return g, sts
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/states"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 	"os"
 	"os/exec"
 	"strconv"
@@ -21,7 +21,6 @@ type Disk struct {
 }
 type Disks []Disk
 
-
 func (me *Vm) vbCreate() (states.State, error) {
 
 	var err error
@@ -35,42 +34,39 @@ func (me *Vm) vbCreate() (states.State, error) {
 
 		state, err = me.cmdVmInfo()
 		switch state {
-			case states.StateError:
+		case states.StateError:
+			eblog.Debug(me.EntityId, "%v", err)
+
+		case states.StateStopped:
+			fallthrough
+		case states.StateStarted:
+			err = me.EntityName.ProduceError("VM already created")
+			eblog.Debug(me.EntityId, "%v", err)
+
+		case states.StateUnregistered:
+			eblog.Debug(me.EntityId, "creating VM")
+			err = me.cmdCreateVm()
+			if err != nil {
+				break
+			}
+
+			eblog.Debug(me.EntityId, "modifying VM")
+			err = me.cmdModifyVm()
+			if err != nil {
+				break
+			}
+
+			state, err = me.cmdVmInfo()
+			if err != nil {
+				err = me.EntityName.ProduceError("VM couldn't be created")
 				eblog.Debug(me.EntityId, "%v", err)
+				break
+			}
 
+			eblog.Debug(me.EntityId, "VM created OK")
 
-			case states.StateStopped:
-				fallthrough
-			case states.StateStarted:
-				err = me.EntityName.ProduceError("VM already created")
-				eblog.Debug(me.EntityId, "%v", err)
-
-
-			case states.StateUnregistered:
-				eblog.Debug(me.EntityId, "creating VM")
-				err = me.cmdCreateVm()
-				if err != nil {
-					break
-				}
-
-				eblog.Debug(me.EntityId, "modifying VM")
-				err = me.cmdModifyVm()
-				if err != nil {
-					break
-				}
-
-				state, err = me.cmdVmInfo()
-				if err != nil {
-					err = me.EntityName.ProduceError("VM couldn't be created")
-					eblog.Debug(me.EntityId, "%v", err)
-					break
-				}
-
-				eblog.Debug(me.EntityId, "VM created OK")
-
-
-			case states.StateUnknown:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateUnknown:
+			eblog.Debug(me.EntityId, "%v", err)
 		}
 
 	}
@@ -80,7 +76,6 @@ func (me *Vm) vbCreate() (states.State, error) {
 
 	return state, err
 }
-
 
 func (me *Vm) vbDestroy() error {
 
@@ -95,32 +90,28 @@ func (me *Vm) vbDestroy() error {
 		var state states.State
 		state, err = me.cmdVmInfo()
 		switch state {
-			case states.StateError:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateError:
+			eblog.Debug(me.EntityId, "%v", err)
 
+		case states.StateStopped:
+			eblog.Debug(me.EntityId, "destroying VM")
+			err = me.cmdDestroyVm()
+			if err != nil {
+				break
+			}
 
-			case states.StateStopped:
-				eblog.Debug(me.EntityId, "destroying VM")
-				err = me.cmdDestroyVm()
-				if err != nil {
-					break
-				}
+			eblog.Debug(me.EntityId, "VM destroyed OK")
 
-				eblog.Debug(me.EntityId, "VM destroyed OK")
+		case states.StateStarted:
+			err = me.EntityName.ProduceError("VM not stopped")
+			eblog.Debug(me.EntityId, "%v", err)
 
+		case states.StateUnregistered:
+			err = me.EntityName.ProduceError("VM doesn't exist")
+			eblog.Debug(me.EntityId, "%v", err)
 
-			case states.StateStarted:
-				err = me.EntityName.ProduceError("VM not stopped")
-				eblog.Debug(me.EntityId, "%v", err)
-
-
-			case states.StateUnregistered:
-				err = me.EntityName.ProduceError("VM doesn't exist")
-				eblog.Debug(me.EntityId, "%v", err)
-
-
-			case states.StateUnknown:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateUnknown:
+			eblog.Debug(me.EntityId, "%v", err)
 		}
 
 	}
@@ -130,7 +121,6 @@ func (me *Vm) vbDestroy() error {
 
 	return err
 }
-
 
 func (me *Vm) vbStart(wait bool) (bool, error) {
 
@@ -146,39 +136,35 @@ func (me *Vm) vbStart(wait bool) (bool, error) {
 		var state states.State
 		state, err = me.cmdVmInfo()
 		switch state {
-			case states.StateError:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateError:
+			eblog.Debug(me.EntityId, "%v", err)
 
+		case states.StateStopped:
+			// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
+			_, err = me.Run("startvm", me.EntityName.String(), "--type", "headless")
+			if err != nil {
+				break
+			}
 
-			case states.StateStopped:
-				// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
-				_, err = me.Run("startvm", me.EntityName.String(), "--type", "headless")
-				if err != nil {
-					break
-				}
+			ok, err = me.vbWaitForState(states.StateStarted)
+			if err != nil {
+				break
+			}
+			if !ok {
+				break
+			}
 
-				ok, err = me.vbWaitForState(states.StateStarted)
-				if err != nil {
-					break
-				}
-				if !ok {
-					break
-				}
+			eblog.Debug(me.EntityId, "VM started OK")
 
-				eblog.Debug(me.EntityId, "VM started OK")
+		case states.StateStarted:
+			err = me.EntityName.ProduceError("VM already started")
+			eblog.Debug(me.EntityId, "%v", err)
 
+		case states.StateUnregistered:
+			eblog.Debug(me.EntityId, "%v", err)
 
-			case states.StateStarted:
-				err = me.EntityName.ProduceError("VM already started")
-				eblog.Debug(me.EntityId, "%v", err)
-
-
-			case states.StateUnregistered:
-				eblog.Debug(me.EntityId, "%v", err)
-
-
-			case states.StateUnknown:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateUnknown:
+			eblog.Debug(me.EntityId, "%v", err)
 		}
 
 	}
@@ -188,7 +174,6 @@ func (me *Vm) vbStart(wait bool) (bool, error) {
 
 	return ok, err
 }
-
 
 func (me *Vm) vbStop(force bool, wait bool) (bool, error) {
 
@@ -204,42 +189,38 @@ func (me *Vm) vbStop(force bool, wait bool) (bool, error) {
 		var state states.State
 		state, err = me.cmdVmInfo()
 		switch state {
-			case states.StateError:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateError:
+			eblog.Debug(me.EntityId, "%v", err)
 
+		case states.StateStopped:
+			eblog.Debug(me.EntityId, "VM already stopped")
 
-			case states.StateStopped:
-				eblog.Debug(me.EntityId, "VM already stopped")
+		case states.StateStarted:
+			// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
+			if force {
+				_, err = me.Run("controlvm", me.EntityName.String(), "poweroff")
+			} else {
+				_, err = me.Run("controlvm", me.EntityName.String(), "acpipowerbutton")
+			}
+			if err != nil {
+				break
+			}
 
+			ok, err = me.vbWaitForState(states.StateStarted)
+			if err != nil {
+				break
+			}
+			if !ok {
+				break
+			}
 
-			case states.StateStarted:
-				// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
-				if force {
-					_, err = me.Run("controlvm", me.EntityName.String(), "poweroff")
-				} else {
-					_, err = me.Run("controlvm", me.EntityName.String(), "acpipowerbutton")
-				}
-				if err != nil {
-					break
-				}
+			eblog.Debug(me.EntityId, "VM stopped OK")
 
-				ok, err = me.vbWaitForState(states.StateStarted)
-				if err != nil {
-					break
-				}
-				if !ok {
-					break
-				}
+		case states.StateUnregistered:
+			eblog.Debug(me.EntityId, "%v", err)
 
-				eblog.Debug(me.EntityId, "VM stopped OK")
-
-
-			case states.StateUnregistered:
-				eblog.Debug(me.EntityId, "%v", err)
-
-
-			case states.StateUnknown:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateUnknown:
+			eblog.Debug(me.EntityId, "%v", err)
 		}
 
 	}
@@ -249,7 +230,6 @@ func (me *Vm) vbStop(force bool, wait bool) (bool, error) {
 
 	return ok, err
 }
-
 
 func (me *Vm) vbStatus() (states.State, error) {
 
@@ -270,7 +250,6 @@ func (me *Vm) vbStatus() (states.State, error) {
 
 	return state, err
 }
-
 
 func (me *Vm) vbWaitForState(want states.State) (bool, error) {
 
@@ -310,8 +289,6 @@ func (me *Vm) vbWaitForState(want states.State) (bool, error) {
 
 	return ok, err
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////
 func (me *Vm) cmdVmInfo() (states.State, error) {
@@ -361,19 +338,19 @@ func (me *Vm) cmdVmInfo() (states.State, error) {
 			me.Entry.vmInfo = kvm
 
 			switch me.Entry.vmInfo["VMState"] {
-				case "poweroff":
-					fallthrough
-				case "paused":
-					fallthrough
-				case "saved":
-					state = states.StateStopped
+			case "poweroff":
+				fallthrough
+			case "paused":
+				fallthrough
+			case "saved":
+				state = states.StateStopped
 
-				case "running":
-					state = states.StateStarted
+			case "running":
+				state = states.StateStarted
 
-				default:
-					state = states.StateUnknown
-					err = me.EntityName.ProduceError("VM is in an unknown state")
+			default:
+				state = states.StateUnknown
+				err = me.EntityName.ProduceError("VM is in an unknown state")
 			}
 
 			// 	VmStatePowerOff 	= "poweroff"	// Valid VM state return from listvm
@@ -415,7 +392,6 @@ func (me *Vm) cmdVmInfo() (states.State, error) {
 	return state, err
 }
 
-
 func (me *Vm) cmdCreateVm() error {
 
 	var err error
@@ -441,7 +417,6 @@ func (me *Vm) cmdCreateVm() error {
 
 	return err
 }
-
 
 func (me *Vm) cmdModifyVm() error {
 
@@ -482,7 +457,6 @@ func (me *Vm) cmdModifyVm() error {
 	return err
 }
 
-
 func (me *Vm) cmdDestroyVm() error {
 
 	var err error
@@ -508,7 +482,6 @@ func (me *Vm) cmdDestroyVm() error {
 	return err
 }
 
-
 func (me *Vm) cmdModifyVmBasic() error {
 
 	var err error
@@ -521,7 +494,7 @@ func (me *Vm) cmdModifyVmBasic() error {
 
 		// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsBridge.GetAdminRootDir()) + "/" + IconLogo)
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--description", me.EntityName.String() + " OS VM", "--iconfile", me.osPaths.UserConfigDir.AddFileToPath(IconLogoPng).String())
+			"--description", me.EntityName.String()+" OS VM", "--iconfile", me.osPaths.UserConfigDir.AddFileToPath(IconLogoPng).String())
 		if err != nil {
 			break
 		}
@@ -583,7 +556,6 @@ func (me *Vm) cmdModifyVmBasic() error {
 	return err
 }
 
-
 func (me *Vm) cmdModifyVmNetwork() error {
 
 	var err error
@@ -608,7 +580,7 @@ func (me *Vm) cmdModifyVmNetwork() error {
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--natnet1", "default", "--natpf1", "SSH,tcp,," + me.Entry.SshPort + ",,22")
+			"--natnet1", "default", "--natpf1", "SSH,tcp,,"+me.Entry.SshPort+",,22")
 		if err != nil {
 			break
 		}
@@ -641,7 +613,6 @@ func (me *Vm) cmdModifyVmNetwork() error {
 	return err
 }
 
-
 func (me *Vm) cmdModifyVmStorage() error {
 
 	var err error
@@ -662,24 +633,24 @@ func (me *Vm) cmdModifyVmStorage() error {
 		// SIGH - Needs to be not hard-coded.
 		disks := Disks{}
 		disks = append(disks, Disk{
-			Name: "Gearbox-Opt.vdi",
+			Name:   "Gearbox-Opt.vdi",
 			Format: "VDI",
-			Size: "1024",
+			Size:   "1024",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Docker.vdi",
+			Name:   "Gearbox-Docker.vdi",
 			Format: "VDI",
-			Size: "16384",
+			Size:   "16384",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Projects.vdi",
+			Name:   "Gearbox-Projects.vdi",
 			Format: "VDI",
-			Size: "16384",
+			Size:   "16384",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Config.vdi",
+			Name:   "Gearbox-Config.vdi",
 			Format: "VDI",
-			Size: "1024",
+			Size:   "1024",
 		})
 
 		for index, disk := range disks {
@@ -707,7 +678,6 @@ func (me *Vm) cmdModifyVmStorage() error {
 
 	return err
 }
-
 
 func (me *Vm) cmdModifyVmIso() error {
 
@@ -740,7 +710,6 @@ func (me *Vm) cmdModifyVmIso() error {
 
 	return err
 }
-
 
 func (me *Vm) findFirstNic() error {
 
@@ -788,7 +757,6 @@ func (me *Vm) findFirstNic() error {
 	return err
 }
 
-
 // Run runs a VBoxManage command.
 func (me *Vm) Run(args ...string) (exitCode string, err error) {
 
@@ -819,17 +787,17 @@ func (me *Vm) Run(args ...string) (exitCode string, err error) {
 			exitCode = strings.TrimPrefix(err.Error(), "exit status ")
 
 			switch exitCode {
-				case exitCodeMissingVm:
-					err = me.EntityName.ProduceError("VM unregistered")
-					//fmt.Printf("stdout:%v\n", stdout.String())
-					//fmt.Printf("stderr:%v\n", stderr.String())
-					//fmt.Printf("returnCode:'%v'\n", returnCode)
+			case exitCodeMissingVm:
+				err = me.EntityName.ProduceError("VM unregistered")
+				//fmt.Printf("stdout:%v\n", stdout.String())
+				//fmt.Printf("stderr:%v\n", stderr.String())
+				//fmt.Printf("returnCode:'%v'\n", returnCode)
 
-				default:
-					err = me.EntityName.ProduceError("failed to run command '%v'", err.Error())
-					fmt.Printf("stdout:%v\n", me.Entry.cmdStdout.String())
-					fmt.Printf("stderr:%v\n", me.Entry.cmdStderr.String())
-					fmt.Printf("returnCode:'%v'\n", exitCode)
+			default:
+				err = me.EntityName.ProduceError("failed to run command '%v'", err.Error())
+				fmt.Printf("stdout:%v\n", me.Entry.cmdStdout.String())
+				fmt.Printf("stderr:%v\n", me.Entry.cmdStderr.String())
+				fmt.Printf("returnCode:'%v'\n", exitCode)
 			}
 		}
 
@@ -843,22 +811,19 @@ func (me *Vm) Run(args ...string) (exitCode string, err error) {
 }
 
 const (
-	exitCodeOK = "0"
+	exitCodeOK        = "0"
 	exitCodeMissingVm = "1"
-	exitCodeCmdError = "2"
+	exitCodeCmdError  = "2"
 )
 
-
-
 type KeyValue struct {
-	Key	string
+	Key   string
 	Value string
 }
 type KeyValues []KeyValue
 
 type KeyValueMap map[string]string
 type KeyValuesMap map[string]KeyValueMap
-
 
 func (kvs *KeyValues) decodeBridgeIfs() (KeyValuesMap, bool) {
 
@@ -887,7 +852,6 @@ func (kvs *KeyValues) decodeBridgeIfs() (KeyValuesMap, bool) {
 	return kvm, ok
 }
 
-
 func (kvs *KeyValues) decodeShowVmInfo() (KeyValueMap, bool) {
 
 	ok := false
@@ -905,7 +869,6 @@ func (kvs *KeyValues) decodeShowVmInfo() (KeyValueMap, bool) {
 
 	return kvm, ok
 }
-
 
 func lineToKey(s string, splitOn rune) (ld KeyValue, ok bool) {
 
@@ -952,7 +915,6 @@ func lineToKey(s string, splitOn rune) (ld KeyValue, ok bool) {
 	return
 }
 
-
 func decodeResponse(s bytes.Buffer, splitOn rune) (dr KeyValues, ok bool) {
 
 	ok = false
@@ -974,9 +936,6 @@ func decodeResponse(s bytes.Buffer, splitOn rune) (dr KeyValues, ok bool) {
 	return
 }
 
-
-
-
 //// RunCombinedError runs a VBoxManage command.  The output is stdout and the the
 //// combined err/stderr from the command.
 //func (me *Vm) RunCombinedError(args ...string) (string, error) {
@@ -991,7 +950,6 @@ func decodeResponse(s bytes.Buffer, splitOn rune) (dr KeyValues, ok bool) {
 //
 //	return wout, nil
 //}
-
 
 //#!/bin/bash
 //
@@ -1072,4 +1030,3 @@ func decodeResponse(s bytes.Buffer, splitOn rune) (dr KeyValues, ok bool) {
 //# Create IDE bus for ISO.
 //VBoxManage storagectl ${VM_NAME} --name "IDE" --add ide --hostiocache on --bootable on
 //VBoxManage storageattach ${VM_NAME} --storagectl "IDE" --port 0 --device 0 --type dvddrive --tempeject on  --medium $HOME/.gearbox/box/iso/gearbox-0.5.0.iso
-

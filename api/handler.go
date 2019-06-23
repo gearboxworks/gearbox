@@ -3,10 +3,10 @@ package api
 import (
 	"gearbox/global"
 	"gearbox/jsonapi"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/labstack/echo"
 )
 

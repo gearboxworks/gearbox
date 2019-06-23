@@ -2,10 +2,12 @@ package apiworks
 
 import (
 	"fmt"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 )
@@ -63,7 +65,15 @@ func GetIdFromUrl(ctx *Context, controller ListController) (id ItemId, sts statu
 				})
 				break
 			}
-			parts[i] = val
+			part, err := url.PathUnescape(val)
+			if err != nil {
+				sts = status.Wrap(err).SetMessage("unable to unescape URL path segment '%s'", val)
+				break
+			}
+			parts[i] = part
+		}
+		if is.Error(sts) {
+			break
 		}
 		id = ItemId(strings.Join(parts, "/"))
 	}

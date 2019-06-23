@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/jsonapi"
-	"gearbox/only"
 	"gearbox/types"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/mitchellh/go-homedir"
 	"net/http"
 	"net/url"
@@ -18,7 +18,6 @@ import (
 
 const DirectoryControllerName types.RouteName = "directories"
 const DirectoriesBasepath types.Basepath = "/directories"
-const DirectoryIdParam IdParam = "dir"
 
 var NilDirectoryController = (*DirectoryController)(nil)
 var _ ListController = NilDirectoryController
@@ -41,12 +40,6 @@ func (me *DirectoryController) GetName() types.RouteName {
 
 func (me *DirectoryController) GetBasepath() types.Basepath {
 	return DirectoriesBasepath
-}
-
-func (me *DirectoryController) GetIdParams() IdParams {
-	return IdParams{
-		DirectoryIdParam,
-	}
 }
 
 func (me *DirectoryController) GetListIds(ctx *Context, filterPath ...FilterPath) (itemids ItemIds, sts Status) {
@@ -78,10 +71,6 @@ func (me *DirectoryController) GetItem(ctx *Context, dir ItemId) (item ItemModel
 		item, sts = FindDirectory(d)
 	}
 	return item, sts
-}
-
-func (me *DirectoryController) GetItemDetails(ctx *Context, itemid ItemId) (ItemModeler, Status) {
-	return me.GetItem(ctx, itemid)
 }
 
 func (me *DirectoryController) FilterItem(in ItemModeler, filterPath FilterPath) (out ItemModeler, sts Status) {

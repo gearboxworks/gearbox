@@ -5,10 +5,10 @@ import (
 	"gearbox/apiworks"
 	"gearbox/gearbox"
 	"gearbox/gears"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 	"reflect"
 	"sort"
@@ -16,10 +16,8 @@ import (
 
 const StackControllerName types.RouteName = "stacks"
 const StacksBasepath types.Basepath = "/stacks"
-const AuthorityIdParam IdParam = "authority"
-const StacknameIdParam IdParam = "stackname"
 
-const StackRolesField Fieldname = "stack_roles"
+const GearspecsField Fieldname = "gearspecs"
 
 var NilStackController = (*StackController)(nil)
 var _ ListController = NilStackController
@@ -42,7 +40,7 @@ func (me *StackController) GetNilItem(ctx *Context) ItemModeler {
 func (me *StackController) GetRelatedFields() RelatedFields {
 	return RelatedFields{
 		&RelatedField{
-			Fieldname:   StackRolesField,
+			Fieldname:   GearspecsField,
 			IncludeType: NamedStackType,
 		},
 	}
@@ -64,13 +62,6 @@ func (me *StackController) GetBasepath() types.Basepath {
 
 func (me *StackController) GetItemType() reflect.Kind {
 	return reflect.Struct
-}
-
-func (me *StackController) GetIdParams() IdParams {
-	return IdParams{
-		AuthorityIdParam,
-		StacknameIdParam,
-	}
 }
 
 func (me *StackController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
@@ -172,10 +163,6 @@ func (me *StackController) GetItem(ctx *Context, stackid ItemId) (list ItemModel
 	for range only.Once {
 		gbns, sts := me.Gearbox.FindNamedStack(types.StackId(stackid))
 		if is.Error(sts) {
-			sts = status.Wrap(sts, &status.Args{
-				Message:    fmt.Sprintf("Stack '%s' not found", stackid),
-				HttpStatus: http.StatusNotFound,
-			})
 			break
 		}
 		ns, sts = NewNamedStackModelFromGearsNamedStack(ctx, gbns)
@@ -185,10 +172,6 @@ func (me *StackController) GetItem(ctx *Context, stackid ItemId) (list ItemModel
 		sts = status.Success("Stack '%s' found", stackid)
 	}
 	return ns, sts
-}
-
-func (me *StackController) GetItemDetails(ctx *Context, itemid ItemId) (ItemModeler, Status) {
-	return me.GetItem(ctx, itemid)
 }
 
 func (me *StackController) FilterItem(in ItemModeler, filterPath FilterPath) (out ItemModeler, sts Status) {

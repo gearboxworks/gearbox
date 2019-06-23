@@ -3,17 +3,17 @@ package gearspec
 import (
 	"fmt"
 	"gearbox/global"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
 const minStacknameLen = 2
-const minRoleLen = 3
+const minSpecnameLen = 3
 
 type Gearspecs []*Gearspec
 
@@ -29,12 +29,21 @@ func (me Gearspecs) FindById(gsid Identifier) (gs *Gearspec) {
 	return gs
 }
 
+type Gearspecer interface {
+	GetIdentifier() Identifier
+	GetIsRemote() bool
+	GetAuthorityDomain() types.AuthorityDomain
+	GetStackname() types.Stackname
+	GetSpecname() types.Specname
+	GetRevision() types.Revision
+}
+
 type Gearspec struct {
 	Identifier      Identifier
 	IsRemote        bool
 	AuthorityDomain types.AuthorityDomain `json:"authority,omitempty"`
 	Stackname       types.Stackname       `json:"stackname,omitempty"`
-	Role            types.StackRole       `json:"role,omitempty"`
+	Specname        types.Specname        `json:"role,omitempty"`
 	Revision        types.Revision        `json:"revision,omitempty"`
 }
 
@@ -52,6 +61,17 @@ var regexes = struct {
 	regexp.MustCompile("#https?://#"),
 }
 
+func NewGearspecFromGearspecer(gsr Gearspecer) *Gearspec {
+	return &Gearspec{
+		Identifier:      gsr.GetIdentifier(),
+		IsRemote:        gsr.GetIsRemote(),
+		AuthorityDomain: gsr.GetAuthorityDomain(),
+		Stackname:       gsr.GetStackname(),
+		Specname:        gsr.GetSpecname(),
+		Revision:        gsr.GetRevision(),
+	}
+}
+
 func (me *Gearspec) ParseString(gearspecid string) (sts status.Status) {
 	return me.Parse(Identifier(gearspecid))
 }
@@ -60,7 +80,7 @@ func (me *Gearspec) ParseStackId(stackid types.StackId) (sts status.Status) {
 	gearspecid := fmt.Sprintf("%s/%s", stackid, "dummy")
 	sts = me.Parse(Identifier(gearspecid))
 	if is.Success(sts) {
-		me.Role = ""
+		me.Specname = ""
 	}
 	return sts
 }
@@ -122,11 +142,11 @@ func (me *Gearspec) ParseLocalGearspec(gsi Identifier) (sts status.Status) {
 				SetAllHelp("stackname must be at least %d characters long", minStacknameLen)
 			break
 		}
-		tmp.Role = parts[1]
-		if len(tmp.Role) < minRoleLen {
+		tmp.Specname = parts[1]
+		if len(tmp.Specname) < minSpecnameLen {
 			sts = status.Wrap(err).
 				SetMessage("invalid role in '%s'", gsi).
-				SetAllHelp("role must be at least %d characters long", minRoleLen)
+				SetAllHelp("role must be at least %d characters long", minSpecnameLen)
 		}
 	}
 	if is.Success(sts) {
@@ -144,10 +164,19 @@ func (me *Gearspec) GetIdentifier() (id Identifier) {
 			break
 		}
 		if me.Revision == "" {
-			_id = strings.ToLower(fmt.Sprintf("%s/%s", me.Stackname, me.Role))
+			_id = strings.ToLower(fmt.Sprintf("%s/%s/%s",
+				me.AuthorityDomain,
+				me.Stackname,
+				me.Specname,
+			))
 			break
 		}
-		_id = strings.ToLower(fmt.Sprintf("%s/%s:%s", me.Stackname, me.Role, me.Revision))
+		_id = strings.ToLower(fmt.Sprintf("%s/%s/%s:%s",
+			me.AuthorityDomain,
+			me.Stackname,
+			me.Specname,
+			me.Revision,
+		))
 	}
 	return Identifier(_id)
 }
@@ -168,8 +197,8 @@ func (me *Gearspec) GetStackname() types.Stackname {
 	return me.Stackname
 }
 
-func (me *Gearspec) GetRole() types.StackRole {
-	return me.Role
+func (me *Gearspec) GetSpecname() types.Specname {
+	return me.Specname
 }
 
 func (me *Gearspec) GetRevision() types.Revision {

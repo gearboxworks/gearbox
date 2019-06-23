@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"gearbox/apiworks"
 	"gearbox/gearspec"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/only"
 	"strings"
 )
 
@@ -23,7 +23,7 @@ type GearspecModel struct {
 	StackId    types.StackId         `json:"stack_id,omitempty"`
 	Authority  types.AuthorityDomain `json:"authority,omitempty"`
 	Stackname  types.Stackname       `json:"stackname,omitempty"`
-	Role       types.StackRole       `json:"role,omitempty"`
+	Specname   types.Specname        `json:"role,omitempty"`
 	Revision   types.Revision        `json:"revision"`
 	Model
 }
@@ -38,7 +38,7 @@ func NewGearspecModelFromGearspecGearspec(ctx *Context, gsgs *gearspec.Gearspec)
 		StackId:    gsgs.GetStackId(),
 		Authority:  gsgs.AuthorityDomain,
 		Stackname:  gsgs.Stackname,
-		Role:       gsgs.Role,
+		Specname:   gsgs.Specname,
 		Revision:   gsgs.Revision,
 	}, sts
 }

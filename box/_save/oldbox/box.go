@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"gearbox/global"
 	"gearbox/help"
-	"gearbox/only"
 	"github.com/gearboxworks/go-osbridge"
+	"github.com/gearboxworks/go-status/only"
 
 	//	"gearbox/os_support"
 	"gearbox/ssh"
@@ -15,16 +15,15 @@ import (
 	"time"
 )
 
-
 type Box struct {
-	Boxname         string
-	State           BoxState
-	VmBaseDir       string
-	VmIsoDir        string
-	VmIsoVersion    string
-	VmIsoFile       string
-	VmIsoUrl 		string
-	VmIsoDlIndex	int
+	Boxname      string
+	State        BoxState
+	VmBaseDir    string
+	VmIsoDir     string
+	VmIsoVersion string
+	VmIsoFile    string
+	VmIsoUrl     string
+	VmIsoDlIndex int
 
 	// SSH related - Need to fix this. It's used within CreateBox()
 	SshUsername  string
@@ -47,9 +46,7 @@ type Box struct {
 }
 type Args Box
 
-
 // These will be re-implemented using the EventBroker framework.
-
 
 func NewBox(OsSupport osbridge.OsBridger, args ...Args) *Box {
 
@@ -122,12 +119,10 @@ func NewBox(OsSupport osbridge.OsBridger, args ...Args) *Box {
 	return box
 }
 
-
 func (me *Box) Initialize() (sts status.Status) {
 
 	return sts
 }
-
 
 //
 //
@@ -221,7 +216,6 @@ func (me *Box) Initialize() (sts status.Status) {
 //	return sts
 //}
 
-
 func (me *Box) Start() (sts status.Status) {
 
 	for range only.Once {
@@ -235,7 +229,6 @@ func (me *Box) Start() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Box) Stop() (sts status.Status) {
 
@@ -251,7 +244,6 @@ func (me *Box) Stop() (sts status.Status) {
 	return sts
 }
 
-
 func (me *Box) Restart() (sts status.Status) {
 
 	for range only.Once {
@@ -266,7 +258,6 @@ func (me *Box) Restart() (sts status.Status) {
 
 	return sts
 }
-
 
 func (me *Box) GetState() (BoxState, status.Status) {
 
@@ -284,7 +275,6 @@ func (me *Box) GetState() (BoxState, status.Status) {
 	return me.State, sts
 }
 
-
 func (me *Box) CreateBox() (BoxState, status.Status) {
 
 	var sts status.Status
@@ -301,8 +291,7 @@ func (me *Box) CreateBox() (BoxState, status.Status) {
 	return me.State, sts
 }
 
-
-func (me *Box) GetVmStatus() (status.Status) {
+func (me *Box) GetVmStatus() status.Status {
 
 	var sts status.Status
 
@@ -317,7 +306,6 @@ func (me *Box) GetVmStatus() (status.Status) {
 
 	return sts
 }
-
 
 func EnsureNotNil(bx *Box) (sts status.Status) {
 	if bx == nil {

@@ -3,7 +3,7 @@ package util
 import (
 	"fmt"
 	"gearbox/help"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 
 	"github.com/gearboxworks/go-status"
 	"io"

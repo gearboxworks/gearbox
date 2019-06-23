@@ -3,9 +3,9 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/only"
 )
 
 type FilepathHelpUrlGetter interface {

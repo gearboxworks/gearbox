@@ -10,8 +10,8 @@ import (
 	"gearbox/eventbroker/ospaths"
 	"gearbox/eventbroker/states"
 	"gearbox/global"
-	"gearbox/only"
 	"github.com/cavaliercoder/grab"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/google/go-github/github"
 	"golang.org/x/net/context"
 	"os"
@@ -25,14 +25,15 @@ import (
 //	"strings"
 
 type Releases struct {
-	Map             ReleasesMap
-	Latest	        *Release
-	Selected        *Release
-	BaseDir         *ospaths.Dir
+	Map      ReleasesMap
+	Latest   *Release
+	Selected *Release
+	BaseDir  *ospaths.Dir
 
-	channels        *channels.Channels
+	channels *channels.Channels
 }
 type ReleasesMap map[Version]*Release
+
 //type Release github.RepositoryRelease
 type Version string
 
@@ -45,7 +46,7 @@ type Release struct {
 	DlIndex       int
 	IsDownloading bool
 
-	channels      *channels.Channels
+	channels *channels.Channels
 }
 
 type ReleaseSelector struct {
@@ -54,9 +55,8 @@ type ReleaseSelector struct {
 	UntilDate       time.Time
 	SpecificVersion string
 	RegexpVersion   string
-	Latest			*bool
+	Latest          *bool
 }
-
 
 func NewReleases(c *channels.Channels) (*Releases, error) {
 
@@ -83,7 +83,6 @@ func NewReleases(c *channels.Channels) (*Releases, error) {
 
 	return ret, err
 }
-
 
 func (me *Releases) ShowReleases() error {
 	var err error
@@ -129,7 +128,6 @@ func (me *Releases) ShowReleases() error {
 	return err
 }
 
-
 func (me *Release) ShowRelease() error {
 	var err error
 
@@ -140,7 +138,7 @@ func (me *Release) ShowRelease() error {
 		}
 
 		if me.Instance.Name == nil {
-			err = messages.ProduceError(entity.VmBoxEntityName,"no release version specified")
+			err = messages.ProduceError(entity.VmBoxEntityName, "no release version specified")
 			break
 		}
 
@@ -168,7 +166,6 @@ func (me *Release) ShowRelease() error {
 	return err
 }
 
-
 func (me *Releases) UpdateReleases() error {
 
 	var rm = make(ReleasesMap)
@@ -193,7 +190,7 @@ func (me *Releases) UpdateReleases() error {
 
 		releases, _, err := client.Repositories.ListReleases(context.Background(), "gearboxworks", "gearbox-os", opt)
 		if err != nil {
-			err = messages.ProduceError(entity.VmBoxEntityName,"can't fetch GitHub releases")
+			err = messages.ProduceError(entity.VmBoxEntityName, "can't fetch GitHub releases")
 			break
 		}
 
@@ -206,8 +203,8 @@ func (me *Releases) UpdateReleases() error {
 			name := Version(rel.GetName())
 
 			release := Release{
-				Version: name,
-				Url: "",
+				Version:  name,
+				Url:      "",
 				Instance: rel,
 				channels: me.channels,
 			}
@@ -249,7 +246,6 @@ func (me *Releases) UpdateReleases() error {
 	return err
 }
 
-
 /*
 Updates the following:
    me.VmIsoVersion    string
@@ -286,7 +282,6 @@ func (me *Releases) SelectRelease(selector ReleaseSelector) (*Release, error) {
 	return r, err
 }
 
-
 func (me *Release) GetIso() error {
 
 	var err error
@@ -307,13 +302,11 @@ func (me *Release) GetIso() error {
 			break
 		}
 
-
 		var state int
 		state, err = me.IsIsoFilePresent()
 		if state != IsoFileNeedsToDownload {
 			break
 		}
-
 
 		// Start download
 		me.DlIndex = 0
@@ -325,24 +318,23 @@ func (me *Release) GetIso() error {
 		fmt.Printf("  %v\n", resp.HTTPResponse.Status)
 		fmt.Printf("%s VM - ISO fetching from '%s' and saved to '%s'. Size:%s.\n", global.Brandname, me.Url, me.File.String(), resp.Size)
 
-
 		// start UI loop
 		t := time.NewTicker(500 * time.Millisecond)
 		defer t.Stop()
 
-		Loop:
-			for {
-				select {
-					case <-t.C:
-						me.DlIndex = int(100*resp.Progress())
-						me.publishDownloadState()
-						fmt.Printf("File '%s' transferred %v / %v bytes (%d%%)\n", me.File.String(), resp.BytesComplete(), resp.Size, me.DlIndex)
+	Loop:
+		for {
+			select {
+			case <-t.C:
+				me.DlIndex = int(100 * resp.Progress())
+				me.publishDownloadState()
+				fmt.Printf("File '%s' transferred %v / %v bytes (%d%%)\n", me.File.String(), resp.BytesComplete(), resp.Size, me.DlIndex)
 
-					case <-resp.Done:
-						// download is complete
-						break Loop
-				}
+			case <-resp.Done:
+				// download is complete
+				break Loop
 			}
+		}
 
 		// check for errors
 		if err := resp.Err(); err != nil {
@@ -350,7 +342,6 @@ func (me *Release) GetIso() error {
 			break
 		}
 		fmt.Printf("Download saved to ./%v \n", resp.Filename)
-
 
 		eblog.Debug(entity.VmBoxEntityName, "ISO fetched from '%s' and saved to '%s'. Size:%d", me.Url, me.File.String(), resp.Size)
 		me.DlIndex = 100
@@ -364,7 +355,6 @@ func (me *Release) GetIso() error {
 	return err
 }
 
-
 func (me *Release) publishDownloadState() {
 
 	client := messages.MessageAddress(entity.VmUpdateEntityName)
@@ -377,10 +367,10 @@ func (me *Release) publishDownloadState() {
 	_ = me.channels.Publish(msg)
 }
 
+const IsoFileNeedsToDownload = 0
+const IsoFileIsDownloading = 1
+const IsoFileDownloaded = 2
 
-const IsoFileNeedsToDownload	= 0
-const IsoFileIsDownloading		= 1
-const IsoFileDownloaded			= 2
 func (me *Release) IsIsoFilePresent() (int, error) {
 
 	var err error
@@ -434,7 +424,6 @@ func (me *Release) IsIsoFilePresent() (int, error) {
 	return ret, err
 }
 
-
 func (me *Releases) EnsureNotNil() error {
 
 	var err error
@@ -452,7 +441,6 @@ func (me *Releases) EnsureNotNil() error {
 func EnsureReleasesNotNil(me *Releases) error {
 	return me.EnsureNotNil()
 }
-
 
 func (me *ReleasesMap) EnsureNotNil() error {
 
@@ -472,7 +460,6 @@ func EnsureReleasesMapNotNil(me *ReleasesMap) error {
 	return me.EnsureNotNil()
 }
 
-
 func (me *Release) EnsureNotNil() error {
 
 	var err error
@@ -490,9 +477,6 @@ func (me *Release) EnsureNotNil() error {
 func EnsureReleaseNotNil(me *Release) error {
 	return me.EnsureNotNil()
 }
-
-
-
 
 //func EnsureReleaseNotNil(rm *Release) (sts status.Status) {
 //	if rm == nil {
@@ -689,4 +673,3 @@ func EnsureReleaseNotNil(me *Release) error {
 //		release.Author,
 //		release.NodeID,
 //		)
-

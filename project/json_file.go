@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"gearbox/gears"
 	"gearbox/gearspec"
-	"gearbox/only"
 	"gearbox/service"
 	"gearbox/types"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -22,12 +22,12 @@ var _ util.FilepathHelpUrlGetter = (*JsonFile)(nil)
 type HostnameAliases []types.Hostname
 
 type JsonFile struct {
-	JsonMeta   JsonMeta            `json:"gearbox"`
-	Hostname   types.Hostname      `json:"hostname"`
-	Aliases    HostnameAliases     `json:"aliases"`
-	ServiceBag gears.ServiceBag    `json:"stack"`
-	Stack      service.ServicerMap `json:"-"`
-	Filepath   types.Filepath      `json:"-"`
+	JsonMeta JsonMeta            `json:"gearbox"`
+	Hostname types.Hostname      `json:"hostname"`
+	Aliases  HostnameAliases     `json:"aliases"`
+	GearBag  gears.GearBag       `json:"stack"`
+	Stack    service.ServicerMap `json:"-"`
+	Filepath types.Filepath      `json:"-"`
 }
 
 func NewJsonFile(filepath types.Filepath) *JsonFile {
@@ -37,8 +37,8 @@ func NewJsonFile(filepath types.Filepath) *JsonFile {
 	}
 }
 
-func (me *JsonFile) GetServiceBag() (sb gears.ServiceBag, sts status.Status) {
-	sb = make(gears.ServiceBag, len(me.Stack))
+func (me *JsonFile) GetGearBag() (sb gears.GearBag, sts status.Status) {
+	sb = make(gears.GearBag, len(me.Stack))
 	for range only.Once {
 		for gs, s := range me.Stack {
 			var ps service.Servicer
@@ -56,8 +56,8 @@ func (me *JsonFile) CaptureProject(project *Project) (sts status.Status) {
 	me.Hostname = types.Hostname(project.Hostname)
 	me.Aliases = project.Aliases
 	me.Stack = project.Stack
-	sb, sts := me.GetServiceBag()
-	me.ServiceBag = sb
+	gb, sts := me.GetGearBag()
+	me.GearBag = gb
 	return sts
 }
 
@@ -119,8 +119,8 @@ func (me *JsonFile) Unmarshal(j []byte) (sts status.Status) {
 }
 
 func (me *JsonFile) FixupStack() (sts status.Status) {
-	me.Stack = make(service.ServicerMap, len(me.ServiceBag))
-	for gsi, item := range me.ServiceBag {
+	me.Stack = make(service.ServicerMap, len(me.GearBag))
+	for gsi, item := range me.GearBag {
 		var svc *service.Service
 		svc, sts = me.FixupStackItem(item, gsi)
 		if status.IsError(sts) {
@@ -130,7 +130,7 @@ func (me *JsonFile) FixupStack() (sts status.Status) {
 		me.Stack[gsi] = service.NewProxyServicer(svc)
 	}
 	if !status.IsError(sts) {
-		me.ServiceBag = nil
+		me.GearBag = nil
 		sts = status.Success("stack fixup for '%s' complete", me.Hostname)
 	}
 	return sts

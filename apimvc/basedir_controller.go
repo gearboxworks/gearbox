@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"gearbox/config"
 	"gearbox/jsonapi"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 	"reflect"
 	"sort"
@@ -16,7 +16,6 @@ import (
 
 const BasedirControllerName types.RouteName = "basedirs"
 const BasedirsBasepath types.Basepath = "/basedirs"
-const NicknameIdParam IdParam = "nickname"
 
 var NilBasedirController = (*BasedirController)(nil)
 var _ ListController = NilBasedirController
@@ -56,12 +55,6 @@ func (me *BasedirController) GetBasepath() types.Basepath {
 
 func (me *BasedirController) GetItemType() reflect.Kind {
 	return reflect.Struct
-}
-
-func (me *BasedirController) GetIdParams() IdParams {
-	return IdParams{
-		NicknameIdParam,
-	}
 }
 
 func (me *BasedirController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
@@ -118,10 +111,6 @@ func (me *BasedirController) GetItem(ctx *Context, nickname ItemId) (list ItemMo
 		sts = status.Success("Basedir '%s' found", nickname)
 	}
 	return ns, sts
-}
-
-func (me *BasedirController) GetItemDetails(ctx *Context, itemid ItemId) (ItemModeler, Status) {
-	return me.GetItem(ctx, itemid)
 }
 
 func (me *BasedirController) FilterItem(in ItemModeler, filterPath FilterPath) (out ItemModeler, sts Status) {

@@ -16,7 +16,7 @@ type FileSystemEntry = string
 
 type CacheKey string
 
-type ServiceType = string //@TODO Merge with StackRole?
+type ServiceType = string //@TODO Merge with Specname?
 type ProgramName = string
 type Orgname = string
 type Version = string
@@ -28,7 +28,7 @@ type AuthorityDomain = string
 
 type Revision = string
 
-type StackRole = string
+type Specname = string
 
 type Basepath = Dir
 
@@ -40,3 +40,5 @@ type RouteName = string
 type ResourceType = string
 
 type ResponseType = string
+
+type GearType string

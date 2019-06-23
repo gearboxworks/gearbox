@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/apiworks"
-	"gearbox/only"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 )
 
 var NilResourceObject = (*ResourceObject)(nil)

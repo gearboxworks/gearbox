@@ -2,15 +2,17 @@ package apiworks
 
 import (
 	"fmt"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 	"reflect"
 )
 
 const Basename = "controller"
 const Basepath types.Basepath = "/"
+
+const ItemIdParam IdParam = "item_id"
 
 var NilListController = (*Controller)(nil)
 var _ ListController = NilListController
@@ -86,7 +88,9 @@ func (me *Controller) GetItemType() reflect.Kind {
 }
 
 func (me *Controller) GetIdParams() IdParams {
-	return IdParams{}
+	return IdParams{
+		ItemIdParam,
+	}
 }
 
 func (me *Controller) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts status.Status) {
