@@ -15,19 +15,19 @@ type NamedStackMap map[types.StackId]*NamedStack
 type NamedStacks []*NamedStack
 
 type NamedStack struct {
-	Authority       types.AuthorityDomain `json:"authority"`
-	Stackname       types.Stackname       `json:"name"`
-	RoleMap         StackRoleMap          `json:"roles,omitempty"`
-	RoleServicesMap RoleServicesMap       `json:"services,omitempty"`
-	Gears           *Gears                `json:"-"`
-	refreshed       bool
+	Authority      types.AuthorityDomain `json:"authority"`
+	Stackname      types.Stackname       `json:"name"`
+	StackRoles     StackRoles            `json:"roles,omitempty"`
+	ServiceOptions ServiceOptions        `json:"services,omitempty"`
+	Gears          *Gears                `json:"-"`
+	refreshed      bool
 }
 
 //func NewNamedStack(gears *Gears, stackid types.StackId) *NamedStack {
 func NewNamedStack(stackid types.StackId) *NamedStack {
 	stack := NamedStack{
-		RoleMap:         make(StackRoleMap, 0),
-		RoleServicesMap: make(RoleServicesMap, 0),
+		StackRoles:     make(StackRoles, 0),
+		ServiceOptions: make(ServiceOptions, 0),
 		//		Gears:           gears,
 	}
 	// This will split authority out, or do nothing
@@ -58,11 +58,11 @@ func (me *NamedStack) GetGearspecIds() (gsids gearspec.Identifiers, sts status.S
 func (me *NamedStack) GetGearspecs() (gss gearspec.Gearspecs, sts status.Status) {
 	for range only.Once {
 		gss = make(gearspec.Gearspecs, 0)
-		nsrm, sts := me.Gears.GetNamedStackRoleMap(me.GetIdentifier())
+		nsrs, sts := me.Gears.GetNamedStackRoles(me.GetIdentifier())
 		if is.Error(sts) {
 			break
 		}
-		for _, r := range nsrm {
+		for _, r := range nsrs {
 			gs := gearspec.NewGearspec()
 			sts = gs.Parse(r.GetGearspecId())
 			if is.Error(sts) {
@@ -75,35 +75,19 @@ func (me *NamedStack) GetGearspecs() (gss gearspec.Gearspecs, sts status.Status)
 }
 
 //
-// Get the available service options for a given named stack
+// Get the available stack roles for a given named stack
 //
-func (me *NamedStack) GetRoleMap() (srm StackRoleMap, sts status.Status) {
+func (me *NamedStack) GetStackRoles() (srs StackRoles, sts status.Status) {
 	for range only.Once {
-		srm = make(StackRoleMap, 0)
-		for gs, rso := range me.RoleMap {
+		srs = make(StackRoles, 0)
+		for gs, rso := range me.StackRoles {
 			if !strings.HasPrefix(string(gs), string(me.GetIdentifier())) {
 				continue
 			}
-			srm[gs] = rso
+			srs = append(srs, rso)
 		}
 	}
-	return srm, sts
-}
-
-//
-// Get the available service options for a given named stack
-//
-func (me *NamedStack) GetServiceOptionMap() (rsm RoleServicesMap, sts status.Status) {
-	for range only.Once {
-		rsm = make(RoleServicesMap, 0)
-		for gs, rso := range me.RoleServicesMap {
-			if !strings.HasPrefix(string(gs), string(me.GetIdentifier())) {
-				continue
-			}
-			rsm[gs] = rso
-		}
-	}
-	return rsm, sts
+	return srs, sts
 }
 
 func (me *NamedStack) String() string {
@@ -123,7 +107,7 @@ func (me *NamedStack) LightweightClone() *NamedStack {
 //		if status.IsError(sts) {
 //			break
 //		}
-//		for gs, s := range me.RoleServicesMap {
+//		for gs, s := range me.ServiceOptions {
 //			if s.DefaultService == nil {
 //				continue
 //			}
@@ -134,7 +118,7 @@ func (me *NamedStack) LightweightClone() *NamedStack {
 //}
 
 func (me *NamedStack) AddStackRole(sr *StackRole) (sts status.Status) {
-	me.RoleMap[sr.GetGearspecId()] = sr
+	me.StackRoles = append(me.StackRoles, sr)
 	return sts
 }
 
@@ -148,19 +132,19 @@ func (me *NamedStack) Refresh(gears *Gears) (sts status.Status) {
 			break
 		}
 
-		var nsrm StackRoleMap
-		nsrm, sts = gears.GetNamedStackRoleMap(me.GetIdentifier())
+		var nsrs StackRoles
+		nsrs, sts = gears.GetNamedStackRoles(me.GetIdentifier())
 		if is.Error(sts) {
 			break
 		}
-		me.RoleMap = nsrm
+		me.StackRoles = nsrs
 
-		var rsm RoleServicesMap
-		rsm, sts = gears.GetNamedStackRoleServicesMap(me.GetIdentifier())
+		var sos ServiceOptions
+		sos, sts = gears.GetNamedServiceOptions(me.GetIdentifier())
 		if is.Error(sts) {
 			break
 		}
-		me.RoleServicesMap = rsm
+		me.ServiceOptions = sos
 
 		me.refreshed = true
 	}
@@ -173,11 +157,11 @@ func (me *NamedStack) Refresh(gears *Gears) (sts status.Status) {
 func (me *NamedStack) SetIdentifier(stackid types.StackId) (sts status.Status) {
 	for range only.Once {
 		gsi := gearspec.NewGearspec()
-		sts := gsi.SetId(stackid)
+		sts := gsi.SetStackId(stackid)
 		if status.IsError(sts) {
 			break
 		}
-		me.Authority = gsi.Authority
+		me.Authority = gsi.AuthorityDomain
 		me.Stackname = gsi.Stackname
 	}
 	return sts

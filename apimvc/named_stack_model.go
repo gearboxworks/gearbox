@@ -6,9 +6,9 @@ import (
 	"gearbox/gearbox"
 	"gearbox/gears"
 	"gearbox/only"
+	"gearbox/service"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
-	"github.com/gearboxworks/go-status/is"
 	"strings"
 )
 
@@ -34,26 +34,19 @@ func (me *NamedStackModel) GetAttributeMap() apiworks.AttributeMap {
 func NewNamedStackModelFromGearsNamedStack(ctx *Context, gns *gears.NamedStack) (ns *NamedStackModel, sts Status) {
 	for range only.Once {
 
-		gsom, sts := gns.GetServiceOptionMap()
-		if is.Error(sts) {
-			break
-		}
-		gsrm, sts := gns.GetRoleMap()
-		if is.Error(sts) {
-			break
-		}
-		sms := make(StackMembers, len(gsom))
-		i := 0
-		for gs, gso := range gsom {
-			sr, ok := gsrm[gs]
-			if !ok {
-				sr = &gears.StackRole{}
-			}
+		sos := gns.ServiceOptions
+
+		srs := gns.StackRoles
+
+		sms := make(StackMembers, len(sos))
+		for _, sr := range srs {
+			//			sids := sos.GetGearspecServices(sr.GearspecId)
+			sids := service.Identifiers{}
 			var sm *StackMember
-			sm = NewStackMemberFromGearsStackRoleServices(ctx, gso, sr)
-			sms[i] = sm
-			i++
+			sm = NewStackMemberFromGearsServiceOptions(ctx, sr, sids)
+			sms = append(sms, sm)
 		}
+
 		ns = &NamedStackModel{
 			Authority: gns.Authority,
 			Stackname: gns.Stackname,

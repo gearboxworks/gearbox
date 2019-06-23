@@ -69,7 +69,7 @@ func (me *AuthorityController) GetIdParams() IdParams {
 
 func (me *AuthorityController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
 	for range only.Once {
-		gbgas, sts := me.Gearbox.GetGears().GetAuthorities()
+		gbgas, sts := me.Gearbox.GetGears().GetAuthorityDomains()
 		if is.Error(sts) {
 			break
 		}

@@ -3,11 +3,11 @@ package global
 import "gearbox/types"
 
 const (
-	DefaultAuthority                    = "gearbox.works"
-	DefaultOrgName                      = "gearboxworks"
-	Brandname                           = "Gearbox"
-	RelPrefix                           = "gearbox"
-	UserDataPath     types.RelativePath = ".gearbox"
+	DefaultAuthorityDomain            = "gearbox.works"
+	DefaultOrgName                    = "gearboxworks"
+	Brandname                         = "Gearbox"
+	RelPrefix                         = "gearbox"
+	UserDataPath           types.Path = ".gearbox"
 )
 
 const (
@@ -15,10 +15,10 @@ const (
 	ListResponse types.ResponseType = "list"
 )
 
-type ShareableChoices string
+type ShareableChoice string
 
 const (
-	NotShareable    ShareableChoices = "no"
-	InStackSharable ShareableChoices = "instack"
-	YesShareable    ShareableChoices = "yes"
+	NotShareable    ShareableChoice = "no"
+	InStackSharable ShareableChoice = "instack"
+	YesShareable    ShareableChoice = "yes"
 )

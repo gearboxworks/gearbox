@@ -21,12 +21,11 @@ type ServiceModelMap map[gearspec.Identifier]*ServiceModel
 type ServiceModels []*ServiceModel
 
 type ServiceModel struct {
-	GearspecId  gearspec.Identifier `json:"gearspec_id,omitempty"`
-	ServiceId   service.Identifier  `json:"-"`
-	ServiceType types.ServiceType   `json:"service_type,omitempty"`
-	Orgname     types.Orgname       `json:"orgname,omitempty"`
-	Program     types.ProgramName   `json:"program,omitempty"`
-	Version     types.Version       `json:"version,omitempty"`
+	//GearspecId  gearspec.Identifier `json:"gearspec_id,omitempty"`
+	ServiceId service.Identifier `json:"-"`
+	Orgname   types.Orgname      `json:"orgname,omitempty"`
+	Program   types.ProgramName  `json:"program,omitempty"`
+	Version   types.Version      `json:"version,omitempty"`
 	//GearspecIds gearspec.Identifiers `json:"gearspec_ids,omitempty"`
 	Gears *gears.Gears `json:"-"`
 	Model
@@ -38,12 +37,11 @@ func (me *ServiceModel) GetAttributeMap() apiworks.AttributeMap {
 
 func NewModelFromGearsService(ctx *Context, gsvc *gears.Service) (s *ServiceModel, sts Status) {
 	s = &ServiceModel{
-		GearspecId:  gsvc.GearspecId,
-		ServiceId:   gsvc.ServiceId,
-		Orgname:     gsvc.Orgname,
-		Program:     gsvc.Program,
-		Version:     gsvc.Version,
-		ServiceType: gsvc.ServiceType,
+		//GearspecId:  gsvc.GearspecId,
+		ServiceId: gsvc.ServiceId,
+		Orgname:   gsvc.Orgname,
+		Program:   gsvc.Program,
+		Version:   gsvc.Version,
 	}
 	return s, sts
 }
@@ -95,7 +93,6 @@ func NewModelFromServiceServicer(ctx *Context, ps service.Servicer) (s *ServiceM
 		//
 		//}
 		s.Orgname = ss.OrgName
-		s.ServiceType = ss.ServiceType
 		s.Program = ss.Program
 		s.Version = ss.Version.GetIdentifier()
 	}
@@ -128,7 +125,7 @@ func GetServiceModelsFromServiceServicerMap(ctx *Context, sm service.ServicerMap
 		if is.Error(sts) {
 			break
 		}
-		s.GearspecId = gs.GetIdentifier()
+		//s.GearspecId = gs.GetIdentifier()
 		sms[i] = s
 		i++
 	}

@@ -19,8 +19,8 @@ type BasedirModelMap map[gearspec.Identifier]*BasedirModel
 type BasedirModels []*BasedirModel
 
 type BasedirModel struct {
-	Nickname types.Nickname    `json:"nickname"`
-	Basedir  types.AbsoluteDir `json:"basedir"`
+	Nickname types.Nickname `json:"nickname"`
+	Basedir  types.Dir      `json:"basedir"`
 	Model
 }
 

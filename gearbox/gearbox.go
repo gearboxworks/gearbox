@@ -38,7 +38,7 @@ type Gearboxer interface {
 	//GetProjectFilepath(string, string) (string, status.Status)
 	//GetProjectWithDetails(config.Hostname) (*config.Project, status.Status)
 	//ValidateBasedirNickname(string, *config.ValidateArgs) status.Status
-	AddBasedir(types.AbsoluteDir, ...types.Nickname) status.Status
+	AddBasedir(types.Dir, ...types.Nickname) status.Status
 	AddNamedStack(*gears.NamedStack) status.Status
 	AddProject(*project.Project) status.Status
 	Admin(ViewerType)
@@ -52,13 +52,13 @@ type Gearboxer interface {
 	GetGears() *gears.Gears
 	GetGlobalOptions() *global.Options
 	GetApi() api.Apier
-	GetNamedStackMap() (gears.NamedStackMap, status.Status)
-	GetServiceMap() (gears.ServiceMap, status.Status)
-	GetNamedStackRoleMap(types.StackId) (gears.StackRoleMap, status.Status)
+	GetNamedStacks() (gears.NamedStacks, status.Status)
+	GetServices() (gears.Services, status.Status)
+	//GetNamedStackRoleMap(types.StackId) (gears.StackRoles, status.Status)
 	GetOsBridge() osbridge.OsBridger
 	GetProjectMap() (project.Map, status.Status)
 	GetRouteName() types.RouteName
-	GetStackRoleMap() (gears.StackRoleMap, status.Status)
+	//GetStackRoleMap() (gears.StackRoles, status.Status)
 	Initialize() status.Status
 	IsDebug() bool
 	BasedirExists(types.Nickname) bool
@@ -78,7 +78,7 @@ type Gearboxer interface {
 	SetConfig(config.Configer)
 	SetApi(api api.Apier)
 	SetRouteName(types.RouteName)
-	UpdateBasedir(types.Nickname, types.AbsoluteDir) status.Status
+	UpdateBasedir(types.Nickname, types.Dir) status.Status
 	UpdateNamedStack(*gears.NamedStack) status.Status
 	UpdateProject(*project.Project) status.Status
 	WriteLog([]byte) (int, error)
@@ -88,7 +88,7 @@ type Gearbox struct {
 	Config        config.Configer
 	OsBridge      osbridge.OsBridger
 	StackMap      gears.NamedStackMap
-	ServiceMap    gears.ServiceMap
+	Services      gears.Services
 	GlobalOptions *global.Options
 	Api           api.Apier
 	RouteName     types.RouteName
@@ -121,31 +121,26 @@ func NewGearbox(args *Args) Gearboxer {
 	return &gb
 }
 
-func (me *Gearbox) GetServiceMap() (nsm gears.ServiceMap, sts status.Status) {
-	for range only.Once {
-		// @TODO Remove these comments after debugging
-		//if me.ServiceMap != nil {
-		//	break
-		//}
-		me.ServiceMap, sts = me.Gears.GetServiceMap()
-		if is.Error(sts) {
-			break
-		}
+func (me *Gearbox) GetNamedStacks() (nss gears.NamedStacks, sts status.Status) {
+	nss = make(gears.NamedStacks, len(me.StackMap))
+	i := 0
+	for _, s := range me.StackMap {
+		nss[i] = s
+		i++
 	}
-	return me.ServiceMap, sts
+	return nss, sts
 }
 
-func (me *Gearbox) GetNamedStackMap() (nsm gears.NamedStackMap, sts status.Status) {
+func (me *Gearbox) GetServices() (nsm gears.Services, sts status.Status) {
 	for range only.Once {
-		if me.StackMap != nil {
+		if me.Gears == nil {
+			sts = status.Fail().SetMessage("gears property can not be nil")
+			sts.Log()
 			break
 		}
-		me.StackMap, sts = me.Gears.GetNamedStackMap()
-		if is.Error(sts) {
-			break
-		}
+		me.Services = me.Gears.GetServices()
 	}
-	return me.StackMap, sts
+	return me.Services, sts
 }
 
 func (me *Gearbox) AddNamedStack(*gears.NamedStack) status.Status {
@@ -213,17 +208,6 @@ func (me *Gearbox) GetProjectMap() (pm project.Map, sts status.Status) {
 		}
 	}
 	return pm, sts
-}
-
-func (me *Gearbox) GetStackRoleMap() (gears.StackRoleMap, status.Status) {
-	return me.Gears.GetStackRoleMap()
-}
-func (me *Gearbox) GetNamedStackRoleMap(stackid types.StackId) (gears.StackRoleMap, status.Status) {
-	return me.Gears.GetNamedStackRoleMap(stackid)
-}
-
-func (me *Gearbox) GetNamedStackIds() (types.StackIds, status.Status) {
-	return me.Gears.GetNamedStackIds()
 }
 
 func (me *Gearbox) WriteLog(msg []byte) (int, error) {
@@ -337,7 +321,7 @@ func (me *Gearbox) BasedirExists(nickname types.Nickname) bool {
 	return me.Config.GetBasedirMap().NicknameExists(nickname)
 }
 
-func (me *Gearbox) AddBasedir(basedir types.AbsoluteDir, nickname ...types.Nickname) (sts status.Status) {
+func (me *Gearbox) AddBasedir(basedir types.Dir, nickname ...types.Nickname) (sts status.Status) {
 	var nn types.Nickname
 	if len(nickname) == 0 {
 		nn = ""
@@ -358,7 +342,7 @@ func (me *Gearbox) AddBasedir(basedir types.AbsoluteDir, nickname ...types.Nickn
 	return sts
 }
 
-func (me *Gearbox) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDir) (sts status.Status) {
+func (me *Gearbox) UpdateBasedir(nickname types.Nickname, dir types.Dir) (sts status.Status) {
 	for range only.Once {
 		sts = me.Config.GetBasedirMap().UpdateBasedir(
 			me.Config,
@@ -403,26 +387,26 @@ func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery
 	return names, sts
 }
 
-//func (me *Parent) GetProjectDir(path types.RelativePath, basedir types.Nickname) (bd types.AbsoluteDir, sts status.Status) {
+//func (me *Parent) GetProjectDir(path types.Path, basedir types.Nickname) (bd types.Dir, sts status.Status) {
 //	for range only.Once {
-//		var bd types.AbsoluteDir
+//		var bd types.Dir
 //		bd, sts = me.Config.GetBasedir(basedir)
 //		if status.IsError(sts) {
 //			break
 //		}
-//		bd = types.AbsoluteDir(filepath.FromSlash(fmt.Sprintf("%s/%s", bd, path)))
+//		bd = types.Dir(filepath.FromSlash(fmt.Sprintf("%s/%s", bd, path)))
 //	}
 //	return bd, sts
 //}
 
-//func (me *Parent) GetProjectFilepath(path types.RelativePath, basedir types.Nickname) (pfp types.AbsoluteDir, sts status.Status) {
+//func (me *Parent) GetProjectFilepath(path types.Path, basedir types.Nickname) (pfp types.Dir, sts status.Status) {
 //	for range only.Once {
-//		var pd types.AbsoluteDir
+//		var pd types.Dir
 //		pd, sts = me.GetProjectDir(path, basedir)
 //		if status.IsError(sts) {
 //			break
 //		}
-//		pfp = types.AbsoluteDir(filepath.FromSlash(fmt.Sprintf("%s/%s", pd, jsonfile.BaseFilename)))
+//		pfp = types.Dir(filepath.FromSlash(fmt.Sprintf("%s/%s", pd, jsonfile.BaseFilename)))
 //	}
 //	return pfp, sts
 //}

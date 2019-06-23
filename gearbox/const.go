@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	WindowsSuggestedBasedir types.AbsoluteDir  = "Gearbox Sites"
-	WindowsAdminPath        types.RelativePath = "admin\\dist"
-	LinuxSuggestedBasedir   types.AbsoluteDir  = "projects"
-	MacOsSuggestedBasedir   types.AbsoluteDir  = "Sites"
-	NixAdminPath            types.RelativePath = "admin/dist"
+	WindowsSuggestedBasedir types.Dir  = "Gearbox Sites"
+	WindowsAdminPath        types.Path = "admin\\dist"
+	LinuxSuggestedBasedir   types.Dir  = "projects"
+	MacOsSuggestedBasedir   types.Dir  = "Sites"
+	NixAdminPath            types.Path = "admin/dist"
 )

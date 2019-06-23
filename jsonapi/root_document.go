@@ -199,10 +199,10 @@ func (me *RootDocument) AddResponseItem(item apiworks.ItemModeler) (sts status.S
 //	return sts
 //}
 
-//func (me *RootDocument) SetId(id ResourceId) (sts status.Status) {
+//func (me *RootDocument) SetStackId(id ResourceId) (sts status.Status) {
 //	setter, ok := me.Data.(ResourceIdSetter)
 //	if ok {
-//		sts = setter.SetId(id)
+//		sts = setter.SetStackId(id)
 //	}
 //	return sts
 //}

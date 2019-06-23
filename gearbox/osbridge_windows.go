@@ -7,7 +7,7 @@ import (
 	"github.com/gearboxworks/go-osbridge"
 )
 
-func GetOsBridge(project types.Name, userdata types.RelativePath) *osbridge.OsBridge {
+func GetOsBridge(project types.Name, userdata types.Path) *osbridge.OsBridge {
 	return osbridge.NewOsBridge(&osbridge.Args{
 		ProjectName:  project,
 		UserDataPath: userdata,

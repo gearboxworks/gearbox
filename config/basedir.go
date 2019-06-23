@@ -17,7 +17,7 @@ import (
 
 type BasedirMap map[types.Nickname]*Basedir
 
-func (me BasedirMap) GetNickname(basedir types.AbsoluteDir, nickname ...types.Nickname) (nn types.Nickname) {
+func (me BasedirMap) GetNickname(basedir types.Dir, nickname ...types.Nickname) (nn types.Nickname) {
 	var _nn types.Nickname
 	if len(nickname) > 0 {
 		_nn = nickname[0]
@@ -41,13 +41,13 @@ func (me BasedirMap) GetNickname(basedir types.AbsoluteDir, nickname ...types.Ni
 type Basedirs []*Basedir
 
 type Basedir struct {
-	Nickname types.Nickname    `json:"nickname"`
-	Basedir  types.AbsoluteDir `json:"basedir"`
+	Nickname types.Nickname `json:"nickname"`
+	Basedir  types.Dir      `json:"basedir"`
 }
 
 type BasedirArgs Basedir
 
-func NewBasedir(nickname types.Nickname, basedir types.AbsoluteDir) *Basedir {
+func NewBasedir(nickname types.Nickname, basedir types.Dir) *Basedir {
 	return &Basedir{
 		Nickname: nickname,
 		Basedir:  basedir,
@@ -94,7 +94,7 @@ func (me BasedirMap) NicknameExists(nickname types.Nickname) (ok bool) {
 	return ok
 }
 
-func (me BasedirMap) BasedirExists(basedir types.AbsoluteDir) (ok bool) {
+func (me BasedirMap) BasedirExists(basedir types.Dir) (ok bool) {
 	for _, bd := range me {
 		if bd.Basedir != basedir {
 			continue
@@ -105,7 +105,7 @@ func (me BasedirMap) BasedirExists(basedir types.AbsoluteDir) (ok bool) {
 	return ok
 }
 
-//func (me BasedirMap) BasedirDirExists(dir types.AbsoluteDir) (ok bool) {
+//func (me BasedirMap) BasedirDirExists(dir types.Dir) (ok bool) {
 //	for _, bd := range me {
 //		if bd.Basedir != dir {
 //			continue
@@ -306,7 +306,7 @@ func ValidateBasedirNickname(nickname types.Nickname, args *ValidateArgs) (sts S
 	return sts
 }
 
-func ValidateBasedir(basedir types.AbsoluteDir, nickname types.Nickname, args *ValidateArgs) (sts Status) {
+func ValidateBasedir(basedir types.Dir, nickname types.Nickname, args *ValidateArgs) (sts Status) {
 	for range only.Once {
 		sts = status.Success("base directory '%s' validated", basedir)
 		if args.Config == nil {

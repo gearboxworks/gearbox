@@ -32,11 +32,11 @@ func (me *GearspecModel) GetAttributeMap() apiworks.AttributeMap {
 	panic("implement me")
 }
 
-func NewGearspecModelFromGearspecGearspec(ctx *Context, gsgs *gearspec.Gearspec) (gs *GearspecModel, sts Status) {
+func NewGearspecModelFromGearspecGearspec(ctx *Context, gsgs *gearspec.Gearspec) (gsm *GearspecModel, sts Status) {
 	return &GearspecModel{
 		GearspecId: gsgs.GetIdentifier(),
 		StackId:    gsgs.GetStackId(),
-		Authority:  gsgs.Authority,
+		Authority:  gsgs.AuthorityDomain,
 		Stackname:  gsgs.Stackname,
 		Role:       gsgs.Role,
 		Revision:   gsgs.Revision,

@@ -3,6 +3,7 @@ package project
 import (
 	"fmt"
 	"gearbox/config"
+	"gearbox/gears"
 	"gearbox/jsonfile"
 	"gearbox/only"
 	"gearbox/service"
@@ -20,9 +21,9 @@ type Projects []*Project
 type Project struct {
 	loaded bool
 	*config.Project
-	Filepath types.AbsoluteFilepath `json:"filepath"`
-	Aliases  HostnameAliases        `json:"aliases"`
-	Stack    service.ServicerMap    `json:"stack"`
+	Filepath types.Filepath      `json:"filepath"`
+	Aliases  HostnameAliases     `json:"aliases"`
+	Stack    service.ServicerMap `json:"stack"`
 }
 
 func NewProject(cp *config.Project) (p *Project) {
@@ -57,7 +58,7 @@ func (me Map) ProjectExists(hostname types.Hostname) (ok bool) {
 	return ok
 }
 
-func (me *Project) Renew(path types.RelativePath) (sts status.Status) {
+func (me *Project) Renew(path types.Path) (sts status.Status) {
 	for range only.Once {
 		me.Path = path
 		if me.Hostname == "" {
@@ -76,11 +77,10 @@ func (me *Project) Renew(path types.RelativePath) (sts status.Status) {
 			}
 			svc, sts := ps.GetServiceValue()
 			if is.Error(sts) {
-				sts = status.Fail(&status.Args{
-					Message:    fmt.Sprintf("unable to get stack service value for gearspecid '%s'", gs),
-					Help:       "ensure your gears.json is using the correct roles.", // @TODO improve this help
-					HttpStatus: http.StatusBadRequest,
-				})
+				sts = status.Fail().
+					SetHttpStatus(http.StatusBadRequest).
+					SetMessage("unable to get stack service value for gearspecid '%s'", gs).
+					SetAllHelp("ensure your %s is using the correct roles.", gears.JsonFilename) // @TODO improve this help
 				break
 			}
 			me.Stack[gs].Servicer = svc
@@ -115,7 +115,7 @@ func (me *Project) Disable() (sts status.Status) {
 
 func (me *Project) Load() (sts status.Status) {
 	for range only.Once {
-		var fp types.AbsoluteFilepath
+		var fp types.Filepath
 		fp, sts = me.GetFilepath()
 		if is.Error(sts) {
 			break
@@ -149,8 +149,8 @@ func (me *Project) GetServicerMap() (simap service.ServicerMap) {
 	return me.Stack
 }
 
-func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts status.Status) {
-	var bd types.AbsoluteDir
+func (me *Project) GetFilepath() (fp types.Filepath, sts status.Status) {
+	var bd types.Dir
 	for range only.Once {
 		if me.Filepath != "" {
 			break
@@ -159,7 +159,7 @@ func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts status.Status) 
 		if is.Error(sts) {
 			break
 		}
-		me.Filepath = types.AbsoluteFilepath(filepath.FromSlash(fmt.Sprintf("%s/%s/%s",
+		me.Filepath = types.Filepath(filepath.FromSlash(fmt.Sprintf("%s/%s/%s",
 			bd,
 			me.Path,
 			jsonfile.BaseFilename,
@@ -168,7 +168,7 @@ func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts status.Status) 
 	return me.Filepath, sts
 }
 
-func (me *Project) GetProjectDir() (dir types.AbsoluteDir) {
+func (me *Project) GetProjectDir() (dir types.Dir) {
 	for range only.Once {
 		if me.Filepath != "" {
 			dir = util.FileDir(me.Filepath)

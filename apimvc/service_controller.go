@@ -17,7 +17,6 @@ const ServiceControllerName types.RouteName = "services"
 const ServicesBasepath types.Basepath = "/services"
 
 const OrgnameIdParam IdParam = "orgname"
-const ServiceTypeIdParam IdParam = "svctype"
 const ProgramVersionIdParam IdParam = "progver"
 
 var NilServiceController = (*ServiceController)(nil)
@@ -63,18 +62,17 @@ func (me *ServiceController) GetItemType() reflect.Kind {
 func (me *ServiceController) GetIdParams() IdParams {
 	return IdParams{
 		OrgnameIdParam,
-		ServiceTypeIdParam,
 		ProgramVersionIdParam,
 	}
 }
 
 func (me *ServiceController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
 	for range only.Once {
-		gbnsm, sts := me.Gearbox.GetServiceMap()
+		gbss, sts := me.Gearbox.GetServices()
 		if is.Error(sts) {
 			break
 		}
-		for _, gbs := range gbnsm {
+		for _, gbs := range gbss {
 			ns, sts := NewModelFromGearsService(ctx, gbs)
 			if is.Error(sts) {
 				break

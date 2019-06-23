@@ -14,10 +14,10 @@ import (
 type Candidates []*Candidate
 
 type Candidate struct {
-	Basedir  types.Nickname     `json:"basedir"`
-	Path     types.RelativePath `json:"path"`
-	FullPath types.AbsoluteDir  `json:"full_path"`
-	Config   *Config            `json:"-"`
+	Basedir  types.Nickname `json:"basedir"`
+	Path     types.Path     `json:"path"`
+	FullPath types.Dir      `json:"full_path"`
+	Config   *Config        `json:"-"`
 }
 
 type CandidateArgs Candidate
@@ -43,7 +43,7 @@ func (me *Candidate) GetPotentialHostname() types.Hostname {
 	return types.Hostname(strings.ToLower(string(hostname)))
 }
 
-func (me *Candidate) GetBasedir() (types.AbsoluteDir, Status) {
+func (me *Candidate) GetBasedir() (types.Dir, Status) {
 	return me.Config.GetBasedir(me.Basedir)
 }
 
@@ -59,13 +59,13 @@ func (me *Candidate) IsProject() (ok bool) {
 	return ok
 }
 
-func (me *Candidate) GetFullPath() (fp types.AbsoluteDir, sts Status) {
+func (me *Candidate) GetFullPath() (fp types.Dir, sts Status) {
 	for range only.Once {
 		fp, sts = me.Config.ExpandBasedirPath(me.Basedir, me.Path)
 		if is.Error(sts) {
 			break
 		}
-		fp = types.AbsoluteDir(filepath.FromSlash(string(fp)))
+		fp = types.Dir(filepath.FromSlash(string(fp)))
 	}
 	return fp, sts
 }

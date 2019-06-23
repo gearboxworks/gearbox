@@ -72,16 +72,22 @@ func (me *GearspecController) GetIdParams() IdParams {
 
 func (me *GearspecController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
 	for range only.Once {
-		gbgsrm, sts := me.Gearbox.GetGears().GetStackRoleMap()
+		srs, sts := me.Gearbox.GetGears().GetStackRoles()
 		if is.Error(sts) {
 			break
 		}
-		for _, gbgs := range gbgsrm {
-			ns, sts := NewGearspecModelFromGearspecGearspec(ctx, gbgs.Gearspec)
+		for _, sr := range srs {
+			gs := gearspec.NewGearspec()
+			sts := gs.Parse(sr.GearspecId)
 			if is.Error(sts) {
 				break
 			}
-			list = append(list, ns)
+			var gsm *GearspecModel
+			gsm, sts = NewGearspecModelFromGearspecGearspec(ctx, gs)
+			if is.Error(sts) {
+				break
+			}
+			list = append(list, gsm)
 		}
 		sort.Slice(list, func(i, j int) bool {
 			return list[i].GetId() < list[j].GetId()

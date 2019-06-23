@@ -75,13 +75,12 @@ func (me *StackController) GetIdParams() IdParams {
 
 func (me *StackController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
 	for range only.Once {
-		gbnsm, sts := me.Gearbox.GetNamedStackMap()
+		nss, sts := me.Gearbox.GetNamedStacks()
 		if is.Error(sts) {
 			break
 		}
-		for _, gbns := range gbnsm {
-
-			ns, sts := NewNamedStackModelFromGearsNamedStack(ctx, gbns)
+		for _, ns := range nss {
+			ns, sts := NewNamedStackModelFromGearsNamedStack(ctx, ns)
 			if is.Error(sts) {
 				break
 			}
@@ -229,8 +228,4 @@ func assertStack(item ItemModeler) (s *NamedStackModel, sts Status) {
 		})
 	}
 	return s, sts
-}
-
-func (me *StackController) getGearboxStackRoleMap() (gears.StackRoleMap, Status) {
-	return me.Gearbox.GetStackRoleMap()
 }

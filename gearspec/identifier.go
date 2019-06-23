@@ -32,8 +32,8 @@ func (me Identifier) GetNamedStackId() (sid types.StackId, sts status.Status) {
 func (me Identifier) GetIdentifier() (gs Identifier, sts status.Status) {
 	gsi := Gearspec{}
 	sts = gsi.Parse(me)
-	if is.Success(sts) && gsi.Authority == "" {
-		gsi.Authority = global.DefaultAuthority
+	if is.Success(sts) && gsi.AuthorityDomain == "" {
+		gsi.AuthorityDomain = global.DefaultAuthorityDomain
 	}
 	return Identifier(gsi.String()), sts
 }
@@ -49,8 +49,8 @@ func (me Identifier) GetIdentifier() (gs Identifier, sts status.Status) {
 func (me Identifier) GetPersistableIdentifier() (gs Identifier, sts status.Status) {
 	gsi := Gearspec{}
 	sts = gsi.Parse(me)
-	if is.Success(sts) && gsi.Authority == global.DefaultAuthority {
-		gsi.Authority = ""
+	if is.Success(sts) && gsi.AuthorityDomain == global.DefaultAuthorityDomain {
+		gsi.AuthorityDomain = ""
 	}
 	return Identifier(gsi.String()), sts
 }

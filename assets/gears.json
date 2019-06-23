@@ -4,68 +4,126 @@
       "schema": "v1"
    },
    "authorities": [
-      "gearbox.works"
+      {
+         "domain": "gearbox.works"
+      }
    ],
-   "stacks": [
-      "gearbox.works/wordpress",
-      "gearbox.works/lamp",
-      "gearbox.works/lemp",
-      "gearbox.works/elasticsearch"
+   "named_stacks": [
+      {
+         "stack_id": "gearbox.works/elasticsearch",
+         "authority": "gearbox.works",
+         "stackname": "elasticsearch"
+      },
+      {
+         "stack_id": "gearbox.works/lamp",
+         "authority": "gearbox.works",
+         "stackname": "lamp"
+      },
+      {
+         "stack_id": "gearbox.works/wordpress",
+         "authority": "gearbox.works",
+         "stackname": "lemp"
+      },
+      {
+         "stack_id": "gearbox.works/wordpress",
+         "authority": "gearbox.works",
+         "stackname": "wordpress"
+      }
    ],
-   "roles": {
-      "gearbox.works/elasticsearch/elasticsearch": {
-         "name": "Elasticsearch",
+   "stack_roles": [
+      {
+         "gearspec_id": "gearbox.works/elasticsearch/elasticsearch",
+         "authority": "gearbox.works",
+         "stackname": "elasticsearch",
+         "role": "elasticsearch",
          "label": "Elasticsearch",
+         "described": "Search engine component of the Elasticsearch stack",
+         "default": "elasticsearch",
          "examples": [
             "Elasticsearch"
          ]
       },
-      "gearbox.works/lamp/apache": {
-         "name": "LAMP Apache Web Server",
+      {
+         "gearspec_id": "gearbox.works/lamp/apache",
+         "authority": "gearbox.works",
+         "stackname": "lamp",
+         "role": "apache",
          "label": "Apache",
+         "described": "LAMP Apache Web Server",
+         "default": "apache",
          "examples": [
             "Apache"
          ]
       },
-      "gearbox.works/lamp/mysql": {
-         "name": "LAMP MySQL database server",
+      {
+         "gearspec_id": "gearbox.works/lamp/mysql",
+         "authority": "gearbox.works",
+         "stackname": "lamp",
+         "role": "mysql",
+         "described": "LAMP MySQL database server",
          "label": "MySQL",
+         "default": "mysql",
          "examples": [
             "MySQL"
          ]
       },
-      "gearbox.works/lamp/php": {
-         "name": "LAMP PHP ProcessVM",
-         "label": "PHP",
+      {
+         "gearspec_id": "gearbox.works/lemp/scripting",
+         "authority": "gearbox.works",
+         "stackname": "lamp",
+         "role": "scripting",
+         "label": "server-side scripting",
+         "described": "Server-side scripting of the LAMP stack; PHP, Python or Perl",
+         "default": "php",
          "examples": [
             "PHP"
          ]
       },
-      "gearbox.works/lemp/nginx": {
-         "name": "LEMP Nginx Web server",
+      {
+         "gearspec_id": "gearbox.works/lemp/nginx",
+         "authority": "gearbox.works",
+         "stackname": "lemp",
+         "role": "nginx",
          "label": "Nginx",
+         "described": "Nginx Web server of the LEMP stack",
+         "default": "nginx",
          "examples": [
             "Nginx"
          ]
       },
-      "gearbox.works/lemp/mysql": {
-         "name": "LEMP Database server; MySQL or MariaDB",
+      {
+         "gearspec_id": "gearbox.works/lemp/mysql",
+         "authority": "gearbox.works",
+         "stackname": "lemp",
+         "role": "mysql",
          "label": "DB server",
+         "described": "Database server of the LEMP stack; MySQL or MariaDB",
+         "default": "mariadb",
          "examples": [
             "MySQL",
             "MariaDB"
          ]
       },
-      "gearbox.works/lemp/php": {
-         "name": "LEMP server-side scripting process VM; PHP, Python or Perl",
+      {
+         "gearspec_id": "gearbox.works/lemp/scripting",
+         "authority": "gearbox.works",
+         "stackname": "lemp",
+         "role": "scripting",
          "label": "server-side scripting",
+         "described": "Server-side scripting of the LEMP stack; PHP, Python or Perl",
+         "default": "php",
          "examples": [
             "PHP"
          ]
       },
-      "gearbox.works/wordpress/webserver": {
-         "name": "Web server for WordPress",
+      {
+         "gearspec_id": "gearbox.works/wordpress/webserver",
+         "authority": "gearbox.works",
+         "stackname": "wordpress",
+         "role": "webserver",
          "label": "Web server",
+         "described": "Web server for WordPress",
+         "default": "nginx",
          "examples": [
             "Apache",
             "Nginx",
@@ -73,26 +131,41 @@
             "Lighttpd"
          ]
       },
-      "gearbox.works/wordpress/dbserver": {
-         "name": "Database server for WordPress",
+      {
+         "gearspec_id": "gearbox.works/wordpress/dbserver",
+         "authority": "gearbox.works",
+         "stackname": "wordpress",
+         "role": "dbserver",
          "label": "DB server",
+         "described": "Database server for WordPress",
+         "default": "mysql",
          "examples": [
             "MySQL",
             "MariaDB",
             "Percona"
          ]
       },
-      "gearbox.works/wordpress/processvm": {
-         "name": "ProcessVM (PHP) for WordPress",
+      {
+         "gearspec_id": "gearbox.works/wordpress/processvm",
+         "authority": "gearbox.works",
+         "stackname": "wordpress",
+         "role": "processvm",
          "label": "PHP",
+         "described": "ProcessVM (PHP) for WordPress",
+         "default": "php",
          "examples": [
             "PHP",
             "HHVM"
          ]
       },
-      "gearbox.works/wordpress/cacheserver": {
+      {
+         "gearspec_id": "gearbox.works/wordpress/cacheserver",
+         "authority": "gearbox.works",
+         "stackname": "wordpress",
+         "role": "cacheserver",
          "name": "Cache server for WordPress",
-         "label": "Cache server",
+         "described": "Cache server",
+         "default": "",
          "examples": [
             "Redis",
             "Memcached"
@@ -100,23 +173,30 @@
          "optional": true,
          "max": 1
       }
-   },
-   "services": {
-      "gearbox.works/elasticsearch/elasticsearch": {
+   ],
+   "service_options": [
+      {
          "orgname": "gearboxworks",
          "default": "elasticsearch",
          "options": [
             "elasticsearch:6.6.2"
+         ],
+         "implements": [
+            "elasticsearch/elasticsearch"
          ]
       },
-      "gearbox.works/lamp/apache": {
+      {
          "orgname": "gearboxworks",
          "default": "apache",
          "options": [
             "apache:2.4"
+         ],
+         "implements": [
+            "lamp/apache",
+            "wordpress/webserver"
          ]
       },
-      "gearbox.works/lamp/mysql": {
+      {
          "orgname": "gearboxworks",
          "default": "mysql",
          "options": [
@@ -124,20 +204,30 @@
             "mysql:5.6",
             "mysql:5.7",
             "mysql:8.0"
+         ],
+         "implements": [
+            "lamp/mysql",
+            "lemp/mysql",
+            "wordpress/dbserver"
          ]
       },
-      "gearbox.works/lamp/php": {
+      {
          "orgname": "gearboxworks",
-         "default": "php",
+         "default": "php:7.2",
          "options": [
             "php:5.2",
             "php:5.6",
             "php:7.0",
             "php:7.1",
             "php:7.2"
+         ],
+         "implements": [
+            "lamp/script",
+            "lemp/script",
+            "wordpress/processvm"
          ]
       },
-      "gearbox.works/lemp/nginx": {
+      {
          "orgname": "gearboxworks",
          "default": "nginx",
          "options": [
@@ -145,9 +235,13 @@
             "nginx:1.13",
             "nginx:1.14",
             "nginx:1.15"
+         ],
+         "implements": [
+            "lemp/nginx",
+            "wordpress/webserver"
          ]
       },
-      "gearbox.works/lemp/mysql": {
+      {
          "orgname": "gearboxworks",
          "default": "mariadb",
          "options": [
@@ -160,70 +254,27 @@
             "mysql:5.6",
             "mysql:5.7",
             "mysql:8.0"
+         ],
+         "implements": [
+            "lamp/mysql",
+            "lemp/mysql",
+            "wordpress/dbserver"
          ]
       },
-      "gearbox.works/lemp/script": {
-         "orgname": "gearboxworks",
-         "default": "php",
-         "options": [
-            "php:5.2",
-            "php:5.6",
-            "php:7.0",
-            "php:7.1",
-            "php:7.2"
-         ]
-      },
-      "gearbox.works/wordpress/webserver": {
-         "orgname": "gearboxworks",
-         "default": "nginx",
-         "options": [
-            "apache:2.4",
-            "nginx:1.12",
-            "nginx:1.13",
-            "nginx:1.14",
-            "nginx:1.15"
-         ]
-      },
-      "gearbox.works/wordpress/dbserver": {
-         "orgname": "gearboxworks",
-         "default": "mariadb",
-         "options": [
-            "mariadb:5.5",
-            "mariadb:10.0",
-            "mariadb:10.1",
-            "mariadb:10.2",
-            "mariadb:10.3",
-            "mysql:5.5",
-            "mysql:5.6",
-            "mysql:5.7",
-            "mysql:8.0"
-         ]
-      },
-      "gearbox.works/wordpress/processvm": {
-         "orgname": "gearboxworks",
-         "default": "php",
-         "options": [
-            "php:5.2",
-            "php:5.6",
-            "php:7.0",
-            "php:7.1",
-            "php:7.2"
-         ]
-      },
-      "gearbox.works/wordpress/cacheserver": {
+      {
          "orgname": "gearboxworks",
          "default": "",
          "options": [
             "memcached:1.5",
             "redis:3.2",
             "redis:4.0"
+         ],
+         "implements": [
+            "wordpress/cacheserver"
          ]
       }
-   },
-   "extensions": {
-      "php": {
-      }
-   }
+   ]
+
 }
 
 

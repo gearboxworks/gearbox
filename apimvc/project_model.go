@@ -23,9 +23,9 @@ type ProjectModel struct {
 	Enabled       bool                    `json:"enabled"`
 	Basedir       types.Nickname          `json:"basedir"`
 	Notes         string                  `json:"notes"`
-	Path          types.RelativePath      `json:"path"`
-	ProjectDir    types.AbsoluteDir       `json:"project_dir"`
-	Filepath      types.AbsoluteFilepath  `json:"filepath"`
+	Path          types.Path              `json:"path"`
+	ProjectDir    types.Dir               `json:"project_dir"`
+	Filepath      types.Filepath          `json:"filepath"`
 	Aliases       project.HostnameAliases `json:"aliases,omitempty"`
 	Stack         ProjectStackItems       `json:"stack,omitempty"`
 	ConfigProject *config.Project         `json:"-"`
@@ -42,11 +42,16 @@ func NewModelFromConfigProject(cp *config.Project) (p *ProjectModel, sts Status)
 		if is.Error(sts) {
 			break
 		}
+		fp, sts := cp.GetFilepath()
+		if is.Error(sts) {
+			break
+		}
 		p = &ProjectModel{
 			Hostname:      cp.Hostname,
 			Basedir:       cp.Basedir,
 			Notes:         cp.Notes,
 			Path:          cp.Path,
+			Filepath:      fp,
 			ProjectDir:    pd,
 			ConfigProject: cp,
 		}
@@ -119,7 +124,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
 			if is.Error(sts) {
 				break
 			}
-			sm.GearspecId = gsm.GearspecId
+			//sm.GearspecId = gsm.GearspecId
 			list = append(list, sm)
 		}
 	}

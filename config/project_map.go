@@ -66,11 +66,11 @@ func (me ProjectMap) FindProject(hostname types.Hostname) (p *Project, sts Statu
 	return p, sts
 }
 
-func (me ProjectMap) FindProjectByPath(basedir types.Nickname, path types.RelativePath) (p *Project, sts Status) {
+func (me ProjectMap) FindProjectByPath(basedir types.Nickname, path types.Path) (p *Project, sts Status) {
 	var hn types.Hostname
 	var _p *Project
 	for hn, _p = range me {
-		if path == types.RelativePath(hn) {
+		if path == types.Path(hn) {
 			p = _p
 			break
 		}

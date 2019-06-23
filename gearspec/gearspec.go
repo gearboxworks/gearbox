@@ -12,13 +12,30 @@ import (
 	"strings"
 )
 
+const minStacknameLen = 2
+const minRoleLen = 3
+
 type Gearspecs []*Gearspec
+
+func (me Gearspecs) FindById(gsid Identifier) (gs *Gearspec) {
+	for range only.Once {
+		for _, _gs := range me {
+			if _gs.Identifier != gsid {
+				continue
+			}
+			gs = _gs
+		}
+	}
+	return gs
+}
+
 type Gearspec struct {
-	raw       Identifier
-	Authority types.AuthorityDomain `json:"authority,omitempty"`
-	Stackname types.Stackname       `json:"stack,omitempty"`
-	Role      types.StackRole       `json:"role,omitempty"`
-	Revision  types.Revision        `json:"revision,omitempty"`
+	Identifier      Identifier
+	IsRemote        bool
+	AuthorityDomain types.AuthorityDomain `json:"authority,omitempty"`
+	Stackname       types.Stackname       `json:"stackname,omitempty"`
+	Role            types.StackRole       `json:"role,omitempty"`
+	Revision        types.Revision        `json:"revision,omitempty"`
 }
 
 type Args Gearspec
@@ -27,14 +44,12 @@ func NewGearspec() *Gearspec {
 	return &Gearspec{}
 }
 
-type reMap map[string]*regexp.Regexp
-
-var re reMap
-
-func init() {
-	re = make(reMap, 2)
-	re["authority"] = regexp.MustCompile("[^A-Za-z0-9-/.]")
-	re["ns_or_r"] = regexp.MustCompile("[^A-Za-z0-9-/]")
+var regexes = struct {
+	authority *regexp.Regexp
+	httpurl   *regexp.Regexp
+}{
+	regexp.MustCompile("[^A-Za-z0-9-/.]"),
+	regexp.MustCompile("#https?://#"),
 }
 
 func (me *Gearspec) ParseString(gearspecid string) (sts status.Status) {
@@ -51,108 +66,90 @@ func (me *Gearspec) ParseStackId(stackid types.StackId) (sts status.Status) {
 }
 
 func (me *Gearspec) Parse(gsi Identifier) (sts status.Status) {
-	var err error
-	tmp := Gearspec{raw: gsi}
 	for range only.Once {
 		if me == nil {
 			panic("gsi.Parse() called when 'gsi' is nil.")
 		}
-		*me = Gearspec{}
+		if regexes.httpurl.Match([]byte(gsi)) {
+			sts = me.ParseRemoteGearspec(gsi)
+			break
+		}
+		sts = me.ParseLocalGearspec(gsi)
+	}
+	return sts
+}
+
+func (me *Gearspec) ParseRemoteGearspec(gsi Identifier) (sts status.Status) {
+	panic("Remote Gearspecs not yet implemented")
+	me.IsRemote = true
+	return sts
+}
+
+func (me *Gearspec) ParseLocalGearspec(gsi Identifier) (sts status.Status) {
+	var err error
+	tmp := Gearspec{Identifier: gsi}
+	for range only.Once {
+		if me == nil {
+			panic("gsi.Parse() called when 'gsi' is nil.")
+		}
 		parts := strings.Split(string(gsi), ":")
 		if len(parts) > 1 {
 			_, err = strconv.Atoi(parts[1])
 			if err != nil {
-				sts = status.Wrap(err, &status.Args{
-					Message: fmt.Sprintf("invalid version in '%s'", gsi),
-					Help: fmt.Sprintf("version must be integer after a colon (':') at end of '%s'",
-						gsi,
-					),
-				})
+				sts = status.Wrap(err).
+					SetMessage("invalid version in '%s'", gsi).
+					SetAllHelp("version must be integer after a colon (':') at end of '%s'", gsi)
 				break
 			}
 			tmp.Revision = types.Revision(parts[1])
 		}
 		parts = strings.Split(parts[0], "/")
-		if len(parts) == 1 {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("invalid gearspec ID '%s'", gsi),
-				Help:    "gearspec ID must contain at least two (2) slash-separated segments, i.e. {stack}/{role}",
-			})
+		if len(parts) == 3 && parts[0] == global.DefaultAuthorityDomain {
+			parts = []string{parts[1], parts[2]}
+		}
+		if len(parts) != 2 {
+			sts = status.Fail().
+				SetMessage("invalid gearspec ID '%s'", gsi).
+				SetAllHelp("gearspec ID must contain exactly two (2) slash-separated segments, or be a valid URL, i.e. {stack}/{role}")
 			break
 		}
-		tmp.Role = types.StackRole(parts[len(parts)-1])
-		sharedHelp := " can only contain letters [a-z], numbers [0-9], dashes ('-')%s or slashes ('/')"
-		if strings.Contains(parts[0], ".") {
-			tmp.Authority = types.AuthorityDomain(parts[0])
-			if re["authority"].MatchString(string(tmp.Authority)) {
-				sts = status.Fail(&status.Args{
-					Message: fmt.Sprintf("invalid authority '%s' in '%s'", tmp.Authority, gsi),
-					Help: fmt.Sprintf("authority '%s' in '%s'%s",
-						tmp.Authority,
-						gsi,
-						fmt.Sprintf(sharedHelp, ", dots ('.')"),
-					),
-				})
-				break
-			}
-			if len(parts) >= 2 {
-				tmp.Stackname = types.Stackname(strings.Join(parts[1:len(parts)-1], "/"))
-			}
-		} else if len(parts) > 1 {
-			tmp.Stackname = types.Stackname(strings.Join(parts[:len(parts)-1], "/"))
-		}
-		if re["ns_or_r"].MatchString(string(tmp.Stackname)) {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("invalid stack name '%s' in stack ID '%s'",
-					tmp.Stackname,
-					gsi,
-				),
-				Help: fmt.Sprintf("stack name '%s'%s",
-					tmp.Stackname,
-					fmt.Sprintf(sharedHelp, ""),
-				),
-			})
+		tmp.AuthorityDomain = global.DefaultAuthorityDomain
+		tmp.Identifier = gsi
+		tmp.Stackname = parts[0]
+		if len(tmp.Stackname) < minStacknameLen {
+			sts = status.Wrap(err).
+				SetMessage("invalid stackname in '%s'", gsi).
+				SetAllHelp("stackname must be at least %d characters long", minStacknameLen)
 			break
 		}
-		if re["ns_or_r"].MatchString(string(tmp.Role)) {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("invalid role '%s' in '%s'",
-					tmp.Role,
-					gsi,
-				),
-				Help: fmt.Sprintf("role '%s'%s",
-					tmp.Role,
-					fmt.Sprintf(sharedHelp, ""),
-				),
-			})
-			break
-		}
-		if tmp.Authority == "" {
-			tmp.Authority = global.DefaultAuthority
+		tmp.Role = parts[1]
+		if len(tmp.Role) < minRoleLen {
+			sts = status.Wrap(err).
+				SetMessage("invalid role in '%s'", gsi).
+				SetAllHelp("role must be at least %d characters long", minRoleLen)
 		}
 	}
-	if err == nil {
+	if is.Success(sts) {
 		*me = tmp
+		me.IsRemote = false
 	}
 	return sts
 }
 
-func (me *Gearspec) GetIdentifier() Identifier {
-	var s string
-	if me.Authority == "" && me.Stackname == "" && me.Revision == "" {
-		s = string(me.Role)
-	} else if me.Authority == "" && me.Revision == "" {
-		s = fmt.Sprintf("%s/%s", me.Stackname, me.Role)
-	} else if me.Authority == "" && me.Stackname == "" {
-		s = fmt.Sprintf("%s:%s", me.Role, me.Revision)
-	} else if me.Authority == "" {
-		s = fmt.Sprintf("%s/%s:%s", me.Stackname, me.Role, me.Revision)
-	} else if me.Revision == "" {
-		s = fmt.Sprintf("%s/%s/%s", me.Authority, me.Stackname, me.Role)
-	} else {
-		s = fmt.Sprintf("%s/%s/%s:%s", me.Authority, me.Stackname, me.Role, me.Revision)
+func (me *Gearspec) GetIdentifier() (id Identifier) {
+	var _id string
+	for range only.Once {
+		if me.IsRemote {
+			_id = string(me.Identifier)
+			break
+		}
+		if me.Revision == "" {
+			_id = strings.ToLower(fmt.Sprintf("%s/%s", me.Stackname, me.Role))
+			break
+		}
+		_id = strings.ToLower(fmt.Sprintf("%s/%s:%s", me.Stackname, me.Role, me.Revision))
 	}
-	return Identifier(s)
+	return Identifier(_id)
 }
 
 func (me *Gearspec) String() string {
@@ -160,11 +157,11 @@ func (me *Gearspec) String() string {
 }
 
 func (me *Gearspec) GetRaw() Identifier {
-	return me.raw
+	return me.Identifier
 }
 
 func (me *Gearspec) GetAuthority() types.AuthorityDomain {
-	return me.Authority
+	return me.AuthorityDomain
 }
 
 func (me *Gearspec) GetStackname() types.Stackname {
@@ -179,44 +176,42 @@ func (me *Gearspec) GetRevision() types.Revision {
 	return me.Revision
 }
 
-func (me *Gearspec) GetStackId() types.StackId {
-	if me.Authority == "" {
-		me.Authority = global.DefaultAuthority
+func (me *Gearspec) GetStackId() (sid types.StackId) {
+	if me.AuthorityDomain == "" {
+		me.AuthorityDomain = global.DefaultAuthorityDomain
 	}
-	return types.StackId(fmt.Sprintf("%s/%s", me.Authority, me.Stackname))
+	return types.StackId(fmt.Sprintf("%s/%s", me.AuthorityDomain, me.Stackname))
 }
 
-func (me *Gearspec) SetId(stackid types.StackId) (sts status.Status) {
+func (me *Gearspec) SetStackId(stackid types.StackId) (sts status.Status) {
 	for range only.Once {
-		tmp := Gearspec{raw: Identifier(stackid)}
+		tmp := Gearspec{Identifier: Identifier(stackid)}
 		if me == nil {
-			panic("gearspec.SetId() called when 'spec' is nil.")
+			panic("gearspec.SetStackId() called when stackid is nil.")
 		}
+
 		parts := strings.Split(string(stackid), "/")
 		if len(parts) < 2 {
 			parts = []string{
-				global.DefaultAuthority,
+				global.DefaultAuthorityDomain,
 				string(stackid),
 			}
 		} else if len(parts) > 2 {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("invalid stack ID '%s'", stackid),
-				Help:    "ID can only have one slash ('/') and it should separate authority from stackname",
-			})
+			sts = status.Fail().
+				SetMessage("invalid stack ID '%s'", stackid).
+				SetAllHelp("ID can only have one slash ('/') and it should separate authority from stackname")
 			break
 		}
 		switch len(parts) {
 		case 1:
+			tmp.AuthorityDomain = global.DefaultAuthorityDomain
 			tmp.Stackname = types.Stackname(stackid)
 		default:
-			tmp.Authority = types.AuthorityDomain(parts[0])
+			tmp.AuthorityDomain = types.AuthorityDomain(parts[0])
 			tmp.Stackname = types.Stackname(parts[1])
 		}
-		if tmp.Authority == "" {
-			tmp.Authority = global.DefaultAuthority
-		}
 		*me = tmp
-		sts = status.Success("named stack id '%s' set", me.GetStackId())
+		sts = status.Success("named stack id '%s' set", stackid)
 	}
 	return sts
 }

@@ -29,12 +29,11 @@ func (me Services) ServiceIds() service.Identifiers {
 }
 
 type Service struct {
-	ServiceId   service.Identifier  `json:"service_id,omitempty"`
-	Orgname     types.Orgname       `json:"org,omitempty"`
-	ServiceType types.ServiceType   `json:"type,omitempty"`
-	Program     types.ProgramName   `json:"program,omitempty"`
-	Version     types.Version       `json:"version,omitempty"`
-	GearspecId  gearspec.Identifier `json:"gearspec_id,omitempty"`
+	ServiceId service.Identifier `json:"service_id,omitempty"`
+	Orgname   types.Orgname      `json:"org,omitempty"`
+	Program   types.ProgramName  `json:"program,omitempty"`
+	Version   types.Version      `json:"version,omitempty"`
+	//GearspecId  gearspec.Identifier  `json:"gearspec_id,omitempty"`
 }
 type ServiceArgs Service
 
@@ -46,6 +45,10 @@ func (me *Service) Clone() *Service {
 	_s := Service{}
 	_s = *me
 	return &_s
+}
+
+func (me *Service) GetStackId() (sid types.StackId) {
+	panic("Not yet implemented")
 }
 
 func (me *Service) GetIdentifier() (serviceId service.Identifier) {
@@ -64,7 +67,6 @@ func (me *Service) Parse(serviceId service.Identifier) (sts status.Status) {
 func (me *Service) CaptureGearId(g *gear.Gear) {
 	me.ServiceId = service.Identifier(g.GetIdentifier())
 	me.Orgname = g.OrgName
-	me.ServiceType = g.ServiceType
 	me.Program = g.Program
 	if g.Version == nil {
 		me.Version = ""
@@ -104,9 +106,6 @@ func (me *Service) ApplyDefaults(defaults *Service) (sts status.Status) {
 		}
 		if g.Program == "" {
 			g.Program = defaults.Program
-		}
-		if g.ServiceType == "" {
-			g.ServiceType = defaults.ServiceType
 		}
 		if defaults.Version == "" {
 			break

@@ -21,18 +21,16 @@ type Gearer interface {
 	SetRaw(gearid Identifier)
 	GetRaw() Identifier
 	GetOrgName() types.Orgname
-	GetType() types.ServiceType
 	GetName() types.ProgramName
 	GetVersion() *version.Version
 	String() (id string)
 }
 
 type Gear struct {
-	raw         Identifier
-	OrgName     types.Orgname     `json:"org,omitempty"`
-	ServiceType types.ServiceType `json:"type,omitempty"`
-	Program     types.ProgramName `json:"program,omitempty"`
-	Version     *version.Version  `json:"version,omitempty"`
+	raw     Identifier
+	OrgName types.Orgname     `json:"org,omitempty"`
+	Program types.ProgramName `json:"program,omitempty"`
+	Version *version.Version  `json:"version,omitempty"`
 }
 
 func NewGear() (id *Gear) {
@@ -51,7 +49,6 @@ func (me *Gear) Parse(gearid Identifier) (sts status.Status) {
 
 	var parts []string
 	var on types.Orgname
-	var t types.ServiceType
 	var p types.ProgramName
 	var msg string
 	var hlp string
@@ -76,10 +73,6 @@ func (me *Gear) Parse(gearid Identifier) (sts status.Status) {
 		case 2:
 			on = types.Orgname(parts[0])
 			p = types.ProgramName(parts[1])
-		case 3:
-			on = types.Orgname(parts[0])
-			t = types.ServiceType(parts[1])
-			p = types.ProgramName(parts[2])
 		default:
 			msg = fmt.Sprintf("too many slashes ('/') in gearid '%s'", gearid)
 			hlp = sharedHelp
@@ -94,7 +87,6 @@ func (me *Gear) Parse(gearid Identifier) (sts status.Status) {
 		}
 		me.raw = gearid
 		me.OrgName = on
-		me.ServiceType = t
 		me.Program = p
 		me.Version = v
 	}
@@ -109,9 +101,6 @@ func (me *Gear) Parse(gearid Identifier) (sts status.Status) {
 
 func (me *Gear) GetIdentifier() Identifier {
 	id := string(me.Program)
-	if me.ServiceType != "" {
-		id = fmt.Sprintf("%s/%s", me.ServiceType, id)
-	}
 	if me.OrgName != "" {
 		id = fmt.Sprintf("%s/%s", me.OrgName, id)
 	}
@@ -135,10 +124,6 @@ func (me *Gear) GetRaw() Identifier {
 
 func (me *Gear) GetOrgName() types.Orgname {
 	return me.OrgName
-}
-
-func (me *Gear) GetType() types.ServiceType {
-	return me.ServiceType
 }
 
 func (me *Gear) GetName() types.ProgramName {
