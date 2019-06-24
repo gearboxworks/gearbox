@@ -21,7 +21,7 @@ type StackMember struct {
 	GearIds          service.Identifiers    `json:"available_gears,omitempty"`
 }
 
-func NewStackMemberFromGearOptions(ctx *apiworks.Context, gsr *gears.Gearspec, gids service.Identifiers) (rss *StackMember) {
+func NewStackMemberFromGearspec(ctx *apiworks.Context, gsr *gears.Gearspec) (rss *StackMember) {
 	var dsi service.Identifier
 	ds := gsr.GetDefaultGear()
 	if ds != nil {
@@ -35,6 +35,6 @@ func NewStackMemberFromGearOptions(ctx *apiworks.Context, gsr *gears.Gearspec, g
 		Specname:         gsr.Specname,
 		Revision:         gsr.Revision,
 		Shareable:        gsr.Shareable,
-		GearIds:          gids,
+		GearIds:          gsr.Gears.GetGearIds(),
 	}
 }

@@ -148,6 +148,7 @@ func (me *Gearspec) ParseLocalGearspec(gsi Identifier) (sts status.Status) {
 				SetMessage("invalid role in '%s'", gsi).
 				SetAllHelp("role must be at least %d characters long", minSpecnameLen)
 		}
+		tmp.Identifier = tmp.GetIdentifier()
 	}
 	if is.Success(sts) {
 		*me = tmp

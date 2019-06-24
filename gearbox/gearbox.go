@@ -80,7 +80,6 @@ type Gearboxer interface {
 type Gearbox struct {
 	Config        config.Configer
 	OsBridge      osbridge.OsBridger
-	StackMap      gears.NamedStackMap
 	Services      gears.Gears
 	GlobalOptions *global.Options
 	Api           api.Apier
@@ -115,9 +114,9 @@ func NewGearbox(args *Args) Gearboxer {
 }
 
 func (me *Gearbox) GetNamedStacks() (nss gears.NamedStacks, sts status.Status) {
-	nss = make(gears.NamedStacks, len(me.StackMap))
+	nss = make(gears.NamedStacks, len(me.GearRegistry.NamedStacks))
 	i := 0
-	for _, s := range me.StackMap {
+	for _, s := range me.GearRegistry.NamedStacks {
 		nss[i] = s
 		i++
 	}

@@ -31,7 +31,7 @@ func NewProject(cp *config.Project) (p *Project) {
 		Project: cp,
 
 		//Stack: ConvertServiceMap(p.GetServicerMap()),
-		//GearIds: ConvertServices(pp.GetServicerMap()),
+		//GetGearIds: ConvertServices(pp.GetServicerMap()),
 		//
 		//Aliases:    pp.GetAliases(),
 	}

@@ -38,6 +38,14 @@ func (me Gearspecs) Find(gsid gearspec.Identifier) (gs *Gearspec, sts Status) {
 	return gs, sts
 }
 
+func (me Gearspecs) GetMap() (gsm GearspecMap) {
+	gsm = make(GearspecMap, len(me))
+	for _, gs := range me {
+		gsm[gs.GearspecId] = gs
+	}
+	return gsm
+}
+
 type Gearspec struct {
 	GearspecId      gearspec.Identifier    `json:"gearspec_id"`
 	AuthorityDomain types.AuthorityDomain  `json:"authority"`
@@ -52,7 +60,9 @@ type Gearspec struct {
 	DefaultGearId   service.Identifier     `json:"default,omitempty"`
 	Minimum         int                    `json:"min,omitempty"`
 	Maximum         int                    `json:"max,omitempty"`
-	stackid         types.StackId
+	Gears           Gears                  `json:"-"`
+
+	stackid types.StackId
 }
 
 func (me *Gearspec) GetIdentifier() gearspec.Identifier {
@@ -88,20 +98,14 @@ func NewGearspec() *Gearspec {
 }
 
 func (me Gearspecs) FilterByNamedStack(stackid types.StackId) (nsrs Gearspecs, sts status.Status) {
-	for range only.Once {
-		gs := gearspec.NewGearspec()
-		sts = gs.SetStackId(stackid)
-		if is.Error(sts) {
-			break
+	ns := NewNamedStack(stackid)
+	stackid = ns.GetIdentifier()
+	nsrs = make(Gearspecs, 0)
+	for _, gs := range me {
+		if gs.GetStackId() != stackid {
+			continue
 		}
-		stackid = gs.GetStackId()
-		nsrs = make(Gearspecs, 0)
-		for i, r := range me {
-			if r.GetStackId() != stackid {
-				continue
-			}
-			nsrs[i] = r
-		}
+		nsrs = append(nsrs, gs)
 	}
 	return nsrs, sts
 }

@@ -31,7 +31,7 @@ type GearRegistry struct {
 	Authorities   Authorities         `json:"authorities"`
 	NamedStacks   NamedStacks         `json:"named_stacks"`
 	Gearspecs     Gearspecs           `json:"gearspecs"`
-	GearOptions   GearOptions         `json:"service_options"`
+	GearOptions   GearOptions         `json:"gear_options"`
 	GlobalOptions global.Options      `json:"-"`
 	serviceids    service.Identifiers `json:"-"`
 	services      Gears               `json:"-"`
@@ -66,15 +66,8 @@ func (me *GearRegistry) GetAuthorityDomains() (as types.AuthorityDomains, sts St
 func (me *GearRegistry) FindAuthority(authority types.AuthorityDomain) (ad types.AuthorityDomain, sts Status) {
 	return authority, nil
 }
-func (me *GearRegistry) GetGearspecs() (Gearspecs, Status) {
-	return me.Gearspecs, nil
-}
 
-func (me *GearRegistry) GetNamedGearOptions(stackid types.StackId) (sos GearOptions, sts Status) {
-	return me.GearOptions.FilterForNamedStack(stackid)
-}
-
-func (me *GearRegistry) GetNamedRegistries(stackid types.StackId) (Gearspecs, Status) {
+func (me *GearRegistry) FilterByNamedStack(stackid types.StackId) (Gearspecs, Status) {
 	return me.Gearspecs.FilterByNamedStack(stackid)
 }
 
@@ -136,7 +129,16 @@ func (me *GearRegistry) Initialize() (sts Status) {
 			break
 		}
 		for _, so := range me.GearOptions {
-			sts = so.Fixup()
+			sts = so.Fixup(me)
+			if is.Error(sts) {
+				break
+			}
+		}
+		if is.Error(sts) {
+			break
+		}
+		for _, ns := range me.NamedStacks {
+			sts = ns.Fixup(me)
 			if is.Error(sts) {
 				break
 			}
@@ -215,26 +217,16 @@ func (me *GearRegistry) ValidateNamedStackId(stackid types.StackId) (sts Status)
 	return sts
 }
 
-func (me *GearRegistry) FindNamedStack(stackid types.StackId) (stack *NamedStack, sts Status) {
-	var tmp *NamedStack
+func (me *GearRegistry) FindNamedStack(stackid types.StackId) (ns *NamedStack, sts Status) {
 	for range only.Once {
 		sts = me.ValidateNamedStackId(stackid)
 		if is.Error(sts) {
 			break
 		}
-		//		tmp = NewNamedStack(me, stackid)
-		tmp = NewNamedStack(stackid)
-		sts = tmp.Refresh(me)
-		if is.Error(sts) {
-			break
-		}
+		nsm := me.NamedStacks.GetMap()
+		ns, _ = nsm[stackid]
 	}
-	if !status.IsError(sts) && tmp != nil {
-		stack = &NamedStack{}
-		*stack = *tmp
-		stack.GearRegistry = me
-	}
-	return stack, sts
+	return ns, sts
 }
 
 func (me *GearRegistry) GetGears() (sm Gears) {
@@ -262,8 +254,8 @@ func (me *GearRegistry) GetGearIds() (sids service.Identifiers, sts Status) {
 func (me *GearRegistry) ValidateGearId(gearid service.Identifier) (sts Status) {
 	for range only.Once {
 		var ok bool
-		for _, nsid := range me.serviceids {
-			if nsid == gearid {
+		for _, sid := range me.serviceids {
+			if sid == gearid {
 				ok = true
 				break
 			}

@@ -20,7 +20,7 @@ type DefaultGearMap map[gearspec.Identifier]*Gear
 
 type Gears []*Gear
 
-func (me Gears) GearIds() service.Identifiers {
+func (me Gears) GetGearIds() service.Identifiers {
 	gs := make(service.Identifiers, len(me))
 	for i, s := range me {
 		gs[i] = s.GearId
