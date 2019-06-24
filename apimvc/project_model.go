@@ -429,7 +429,7 @@ func (me *ProjectModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
 //		if status.IsError(sts) {
 //			break
 //		}
-//		sts = me.Gearbox.AddNamedStackToProject(sn, hn)
+//		sts = me.Gearbox.AddStackToProject(sn, hn)
 //		if status.IsError(sts) {
 //			break
 //		}

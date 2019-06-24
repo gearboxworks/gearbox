@@ -97,8 +97,8 @@ func NewGearspec() *Gearspec {
 	return &Gearspec{}
 }
 
-func (me Gearspecs) FilterByNamedStack(stackid types.StackId) (nsrs Gearspecs, sts status.Status) {
-	ns := NewNamedStack(stackid)
+func (me Gearspecs) FilterByStack(stackid types.StackId) (nsrs Gearspecs, sts status.Status) {
+	ns := NewStack(stackid)
 	stackid = ns.GetIdentifier()
 	nsrs = make(Gearspecs, 0)
 	for _, gs := range me {

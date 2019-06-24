@@ -205,10 +205,10 @@ func (me *Project) WriteFile() (sts status.Status) {
 	return sts
 }
 
-//func (me *Project) AddNamedStack(stackid gears.StackId) (sts status.Status) {
+//func (me *Project) AddStack(stackid gears.StackId) (sts status.Status) {
 //	for range only.Once {
-//		var stack *gears.NamedStack
-//		stack, sts = gears.FindNamedStack(stackid)
+//		var stack *gears.Stack
+//		stack, sts = gears.FindStack(stackid)
 //		if is.Error(sts) {
 //			break
 //		}

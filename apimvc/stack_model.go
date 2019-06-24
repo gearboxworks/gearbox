@@ -11,26 +11,26 @@ import (
 	"strings"
 )
 
-const NamedStackType ItemType = "stacks"
+const StackType ItemType = "stacks"
 
-var NilNamedStackModel = (*NamedStackModel)(nil)
-var _ ItemModeler = NilNamedStackModel
+var NilStackModel = (*StackModel)(nil)
+var _ ItemModeler = NilStackModel
 
-type NamedStackModelMap map[types.Stackname]*NamedStackModel
-type NamedStackModels []*NamedStackModel
+type StackModelMap map[types.Stackname]*StackModel
+type StackModels []*StackModel
 
-type NamedStackModel struct {
+type StackModel struct {
 	Authority types.AuthorityDomain `json:"authority"`
 	Stackname types.Stackname       `json:"stackname"`
 	Members   StackMembers          `json:"members,omitempty"`
 	Model
 }
 
-func (me *NamedStackModel) GetAttributeMap() apiworks.AttributeMap {
+func (me *StackModel) GetAttributeMap() apiworks.AttributeMap {
 	panic("implement me")
 }
 
-func NewNamedStackModelFromGearsNamedStack(ctx *Context, gns *gears.NamedStack) (ns *NamedStackModel, sts Status) {
+func NewStackModelFromGearsStack(ctx *Context, gns *gears.Stack) (ns *StackModel, sts Status) {
 	for range only.Once {
 
 		sms := make(StackMembers, len(gns.Gearspecs))
@@ -41,7 +41,7 @@ func NewNamedStackModelFromGearsNamedStack(ctx *Context, gns *gears.NamedStack) 
 			sms[i] = sm
 		}
 
-		ns = &NamedStackModel{
+		ns = &StackModel{
 			Authority: gns.Authority,
 			Stackname: gns.Stackname,
 			Members:   sms,
@@ -50,27 +50,27 @@ func NewNamedStackModelFromGearsNamedStack(ctx *Context, gns *gears.NamedStack) 
 	return ns, sts
 }
 
-func NewNamedStackModel(ns *gears.NamedStack) *NamedStackModel {
-	return &NamedStackModel{
+func NewStackModel(ns *gears.Stack) *StackModel {
+	return &StackModel{
 		Authority: ns.Authority,
 		Stackname: ns.Stackname,
 		Members:   make(StackMembers, 0),
 	}
 }
 
-func (me *NamedStackModel) GetType() ItemType {
-	return NamedStackType
+func (me *StackModel) GetType() ItemType {
+	return StackType
 }
 
-func (me *NamedStackModel) GetFullStackname() types.Stackname {
+func (me *StackModel) GetFullStackname() types.Stackname {
 	return types.Stackname(me.GetId())
 }
 
-func (me *NamedStackModel) GetId() ItemId {
+func (me *StackModel) GetId() ItemId {
 	return ItemId(fmt.Sprintf("%s/%s", me.Authority, me.Stackname))
 }
 
-func (me *NamedStackModel) SetId(itemid ItemId) (sts Status) {
+func (me *StackModel) SetId(itemid ItemId) (sts Status) {
 	for range only.Once {
 		parts := strings.Split(string(itemid), "/")
 		if len(parts) < 2 {
@@ -90,8 +90,8 @@ func (me *NamedStackModel) SetId(itemid ItemId) (sts Status) {
 	return sts
 }
 
-func MakeGearboxStack(gb gearbox.Gearboxer, ns *NamedStackModel) (gbns *gears.NamedStack, sts Status) {
-	gbns = gears.NewNamedStack(types.StackId(ns.GetId()))
+func MakeGearboxStack(gb gearbox.Gearboxer, ns *StackModel) (gbns *gears.Stack, sts Status) {
+	gbns = gears.NewStack(types.StackId(ns.GetId()))
 	sts = gbns.Refresh(gb.GetGearRegistry())
 	return gbns, sts
 }

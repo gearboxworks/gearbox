@@ -66,7 +66,7 @@ func (me *GearspecController) GetList(ctx *Context, filterPath ...FilterPath) (l
 		fp = string(filterPath[0])
 	}
 	for range only.Once {
-		gss, sts := me.Gearbox.GetGearRegistry().FilterByNamedStack(types.StackId(fp))
+		gss, sts := me.Gearbox.GetGearRegistry().FilterGearspecByStack(types.StackId(fp))
 		if is.Error(sts) {
 			break
 		}

@@ -34,14 +34,14 @@ func NewStackController(gb gearbox.Gearboxer) *StackController {
 }
 
 func (me *StackController) GetNilItem(ctx *Context) ItemModeler {
-	return NilNamedStackModel
+	return NilStackModel
 }
 
 func (me *StackController) GetRelatedFields() RelatedFields {
 	return RelatedFields{
 		&RelatedField{
 			Fieldname:   GearspecsField,
-			IncludeType: NamedStackType,
+			IncludeType: StackType,
 		},
 	}
 }
@@ -66,12 +66,12 @@ func (me *StackController) GetItemType() reflect.Kind {
 
 func (me *StackController) GetList(ctx *Context, filterPath ...FilterPath) (list List, sts Status) {
 	for range only.Once {
-		nss, sts := me.Gearbox.GetNamedStacks()
+		nss, sts := me.Gearbox.GetStacks()
 		if is.Error(sts) {
 			break
 		}
 		for _, ns := range nss {
-			ns, sts := NewNamedStackModelFromGearsNamedStack(ctx, ns)
+			ns, sts := NewStackModelFromGearsStack(ctx, ns)
 			if is.Error(sts) {
 				break
 			}
@@ -109,16 +109,16 @@ func (me *StackController) GetListIds(ctx *Context, filterPath ...FilterPath) (i
 
 func (me *StackController) AddItem(ctx *Context, item ItemModeler) (im ItemModeler, sts Status) {
 	for range only.Once {
-		var gbs *gears.NamedStack
+		var gbs *gears.Stack
 		gbs, _, sts = me.extractGearboxStack(ctx, item)
 		if status.IsError(sts) {
 			break
 		}
-		sts = me.Gearbox.AddNamedStack(gbs)
+		sts = me.Gearbox.AddStack(gbs)
 		if status.IsError(sts) {
 			break
 		}
-		im, sts = NewNamedStackModelFromGearsNamedStack(ctx, gbs)
+		im, sts = NewStackModelFromGearsStack(ctx, gbs)
 		if status.IsError(sts) {
 			break
 		}
@@ -130,12 +130,12 @@ func (me *StackController) AddItem(ctx *Context, item ItemModeler) (im ItemModel
 
 func (me *StackController) UpdateItem(ctx *apiworks.Context, item apiworks.ItemModeler) (modeler apiworks.ItemModeler, sts status.Status) {
 	for range only.Once {
-		var gbs *gears.NamedStack
+		var gbs *gears.Stack
 		gbs, _, sts = me.extractGearboxStack(ctx, item)
 		if status.IsError(sts) {
 			break
 		}
-		sts = me.Gearbox.UpdateNamedStack(gbs)
+		sts = me.Gearbox.UpdateStack(gbs)
 		if status.IsError(sts) {
 			break
 		}
@@ -148,7 +148,7 @@ func (me *StackController) UpdateItem(ctx *apiworks.Context, item apiworks.ItemM
 
 func (me *StackController) DeleteItem(ctx *Context, stackid ItemId) (sts Status) {
 	for range only.Once {
-		sts := me.Gearbox.DeleteNamedStack(types.StackId(stackid))
+		sts := me.Gearbox.DeleteStack(types.StackId(stackid))
 		if status.IsError(sts) {
 			break
 		}
@@ -159,13 +159,13 @@ func (me *StackController) DeleteItem(ctx *Context, stackid ItemId) (sts Status)
 }
 
 func (me *StackController) GetItem(ctx *Context, stackid ItemId) (list ItemModeler, sts Status) {
-	var ns *NamedStackModel
+	var ns *StackModel
 	for range only.Once {
-		gbns, sts := me.Gearbox.FindNamedStack(types.StackId(stackid))
+		gbns, sts := me.Gearbox.FindStack(types.StackId(stackid))
 		if is.Error(sts) {
 			break
 		}
-		ns, sts = NewNamedStackModelFromGearsNamedStack(ctx, gbns)
+		ns, sts = NewStackModelFromGearsStack(ctx, gbns)
 		if is.Error(sts) {
 			break
 		}
@@ -183,8 +183,8 @@ func (me *StackController) GetFilterMap() FilterMap {
 	return GetStackFilterMap()
 }
 
-func (me *StackController) extractGearboxStack(ctx *Context, item ItemModeler) (gbs *gears.NamedStack, list List, sts Status) {
-	var ns *NamedStackModel
+func (me *StackController) extractGearboxStack(ctx *Context, item ItemModeler) (gbs *gears.Stack, list List, sts Status) {
+	var ns *StackModel
 	for range only.Once {
 		list, sts = me.GetList(ctx)
 		if is.Error(sts) {
@@ -203,8 +203,8 @@ func GetStackFilterMap() FilterMap {
 	return FilterMap{}
 }
 
-func assertStack(item ItemModeler) (s *NamedStackModel, sts Status) {
-	s, ok := item.(*NamedStackModel)
+func assertStack(item ItemModeler) (s *StackModel, sts Status) {
+	s, ok := item.(*StackModel)
 	if !ok {
 		sts = status.Fail(&status.Args{
 			Message: fmt.Sprintf("item not a Stack: %v", item),

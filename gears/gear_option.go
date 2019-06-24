@@ -21,31 +21,6 @@ type GearOption struct {
 	DefaultGear *Gear     `json:"-"`
 }
 
-func (me GearOptions) FilterForNamedStack(stackid types.StackId) (sos GearOptions, sts Status) {
-	for range only.Once {
-		if is.Error(sts) {
-			break
-		}
-		//ns := NewNamedStack(stackid)
-		//sos = make(GearOptions, 0)
-		//for _, so := range me {
-		//	gs := gearspec.NewGearspec()
-		//	for _, g := range so.Gears {
-		//		sts = gs.Parse(gsid)
-		//		if is.Error(sts) {
-		//			sts.Log()
-		//			continue
-		//		}
-		//		if gs.GetStackId() != ns.GetIdentifier() {
-		//			continue
-		//		}
-		//		sos = append(sos, so)
-		//	}
-		//}
-	}
-	return sos, sts
-}
-
 func (me *GearOption) Fixup(gr *GearRegistry) (sts status.Status) {
 	for range only.Once {
 		if me.Default != ZeroString {

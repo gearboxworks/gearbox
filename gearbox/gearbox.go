@@ -34,20 +34,20 @@ var Instance Gearboxer
 
 type Gearboxer interface {
 	AddBasedir(types.Dir, ...types.Nickname) status.Status
-	AddNamedStack(*gears.NamedStack) status.Status
+	AddStack(*gears.Stack) status.Status
 	AddProject(*project.Project) status.Status
 	Admin(ViewerType)
 	DeleteBasedir(types.Nickname) status.Status
-	DeleteNamedStack(stackid types.StackId) status.Status
+	DeleteStack(stackid types.StackId) status.Status
 	DeleteProject(hostname types.Hostname) status.Status
-	FindNamedStack(stackid types.StackId) (*gears.NamedStack, status.Status)
+	FindStack(stackid types.StackId) (*gears.Stack, status.Status)
 	FindService(serviceid service.Identifier) (*gears.Gear, status.Status)
 	FindProject(hostname types.Hostname) (*project.Project, status.Status)
 	GetConfig() config.Configer
 	GetGearRegistry() *gears.GearRegistry
 	GetGlobalOptions() *global.Options
 	GetApi() api.Apier
-	GetNamedStacks() (gears.NamedStacks, status.Status)
+	GetStacks() (gears.Stacks, status.Status)
 	GetServices() (gears.Gears, status.Status)
 	GetOsBridge() osbridge.OsBridger
 	GetProjectMap() (project.Map, status.Status)
@@ -72,7 +72,7 @@ type Gearboxer interface {
 	SetApi(api api.Apier)
 	SetRouteName(types.RouteName)
 	UpdateBasedir(types.Nickname, types.Dir) status.Status
-	UpdateNamedStack(*gears.NamedStack) status.Status
+	UpdateStack(*gears.Stack) status.Status
 	UpdateProject(*project.Project) status.Status
 	WriteLog([]byte) (int, error)
 }
@@ -113,10 +113,10 @@ func NewGearbox(args *Args) Gearboxer {
 	return &gb
 }
 
-func (me *Gearbox) GetNamedStacks() (nss gears.NamedStacks, sts status.Status) {
-	nss = make(gears.NamedStacks, len(me.GearRegistry.NamedStacks))
+func (me *Gearbox) GetStacks() (nss gears.Stacks, sts status.Status) {
+	nss = make(gears.Stacks, len(me.GearRegistry.Stacks))
 	i := 0
-	for _, s := range me.GearRegistry.NamedStacks {
+	for _, s := range me.GearRegistry.Stacks {
 		nss[i] = s
 		i++
 	}
@@ -135,20 +135,20 @@ func (me *Gearbox) GetServices() (nsm gears.Gears, sts status.Status) {
 	return me.Services, sts
 }
 
-func (me *Gearbox) AddNamedStack(*gears.NamedStack) status.Status {
+func (me *Gearbox) AddStack(*gears.Stack) status.Status {
 	panic("implement me")
 }
 
-func (me *Gearbox) UpdateNamedStack(*gears.NamedStack) status.Status {
+func (me *Gearbox) UpdateStack(*gears.Stack) status.Status {
 	panic("implement me")
 }
 
-func (me *Gearbox) DeleteNamedStack(stackid types.StackId) status.Status {
+func (me *Gearbox) DeleteStack(stackid types.StackId) status.Status {
 	panic("implement me")
 }
 
-func (me *Gearbox) FindNamedStack(stackid types.StackId) (stack *gears.NamedStack, sts status.Status) {
-	return me.GearRegistry.FindNamedStack(stackid)
+func (me *Gearbox) FindStack(stackid types.StackId) (stack *gears.Stack, sts status.Status) {
+	return me.GearRegistry.FindStack(stackid)
 }
 
 func (me *Gearbox) FindService(serviceid service.Identifier) (service *gears.Gear, sts status.Status) {
@@ -403,18 +403,18 @@ func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery
 //	return pfp, sts
 //}
 
-//func (me *Parent) AddNamedStackToProject(stackid gears.StackId, hostname types.Hostname) (sts status.Status) {
+//func (me *Parent) AddStackToProject(stackid gears.StackId, hostname types.Hostname) (sts status.Status) {
 //	for range only.Once {
 //		var p *config.Project
 //		p, sts = me.GetProjects(hostname)
 //		if status.IsError(sts) {
 //			break
 //		}
-//		sts = p.AddNamedStack(stackid)
+//		sts = p.AddStack(stackid)
 //		if status.IsError(sts) {
 //			break
 //		}
-//		sts = status.Success("named stack ID '%s' added to project '%s'", stackid, hostname)
+//		sts = status.Success("stack ID '%s' added to project '%s'", stackid, hostname)
 //	}
 //	return sts
 //}
