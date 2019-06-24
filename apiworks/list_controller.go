@@ -25,6 +25,7 @@ type ListController interface {
 	RelatedFieldsGetter
 	LinkAdder
 	LinksAdder
+	RootObjectGetter
 }
 
 type ItemCanAdder interface {
@@ -89,4 +90,7 @@ type LinksAdder interface {
 }
 type MetaAdder interface {
 	AddMeta(Metaname, MetaValue)
+}
+type RootObjectGetter interface {
+	GetRootObject() interface{}
 }

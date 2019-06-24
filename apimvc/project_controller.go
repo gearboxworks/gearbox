@@ -38,6 +38,10 @@ func NewProjectController(gb gearbox.Gearboxer) *ProjectController {
 	}
 }
 
+func (me *ProjectController) GetRootObject() interface{} {
+	return me.Gearbox
+}
+
 func (me *ProjectController) GetNilItem(ctx *Context) ItemModeler {
 	return NilProjectModel
 }

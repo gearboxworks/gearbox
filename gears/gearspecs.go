@@ -188,7 +188,7 @@ func (me *Gearspec) Fixup() (sts status.Status) {
 			break
 		}
 		if me.Specname == ZeroString {
-			sts = status.Fail().SetMessage("role cannot be null for stack role: %s", me)
+			sts = status.Fail().SetMessage("specname cannot be null for stack role: %s", me)
 			break
 		}
 		if save.Stackname != ZeroString {

@@ -30,6 +30,10 @@ func NewDirectoryController() *DirectoryController {
 	return &DirectoryController{}
 }
 
+func (me *DirectoryController) GetRootObject() interface{} {
+	return nil
+}
+
 func (me *DirectoryController) GetNilItem(ctx *Context) ItemModeler {
 	return NilDirectoryModel
 }

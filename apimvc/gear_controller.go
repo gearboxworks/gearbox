@@ -30,6 +30,10 @@ func NewGearController(gb gearbox.Gearboxer) *GearController {
 	}
 }
 
+func (me *GearController) GetRootObject() interface{} {
+	return me.Gearbox
+}
+
 func (me *GearController) GetNilItem(ctx *Context) ItemModeler {
 	return NilGearModel
 }

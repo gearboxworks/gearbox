@@ -21,7 +21,7 @@ func AddControllers(gb gearbox.Gearboxer) (sts Status) {
 			NewGearspecController(gb),
 			NewAuthorityController(gb),
 			NewBasedirController(gb.GetConfig()),
-			NewRootController(gb),
+			//NewRootController(gb),
 		}
 		a := gb.GetApi()
 		for _, cs := range controllers {

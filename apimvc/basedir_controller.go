@@ -31,6 +31,10 @@ func NewBasedirController(cfg config.Configer) *BasedirController {
 	}
 }
 
+func (me *BasedirController) GetRootObject() interface{} {
+	return me.Config
+}
+
 func (me *BasedirController) GetNilItem(ctx *Context) ItemModeler {
 	return NilBasedirModel
 }

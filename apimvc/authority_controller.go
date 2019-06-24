@@ -22,6 +22,10 @@ type AuthorityController struct {
 	Gearbox gearbox.Gearboxer
 }
 
+func (me *AuthorityController) GetRootObject() interface{} {
+	return me.Gearbox
+}
+
 func NewAuthorityController(gb gearbox.Gearboxer) *AuthorityController {
 	return &AuthorityController{
 		Gearbox: gb,

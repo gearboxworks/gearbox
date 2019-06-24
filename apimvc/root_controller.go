@@ -30,3 +30,7 @@ func (me *RootController) GetName() types.RouteName {
 func (me *RootController) GetNilItem(ctx *Context) ItemModeler {
 	panic("not yet implemented")
 }
+
+func (me *RootController) GetRootObject() interface{} {
+	return me.Gearbox
+}

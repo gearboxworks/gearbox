@@ -23,7 +23,7 @@ type GearspecModel struct {
 	StackId    types.StackId         `json:"stack_id,omitempty"`
 	Authority  types.AuthorityDomain `json:"authority,omitempty"`
 	Stackname  types.Stackname       `json:"stackname,omitempty"`
-	Specname   types.Specname        `json:"role,omitempty"`
+	Specname   types.Specname        `json:"specname,omitempty"`
 	Revision   types.Revision        `json:"revision"`
 	Model
 }
@@ -32,19 +32,19 @@ func (me *GearspecModel) GetAttributeMap() apiworks.AttributeMap {
 	panic("implement me")
 }
 
-func NewGearspecModelFromGearspecGearspec(ctx *Context, gsgs *gearspec.Gearspec) (gsm *GearspecModel, sts Status) {
+func NewGearspecModel() *GearspecModel {
+	return &GearspecModel{}
+}
+
+func NewGearspecModelFromGearspecer(ctx *Context, gsgs gearspec.Gearspecer) (gsm *GearspecModel) {
 	return &GearspecModel{
 		GearspecId: gsgs.GetIdentifier(),
 		StackId:    gsgs.GetStackId(),
-		Authority:  gsgs.AuthorityDomain,
-		Stackname:  gsgs.Stackname,
-		Specname:   gsgs.Specname,
-		Revision:   gsgs.Revision,
-	}, sts
-}
-
-func NewGearspecModel() *GearspecModel {
-	return &GearspecModel{}
+		Authority:  gsgs.GetAuthorityDomain(),
+		Stackname:  gsgs.GetStackname(),
+		Specname:   gsgs.GetSpecname(),
+		Revision:   gsgs.GetRevision(),
+	}
 }
 
 func (me *GearspecModel) GetType() ItemType {

@@ -14,8 +14,8 @@ const Basepath types.Basepath = "/"
 
 const ItemIdParam IdParam = "item_id"
 
-var NilListController = (*Controller)(nil)
-var _ ListController = NilListController
+var NilController = (*Controller)(nil)
+var _ ListController = NilController
 
 type ControllerMap map[types.Basepath]ListController
 
@@ -23,6 +23,10 @@ type Controller struct {
 	LinkMap  LinkMap
 	Parent   *Controller
 	Children ControllerMap
+}
+
+func (me *Controller) GetRootObject() interface{} {
+	return nil
 }
 
 func (me *Controller) GetNilItem(ctx *Context) ItemModeler {

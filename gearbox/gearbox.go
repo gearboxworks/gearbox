@@ -114,6 +114,7 @@ func NewGearbox(args *Args) Gearboxer {
 }
 
 func (me *Gearbox) GetStacks() (nss gears.Stacks, sts status.Status) {
+
 	nss = make(gears.Stacks, len(me.GearRegistry.Stacks))
 	i := 0
 	for _, s := range me.GearRegistry.Stacks {

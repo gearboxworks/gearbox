@@ -101,32 +101,26 @@ func (me *ProjectModel) AddDetails(ctx *Context) (sts Status) {
 }
 
 func (me *ProjectModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
-	for range only.Once {
-		list = make(List, 0)
-		for _, s := range me.Stack {
-			gsgs := gearspec.NewGearspec()
-			sts = gsgs.Parse(s.GearspecId)
-			if is.Error(sts) {
-				break
-			}
-			gsm, sts := NewGearspecModelFromGearspecGearspec(ctx, gsgs)
-			if is.Error(sts) {
-				break
-			}
-			list = append(list, gsm)
-
-			ss := service.NewService()
-			sts = ss.Parse(s.ServiceId)
-			if is.Error(sts) {
-				break
-			}
-			sm, sts := NewModelFromServiceServicer(ctx, ss)
-			if is.Error(sts) {
-				break
-			}
-			//sm.GearspecId = gsm.GearspecId
-			list = append(list, sm)
+	list = make(List, 0)
+	for _, s := range me.Stack {
+		gsgs := gearspec.NewGearspec()
+		sts = gsgs.Parse(s.GearspecId)
+		if is.Error(sts) {
+			break
 		}
+		gsm := NewGearspecModelFromGearspecer(ctx, gsgs)
+		list = append(list, gsm)
+
+		ss := service.NewService()
+		sts = ss.Parse(s.ServiceId)
+		if is.Error(sts) {
+			break
+		}
+		sm, sts := NewModelFromServiceServicer(ctx, ss)
+		if is.Error(sts) {
+			break
+		}
+		list = append(list, sm)
 	}
 	return list, sts
 }

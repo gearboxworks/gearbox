@@ -15,6 +15,9 @@ import (
 const minStacknameLen = 2
 const minSpecnameLen = 3
 
+var NilGearspec = (*Gearspec)(nil)
+var _ Gearspecer = NilGearspec
+
 type Gearspecs []*Gearspec
 
 func (me Gearspecs) FindById(gsid Identifier) (gs *Gearspec) {
@@ -31,6 +34,7 @@ func (me Gearspecs) FindById(gsid Identifier) (gs *Gearspec) {
 
 type Gearspecer interface {
 	GetIdentifier() Identifier
+	GetStackId() types.StackId
 	GetIsRemote() bool
 	GetAuthorityDomain() types.AuthorityDomain
 	GetStackname() types.Stackname
@@ -43,7 +47,7 @@ type Gearspec struct {
 	IsRemote        bool
 	AuthorityDomain types.AuthorityDomain `json:"authority,omitempty"`
 	Stackname       types.Stackname       `json:"stackname,omitempty"`
-	Specname        types.Specname        `json:"role,omitempty"`
+	Specname        types.Specname        `json:"specname,omitempty"`
 	Revision        types.Revision        `json:"revision,omitempty"`
 }
 
@@ -146,7 +150,7 @@ func (me *Gearspec) ParseLocalGearspec(gsi Identifier) (sts status.Status) {
 		if len(tmp.Specname) < minSpecnameLen {
 			sts = status.Wrap(err).
 				SetMessage("invalid role in '%s'", gsi).
-				SetAllHelp("role must be at least %d characters long", minSpecnameLen)
+				SetAllHelp("specname must be at least %d characters long", minSpecnameLen)
 		}
 		tmp.Identifier = tmp.GetIdentifier()
 	}
@@ -190,7 +194,11 @@ func (me *Gearspec) GetRaw() Identifier {
 	return me.Identifier
 }
 
-func (me *Gearspec) GetAuthority() types.AuthorityDomain {
+func (me *Gearspec) GetIsRemote() bool {
+	return me.IsRemote
+}
+
+func (me *Gearspec) GetAuthorityDomain() types.AuthorityDomain {
 	return me.AuthorityDomain
 }
 

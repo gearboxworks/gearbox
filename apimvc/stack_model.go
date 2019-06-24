@@ -26,6 +26,12 @@ type StackModel struct {
 	Model
 }
 
+func MakeGearboxStack(gb gearbox.Gearboxer, ns *StackModel) (gbns *gears.Stack, sts Status) {
+	gbns = gears.NewStack(types.StackId(ns.GetId()))
+	sts = gbns.Refresh(gb.GetGearRegistry())
+	return gbns, sts
+}
+
 func (me *StackModel) GetAttributeMap() apiworks.AttributeMap {
 	panic("implement me")
 }
@@ -90,8 +96,22 @@ func (me *StackModel) SetId(itemid ItemId) (sts Status) {
 	return sts
 }
 
-func MakeGearboxStack(gb gearbox.Gearboxer, ns *StackModel) (gbns *gears.Stack, sts Status) {
-	gbns = gears.NewStack(types.StackId(ns.GetId()))
-	sts = gbns.Refresh(gb.GetGearRegistry())
-	return gbns, sts
+func (me *StackModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
+	list = make(List, 0)
+	for range only.Once {
+		gb, ok := ctx.Controller.GetRootObject().(*gearbox.Gearbox)
+		gsm := gb.GearRegistry.Gearspecs.GetMap()
+		if !ok {
+			break
+		}
+		for _, m := range me.Members {
+			gs, ok := gsm[m.GearspecId]
+			if !ok {
+				status.Fail().SetMessage("gearspec '%s' not found", m.GearspecId).Log()
+			}
+			gsm := NewGearspecModelFromGearspecer(ctx, gs)
+			list = append(list, gsm)
+		}
+	}
+	return list, sts
 }

@@ -16,9 +16,9 @@ type StackMember struct {
 	Stackname        types.Stackname        `json:"stackname"`
 	Specname         types.Specname         `json:"specname,omitempty"`
 	Revision         types.Revision         `json:"revision,omitempty"`
-	DefaultServiceId service.Identifier     `json:"default_service,omitempty"`
+	DefaultServiceId service.Identifier     `json:"default_service"`
 	Shareable        global.ShareableChoice `json:"shareable,omitempty"`
-	GearIds          service.Identifiers    `json:"available_gears,omitempty"`
+	//	GearIds          service.Identifiers    `json:"available_gears,omitempty"`
 }
 
 func NewStackMemberFromGearspec(ctx *apiworks.Context, gsr *gears.Gearspec) (rss *StackMember) {
@@ -35,6 +35,6 @@ func NewStackMemberFromGearspec(ctx *apiworks.Context, gsr *gears.Gearspec) (rss
 		Specname:         gsr.Specname,
 		Revision:         gsr.Revision,
 		Shareable:        gsr.Shareable,
-		GearIds:          gsr.Gears.GetGearIds(),
+		//		GearIds:          gsr.Gears.GetGearIds(),
 	}
 }

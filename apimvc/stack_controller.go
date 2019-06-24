@@ -33,6 +33,10 @@ func NewStackController(gb gearbox.Gearboxer) *StackController {
 	}
 }
 
+func (me *StackController) GetRootObject() interface{} {
+	return me.Gearbox
+}
+
 func (me *StackController) GetNilItem(ctx *Context) ItemModeler {
 	return NilStackModel
 }
@@ -41,7 +45,7 @@ func (me *StackController) GetRelatedFields() RelatedFields {
 	return RelatedFields{
 		&RelatedField{
 			Fieldname:   GearspecsField,
-			IncludeType: StackType,
+			IncludeType: GearspecModelType,
 		},
 	}
 }

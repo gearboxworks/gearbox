@@ -30,6 +30,10 @@ func NewGearspecController(gb gearbox.Gearboxer) *GearspecController {
 	}
 }
 
+func (me *GearspecController) GetRootObject() interface{} {
+	return me.Gearbox
+}
+
 func (me *GearspecController) GetNilItem(ctx *Context) ItemModeler {
 	return NilGearspecModel
 }
@@ -77,10 +81,7 @@ func (me *GearspecController) GetList(ctx *Context, filterPath ...FilterPath) (l
 				break
 			}
 			var gsm *GearspecModel
-			gsm, sts = NewGearspecModelFromGearspecGearspec(ctx, gs)
-			if is.Error(sts) {
-				break
-			}
+			gsm = NewGearspecModelFromGearspecer(ctx, gs)
 			list = append(list, gsm)
 		}
 		sort.Slice(list, func(i, j int) bool {
@@ -114,20 +115,17 @@ func (me *GearspecController) GetListIds(ctx *apiworks.Context, filterPath ...ap
 }
 
 func (me *GearspecController) GetItem(ctx *apiworks.Context, gearspecid apiworks.ItemId) (item ItemModeler, sts Status) {
-	var ns *GearspecModel
+	var gsm *GearspecModel
 	for range only.Once {
 		var gbgs *gearspec.Gearspec
 		gbgs, sts = me.Gearbox.GetGearRegistry().FindGearspec(gearspec.Identifier(gearspecid))
 		if is.Error(sts) {
 			break
 		}
-		ns, sts = NewGearspecModelFromGearspecGearspec(ctx, gbgs)
-		if is.Error(sts) {
-			break
-		}
+		gsm = NewGearspecModelFromGearspecer(ctx, gbgs)
 		sts = status.Success("Gearspec '%s' found", gearspecid)
 	}
-	return ns, sts
+	return gsm, sts
 }
 
 func (me *GearspecController) FilterItem(in apiworks.ItemModeler, filterPath apiworks.FilterPath) (out apiworks.ItemModeler, sts Status) {
