@@ -116,6 +116,18 @@ func (me *Dir) AddFileToPath(format string, fn ...interface{}) *File {
 }
 
 
+func (me *File) FileExists() error {
+
+	var err error
+
+	if _, err = os.Stat(me.String()); os.IsNotExist(err) {
+		//fmt.Printf("Not exists PATH: '%s'\n", me.String())
+	}
+
+	return err
+}
+
+
 func (me *Dir) DirExists() error {
 
 	var err error

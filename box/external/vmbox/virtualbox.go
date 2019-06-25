@@ -519,6 +519,11 @@ func (me *Vm) cmdModifyVmBasic() error {
 			break
 		}
 
+		err = me.osPaths.UserConfigDir.AddFileToPath(IconLogoPng).FileExists()
+		if err != nil {
+			break
+		}
+
 		// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsBridge.GetAdminRootDir()) + "/" + IconLogo)
 		_, err = me.Run("modifyvm", me.EntityName.String(),
 			"--description", me.EntityName.String() + " OS VM", "--iconfile", me.osPaths.UserConfigDir.AddFileToPath(IconLogoPng).String())
