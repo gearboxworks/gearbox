@@ -344,7 +344,6 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 
 		//sc.Host = sc.Url.Hostname()
 		//sc.Port = sc.Url.Port()
-
 		//if len(sc.Dependencies) == 0 {
 		//	sc.Dependencies = []string{}
 		//}
@@ -355,8 +354,18 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 		sc.Config.ChRoot = me.ParsePaths(*sc, sc.Config.ChRoot)
 		dirs = dirs.AppendDir(sc.Config.ChRoot)
 
+
 		sc.Config.Executable = me.ParsePaths(*sc, sc.Config.Executable)
 		dirs = dirs.AppendFile(sc.Config.Executable)
+		_, err = ospaths.FileExists(sc.Config.Executable)
+		if err != nil {
+			break
+		}
+		_, err = ospaths.FileSetExecutePerms(sc.Config.Executable)
+		if err != nil {
+			break
+		}
+
 
 		if sc.Config.WorkingDirectory == "" {
 			sc.Config.WorkingDirectory = me.OsPaths.EventBrokerWorkingDir.String()
@@ -365,6 +374,7 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 		}
 		dirs = dirs.AppendDir(sc.Config.WorkingDirectory)
 
+
 		if sc.Stdout == "" {
 			sc.Stdout = me.OsPaths.EventBrokerLogDir.AddFileToPath("%s-error.log", sc.Name).String()
 		} else {
@@ -372,12 +382,14 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 		}
 		dirs = dirs.AppendFile(sc.Stdout)
 
+
 		if sc.Stderr == "" {
 			sc.Stderr = me.OsPaths.EventBrokerLogDir.AddFileToPath("%s.log", sc.Name).String()
 		} else {
 			sc.Stderr = me.ParsePaths(*sc, sc.Stderr)
 		}
 		dirs = dirs.AppendFile(sc.Stderr)
+
 
 		err = dirs.CreateIfNotExists()
 		if err != nil {
