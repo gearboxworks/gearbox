@@ -2,7 +2,6 @@ package box
 
 import (
 	"fmt"
-	"gearbox/app/logger"
 	"gearbox/eventbroker"
 	"gearbox/eventbroker/daemon"
 	"gearbox/eventbroker/eblog"
@@ -105,7 +104,7 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 			<-sigs
 			_ = me.VmBox.Stop()
 			_ = me.EventBroker.Stop()
-			logger.Debug("Goodbye!")
+			fmt.Printf("Gearbox exiting.\n")
 
 			os.Exit(0)
 		}()
@@ -234,12 +233,12 @@ func (me *Box) StartBox() (sts status.Status) {
 //		}
 
 		//sts = me.DaemonInstance.Load()
-		fmt.Printf("For now, we're running in the forground.\n")
+		fmt.Printf("Gearbox: The alpha release runs Gearbox in the foreground. Please keep this shell open.\n\n")
 		err = me.BoxDaemon()
 		if err != nil {
+			fmt.Printf("Gearbox: Error %v\n", err)
 			break
 		}
-		fmt.Printf("%s\n", sts.Message())
 
 	}
 

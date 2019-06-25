@@ -378,6 +378,7 @@ func (me *Box) onReady() {
 
 				case <- me.menu["quit"].MenuItem.ClickedCh:
 					fmt.Printf("Menu: Quit\n")
+					fmt.Printf("Gearbox: Shutting down. (May take up to 2 minutes.)\n")
 					if me.confirmDialog("Shutdown Gearbox", "This will shutdown Gearbox and all Gearbox related services.\nAre you sure?") {
 						_ = me.VmBox.Stop()
 						_ = me.EventBroker.Stop()
