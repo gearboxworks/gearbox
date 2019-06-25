@@ -85,7 +85,6 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 			break
 		}
 
-
 		err = me.Releases.UpdateReleases()
 		if err != nil {
 			break
