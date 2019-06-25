@@ -42,8 +42,8 @@ func (me *Vm) vbCreate() (states.State, error) {
 			case states.StateStopped:
 				fallthrough
 			case states.StateStarted:
-				err = me.EntityName.ProduceError("VM already created")
-				eblog.Debug(me.EntityId, "%v", err)
+				err = nil		// me.EntityName.ProduceError("VM already created")
+				eblog.Debug(me.EntityId, "VM already created")
 
 
 			case states.StateUnregistered:
@@ -60,17 +60,18 @@ func (me *Vm) vbCreate() (states.State, error) {
 				}
 
 				state, err = me.cmdVmInfo()
-				if err != nil {
-					err = me.EntityName.ProduceError("VM couldn't be created")
-					eblog.Debug(me.EntityId, "%v", err)
-					break
-				}
 
 				eblog.Debug(me.EntityId, "VM created OK")
 
 
 			case states.StateUnknown:
 				eblog.Debug(me.EntityId, "%v", err)
+		}
+
+		if err != nil {
+			eblog.Debug(me.EntityId, "VM couldn't be created with '%v'", err)
+			_ = me.cmdDestroyVm()
+			break
 		}
 
 	}
@@ -428,7 +429,7 @@ func (me *Vm) cmdCreateVm() error {
 		}
 
 		// stdout, stderr, sts = me.Run("createvm", "--name", me.Boxname, "--ostype", "Linux26_64", "--register", "--basefolder", me.VmBaseDir)
-		_, err = me.Run("createvm", "--name", me.EntityName.String(), "--ostype", "Linux26_64", "--register", "--basefolder", me.baseDir.String())
+		_, err = me.Run("createvm", "--name", me.EntityName.String(), "--ostype", "Linux26_64", "--register", "--basefolder", me.Entry.VmDir.String())
 		if err != nil {
 			break
 		}
@@ -519,16 +520,18 @@ func (me *Vm) cmdModifyVmBasic() error {
 			break
 		}
 
-		err = me.osPaths.UserConfigDir.AddFileToPath(IconLogoPng).FileExists()
-		if err != nil {
-			break
-		}
+		err = me.Entry.IconFile.FileExists()
+		if err == nil {
+			// Just don't add the icon if the file doesn't exist.
 
-		// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", string(me.OsBridge.GetAdminRootDir()) + "/" + IconLogo)
-		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--description", me.EntityName.String() + " OS VM", "--iconfile", me.osPaths.UserConfigDir.AddFileToPath(IconLogoPng).String())
-		if err != nil {
-			break
+			// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", me.Entry.IconFile.String())
+			name := me.EntityName.String()
+			icon := me.Entry.IconFile.String()
+			_, err = me.Run("modifyvm", name,
+				"--description", name + " OS VM", "--iconfile", icon)
+			if err != nil {
+				break
+			}
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
@@ -688,7 +691,11 @@ func (me *Vm) cmdModifyVmStorage() error {
 		})
 
 		for index, disk := range disks {
-			fileName := me.baseDir.String() + "/" + me.EntityName.String() + "/" + disk.Name
+			//fileName := me.baseDir.String() + "/" + me.EntityName.String() + "/" + disk.Name
+			fileName := me.Entry.VmDir.
+				AddToPath(me.EntityName.String()).
+				AddFileToPath(disk.Name).
+				String()
 			order := strconv.Itoa(index)
 
 			// _, err = me.Run("createmedium", "disk", "--filename", fileName, "--size", disk.Size, "--format", disk.Format, "--variant", "Stream")
@@ -825,7 +832,7 @@ func (me *Vm) Run(args ...string) (exitCode string, err error) {
 
 			switch exitCode {
 				case exitCodeMissingVm:
-					err = me.EntityName.ProduceError("VM unregistered")
+					err = me.EntityName.ProduceError("VirtualBox command error '%v'", cmd.Stderr)
 					//fmt.Printf("stdout:%v\n", stdout.String())
 					//fmt.Printf("stderr:%v\n", stderr.String())
 					//fmt.Printf("returnCode:'%v'\n", returnCode)

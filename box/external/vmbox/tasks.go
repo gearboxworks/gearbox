@@ -1,6 +1,7 @@
 package vmbox
 
 import (
+	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/only"
@@ -67,12 +68,8 @@ func initVmBox(task *tasks.Task, i ...interface{}) error {
 			myVM, err := me.New(sc)
 			if err == nil {
 				eblog.Debug(me.EntityId, "VM: %v\n", myVM.State.GetStatus())
+				fmt.Printf("Gearbox: Created VM.\n")
 			}
-
-
-			//var state states.Status
-			//state, err = myVM.Status()
-			//fmt.Printf("Status: %s\n", state.String())
 
 
 			me.State.SetNewState(states.StateInitialized, err)
@@ -106,6 +103,7 @@ func startVmBox(task *tasks.Task, i ...interface{}) error {
 
 			// Function to restart services should they die.
 			// Will only be executed if monitor task fails.
+
 
 			me.State.SetNewState(states.StateStarted, err)
 			me.Channels.PublishState(me.State)
@@ -184,7 +182,18 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 					v.State.SetNewState(state, err)
 					v.channels.PublishState(v.State)
 
-					if state == states.StateStopped {
+					if (state == states.StateUnregistered) {
+						state, err = v.vbCreate()
+						if err != nil {
+							v.ApiState.SetNewState(state, err)
+							v.channels.PublishState(v.ApiState)
+							continue
+						}
+						fmt.Printf("Gearbox: Created unregistered VM.\n")
+					}
+
+					if (state == states.StateStopped) ||
+						(err != nil) {
 						v.ApiState.SetNewState(state, err)
 						v.channels.PublishState(v.ApiState)
 						continue

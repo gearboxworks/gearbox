@@ -60,7 +60,7 @@ type Vm struct {
 	channelHandler  *channels.Subscriber
 	osRelease       *Release
 	osPaths         *ospaths.BasePaths
-	baseDir         *ospaths.Dir
+	// baseDir         *ospaths.Dir
 }
 
 type ServiceConfig struct {
@@ -75,6 +75,8 @@ type ServiceConfig struct {
 	consoleMutex     sync.RWMutex
 	SshHost          string
 	SshPort          string
+	IconFile         *ospaths.File
+	VmDir            *ospaths.Dir
 
 	retryMax         int
 	retryDelay       time.Duration
@@ -113,7 +115,7 @@ const (
 
 
 const (
-	IconLogoPng = "dist/heartbeat/img/IconLogo.png"
+	IconLogoPng = "app/dist/heartbeat/img/IconLogo.png"
 )
 
 
