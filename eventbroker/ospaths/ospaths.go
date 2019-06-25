@@ -7,6 +7,7 @@ import (
 	"gearbox/eventbroker/only"
 	"gearbox/global"
 	"github.com/gearboxworks/go-osbridge"
+	"github.com/getlantern/errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +15,7 @@ import (
 )
 
 const (
-	DefaultBaseDir = "dist/eventbroker"
+	DefaultBaseDir = "app/dist/eventbroker"
 
 	defaultLogBaseDir = "logs"
 	defaultEtcBaseDir = "etc"
@@ -120,7 +121,13 @@ func (me *File) FileExists() error {
 
 	var err error
 
-	if _, err = os.Stat(me.String()); os.IsNotExist(err) {
+	if me == nil {
+		err = errors.New("File is nil")
+		return err
+	}
+
+	_, err = os.Stat(me.String())
+	if os.IsNotExist(err) {
 		//fmt.Printf("Not exists PATH: '%s'\n", me.String())
 	}
 
@@ -132,7 +139,13 @@ func (me *Dir) DirExists() error {
 
 	var err error
 
-	if _, err = os.Stat(me.String()); os.IsNotExist(err) {
+	if me == nil {
+		err = errors.New("Dir is nil")
+		return err
+	}
+
+	_, err = os.Stat(me.String())
+	if os.IsNotExist(err) {
 		//fmt.Printf("Not exists PATH: '%s'\n", me.String())
 	}
 
