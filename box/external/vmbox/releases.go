@@ -322,8 +322,12 @@ func (me *Release) GetIso() error {
 		req, _ := grab.NewRequest(me.File.String(), me.Url)
 		eblog.Debug("downloading ISO from URL %s", req.URL().String())
 		resp := client.Do(req)
-		fmt.Printf("  %v\n", resp.HTTPResponse.Status)
-		fmt.Printf("%s VM - ISO fetching from '%s' and saved to '%s'. Size:%s.\n", global.Brandname, me.Url, me.File.String(), resp.Size)
+		// fmt.Printf("  %v\n", resp.HTTPResponse.Status)
+		fmt.Printf("%s VM: Downloading ISO from '%s' to '%s'. Size:%d\n",
+			global.Brandname,
+			me.Url,
+			me.File.String(),
+			resp.Size)
 
 
 		// start UI loop
@@ -336,7 +340,10 @@ func (me *Release) GetIso() error {
 					case <-t.C:
 						me.DlIndex = int(100*resp.Progress())
 						me.publishDownloadState()
-						fmt.Printf("File '%s' transferred %v / %v bytes (%d%%)\n", me.File.String(), resp.BytesComplete(), resp.Size, me.DlIndex)
+						//fmt.Printf("Downloading '%s' transferred %v / %v bytes (%d%%)\n", me.File.String(), resp.BytesComplete(), resp.Size, me.DlIndex)
+						fmt.Printf("%s VM: Downloading ISO - %d%% complete.\r",
+							global.Brandname,
+							me.DlIndex)
 
 					case <-resp.Done:
 						// download is complete
@@ -346,10 +353,13 @@ func (me *Release) GetIso() error {
 
 		// check for errors
 		if err := resp.Err(); err != nil {
+			fmt.Printf("\nDownload failed\n")
 			err = messages.ProduceError(entity.VmBoxEntityName, "ISO download failed VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
 			break
 		}
-		fmt.Printf("Download saved to ./%v \n", resp.Filename)
+		fmt.Printf("%s VM: Downloaded ISO completed OK.\n",
+			global.Brandname,
+		)
 
 
 		eblog.Debug(entity.VmBoxEntityName, "ISO fetched from '%s' and saved to '%s'. Size:%d", me.Url, me.File.String(), resp.Size)

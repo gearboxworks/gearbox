@@ -2,6 +2,7 @@ package box
 
 import (
 	"fmt"
+	"gearbox/box/external/unfsd"
 	"gearbox/eventbroker"
 	"gearbox/eventbroker/daemon"
 	"gearbox/eventbroker/eblog"
@@ -152,6 +153,10 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 			break
 		}
 
+		me.NfsExports, err = unfsd.New(unfsd.Args{Channels: &me.EventBroker.Channels, OsPaths: me.EventBroker.OsPaths, Boxname: me.Boxname})
+		if err != nil {
+			break
+		}
 
 		fmt.Printf("Dropping in.\n")
 		me.VmBox, err = vmbox.New(vmbox.Args{Channels: &me.EventBroker.Channels, OsPaths: me.EventBroker.OsPaths, Boxname: me.Boxname})

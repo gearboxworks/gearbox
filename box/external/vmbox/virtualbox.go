@@ -8,6 +8,7 @@ import (
 	"gearbox/only"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -552,8 +553,12 @@ func (me *Vm) cmdModifyVmBasic() error {
 			break
 		}
 
+		cpus := runtime.NumCPU()
+		if cpus == 0 {
+			cpus = 2
+		}
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--cpuhotplug", "on", "--cpus", "4", "--pae", "off", "--longmode", "on", "--largepages", "on", "--paravirtprovider", "default")
+			"--cpuhotplug", "on", "--cpus", strconv.Itoa(cpus), "--pae", "off", "--longmode", "on", "--largepages", "on", "--paravirtprovider", "default")
 		if err != nil {
 			break
 		}

@@ -27,7 +27,7 @@ type Box struct {
 	EntityName  messages.MessageAddress
 	Boxname     string
 	Version     string
-	NfsInstance *unfsd.Unfsd
+	NfsExports  *unfsd.Unfsd
 	State       *states.Status
 	menu        Menus
 	EventBroker *eventbroker.EventBroker

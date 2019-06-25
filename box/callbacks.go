@@ -46,6 +46,8 @@ func myCallback(i interface{}, state states.Status) error {
 
 		case entity.UnfsdEntityName:
 			me.SetStateMenu(entity.UnfsdEntityName, state.Current)
+			err = me.NfsExports.ReadExport()
+
 
 		case menuVmUpdate:
 			if state.Current.String() != "100%" {

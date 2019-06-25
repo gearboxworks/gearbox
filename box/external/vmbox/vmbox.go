@@ -7,7 +7,6 @@ import (
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"gearbox/global"
-	"github.com/jinzhu/copier"
 )
 
 
@@ -24,12 +23,12 @@ func New(args ...Args) (*VmBox, error) {
 			_args = args[0]
 		}
 
-		foo := Args{}
-		err = copier.Copy(&foo, &_args)
-		if err != nil {
-			err = _args.EntityId.ProduceError("unable to copy config args")
-			break
-		}
+		//foo := Args{}
+		//err = copier.Copy(&foo, &_args)
+		//if err != nil {
+		//	err = _args.EntityId.ProduceError("unable to copy config args")
+		//	break
+		//}
 
 		if _args.Channels == nil {
 			err = _args.EntityId.ProduceError("channel pointer is nil")

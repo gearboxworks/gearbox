@@ -78,13 +78,11 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 		}
 
 		if c.VmDir == nil {
-			err = me.OsPaths.UserConfigDir.AddToPath("vm").DirExists()
-			if err != nil {
-				err = nil
-				// Not really an error.
-			} else {
-				c.VmDir = me.OsPaths.UserConfigDir.AddToPath("vm")
-			}
+			c.VmDir = me.OsPaths.UserConfigDir.AddToPath("vm")
+		}
+		_, err = c.VmDir.CreateIfNotExists()
+		if err != nil {
+			break
 		}
 
 
@@ -103,6 +101,7 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 		if !me.Releases.Selected.IsDownloading {
 			err = me.Releases.Selected.GetIso()
 		}
+
 
 		//err = me.Releases.ShowReleases()
 		//if err != nil {
