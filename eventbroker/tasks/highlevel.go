@@ -74,6 +74,11 @@ func StartTask(initFunc TaskFunc, startFunc TaskFunc, monitorFunc TaskFunc, stop
 				if task.retryDelay > 0 {
 					time.Sleep(task.retryDelay)
 				}
+
+				if shouldStop() {
+					// Have we been told to stop?
+					break
+				}
 			}
 		}
 

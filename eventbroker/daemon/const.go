@@ -69,17 +69,18 @@ type JsonConfig struct {
 type ServiceConfig struct {
 	service.Config
 
-	EntityName     string
-	RunOnPlatform	string
-	Stdout    string
-	Stderr    string
-	Stdin     string
-	Env       []string
-	Url       string
-	UrlPtr    *url.URL
+	EntityName    string
+	RunOnPlatform string
+	Stdout        string
+	Stderr        string
+	Stdin         string
+	Env           []string
+	Url           string
+	UrlPtr        *url.URL
+	MdnsType      string
+
 	autoHost      string
 	autoPort      string
-	MdnsType  string
 }
 
 const (
