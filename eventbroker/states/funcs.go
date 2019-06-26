@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"reflect"
 	"sync"
 	"time"

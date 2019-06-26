@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
+	"github.com/gearboxworks/go-status/only"
 )
 
 
@@ -182,7 +182,7 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 					v.State.SetNewState(state, err)
 					v.channels.PublishState(v.State)
 
-					if (state == states.StateUnregistered) {
+					if state == states.StateUnregistered {
 						state, err = v.vbCreate()
 						if err != nil {
 							v.ApiState.SetNewState(state, err)

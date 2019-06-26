@@ -3,10 +3,10 @@ package apimvc
 import (
 	"fmt"
 	"gearbox/gearbox"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 	"reflect"
 	"sort"

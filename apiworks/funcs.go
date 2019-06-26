@@ -2,9 +2,9 @@ package apiworks
 
 import (
 	"fmt"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 	"reflect"
 	"strings"

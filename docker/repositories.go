@@ -3,8 +3,8 @@ package docker
 import (
 	"encoding/json"
 	"fmt"
-	"gearbox/only"
 	"gearbox/util"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 )
 

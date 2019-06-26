@@ -6,7 +6,7 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 	//	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
 )
@@ -133,7 +133,7 @@ func (me *mqttBroker) StopServices() error {
 			break
 		}
 
-		for u, _ := range me.services {
+		for u := range me.services {
 			if me.services[u].IsManaged {
 				_ = me.UnsubscribeByUuid(u)
 				// Ignore error, will clean up when program exits.

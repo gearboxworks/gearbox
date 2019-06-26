@@ -3,10 +3,10 @@ package config
 import (
 	"fmt"
 	"gearbox/jsonfile"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"path/filepath"
 	"strings"
 )

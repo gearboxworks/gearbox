@@ -3,8 +3,8 @@ package channels
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 )
 
 func (me *Channels) UnSubscribe(client messages.MessageTopic) error {

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"gearbox/config"
 	"gearbox/jsonfile"
-	"gearbox/only"
 	"gearbox/service"
 	"gearbox/types"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 	"path/filepath"
 )

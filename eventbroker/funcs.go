@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/network"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"net/url"
 	"reflect"
 )

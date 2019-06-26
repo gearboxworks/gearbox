@@ -4,8 +4,8 @@ import (
 	"context"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/grandcat/zeroconf"
 )
 
@@ -190,7 +190,7 @@ func (me *ZeroConf) updateRegisteredServices() error {
 			break
 		}
 
-		for u, _ := range me.services {
+		for u := range me.services {
 			if _, ok = me.services[u]; !ok {
 				// Shouldn't ever see this, but hey, might as well be anal about it.
 				eblog.Debug(me.EntityId, "deleting entry %s", u.String())

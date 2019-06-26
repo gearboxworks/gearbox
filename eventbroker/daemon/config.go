@@ -5,7 +5,7 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"os"
 	"path/filepath"
 	"runtime"

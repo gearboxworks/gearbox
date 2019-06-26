@@ -11,9 +11,9 @@ import (
 	"gearbox/eventbroker/tasks"
 	"gearbox/global"
 	"gearbox/help"
-	"gearbox/only"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/getlantern/errors"
 	"io/ioutil"
 	"net"
@@ -284,8 +284,7 @@ func (me *Unfsd) readJsonExport() error {
 	return err
 }
 
-
-func (me *Unfsd) writeJsonExport() (status.Status) {
+func (me *Unfsd) writeJsonExport() status.Status {
 
 	var sts status.Status
 	var err error
@@ -318,8 +317,7 @@ func (me *Unfsd) writeJsonExport() (status.Status) {
 	return sts
 }
 
-
-func (me *Unfsd) writeNfsExport() (status.Status) {
+func (me *Unfsd) writeNfsExport() status.Status {
 
 	var sts status.Status
 	var err error
@@ -449,8 +447,7 @@ func (me *Unfsd) ParsePaths(i string) string {
 	return i
 }
 
-
-func (me *Unfsd) readNfsExport() (status.Status) {
+func (me *Unfsd) readNfsExport() status.Status {
 
 	// Stub method.
 	// We won't ever need to read the UNFSD exports file because it will ALWAYS
@@ -464,7 +461,7 @@ func (me *Unfsd) readNfsExport() (status.Status) {
 
 // NewServer returns a Unfsd.Server object that manages the given nfs mounts to
 // configured clients;  basePath is the path for volumes, exportedName is the container dir to hold exported volumes
-func (me *Unfsd) NewServer(basePath *ospaths.Dir, exportedName string, network string) (error) {
+func (me *Unfsd) NewServer(basePath *ospaths.Dir, exportedName string, network string) error {
 
 	if len(exportedName) < 2 || strings.Contains(exportedName, "/") {
 		return ErrInvalidExportedName
@@ -505,7 +502,7 @@ func (me *Unfsd) NewServer(basePath *ospaths.Dir, exportedName string, network s
 
 
 // Reload ensures that the nfs exports are visible to all clients
-func (me *Unfsd) Reload() (status.Status) {
+func (me *Unfsd) Reload() status.Status {
 
 	var sts status.Status
 
@@ -519,7 +516,7 @@ func (me *Unfsd) Reload() (status.Status) {
 
 
 // Restart restarts the nfs subsystem
-func (me *Unfsd) Restart() (status.Status) {
+func (me *Unfsd) Restart() status.Status {
 
 	var sts status.Status
 
@@ -535,7 +532,7 @@ func (me *Unfsd) Restart() (status.Status) {
 			break
 		}
 
-		sts = me.Start();
+		sts = me.Start()
 		if is.Error(sts) {
 			break
 		}
@@ -546,7 +543,7 @@ func (me *Unfsd) Restart() (status.Status) {
 
 
 // Stop stops the nfs subsystem
-func (me *Unfsd) Stop() (status.Status) {
+func (me *Unfsd) Stop() status.Status {
 
 	var sts status.Status
 
@@ -578,7 +575,7 @@ func (me *Unfsd) Stop() (status.Status) {
 
 
 // Stop stops the nfs subsystem
-func (me *Unfsd) Start() (status.Status) {
+func (me *Unfsd) Start() status.Status {
 
 	var sts status.Status
 	//var err error

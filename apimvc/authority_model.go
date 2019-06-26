@@ -3,9 +3,9 @@ package apimvc
 import (
 	"fmt"
 	"gearbox/apiworks"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/only"
 	"strings"
 )
 

@@ -5,10 +5,10 @@ import (
 	"gearbox/apiworks"
 	"gearbox/gearbox"
 	"gearbox/gears"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"strings"
 )
 

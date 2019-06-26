@@ -4,9 +4,9 @@ package ospaths
 
 import (
 	"fmt"
-	"gearbox/eventbroker/only"
 	"gearbox/global"
 	"github.com/gearboxworks/go-osbridge"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/getlantern/errors"
 	"os"
 	"path/filepath"

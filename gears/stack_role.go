@@ -3,10 +3,10 @@ package gears
 import (
 	"gearbox/gearspec"
 	"gearbox/global"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 )
 
 const MaxServicesPerRole = 10

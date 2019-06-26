@@ -3,10 +3,10 @@ package gears
 import (
 	"fmt"
 	"gearbox/gearspec"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"strings"
 )
 

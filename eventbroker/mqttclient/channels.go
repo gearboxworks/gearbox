@@ -7,8 +7,8 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
-	"gearbox/eventbroker/only"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gearboxworks/go-status/only"
 )
 
 

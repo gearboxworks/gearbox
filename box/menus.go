@@ -3,11 +3,11 @@ package box
 import (
 	"errors"
 	"fmt"
+	"gearbox/box/external/vmbox"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
-	"gearbox/box/external/vmbox"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/getlantern/systray"
 	"io/ioutil"
 	"os"

@@ -2,9 +2,9 @@ package service
 
 import (
 	"gearbox/gear"
-	"gearbox/only"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"sort"
 )
 

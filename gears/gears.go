@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"gearbox/gearspec"
 	"gearbox/global"
-	"gearbox/only"
 	"github.com/gearboxworks/go-osbridge"
+	"github.com/gearboxworks/go-status/only"
 
 	//	"gearbox/os_support"
 	"gearbox/service"

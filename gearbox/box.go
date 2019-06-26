@@ -2,9 +2,9 @@ package gearbox
 
 import (
 	"gearbox/box"
-	"gearbox/only"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 )
 
 func newBox(me Gearboxer, args box.Args) (bx *box.Box, sts status.Status) {

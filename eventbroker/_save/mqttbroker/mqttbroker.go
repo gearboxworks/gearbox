@@ -6,7 +6,7 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/states"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	//	oss "gearbox/os_support"
 	"github.com/jinzhu/copier"
 )

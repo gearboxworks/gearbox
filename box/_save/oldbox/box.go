@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"gearbox/global"
 	"gearbox/help"
-	"gearbox/only"
 	"github.com/gearboxworks/go-osbridge"
+	"github.com/gearboxworks/go-status/only"
 
 	//	"gearbox/os_support"
 	"gearbox/ssh"
@@ -301,8 +301,7 @@ func (me *Box) CreateBox() (BoxState, status.Status) {
 	return me.State, sts
 }
 
-
-func (me *Box) GetVmStatus() (status.Status) {
+func (me *Box) GetVmStatus() status.Status {
 
 	var sts status.Status
 

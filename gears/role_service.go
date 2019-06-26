@@ -3,11 +3,11 @@ package gears
 import (
 	"gearbox/gearspec"
 	"gearbox/global"
-	"gearbox/only"
 	"gearbox/service"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 )
 
 // Example from gears.json/services

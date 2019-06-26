@@ -3,10 +3,10 @@ package test
 import (
 	"flag"
 	"fmt"
-	"gearbox/only"
 	"gearbox/types"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/only"
 	"io/ioutil"
 	"os"
 )

@@ -3,8 +3,8 @@ package eblog
 import (
 	"fmt"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/ospaths"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/rifflock/lfshook"
 	"github.com/sebest/logrusly"
 	"github.com/sirupsen/logrus"
@@ -79,7 +79,7 @@ type Callers []Caller
 
 // Determine the calling functions that called this function.
 // IE: MyCaller's grand-parent.
-func MyCallers(whichCaller int, howMany int) (*Callers) {
+func MyCallers(whichCaller int, howMany int) *Callers {
 
 
 	if whichCaller == 0 {

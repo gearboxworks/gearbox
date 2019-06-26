@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"gearbox/config"
 	"gearbox/jsonapi" // @TODO Refactor this out to interface{}s
-	"gearbox/only"
 	"gearbox/types"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/labstack/echo"
 )
 

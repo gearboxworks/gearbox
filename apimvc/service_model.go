@@ -5,11 +5,11 @@ import (
 	"gearbox/apiworks"
 	"gearbox/gears"
 	"gearbox/gearspec"
-	"gearbox/only"
 	"gearbox/service"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 )
 
 const ServiceModelType ItemType = "services"

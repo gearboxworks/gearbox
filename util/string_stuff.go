@@ -1,7 +1,7 @@
 package util
 
 import (
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 	"strings"
 )
 

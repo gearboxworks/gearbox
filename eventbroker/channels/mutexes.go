@@ -3,7 +3,7 @@ package channels
 import (
 	"fmt"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 )
 
 // Mutex handling.
@@ -15,7 +15,7 @@ func (me *Channels) GetEntities() messages.MessageAddresses {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for s, _ := range me.subscribers {	// Managed by Mutex
+	for s := range me.subscribers { // Managed by Mutex
 		ret = append(ret, s)
 	}
 
@@ -34,7 +34,7 @@ func (me *Channels) GetManagedEntities() messages.MessageAddresses {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for s, _ := range me.subscribers {	// Managed by Mutex
+	for s := range me.subscribers { // Managed by Mutex
 		if me.subscribers[s].IsManaged {	// Managed by Mutex
 			ret = append(ret, s)
 		}
@@ -127,7 +127,7 @@ func (me *Subscriber) GetTopics() messages.SubTopics {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for t, _ := range me.topics {
+	for t := range me.topics {
 		ret = append(ret, t)
 	}
 

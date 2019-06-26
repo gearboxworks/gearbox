@@ -2,8 +2,8 @@ package daemon
 
 import (
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 	"time"
 )
 
@@ -15,7 +15,7 @@ func (me *Daemon) GetEntities() messages.MessageAddresses {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for s, _ := range me.daemons {	// Managed by Mutex
+	for s := range me.daemons { // Managed by Mutex
 		ret = append(ret, s)
 	}
 
@@ -30,7 +30,7 @@ func (me *Daemon) GetManagedEntities() messages.MessageAddresses {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for s, _ := range me.daemons {	// Managed by Mutex
+	for s := range me.daemons { // Managed by Mutex
 		if me.daemons[s].IsManaged {	// Managed by Mutex
 			ret = append(ret, s)
 		}

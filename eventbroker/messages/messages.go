@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/google/uuid"
 	"time"
 )

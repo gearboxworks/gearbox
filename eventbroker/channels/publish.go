@@ -4,8 +4,8 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 	"time"
 )
 
@@ -111,8 +111,7 @@ func (me *Channels) GetCallbackReturn(msg messages.Message, waitForExecute int) 
 	return ret, err
 }
 
-
-func (me *Channels) SetCallbackReturnToNil(msg messages.Message) (error) {
+func (me *Channels) SetCallbackReturnToNil(msg messages.Message) error {
 
 	var err error
 
