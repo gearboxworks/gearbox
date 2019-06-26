@@ -3,9 +3,12 @@ package apimvc
 import (
 	"fmt"
 	"gearbox/apiworks"
+	"gearbox/gearbox"
 	"gearbox/gearspec"
+	"gearbox/service"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/is"
 	"github.com/gearboxworks/go-status/only"
 	"strings"
 )
@@ -19,12 +22,13 @@ type GearspecModelMap map[types.Stackname]*GearspecModel
 type GearspecModels []*GearspecModel
 
 type GearspecModel struct {
-	GearspecId gearspec.Identifier   `json:"-"`
-	StackId    types.StackId         `json:"stack_id,omitempty"`
-	Authority  types.AuthorityDomain `json:"authority,omitempty"`
-	Stackname  types.Stackname       `json:"stackname,omitempty"`
-	Specname   types.Specname        `json:"specname,omitempty"`
-	Revision   types.Revision        `json:"revision"`
+	GearspecId    gearspec.Identifier   `json:"-"`
+	StackId       types.StackId         `json:"stack_id,omitempty"`
+	Authority     types.AuthorityDomain `json:"authority,omitempty"`
+	Stackname     types.Stackname       `json:"stackname,omitempty"`
+	Specname      types.Specname        `json:"specname,omitempty"`
+	Revision      types.Revision        `json:"revision"`
+	GearOptionIds service.Identifiers   `json:"gear_options"`
 	Model
 }
 
@@ -37,16 +41,29 @@ func NewGearspecModel() *GearspecModel {
 }
 
 func NewGearspecModelFromGearspecer(ctx *Context, gsgs gearspec.Gearspecer) (gsm *GearspecModel) {
+	var gids service.Identifiers
+	for range only.Once {
+		gb, ok := ctx.Controller.GetRootObject().(*gearbox.Gearbox)
+		if !ok {
+			status.Fail().SetMessage("Gearspec controller root object is not a *gearbox.Gearbox").Log()
+			break
+		}
+		gs, sts := gb.GetGearRegistry().FindGearspec(gsgs.GetIdentifier())
+		if is.Error(sts) {
+			break
+		}
+		gids = gs.Gears.GetGearIds()
+	}
 	return &GearspecModel{
-		GearspecId: gsgs.GetIdentifier(),
-		StackId:    gsgs.GetStackId(),
-		Authority:  gsgs.GetAuthorityDomain(),
-		Stackname:  gsgs.GetStackname(),
-		Specname:   gsgs.GetSpecname(),
-		Revision:   gsgs.GetRevision(),
+		GearspecId:    gsgs.GetIdentifier(),
+		StackId:       gsgs.GetStackId(),
+		Authority:     gsgs.GetAuthorityDomain(),
+		Stackname:     gsgs.GetStackname(),
+		Specname:      gsgs.GetSpecname(),
+		Revision:      gsgs.GetRevision(),
+		GearOptionIds: gids,
 	}
 }
-
 func (me *GearspecModel) GetType() ItemType {
 	return GearspecModelType
 }

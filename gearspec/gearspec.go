@@ -65,7 +65,7 @@ var regexes = struct {
 	regexp.MustCompile("#https?://#"),
 }
 
-func NewGearspecFromGearspecer(gsr Gearspecer) *Gearspec {
+func NewGearspecFromGearspec(gsr Gearspecer) *Gearspec {
 	return &Gearspec{
 		Identifier:      gsr.GetIdentifier(),
 		IsRemote:        gsr.GetIsRemote(),

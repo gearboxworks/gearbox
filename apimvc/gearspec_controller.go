@@ -118,7 +118,7 @@ func (me *GearspecController) GetItem(ctx *apiworks.Context, gearspecid apiworks
 	var gsm *GearspecModel
 	for range only.Once {
 		var gbgs *gearspec.Gearspec
-		gbgs, sts = me.Gearbox.GetGearRegistry().FindGearspec(gearspec.Identifier(gearspecid))
+		gbgs, sts = me.Gearbox.GetGearRegistry().FindGearspecGearspec(gearspec.Identifier(gearspecid))
 		if is.Error(sts) {
 			break
 		}

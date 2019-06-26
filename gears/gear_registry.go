@@ -177,16 +177,20 @@ func (me *GearRegistry) Unmarshal(b []byte) (sts Status) {
 	return sts
 }
 
-func (me *GearRegistry) FindGearspec(gsid gearspec.Identifier) (gs *gearspec.Gearspec, sts Status) {
+func (me *GearRegistry) FindGearspecGearspec(gsid gearspec.Identifier) (gs *gearspec.Gearspec, sts Status) {
 	for range only.Once {
 		var grgs *Gearspec
 		grgs, sts = me.Gearspecs.Find(gsid)
 		if is.Error(sts) {
 			break
 		}
-		gs = gearspec.NewGearspecFromGearspecer(grgs)
+		gs = gearspec.NewGearspecFromGearspec(grgs)
 	}
 	return gs, sts
+}
+
+func (me *GearRegistry) FindGearspec(gsid gearspec.Identifier) (gs *Gearspec, sts Status) {
+	return me.Gearspecs.Find(gsid)
 }
 
 func (me *GearRegistry) GetNamedStackIds() (nsids types.StackIds) {

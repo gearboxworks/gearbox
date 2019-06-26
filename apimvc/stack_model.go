@@ -112,6 +112,10 @@ func (me *StackModel) GetRelatedItems(ctx *Context) (list List, sts Status) {
 			gsm := NewGearspecModelFromGearspecer(ctx, gs)
 			list = append(list, gsm)
 		}
+
+		// Don't display members as part of item when they
+		// are instead displayed in 'included' section(s)
+		me.Members = nil
 	}
 	return list, sts
 }
