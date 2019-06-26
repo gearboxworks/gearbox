@@ -10,7 +10,7 @@ import (
 	"github.com/gearboxworks/go-osbridge"
 
 	//	oss "gearbox/os_support"
-	"github.com/getlantern/systray"
+	"github.com/gearboxworks/go-systray"
 	"time"
 )
 

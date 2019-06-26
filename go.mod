@@ -23,11 +23,12 @@ require (
 	github.com/gearboxworks/go-jsoncache v1.0.0
 	github.com/gearboxworks/go-osbridge v0.0.0-20190605062119-0e1c68c1c70f
 	github.com/gearboxworks/go-status v0.0.0-20190528175348-42860fb9e78f
+	github.com/gearboxworks/go-systray v0.0.0-20190626020534-3518af45bf7c
 	github.com/gearboxworks/systray v0.0.0-20190626013144-62522b18bfbe
 	github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813
 	github.com/gernest/wow v0.1.0
 	github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7
-	github.com/getlantern/systray v0.0.0-20190618004638-3d7db9f66352
+	github.com/getlantern/systray v0.0.0
 	github.com/go-bindata/go-bindata v1.0.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
@@ -77,3 +78,5 @@ require (
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/guregu/null.v2 v2.1.2 // indirect
 )
+
+replace github.com/getlantern/systray => github.com/gearboxworks/go-systray v0.0.0-20190626020534-3518af45bf7c

@@ -61,6 +61,8 @@ github.com/gearboxworks/go-osbridge v0.0.0-20190605062119-0e1c68c1c70f h1:3kLZyx
 github.com/gearboxworks/go-osbridge v0.0.0-20190605062119-0e1c68c1c70f/go.mod h1:BU1T74QZZ19KsIHnstdN5GuC4TvWiUkNO4qUpkWPRuk=
 github.com/gearboxworks/go-status v0.0.0-20190528175348-42860fb9e78f h1:TP5R7ipjTTpDaCySVdVqAJONPtJZvTrOFCxTKwjL1L4=
 github.com/gearboxworks/go-status v0.0.0-20190528175348-42860fb9e78f/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
+github.com/gearboxworks/go-systray v0.0.0-20190626020534-3518af45bf7c h1:7IcFGeQBM5hWJbeVvvngJb1jaZsTRStxnKORPvSp5XU=
+github.com/gearboxworks/go-systray v0.0.0-20190626020534-3518af45bf7c/go.mod h1:ED8nns0+Te+v2IIRxxJ0gOrb7yIksYqDBuTswucRufk=
 github.com/gearboxworks/systray v0.0.0-20190626013144-62522b18bfbe/go.mod h1:dKAEXir7fEuKsQ240LBiLFNx/AqIsbzSM8j+9VTszgk=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813 h1:Uc+IZ7gYqAf/rSGFplbWBSHaGolEQlNLgMgSE3ccnIQ=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813/go.mod h1:P+oSoE9yhSRvsmYyZsshflcR6ePWYLql6UU1amW13IM=
@@ -78,8 +80,6 @@ github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55 h1:XYzSdCbkzOC0F
 github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55/go.mod h1:6mmzY2kW1TOOrVy+r41Za2MxXM+hhqTtY3oBKd2AgFA=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f h1:wrYrQttPS8FHIRSlsrcuKazukx/xqO/PpLZzZXsF+EA=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
-github.com/getlantern/systray v0.0.0-20190618004638-3d7db9f66352 h1:WDVofJOGEM4yzyoHi1n/MjpXZ1teALe6kf2UFlLlLHY=
-github.com/getlantern/systray v0.0.0-20190618004638-3d7db9f66352/go.mod h1:7Splj4WBQSps8jODnMgrIV6goKL0N1HR+mhCAEVWlA0=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/go-bindata/go-bindata v1.0.0/go.mod h1:xK8Dsgwmeed+BBsSy2XTopBn/8uK2HWuGSnA11C3Joo=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
