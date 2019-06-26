@@ -8,10 +8,9 @@ import (
 	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status/only"
 
-	//	"gearbox/os_support"
 	"gearbox/service"
 	"gearbox/types"
-	"gearbox/util"
+	//"gearbox/util"
 	"github.com/gearboxworks/go-jsoncache"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
@@ -90,21 +89,21 @@ func (me *GearRegistry) Initialize() (sts Status) {
 		if ok {
 			break
 		}
-		var sc int
-		b, sc, sts = util.HttpRequest(JsonUrl)
-		if status.IsError(sts) || sc != http.StatusOK { // @TODO Bundle these as Assets so we will always have some options
-			log.Printf("Could not download '%s' and no options have previously been stored.", JsonFilename)
-			fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), JsonFilename))
-			var err error
-			log.Printf("Loading included '%s'.", fp)
-			b, err = ioutil.ReadFile(fp)
-			if err != nil {
-				sts = status.Fail(&status.Args{
-					Message: fmt.Sprintf("unable to read '%s'", fp),
-				})
-				break
-			}
+		//var sc int
+		//b, sc, sts = util.HttpRequest(JsonUrl)
+		//if status.IsError(sts) || sc != http.StatusOK { // @TODO Bundle these as Assets so we will always have some options
+		//	log.Printf("Could not download '%s' and no options have previously been stored.", JsonFilename)
+		fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), JsonFilename))
+		var err error
+		log.Printf("Loading included '%s'.", fp)
+		b, err = ioutil.ReadFile(fp)
+		if err != nil {
+			sts = status.Fail(&status.Args{
+				Message: fmt.Sprintf("unable to read '%s'", fp),
+			})
+			break
 		}
+		//}
 		sts = store.Set(CacheKey, b, "15m")
 		if is.Error(sts) {
 			log.Printf(sts.Message())
