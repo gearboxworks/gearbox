@@ -3,8 +3,9 @@ package global
 import "fmt"
 
 type Options struct {
-	IsDebug bool
-	NoCache bool
+	IsDebug         bool
+	NoCache         bool
+	NoDownloadGears bool
 }
 
 func (me *Options) Debug() string {

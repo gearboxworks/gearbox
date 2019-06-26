@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gearbox/gearspec"
 	"gearbox/global"
+	"gearbox/util"
 	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status/only"
 
@@ -31,7 +32,7 @@ type GearRegistry struct {
 	Stacks        Stacks              `json:"stacks"`
 	Gearspecs     Gearspecs           `json:"gearspecs"`
 	GearOptions   GearOptions         `json:"gear_options"`
-	GlobalOptions global.Options      `json:"-"`
+	GlobalOptions *global.Options     `json:"-"`
 	serviceids    service.Identifiers `json:"-"`
 	services      Gears               `json:"-"`
 	OsBridge      osbridge.OsBridger  `json:"-"`
@@ -89,21 +90,24 @@ func (me *GearRegistry) Initialize() (sts Status) {
 		if ok {
 			break
 		}
-		//var sc int
-		//b, sc, sts = util.HttpRequest(JsonUrl)
-		//if status.IsError(sts) || sc != http.StatusOK { // @TODO Bundle these as Assets so we will always have some options
-		//	log.Printf("Could not download '%s' and no options have previously been stored.", JsonFilename)
-		fp := filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), JsonFilename))
+		var sc int
+		if !me.GlobalOptions.NoDownloadGears {
+			b, sc, sts = util.HttpRequest(JsonUrl)
+			if status.IsError(sts) || sc != http.StatusOK {
+				log.Printf("Could not download '%s' and no options have previously been stored.", JsonFilename)
+			}
+		}
 		var err error
-		log.Printf("Loading included '%s'.", fp)
-		b, err = ioutil.ReadFile(fp)
+		var fp string
+		if len(b) == 0 {
+			fp = filepath.FromSlash(fmt.Sprintf("%s/%s", me.OsBridge.GetAdminRootDir(), JsonFilename))
+			log.Printf("Loading included '%s'.", fp)
+			b, err = ioutil.ReadFile(fp)
+		}
 		if err != nil {
-			sts = status.Fail(&status.Args{
-				Message: fmt.Sprintf("unable to read '%s'", fp),
-			})
+			sts = status.Fail().SetMessage("unable to read '%s'", fp)
 			break
 		}
-		//}
 		sts = store.Set(CacheKey, b, "15m")
 		if is.Error(sts) {
 			log.Printf(sts.Message())

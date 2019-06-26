@@ -110,6 +110,8 @@ func NewGearbox(args *Args) Gearboxer {
 	if args.GearRegistry == nil {
 		gb.GearRegistry = gears.NewGearRegistry(gb.OsBridge)
 	}
+	gb.GearRegistry.GlobalOptions = gb.GlobalOptions
+
 	return &gb
 }
 
