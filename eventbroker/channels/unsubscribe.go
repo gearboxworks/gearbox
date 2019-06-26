@@ -3,8 +3,8 @@ package channels
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 )
 
 func (me *Channels) UnSubscribe(client messages.MessageTopic) error {
@@ -34,7 +34,7 @@ func (me *Channels) UnSubscribe(client messages.MessageTopic) error {
 
 		me.subscribers[client.Address].State.SetNewAction(states.ActionUnsubscribe)
 
-		err = me.subscribers[client.Address].DeleteTopic(client.SubTopic)	// Managed by Mutex
+		err = me.subscribers[client.Address].DeleteTopic(client.SubTopic) // Managed by Mutex
 		if err != nil {
 			break
 		}
@@ -48,7 +48,6 @@ func (me *Channels) UnSubscribe(client messages.MessageTopic) error {
 
 	return err
 }
-
 
 func (me *Subscriber) UnSubscribe(client messages.SubTopic) error {
 
@@ -67,7 +66,7 @@ func (me *Subscriber) UnSubscribe(client messages.SubTopic) error {
 
 		me.State.SetNewAction(states.ActionUnsubscribe)
 
-		err = me.DeleteTopic(client)	// Managed by Mutex
+		err = me.DeleteTopic(client) // Managed by Mutex
 		if err != nil {
 			break
 		}

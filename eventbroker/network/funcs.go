@@ -6,19 +6,18 @@ import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 	"reflect"
 	"strings"
 )
-
 
 func (me *ZeroConf) EnsureNotNil() error {
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("ZeroConf instance is nil")
+	case me == nil:
+		err = errors.New("ZeroConf instance is nil")
 	}
 
 	return err
@@ -27,14 +26,13 @@ func EnsureNotNil(me *ZeroConf) error {
 	return me.EnsureNotNil()
 }
 
-
 func (me *ServicesMap) EnsureNotNil() error {
 
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("ZeroConf ServicesMap instance is nil")
+	case me == nil:
+		err = errors.New("ZeroConf ServicesMap instance is nil")
 	}
 
 	return err
@@ -43,15 +41,14 @@ func EnsureServicesMapNotNil(me *ServicesMap) error {
 	return me.EnsureNotNil()
 }
 
-
 func (me *Service) EnsureNotNil() error {
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("ZeroConf Service instance is nil")
-		case (me.instance == nil) && (me.IsManaged == true):
-			err = me.EntityId.ProduceError("service instance is nil")
+	case me == nil:
+		err = errors.New("ZeroConf Service instance is nil")
+	case (me.instance == nil) && (me.IsManaged == true):
+		err = me.EntityId.ProduceError("service instance is nil")
 	}
 
 	return err
@@ -59,7 +56,6 @@ func (me *Service) EnsureNotNil() error {
 func EnsureServicesNotNil(me *Service) error {
 	return me.EnsureNotNil()
 }
-
 
 //func (me *ServicesArray) Print() error {
 //
@@ -83,7 +79,6 @@ func EnsureServicesNotNil(me *Service) error {
 //	return err
 //}
 
-
 // Ensure we don't duplicate services.
 func (me *Service) IsExisting(him ServiceConfig) error {
 
@@ -101,7 +96,6 @@ func (me *Service) IsExisting(him ServiceConfig) error {
 	return err
 }
 
-
 // Ensure we don't duplicate services.
 func (me *ServicesMap) IsExisting(him ServiceConfig) error {
 
@@ -117,18 +111,15 @@ func (me *ServicesMap) IsExisting(him ServiceConfig) error {
 	return err
 }
 
-
 func ConstructMdnsRegisterMessage(me messages.MessageAddress, to messages.MessageAddress, s ServiceConfig) messages.Message {
 
 	return ConstructMdnsMessage(me, to, s, states.ActionRegister)
 }
 
-
 func ConstructMdnsUnregisterMessage(me messages.MessageAddress, to messages.MessageAddress, s ServiceConfig) messages.Message {
 
 	return ConstructMdnsMessage(me, to, s, states.ActionUnregister)
 }
-
 
 func ConstructMdnsMessage(me messages.MessageAddress, to messages.MessageAddress, s ServiceConfig, a states.Action) messages.Message {
 
@@ -160,7 +151,6 @@ func ConstructMdnsMessage(me messages.MessageAddress, to messages.MessageAddress
 	return msgTemplate
 }
 
-
 func DeconstructMdnsMessage(event *messages.Message) (ServiceConfig, error) {
 
 	var err error
@@ -186,7 +176,6 @@ func DeconstructMdnsMessage(event *messages.Message) (ServiceConfig, error) {
 
 	return ce, err
 }
-
 
 func InterfaceToTypeZeroConf(i interface{}) (*ZeroConf, error) {
 
@@ -219,7 +208,6 @@ func InterfaceToTypeZeroConf(i interface{}) (*ZeroConf, error) {
 	return zc, err
 }
 
-
 func InterfaceToTypeService(i interface{}) (*Service, error) {
 
 	var err error
@@ -248,7 +236,6 @@ func InterfaceToTypeService(i interface{}) (*Service, error) {
 	return s, err
 }
 
-
 func (me *ServicesMap) Print() error {
 
 	var err error
@@ -270,7 +257,6 @@ func (me *ServicesMap) Print() error {
 
 	return err
 }
-
 
 func (me *Service) Print() error {
 
@@ -296,7 +282,6 @@ func (me *Service) Print() error {
 	return err
 }
 
-
 func (me *Entry) IsTheSame(e Entry) (bool, error) {
 
 	var same bool
@@ -319,7 +304,6 @@ func (me *Entry) IsTheSame(e Entry) (bool, error) {
 
 	return same, err
 }
-
 
 func (me *Entry) UpdateService(e Entry) (bool, error) {
 
@@ -352,7 +336,6 @@ func (me *Entry) UpdateService(e Entry) (bool, error) {
 	return same, err
 }
 
-
 // Replace zeroconf.ServiceEntry.ServiceName() function with our own.
 func (me *Entry) ServiceName() (string, error) {
 
@@ -370,7 +353,6 @@ func (me *Entry) ServiceName() (string, error) {
 
 	return sn, err
 }
-
 
 // Replace zeroconf.ServiceEntry.ServiceInstanceName() function with our own.
 func (me *Entry) ServiceInstanceName() (string, error) {
@@ -397,7 +379,6 @@ func (me *Entry) ServiceInstanceName() (string, error) {
 	return sin, err
 }
 
-
 // Replace zeroconf.ServiceEntry.ServiceTypeName() function with our own.
 func (me *Entry) ServiceTypeName() (string, error) {
 
@@ -416,12 +397,10 @@ func (me *Entry) ServiceTypeName() (string, error) {
 	return sn, err
 }
 
-
 // trimDot is used to trim the dots from the start or end of a string
 func trimDot(s string) string {
 	return strings.Trim(s, ".")
 }
-
 
 func (me *Entry) Print() error {
 
@@ -433,9 +412,9 @@ func (me *Entry) Print() error {
 			break
 		}
 
-		sn,_ := me.ServiceName()
-		sin,_ := me.ServiceInstanceName()
-		stn,_ := me.ServiceTypeName()
+		sn, _ := me.ServiceName()
+		sin, _ := me.ServiceInstanceName()
+		stn, _ := me.ServiceTypeName()
 
 		//
 		fmt.Printf(` me.Instance = %v
@@ -468,4 +447,3 @@ func (me *Entry) Print() error {
 
 	return err
 }
-

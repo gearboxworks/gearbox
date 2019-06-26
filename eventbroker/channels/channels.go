@@ -5,11 +5,10 @@ import (
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/olebedev/emitter"
 	"sync"
 )
-
 
 func (me *Channels) New(args ...Args) error {
 
@@ -27,7 +26,6 @@ func (me *Channels) New(args ...Args) error {
 			break
 		}
 
-
 		if _args.EntityId == "" {
 			_args.EntityId = entity.ChannelEntityName
 		}
@@ -42,7 +40,6 @@ func (me *Channels) New(args ...Args) error {
 
 		*me = Channels(_args)
 
-
 		me.State.SetWant(states.StateIdle)
 		me.State.SetNewState(states.StateIdle, err)
 		eblog.Debug(me.EntityId, "init complete")
@@ -54,7 +51,6 @@ func (me *Channels) New(args ...Args) error {
 
 	return err
 }
-
 
 func (me *Channels) StartHandler() error {
 
@@ -88,7 +84,6 @@ func (me *Channels) StartHandler() error {
 	return err
 }
 
-
 func (me *Channels) StopHandler() error {
 
 	var err error
@@ -108,8 +103,7 @@ func (me *Channels) StopHandler() error {
 	return err
 }
 
-
-func (me *Channels) StopClientHandler(client messages.MessageAddress)  {
+func (me *Channels) StopClientHandler(client messages.MessageAddress) {
 
 	var err error
 
@@ -135,7 +129,6 @@ func (me *Channels) StopClientHandler(client messages.MessageAddress)  {
 	return
 }
 
-
 func (me *Subscriber) StopHandler() error {
 
 	var err error
@@ -158,7 +151,6 @@ func (me *Subscriber) StopHandler() error {
 	return nil
 }
 
-
 func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscriber, error) {
 
 	var err error
@@ -180,14 +172,14 @@ func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscri
 		}
 
 		sub = Subscriber{
-			EntityId:  client,
-			EntityName:  client,
+			EntityId:     client,
+			EntityName:   client,
 			EntityParent: &me.EntityId,
-			State: states.New(&client, &client, me.EntityId),
-			IsManaged: true,
+			State:        states.New(&client, &client, me.EntityId),
+			IsManaged:    true,
 
-			topics: make(References),
-			mutex: sync.RWMutex{},
+			topics:         make(References),
+			mutex:          sync.RWMutex{},
 			parentInstance: &me.instance,
 		}
 		err = me.AddEntity(client, &sub)
@@ -210,7 +202,6 @@ func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscri
 
 	return &sub, err
 }
-
 
 func (me *Channels) rxHandler(client messages.MessageAddress) error {
 
@@ -270,7 +261,7 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 						r := callback(&msg, args, retType)
 						sub.SetReturns(topic, r)
 					} else {
-						 _ = callback(&msg, args, retType)
+						_ = callback(&msg, args, retType)
 					}
 					sub.SetExecuted(topic, true)
 
@@ -297,7 +288,6 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 	return err
 }
 
-
 func (me *Channels) GetEntityId() messages.MessageAddress {
 
 	if me == nil {
@@ -306,4 +296,3 @@ func (me *Channels) GetEntityId() messages.MessageAddress {
 
 	return me.EntityId
 }
-

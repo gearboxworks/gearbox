@@ -2,10 +2,9 @@ package states
 
 import (
 	"fmt"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"time"
 )
-
 
 func (me *Status) SetNewState(new State, err error) bool {
 
@@ -34,7 +33,6 @@ func (me *Status) SetNewState(new State, err error) bool {
 	return ok
 }
 
-
 func (me *Status) SetNewAction(a Action) bool {
 
 	var ok bool
@@ -46,39 +44,38 @@ func (me *Status) SetNewAction(a Action) bool {
 
 	me.Action = a
 	switch me.Action {
-		case ActionRegister:
-			me.Current = StateRegistering
-			me.Want = StateRegistered
-		case ActionUnregister:
-			me.Current = StateUnregistering
-			me.Want = StateUnregistered
-		case ActionPublish:
-			me.Current = StatePublishing
-			me.Want = StatePublished
-		case ActionUnpublish:
-			me.Current = StateUnpublishing
-			me.Want = StateUnpublished
-		case ActionSubscribe:
-			me.Current = StateSubscribing
-			me.Want = StateSubscribed
-		case ActionUnsubscribe:
-			me.Current = StateUnsubscribing
-			me.Want = StateUnsubscribed
+	case ActionRegister:
+		me.Current = StateRegistering
+		me.Want = StateRegistered
+	case ActionUnregister:
+		me.Current = StateUnregistering
+		me.Want = StateUnregistered
+	case ActionPublish:
+		me.Current = StatePublishing
+		me.Want = StatePublished
+	case ActionUnpublish:
+		me.Current = StateUnpublishing
+		me.Want = StateUnpublished
+	case ActionSubscribe:
+		me.Current = StateSubscribing
+		me.Want = StateSubscribed
+	case ActionUnsubscribe:
+		me.Current = StateUnsubscribing
+		me.Want = StateUnsubscribed
 
-		case ActionInitialize:
-			me.Current = StateInitializing
-			me.Want = StateInitialized
-		case ActionStop:
-			me.Current = StateStopping
-			me.Want = StateStopped
-		case ActionStart:
-			me.Current = StateStarting
-			me.Want = StateStarted
+	case ActionInitialize:
+		me.Current = StateInitializing
+		me.Want = StateInitialized
+	case ActionStop:
+		me.Current = StateStopping
+		me.Want = StateStopped
+	case ActionStart:
+		me.Current = StateStarting
+		me.Want = StateStarted
 	}
 
 	return ok
 }
-
 
 func (me *Status) String() string {
 
@@ -112,7 +109,6 @@ func (me *Status) String() string {
 	return ret
 }
 
-
 func (me *Status) ShortString() string {
 
 	var ret string
@@ -142,7 +138,6 @@ func (me *Status) ShortString() string {
 
 	return ret
 }
-
 
 func (me *Status) IsTheSame(other Status) bool {
 
@@ -217,12 +212,10 @@ func (me *Status) IsTheSame(other Status) bool {
 	return ret
 }
 
-
 func StatusAsString(me *Status) string {
 
 	return me.String()
 }
-
 
 func (me *Status) GetStatus() *Status {
 

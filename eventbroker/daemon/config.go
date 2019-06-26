@@ -5,13 +5,12 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 )
-
 
 func ReadJsonConfig(f string) (*ServiceConfig, error) {
 
@@ -46,14 +45,13 @@ func ReadJsonConfig(f string) (*ServiceConfig, error) {
 	return &c, err
 }
 
-
 func (me *Daemon) ParsePaths(sc ServiceConfig, i string) string {
 
 	if me.OsPaths == nil {
 		return i
 	}
 
-	strReplace := map[string]string {
+	strReplace := map[string]string{
 		"{{.LocalDir}}":              me.OsPaths.LocalDir.String(),
 		"{{.UserHomeDir}}":           me.OsPaths.UserHomeDir.String(),
 		"{{.AdminRootDir}}":          me.OsPaths.AdminRootDir.String(),
@@ -64,8 +62,8 @@ func (me *Daemon) ParsePaths(sc ServiceConfig, i string) string {
 		"{{.EventBrokerWorkingDir}}": me.OsPaths.EventBrokerWorkingDir.String(),
 		"{{.EventBrokerLogDir}}":     me.OsPaths.EventBrokerLogDir.String(),
 		"{{.EventBrokerEtcDir}}":     me.OsPaths.EventBrokerEtcDir.String(),
-		"{{.Port}}":                  sc.autoPort,	// sc.UrlPtr.Port(),
-		"{{.Host}}":                  sc.autoHost,	// sc.UrlPtr.Hostname(),
+		"{{.Port}}":                  sc.autoPort, // sc.UrlPtr.Port(),
+		"{{.Host}}":                  sc.autoHost, // sc.UrlPtr.Hostname(),
 		"{{.Platform}}":              runtime.GOOS + "_" + runtime.GOARCH,
 	}
 
@@ -76,12 +74,11 @@ func (me *Daemon) ParsePaths(sc ServiceConfig, i string) string {
 	return i
 }
 
-
 func (me *Daemon) ParseNetwork(sc ServiceConfig, i string) string {
 
-	strReplace := map[string]string {
-		"{{.Port}}":	sc.UrlPtr.Port(),
-		"{{.Host}}":	sc.UrlPtr.Hostname(),
+	strReplace := map[string]string{
+		"{{.Port}}": sc.UrlPtr.Port(),
+		"{{.Host}}": sc.UrlPtr.Hostname(),
 	}
 
 	for k, v := range strReplace {
@@ -90,7 +87,6 @@ func (me *Daemon) ParseNetwork(sc ServiceConfig, i string) string {
 
 	return i
 }
-
 
 func (me *Daemon) CreateDirPaths(file string) error {
 
@@ -113,24 +109,21 @@ func (me *Daemon) CreateDirPaths(file string) error {
 	return err
 }
 
-
 func (c *ServiceConfig) SkipPlatform() (skip bool) {
 
 	// Check platform.
 	myPlatform := runtime.GOOS + "_" + runtime.GOARCH
 
 	switch {
-		case c.RunOnPlatform == "":
-			skip = false
+	case c.RunOnPlatform == "":
+		skip = false
 
-		case c.RunOnPlatform == myPlatform:
-			skip = false
+	case c.RunOnPlatform == myPlatform:
+		skip = false
 
-		default:
-			skip = true
+	default:
+		skip = true
 	}
 
 	return
 }
-
-

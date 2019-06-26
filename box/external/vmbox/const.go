@@ -12,28 +12,26 @@ import (
 	"time"
 )
 
-
 const (
-	DefaultVmWaitTime = time.Millisecond * 1000
-	DefaultRetries  = 12
-	DefaultRetryDelay = time.Second * 10
-	DefaultConsoleReadWait = time.Second * 5
+	DefaultVmWaitTime       = time.Millisecond * 1000
+	DefaultRetries          = 12
+	DefaultRetryDelay       = time.Second * 10
+	DefaultConsoleReadWait  = time.Second * 5
 	DefaultConsoleWaitDelay = time.Second
-	DefaultBootWaitTime = time.Second * 60
-	DefaultRunWaitTime = time.Second * 5
-	DefaultConsoleOkString = "Gearbox Heartbeat"
+	DefaultBootWaitTime     = time.Second * 60
+	DefaultRunWaitTime      = time.Second * 5
+	DefaultConsoleOkString  = "Gearbox Heartbeat"
 )
 
-
 type VmBox struct {
-	EntityId       messages.MessageAddress
-	EntityName     messages.MessageAddress
-	EntityParent   messages.MessageAddress
-	Boxname         string
-	State           *states.Status
-	Task            *tasks.Task
-	Channels        *channels.Channels
-	Releases        *Releases
+	EntityId     messages.MessageAddress
+	EntityName   messages.MessageAddress
+	EntityParent messages.MessageAddress
+	Boxname      string
+	State        *states.Status
+	Task         *tasks.Task
+	Channels     *channels.Channels
+	Releases     *Releases
 
 	mutex           sync.RWMutex // Mutex control for map.
 	channelHandler  *channels.Subscriber
@@ -55,12 +53,12 @@ type Vm struct {
 	IsManaged       bool
 	Entry           *ServiceConfig
 
-	mutex           sync.RWMutex // Mutex control for this struct.
-	channels        *channels.Channels
-	channelHandler  *channels.Subscriber
-	osRelease       *Release
-	osPaths         *ospaths.BasePaths
-	baseDir         *ospaths.Dir
+	mutex          sync.RWMutex // Mutex control for this struct.
+	channels       *channels.Channels
+	channelHandler *channels.Subscriber
+	osRelease      *Release
+	osPaths        *ospaths.BasePaths
+	// baseDir         *ospaths.Dir
 }
 
 type ServiceConfig struct {
@@ -75,47 +73,47 @@ type ServiceConfig struct {
 	consoleMutex     sync.RWMutex
 	SshHost          string
 	SshPort          string
+	IconFile         *ospaths.File
+	VmDir            *ospaths.Dir
 
-	retryMax         int
-	retryDelay       time.Duration
-	cmdStdout        bytes.Buffer
-	cmdStderr        bytes.Buffer
-	vmInfo           KeyValueMap
-	vmNics           KeyValuesMap
+	retryMax   int
+	retryDelay time.Duration
+	cmdStdout  bytes.Buffer
+	cmdStderr  bytes.Buffer
+	vmInfo     KeyValueMap
+	vmNics     KeyValuesMap
 }
 
 const (
 	Package                    = "vmbox"
-	InterfaceTypeVmBox    = "*" + Package + ".VmBox"
+	InterfaceTypeVmBox         = "*" + Package + ".VmBox"
 	InterfaceTypeService       = "*" + Package + ".Service"
 	InterfaceTypeServiceConfig = "*" + Package + ".ServiceConfig"
 )
 
 const (
-	Basedir     = "/home/gearbox/projects"
+	Basedir = "/home/gearbox/projects"
 )
 
 const (
-	VmStateInit			= ""
-	VmStateNotPresent	= "not present"
-	VmStatePowerOff 	= "poweroff"	// Valid VM state return from listvm
-	VmStatePaused 		= "paused"		// Valid VM state return from listvm
-	VmStateSaved 		= "saved"		// Valid VM state return from listvm
-	VmStateRunning  	= "running"		// Valid VM state return from listvm
-	VmStateStarting		= "starting"
-	VmStateStopping		= "stopping"
-	VmStateDontCare		= "dont care"
-	VmStateUnknown		= "unknown"
+	VmStateInit       = ""
+	VmStateNotPresent = "not present"
+	VmStatePowerOff   = "poweroff" // Valid VM state return from listvm
+	VmStatePaused     = "paused"   // Valid VM state return from listvm
+	VmStateSaved      = "saved"    // Valid VM state return from listvm
+	VmStateRunning    = "running"  // Valid VM state return from listvm
+	VmStateStarting   = "starting"
+	VmStateStopping   = "stopping"
+	VmStateDontCare   = "dont care"
+	VmStateUnknown    = "unknown"
 
-	OkState      = "ok"
-	NotOkState   = "nok"
+	OkState    = "ok"
+	NotOkState = "nok"
 )
-
 
 const (
-	IconLogoPng = "dist/heartbeat/img/IconLogo.png"
+	IconLogoPng = "app/dist/heartbeat/img/IconLogo.png"
 )
-
 
 type BoxEntity struct {
 	Name         string
@@ -130,18 +128,17 @@ type BoxState struct {
 }
 
 type VmDisplayState struct {
-	Name			string
+	Name string
 
-	VmIconState		string
-	VmTitleState	string
-	VmHintState		string
+	VmIconState  string
+	VmTitleState string
+	VmHintState  string
 
-	ApiIconState	string
-	ApiTitleState	string
-	ApiHintState	string
+	ApiIconState  string
+	ApiTitleState string
+	ApiHintState  string
 
-	Title			string
-	Hint			string
-	Sts	    		status.Status
+	Title string
+	Hint  string
+	Sts   status.Status
 }
-

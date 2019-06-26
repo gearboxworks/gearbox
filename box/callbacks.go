@@ -1,11 +1,10 @@
 package box
 
 import (
+	"gearbox/box/external/vmbox"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/states"
-	"gearbox/box/external/vmbox"
 )
-
 
 func myCallback(i interface{}, state states.Status) error {
 
@@ -27,34 +26,34 @@ func myCallback(i interface{}, state states.Status) error {
 	//me.SetStateMenu(*name, state.Current)
 	//me.SetControlMenu(*name, state.Current)
 
-
 	switch *name {
-		case entity.VmEntityName:
-			var s int
-			err = me.VmBox.EnsureNotNil()
-			if err == nil {
-				s, _ = me.VmBox.Releases.Selected.IsIsoFilePresent()
-				if s != vmbox.IsoFileDownloaded {
-					state.Current = states.StateUpdating
-				}
+	case entity.VmEntityName:
+		var s int
+		err = me.VmBox.EnsureNotNil()
+		if err == nil {
+			s, _ = me.VmBox.Releases.Selected.IsIsoFilePresent()
+			if s != vmbox.IsoFileDownloaded {
+				state.Current = states.StateUpdating
 			}
-			me.SetStateMenu(entity.VmEntityName, state.Current)
-			me.SetControlMenu(entity.VmEntityName, state.Current)
+		}
+		me.SetStateMenu(entity.VmEntityName, state.Current)
+		me.SetControlMenu(entity.VmEntityName, state.Current)
 
-		case entity.ApiEntityName:
-			me.SetStateMenu(entity.ApiEntityName, state.Current)
+	case entity.ApiEntityName:
+		me.SetStateMenu(entity.ApiEntityName, state.Current)
 
-		case entity.UnfsdEntityName:
-			me.SetStateMenu(entity.UnfsdEntityName, state.Current)
+	case entity.UnfsdEntityName:
+		me.SetStateMenu(entity.UnfsdEntityName, state.Current)
+		err = me.NfsExports.ReadExport()
 
-		case menuVmUpdate:
-			if state.Current.String() != "100%" {
-				me.menu[menuVmUpdate].MenuItem.SetTitle(me.menu[menuVmUpdate].PrefixMenu + " - " + state.Current.String())
-				me.menu[menuVmUpdate].MenuItem.SetTooltip(me.menu[menuVmUpdate].PrefixToolTip + " - " + state.Current.String())
-			} else {
-				me.menu[menuVmUpdate].MenuItem.SetTitle(me.menu[menuVmUpdate].PrefixMenu)
-				me.menu[menuVmUpdate].MenuItem.SetTooltip(me.menu[menuVmUpdate].PrefixToolTip)
-			}
+	case menuVmUpdate:
+		if state.Current.String() != "100%" {
+			me.menu[menuVmUpdate].MenuItem.SetTitle(me.menu[menuVmUpdate].PrefixMenu + " - " + state.Current.String())
+			me.menu[menuVmUpdate].MenuItem.SetTooltip(me.menu[menuVmUpdate].PrefixToolTip + " - " + state.Current.String())
+		} else {
+			me.menu[menuVmUpdate].MenuItem.SetTitle(me.menu[menuVmUpdate].PrefixMenu)
+			me.menu[menuVmUpdate].MenuItem.SetTooltip(me.menu[menuVmUpdate].PrefixToolTip)
+		}
 	}
 
 	//fmt.Printf("Service %s moved to state '%s'\n", state.EntityName, state.Current)
@@ -72,10 +71,8 @@ func myCallback(i interface{}, state states.Status) error {
 	//	state.Error,
 	//)
 
-
 	return err
 }
-
 
 //func (me *Box) SetMenuVM(state states.State) {
 //	// This can clearly be refactored a LOT.
@@ -145,4 +142,3 @@ func myCallback(i interface{}, state states.Status) error {
 //
 //	return
 //}
-

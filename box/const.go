@@ -10,7 +10,7 @@ import (
 	"github.com/gearboxworks/go-osbridge"
 
 	//	oss "gearbox/os_support"
-	"github.com/getlantern/systray"
+	"github.com/gearboxworks/go-systray"
 	"time"
 )
 
@@ -27,7 +27,7 @@ type Box struct {
 	EntityName  messages.MessageAddress
 	Boxname     string
 	Version     string
-	NfsInstance *unfsd.Unfsd
+	NfsExports  *unfsd.Unfsd
 	State       *states.Status
 	menu        Menus
 	EventBroker *eventbroker.EventBroker

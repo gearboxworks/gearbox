@@ -2,10 +2,9 @@ package mqttClient
 
 import (
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 )
-
 
 func (me *MqttClient) GetEntities() messages.MessageAddresses {
 
@@ -14,13 +13,12 @@ func (me *MqttClient) GetEntities() messages.MessageAddresses {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for s, _ := range me.services {	// Managed by Mutex
+	for s := range me.services { // Managed by Mutex
 		ret = append(ret, s)
 	}
 
 	return ret
 }
-
 
 func (me *MqttClient) GetManagedEntities() messages.MessageAddresses {
 
@@ -29,15 +27,14 @@ func (me *MqttClient) GetManagedEntities() messages.MessageAddresses {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for s, _ := range me.services {	// Managed by Mutex
-		if me.services[s].IsManaged {	// Managed by Mutex
+	for s := range me.services { // Managed by Mutex
+		if me.services[s].IsManaged { // Managed by Mutex
 			ret = append(ret, s)
 		}
 	}
 
 	return ret
 }
-
 
 func (me *MqttClient) AddEntity(client messages.MessageAddress, sc *Service) error {
 	var err error
@@ -53,7 +50,6 @@ func (me *MqttClient) AddEntity(client messages.MessageAddress, sc *Service) err
 
 	return err
 }
-
 
 func (me *MqttClient) DeleteEntity(client messages.MessageAddress) error {
 
@@ -74,7 +70,6 @@ func (me *MqttClient) DeleteEntity(client messages.MessageAddress) error {
 	return err
 }
 
-
 func (me *MqttClient) EnsureDaemonNotNil(client messages.MessageAddress) error {
 
 	var err error
@@ -82,15 +77,14 @@ func (me *MqttClient) EnsureDaemonNotNil(client messages.MessageAddress) error {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	if _, ok := me.services[client]; !ok {		// Managed by Mutex
+	if _, ok := me.services[client]; !ok { // Managed by Mutex
 		err = me.EntityId.ProduceError("service doesn't exist")
 	} else {
-		err = me.services[client].EnsureNotNil()	// Managed by Mutex
+		err = me.services[client].EnsureNotNil() // Managed by Mutex
 	}
 
 	return err
 }
-
 
 // Ensure we don't duplicate services.
 func (me *MqttClient) FindExistingConfig(him ServiceConfig) (*Service, error) {
@@ -101,7 +95,7 @@ func (me *MqttClient) FindExistingConfig(him ServiceConfig) (*Service, error) {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for _, ce := range me.services {	// Managed by Mutex
+	for _, ce := range me.services { // Managed by Mutex
 		err = ce.IsExisting(him)
 		if err != nil {
 			sc = ce
@@ -112,7 +106,6 @@ func (me *MqttClient) FindExistingConfig(him ServiceConfig) (*Service, error) {
 	return sc, err
 }
 
-
 // Ensure we don't duplicate services.
 func (me *MqttClient) IsExisting(s messages.MessageAddress) *Service {
 
@@ -121,7 +114,7 @@ func (me *MqttClient) IsExisting(s messages.MessageAddress) *Service {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for _, sc = range me.services {	// Managed by Mutex
+	for _, sc = range me.services { // Managed by Mutex
 		if sc.EntityId == s {
 			break
 		}
@@ -130,20 +123,17 @@ func (me *MqttClient) IsExisting(s messages.MessageAddress) *Service {
 	return sc
 }
 
-
 func (me *MqttClient) GetTopics() messages.SubTopics {
 
 	return me.channelHandler.GetTopics()
 }
 
-
 func (me *Service) GetIsManaged() bool {
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
-	return me.IsManaged	// Managed by Mutex
+	return me.IsManaged // Managed by Mutex
 }
-
 
 func (me *Service) GetEntityId() (messages.MessageAddress, error) {
 
@@ -155,9 +145,8 @@ func (me *Service) GetEntityId() (messages.MessageAddress, error) {
 		return "", err
 	}
 
-	return me.EntityId, err		// Managed by Mutex
+	return me.EntityId, err // Managed by Mutex
 }
-
 
 func (me *Service) GetConfig() (ServiceConfig, error) {
 
@@ -171,9 +160,8 @@ func (me *Service) GetConfig() (ServiceConfig, error) {
 		return sc, err
 	}
 
-	return sc, err		// Managed by Mutex
+	return sc, err // Managed by Mutex
 }
-
 
 func (me *Service) GetStatus() (*states.Status, error) {
 
@@ -184,12 +172,11 @@ func (me *Service) GetStatus() (*states.Status, error) {
 
 	err := me.EnsureNotNil()
 	if err == nil {
-		sc = me.State		// Managed by Mutex
+		sc = me.State // Managed by Mutex
 	}
 
 	return sc, err
 }
-
 
 //func (me *MqttClient) _GetEntities() messages.MessageAddresses {
 //
@@ -286,4 +273,3 @@ func (me *Service) GetStatus() (*states.Status, error) {
 //
 //	return ret, err
 //}
-

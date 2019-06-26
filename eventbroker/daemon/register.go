@@ -6,15 +6,14 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/network"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/ospaths"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/kardianos/service"
 	"os"
 	"os/exec"
 	"time"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
@@ -143,7 +142,6 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 	return sc, err
 }
 
-
 // Register a service via a channel defined by a *CreateEntry structure and
 // returns a *Service structure if successful.
 func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s ServiceConfig) (*network.Service, error) {
@@ -175,7 +173,7 @@ func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s ServiceCon
 			break
 		}
 
-		sc, err = network.InterfaceToTypeService(rs)	// sc = rs.(*Service)
+		sc, err = network.InterfaceToTypeService(rs) // sc = rs.(*Service)
 		if err != nil {
 			break
 		}
@@ -189,7 +187,6 @@ func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s ServiceCon
 
 	return sc, err
 }
-
 
 // Register a service by method defined by a *CreateEntry structure.
 func (me *Daemon) RegisterByFile(f string) (*Service, error) {
@@ -223,7 +220,6 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 			break
 		}
 
-
 		s, err = me.Register(*sc)
 		if err != nil {
 			break
@@ -231,7 +227,6 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 		if s == nil {
 			break
 		}
-
 
 		info, err := os.Stat(f)
 		if err != nil {
@@ -248,7 +243,6 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 
 	return s, err
 }
-
 
 func (me *Daemon) LoadServiceFiles() error {
 
@@ -290,7 +284,6 @@ func (me *Daemon) LoadServiceFiles() error {
 	return err
 }
 
-
 // Create a service by method defined by a *CreateEntry structure.
 func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 
@@ -304,7 +297,6 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 		}
 
 		sc = &c
-
 
 		// Basic sanity checks.
 		if sc.MdnsType == "" {
@@ -332,7 +324,6 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 			break
 		}
 
-
 		sc.autoHost = "0.0.0.0"
 		sc.autoPort = "0"
 		// Check URL.
@@ -344,11 +335,9 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 
 		//sc.Host = sc.Url.Hostname()
 		//sc.Port = sc.Url.Port()
-
 		//if len(sc.Dependencies) == 0 {
 		//	sc.Dependencies = []string{}
 		//}
-
 
 		// Parse paths.
 		dirs := ospaths.NewPath()
@@ -357,6 +346,14 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 
 		sc.Config.Executable = me.ParsePaths(*sc, sc.Config.Executable)
 		dirs = dirs.AppendFile(sc.Config.Executable)
+		_, err = ospaths.FileExists(sc.Config.Executable)
+		if err != nil {
+			break
+		}
+		_, err = ospaths.FileSetExecutePerms(sc.Config.Executable)
+		if err != nil {
+			break
+		}
 
 		if sc.Config.WorkingDirectory == "" {
 			sc.Config.WorkingDirectory = me.OsPaths.EventBrokerWorkingDir.String()
@@ -384,7 +381,6 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 			break
 		}
 
-
 		// Parse envs and arguments.
 		for k, v := range sc.Env {
 			sc.Env[k] = me.ParsePaths(*sc, v)
@@ -397,4 +393,3 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 
 	return sc, err
 }
-

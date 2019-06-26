@@ -8,12 +8,11 @@ import (
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed from a channel
-
 
 // Non-exposed channel function that responds to an "stop" channel request.
 func stopHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
@@ -56,7 +55,6 @@ func stopHandler(event *messages.Message, i channels.Argument, r channels.Return
 	return &err
 }
 
-
 // Non-exposed channel function that responds to an "start" channel request.
 func startHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -98,7 +96,6 @@ func startHandler(event *messages.Message, i channels.Argument, r channels.Retur
 	return &err
 }
 
-
 // Non-exposed channel function that responds to a "status" channel request.
 func statusHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -131,7 +128,6 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 
 	return ret
 }
-
 
 // Non-exposed channel function that responds to a "register" channel request.
 func registerService(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
@@ -171,7 +167,6 @@ func registerService(event *messages.Message, i channels.Argument, r channels.Re
 	return sc
 }
 
-
 // Non-exposed channel function that responds to an "unregister" channel request.
 func unregisterService(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -201,7 +196,6 @@ func unregisterService(event *messages.Message, i channels.Argument, r channels.
 	return &err
 }
 
-
 // Non-exposed channel function that responds to a "get" channel request.
 func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -217,10 +211,10 @@ func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnT
 		fmt.Printf("ReturnType: %v\n", r)
 
 		switch event.Text.String() {
-			case "topics":
-				ret = me.channelHandler.GetTopics()
-			case "topics/subs":
-				ret = me.channelHandler.GetTopics()
+		case "topics":
+			ret = me.channelHandler.GetTopics()
+		case "topics/subs":
+			ret = me.channelHandler.GetTopics()
 		}
 
 		fmt.Printf("topics: %v\n", ret)
@@ -233,7 +227,6 @@ func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnT
 
 	return &ret
 }
-
 
 // Non-exposed channel function that responds to a "load" channel request.
 func loadConfigHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
@@ -257,4 +250,3 @@ func loadConfigHandler(event *messages.Message, i channels.Argument, r channels.
 
 	return &err
 }
-

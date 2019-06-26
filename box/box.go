@@ -2,7 +2,7 @@ package box
 
 import (
 	"fmt"
-	"gearbox/app/logger"
+	"gearbox/box/external/unfsd"
 	"gearbox/box/external/vmbox"
 	"gearbox/eventbroker"
 	"gearbox/eventbroker/daemon"
@@ -16,7 +16,7 @@ import (
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/gearboxworks/go-status/only"
-	"github.com/getlantern/systray"
+	"github.com/gearboxworks/go-systray"
 	"os"
 	"os/signal"
 	"syscall"
@@ -101,7 +101,7 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 			<-sigs
 			_ = me.VmBox.Stop()
 			_ = me.EventBroker.Stop()
-			logger.Debug("Goodbye!")
+			fmt.Printf("Gearbox exiting.\n")
 
 			os.Exit(0)
 		}()
@@ -144,6 +144,11 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 		err = me.EventBroker.Start()
 		if err != nil {
 			sts = status.Wrap(err).SetMessage("EventBroker was not able to start")
+			break
+		}
+
+		me.NfsExports, err = unfsd.New(unfsd.Args{Channels: &me.EventBroker.Channels, OsPaths: me.EventBroker.OsPaths, Boxname: me.Boxname})
+		if err != nil {
 			break
 		}
 
@@ -224,12 +229,12 @@ func (me *Box) StartBox() (sts status.Status) {
 		//		}
 
 		//sts = me.DaemonInstance.Load()
-		fmt.Printf("For now, we're running in the forground.\n")
+		fmt.Printf("Gearbox: The alpha release runs Gearbox in the foreground. Please keep this shell open.\n\n")
 		err = me.BoxDaemon()
 		if err != nil {
+			fmt.Printf("Gearbox: Error %v\n", err)
 			break
 		}
-		fmt.Printf("%s\n", sts.Message())
 
 	}
 

@@ -4,9 +4,8 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
@@ -27,12 +26,12 @@ func (me *MqttClient) UnsubscribeByUuid(client messages.MessageAddress) error {
 			break
 		}
 
-		me.services[client].State.SetNewAction(states.ActionStop)	// Was states.ActionUnsubscribe
+		me.services[client].State.SetNewAction(states.ActionStop) // Was states.ActionUnsubscribe
 		me.services[client].channels.PublishState(me.State)
 
 		me.instance.client.Unsubscribe(me.services[client].Entry.Topic.String())
 
-		me.services[client].State.SetNewState(states.StateStopped, err)	// Was states.StateUnsubscribed
+		me.services[client].State.SetNewState(states.StateStopped, err) // Was states.StateUnsubscribed
 		me.services[client].channels.PublishState(me.services[client].State)
 
 		err = me.DeleteEntity(client)
@@ -77,4 +76,3 @@ func (me *MqttClient) UnsubscribeByChannel(caller messages.MessageAddress, u mes
 
 	return err
 }
-

@@ -3,10 +3,9 @@ package mqttClient
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
@@ -71,7 +70,6 @@ func (me *MqttClient) Subscribe(ce ServiceConfig) (*Service, error) {
 	return &sc, err
 }
 
-
 // Subscribe a service via a channel defined by a *CreateTopic structure and
 // returns a *Service structure if successful.
 func (me *MqttClient) SubscribeByChannel(caller messages.MessageAddress, s Topic) (*Service, error) {
@@ -101,7 +99,7 @@ func (me *MqttClient) SubscribeByChannel(caller messages.MessageAddress, s Topic
 			break
 		}
 
-		sc, err = InterfaceToTypeService(rs)	// sc = rs.(*Service)
+		sc, err = InterfaceToTypeService(rs) // sc = rs.(*Service)
 		if err != nil {
 			break
 		}
@@ -115,4 +113,3 @@ func (me *MqttClient) SubscribeByChannel(caller messages.MessageAddress, s Topic
 
 	return sc, err
 }
-

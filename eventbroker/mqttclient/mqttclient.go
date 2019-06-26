@@ -3,13 +3,12 @@ package mqttClient
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gearboxworks/go-status/only"
 	"net/url"
 )
-
 
 func (me *MqttClient) New(args ...Args) error {
 
@@ -31,7 +30,6 @@ func (me *MqttClient) New(args ...Args) error {
 			err = me.EntityId.ProduceError("ospaths is nil")
 			break
 		}
-
 
 		if _args.EntityId == "" {
 			_args.EntityId = entity.MqttClientEntityName
@@ -61,7 +59,6 @@ func (me *MqttClient) New(args ...Args) error {
 
 		*me = MqttClient(_args)
 
-
 		me.State.SetWant(states.StateIdle)
 		me.State.SetNewState(states.StateIdle, err)
 		eblog.Debug(me.EntityId, "init complete")
@@ -73,7 +70,6 @@ func (me *MqttClient) New(args ...Args) error {
 
 	return err
 }
-
 
 // Start the MQTT handler.
 func (me *MqttClient) StartHandler() error {
@@ -108,7 +104,6 @@ func (me *MqttClient) StartHandler() error {
 	return err
 }
 
-
 // Stop the MQTT handler.
 func (me *MqttClient) StopHandler() error {
 
@@ -141,7 +136,6 @@ func (me *MqttClient) StopHandler() error {
 	return err
 }
 
-
 func (me *MqttClient) StopServices() error {
 
 	var err error
@@ -152,7 +146,7 @@ func (me *MqttClient) StopServices() error {
 			break
 		}
 
-		for u, _ := range me.services {
+		for u := range me.services {
 			if me.services[u].IsManaged {
 				_ = me.UnsubscribeByUuid(u)
 				// Ignore error, will clean up when program exits.
@@ -165,4 +159,3 @@ func (me *MqttClient) StopServices() error {
 
 	return err
 }
-

@@ -5,19 +5,18 @@ import (
 	"fmt"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 	"reflect"
 )
-
 
 func (me *VmBox) EnsureNotNil() error {
 
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("VmBox instance is nil")
+	case me == nil:
+		err = errors.New("VmBox instance is nil")
 	}
 
 	return err
@@ -26,14 +25,13 @@ func EnsureNotNil(me *VmBox) error {
 	return me.EnsureNotNil()
 }
 
-
 func (me *VmMap) EnsureNotNil() error {
 
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("VmBox ServicesMap instance is nil")
+	case me == nil:
+		err = errors.New("VmBox ServicesMap instance is nil")
 	}
 
 	return err
@@ -42,13 +40,12 @@ func EnsureServicesMapNotNil(me *VmMap) error {
 	return me.EnsureNotNil()
 }
 
-
 func (me *Vm) EnsureNotNil() error {
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("VmBox Service instance is nil")
+	case me == nil:
+		err = errors.New("VmBox Service instance is nil")
 	}
 
 	return err
@@ -56,7 +53,6 @@ func (me *Vm) EnsureNotNil() error {
 func EnsureServiceNotNil(me *Vm) error {
 	return me.EnsureNotNil()
 }
-
 
 // Ensure we don't duplicate services.
 func (me *VmBox) IsExisting(client messages.MessageAddress) *Vm {
@@ -81,7 +77,6 @@ func (me *VmBox) IsExisting(client messages.MessageAddress) *Vm {
 
 	return ret
 }
-
 
 //// Ensure we don't duplicate services.
 //func (me *Vm) IsExisting(him ServiceConfig) error {
@@ -112,7 +107,6 @@ func (me *VmBox) IsExisting(client messages.MessageAddress) *Vm {
 //	return err
 //}
 
-
 func InterfaceToTypeVmBox(i interface{}) (*VmBox, error) {
 
 	var err error
@@ -140,7 +134,6 @@ func InterfaceToTypeVmBox(i interface{}) (*VmBox, error) {
 
 	return zc, err
 }
-
 
 func InterfaceToTypeService(i interface{}) (*Vm, error) {
 
@@ -170,7 +163,6 @@ func InterfaceToTypeService(i interface{}) (*Vm, error) {
 	return s, err
 }
 
-
 func (me *VmMap) Print() error {
 
 	var err error
@@ -192,7 +184,6 @@ func (me *VmMap) Print() error {
 
 	return err
 }
-
 
 func (me *Vm) Print() error {
 
@@ -218,7 +209,6 @@ func (me *Vm) Print() error {
 	return err
 }
 
-
 func ConstructVmMessage(me messages.MessageAddress, to messages.MessageAddress, a states.Action) messages.Message {
 
 	var err error
@@ -242,4 +232,3 @@ func ConstructVmMessage(me messages.MessageAddress, to messages.MessageAddress, 
 
 	return msgTemplate
 }
-

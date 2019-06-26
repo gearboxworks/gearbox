@@ -3,13 +3,11 @@ package vmbox
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"gearbox/global"
-	"github.com/jinzhu/copier"
+	"github.com/gearboxworks/go-status/only"
 )
-
 
 func New(args ...Args) (*VmBox, error) {
 
@@ -24,12 +22,12 @@ func New(args ...Args) (*VmBox, error) {
 			_args = args[0]
 		}
 
-		foo := Args{}
-		err = copier.Copy(&foo, &_args)
-		if err != nil {
-			err = _args.EntityId.ProduceError("unable to copy config args")
-			break
-		}
+		//foo := Args{}
+		//err = copier.Copy(&foo, &_args)
+		//if err != nil {
+		//	err = _args.EntityId.ProduceError("unable to copy config args")
+		//	break
+		//}
 
 		if _args.Channels == nil {
 			err = _args.EntityId.ProduceError("channel pointer is nil")
@@ -40,7 +38,6 @@ func New(args ...Args) (*VmBox, error) {
 			err = _args.EntityId.ProduceError("ospaths is nil")
 			break
 		}
-
 
 		if _args.EntityId == "" {
 			_args.EntityId = entity.VmBoxEntityName
@@ -70,7 +67,6 @@ func New(args ...Args) (*VmBox, error) {
 
 		*me = VmBox(_args)
 
-
 		me.State.SetWant(states.StateIdle)
 		me.State.SetNewState(states.StateIdle, err)
 		eblog.Debug(me.EntityId, "init complete")
@@ -82,7 +78,6 @@ func New(args ...Args) (*VmBox, error) {
 
 	return me, err
 }
-
 
 // Start the VmBox handler.
 func (me *VmBox) Start() error {
@@ -117,7 +112,6 @@ func (me *VmBox) Start() error {
 	return err
 }
 
-
 // Stop the VmBox handler.
 func (me *VmBox) Stop() error {
 
@@ -150,7 +144,6 @@ func (me *VmBox) Stop() error {
 	return err
 }
 
-
 func (me *VmBox) StopVms() error {
 
 	var err error
@@ -161,7 +154,7 @@ func (me *VmBox) StopVms() error {
 			break
 		}
 
-		for u, _ := range me.vms {
+		for u := range me.vms {
 			if me.vms[u].IsManaged {
 				_ = me.vms[u].Stop()
 				// Ignore error, will clean up when program exits.
@@ -174,4 +167,3 @@ func (me *VmBox) StopVms() error {
 
 	return err
 }
-

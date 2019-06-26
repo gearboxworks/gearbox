@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"reflect"
 	"sync"
 	"time"
 )
-
 
 func InterfaceToTypeStatus(i interface{}) (*Status, error) {
 
@@ -61,7 +60,6 @@ func InterfaceToTypeError(i interface{}) (*error, error) {
 	return zc, err
 }
 
-
 func New(client *messages.MessageAddress, name *messages.MessageAddress, parent messages.MessageAddress) *Status {
 
 	var ret Status
@@ -86,31 +84,28 @@ func New(client *messages.MessageAddress, name *messages.MessageAddress, parent 
 	return &ret
 }
 
-
 func EnsureNotNil(me *Status) error {
 
 	return me.EnsureNotNil()
 }
-
 
 func (me *Status) EnsureNotNil() error {
 
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("status.Status is nil")
+	case me == nil:
+		err = errors.New("status.Status is nil")
 
-		//case me.mutex == nil:
-		//	err = errors.New("status.mutex is nil")
+	//case me.mutex == nil:
+	//	err = errors.New("status.mutex is nil")
 
-		case me.EntityId == nil:
-			err = errors.New("status.EntityId is nil")
+	case me.EntityId == nil:
+		err = errors.New("status.EntityId is nil")
 	}
 
 	return err
 }
-
 
 func (me *Status) ToMessageText() messages.MessageText {
 
@@ -133,7 +128,6 @@ func (me *Status) ToMessageText() messages.MessageText {
 	return messages.MessageText(j)
 }
 
-
 func FromMessageText(me messages.MessageText) (*Status, error) {
 
 	var err error
@@ -155,4 +149,3 @@ func FromMessageText(me messages.MessageText) (*Status, error) {
 
 	return &ret, err
 }
-

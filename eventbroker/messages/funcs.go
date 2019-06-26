@@ -2,7 +2,7 @@ package messages
 
 import (
 	"errors"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"reflect"
 )
 
@@ -28,4 +28,3 @@ func InterfaceToTypeSubTopics(i interface{}) (*SubTopics, error) {
 
 	return zc, err
 }
-

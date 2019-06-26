@@ -2,10 +2,9 @@ package vmbox
 
 import (
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 )
-
 
 func (me *VmBox) AddEntity(client messages.MessageAddress, sc *Vm) error {
 	var err error
@@ -21,7 +20,6 @@ func (me *VmBox) AddEntity(client messages.MessageAddress, sc *Vm) error {
 
 	return err
 }
-
 
 func (me *VmBox) DeleteEntity(client messages.MessageAddress) error {
 
@@ -42,14 +40,12 @@ func (me *VmBox) DeleteEntity(client messages.MessageAddress) error {
 	return err
 }
 
-
 func (me *Vm) GetIsManaged() bool {
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
-	return me.IsManaged	// Managed by Mutex
+	return me.IsManaged // Managed by Mutex
 }
-
 
 func (me *Vm) GetEntityId() (messages.MessageAddress, error) {
 
@@ -61,9 +57,8 @@ func (me *Vm) GetEntityId() (messages.MessageAddress, error) {
 		return "", err
 	}
 
-	return me.EntityId, err		// Managed by Mutex
+	return me.EntityId, err // Managed by Mutex
 }
-
 
 func (me *Vm) GetConfig() (ServiceConfig, error) {
 
@@ -77,9 +72,8 @@ func (me *Vm) GetConfig() (ServiceConfig, error) {
 		return sc, err
 	}
 
-	return sc, err		// Managed by Mutex
+	return sc, err // Managed by Mutex
 }
-
 
 func (me *Vm) GetStatus() (*states.Status, error) {
 
@@ -90,12 +84,11 @@ func (me *Vm) GetStatus() (*states.Status, error) {
 
 	err := me.EnsureNotNil()
 	if err == nil {
-		sc = me.State		// Managed by Mutex
+		sc = me.State // Managed by Mutex
 	}
 
 	return sc, err
 }
-
 
 //func (me *VmBox) GetEntities() messages.MessageAddresses {
 //
@@ -286,4 +279,3 @@ func (me *Vm) GetStatus() (*states.Status, error) {
 //
 //	return ret, err
 //}
-

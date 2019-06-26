@@ -5,10 +5,9 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed from a channel
@@ -49,7 +48,6 @@ func stopHandler(event *messages.Message, i channels.Argument, r channels.Return
 	return &err
 }
 
-
 // Non-exposed channel function that responds to an "start" channel request.
 func startHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -85,7 +83,6 @@ func startHandler(event *messages.Message, i channels.Argument, r channels.Retur
 
 	return &err
 }
-
 
 // Non-exposed channel function that responds to a "status" channel request.
 func statusHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
@@ -123,7 +120,6 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 
 	return ret
 }
-
 
 // Non-exposed channel function that responds to a "update" channel request.
 func updateHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
@@ -165,7 +161,6 @@ func updateHandler(event *messages.Message, i channels.Argument, r channels.Retu
 	return &err
 }
 
-
 // Non-exposed channel function that responds to a "update" channel request.
 func createHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -189,7 +184,7 @@ func createHandler(event *messages.Message, i channels.Argument, r channels.Retu
 			sc := me.IsExisting(messages.MessageAddress(event.Text))
 			if sc == nil {
 				_, err = me.New(ServiceConfig{
-					Name: messages.MessageAddress(event.Text),
+					Name:    messages.MessageAddress(event.Text),
 					Version: "latest",
 				})
 			}
@@ -207,4 +202,3 @@ func createHandler(event *messages.Message, i channels.Argument, r channels.Retu
 
 	return &err
 }
-

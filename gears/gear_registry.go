@@ -29,7 +29,7 @@ type serviceIdsMapGearspecIds map[service.Identifier]gearspec.Identifier
 
 type GearRegistry struct {
 	Authorities   Authorities         `json:"authorities"`
-	Stacks        Stacks              `json:"named_stacks"`
+	Stacks        Stacks              `json:"stacks"`
 	Gearspecs     Gearspecs           `json:"gearspecs"`
 	GearOptions   GearOptions         `json:"gear_options"`
 	GlobalOptions global.Options      `json:"-"`

@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"net"
 	"net/url"
 	"strconv"
 )
-
 
 func ParseUrl(us string) (*url.URL, error) {
 
@@ -53,19 +52,17 @@ func ParseUrl(us string) (*url.URL, error) {
 	return uri, err
 }
 
-
 func (port *Port) IfZeroFindFreePort() (err error) {
 
 	switch *port {
-		case "0":
-			fallthrough
-		case "":
-			*port, err = GetFreePort()
+	case "0":
+		fallthrough
+	case "":
+		*port, err = GetFreePort()
 	}
 
 	return err
 }
-
 
 // GetFreePort asks the kernel for a free open port that is ready to use.
 func GetFreePort() (Port, error) {
@@ -89,7 +86,6 @@ func GetFreePort() (Port, error) {
 	return Port(strconv.Itoa(port)), nil
 }
 
-
 // GetFreePort asks the kernel for free open ports that are ready to use.
 func GetFreePorts(count int) ([]int, error) {
 	var ports []int
@@ -108,4 +104,3 @@ func GetFreePorts(count int) ([]int, error) {
 	}
 	return ports, nil
 }
-

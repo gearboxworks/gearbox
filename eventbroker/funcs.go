@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/network"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"net/url"
 	"reflect"
 )
-
 
 func (me *EventBroker) EnsureNotNil() error {
 
@@ -21,7 +20,6 @@ func (me *EventBroker) EnsureNotNil() error {
 	return err
 }
 
-
 func (me *EventBroker) RegisterService(topic string, args ...string) {
 	fmt.Printf("RegisterService\n")
 
@@ -30,13 +28,11 @@ func (me *EventBroker) RegisterService(topic string, args ...string) {
 	return
 }
 
-
 var ServiceMqtt = network.ServiceConfig{
 	Name:   "_gearbox-mqtt",
 	Type:   "_mqtt._tcp",
 	Domain: "local",
 }
-
 
 func InterfaceToTypeEventBroker(i interface{}) (*EventBroker, error) {
 
@@ -66,7 +62,6 @@ func InterfaceToTypeEventBroker(i interface{}) (*EventBroker, error) {
 	return me, err
 }
 
-
 func (me *EventBroker) FindMqttBroker() (*url.URL, error) {
 
 	var err error
@@ -94,7 +89,6 @@ func (me *EventBroker) FindMqttBroker() (*url.URL, error) {
 
 	return u, err
 }
-
 
 //func (me *EventBroker) zcByChannel(s network.ServiceConfig) (*network.Service, error) {
 //
@@ -209,4 +203,3 @@ func (me *EventBroker) FindMqttBroker() (*url.URL, error) {
 //	//fmt.Printf("Stopping channel...\n")
 //	//_ = channelService.StopHandler()
 //}
-

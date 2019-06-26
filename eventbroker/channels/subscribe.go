@@ -3,11 +3,10 @@ package channels
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 	"sync"
 )
-
 
 func (me *Channels) Subscribe(client messages.MessageTopic, callback Callback, argInterface Argument, retType ReturnType) (*Subscriber, error) {
 
@@ -42,14 +41,14 @@ func (me *Channels) Subscribe(client messages.MessageTopic, callback Callback, a
 		if _, ok := me.subscribers[client.Address]; !ok {
 			addr := client.Address
 			sub = Subscriber{
-				EntityId:  addr,
-				EntityName: addr,
+				EntityId:     addr,
+				EntityName:   addr,
 				EntityParent: &me.EntityId,
-				State: states.New(&addr, &addr, me.EntityId),
-				IsManaged: true,
+				State:        states.New(&addr, &addr, me.EntityId),
+				IsManaged:    true,
 
-				topics: make(References),
-				mutex: sync.RWMutex{},
+				topics:         make(References),
+				mutex:          sync.RWMutex{},
 				parentInstance: &me.instance,
 			}
 			me.subscribers[client.Address] = &sub
@@ -68,7 +67,6 @@ func (me *Channels) Subscribe(client messages.MessageTopic, callback Callback, a
 
 	return &sub, err
 }
-
 
 func (me *Subscriber) Subscribe(topic messages.SubTopic, callback Callback, argInterface Argument, retType ReturnType) error {
 
@@ -110,4 +108,3 @@ func (me *Subscriber) Subscribe(topic messages.SubTopic, callback Callback, argI
 
 	return err
 }
-

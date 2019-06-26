@@ -4,9 +4,10 @@ package ospaths
 
 import (
 	"fmt"
-	"gearbox/eventbroker/only"
 	"gearbox/global"
 	"github.com/gearboxworks/go-osbridge"
+	"github.com/gearboxworks/go-status/only"
+	"github.com/getlantern/errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +15,7 @@ import (
 )
 
 const (
-	DefaultBaseDir = "dist/eventbroker"
+	DefaultBaseDir = "app/dist/eventbroker"
 
 	defaultLogBaseDir = "logs"
 	defaultEtcBaseDir = "etc"
@@ -23,12 +24,12 @@ const (
 type Name string
 
 type Path struct {
-	Dir Dir
+	Dir  Dir
 	File File
 }
 type Paths []Path
 
-type Dir  string
+type Dir string
 type Dirs []Dir
 
 type File string
@@ -36,7 +37,7 @@ type Files []File
 
 type BasePaths struct {
 	UserHomeDir           Dir
-	ProjectBaseDir      Dir
+	ProjectBaseDir        Dir
 	UserConfigDir         Dir
 	AdminRootDir          Dir
 	CacheDir              Dir
@@ -46,12 +47,11 @@ type BasePaths struct {
 	EventBrokerEtcDir     Dir
 	LocalDir              Dir
 
-	osBridger             osbridge.OsBridger
-	mutex                 sync.RWMutex
+	osBridger osbridge.OsBridger
+	mutex     sync.RWMutex
 }
+
 //type OsBridge     osbridge.OsBridger
-
-
 
 func New(subdir string) *BasePaths {
 
@@ -87,7 +87,6 @@ func New(subdir string) *BasePaths {
 	return &ret
 }
 
-
 func (me *Dir) AddToPath(dir ...string) *Dir {
 
 	var ret Dir
@@ -100,7 +99,6 @@ func (me *Dir) AddToPath(dir ...string) *Dir {
 
 	return &ret
 }
-
 
 func (me *Dir) AddFileToPath(format string, fn ...interface{}) *File {
 
@@ -115,18 +113,39 @@ func (me *Dir) AddFileToPath(format string, fn ...interface{}) *File {
 	return &ret
 }
 
-
-func (me *Dir) DirExists() error {
+func (me *File) FileExists() error {
 
 	var err error
 
-	if _, err = os.Stat(me.String()); os.IsNotExist(err) {
+	if me == nil {
+		err = errors.New("File is nil")
+		return err
+	}
+
+	_, err = os.Stat(me.String())
+	if os.IsNotExist(err) {
 		//fmt.Printf("Not exists PATH: '%s'\n", me.String())
 	}
 
 	return err
 }
 
+func (me *Dir) DirExists() error {
+
+	var err error
+
+	if me == nil {
+		err = errors.New("Dir is nil")
+		return err
+	}
+
+	_, err = os.Stat(me.String())
+	if os.IsNotExist(err) {
+		//fmt.Printf("Not exists PATH: '%s'\n", me.String())
+	}
+
+	return err
+}
 
 func (me *Dir) CreateIfNotExists() (created bool, err error) {
 
@@ -140,7 +159,6 @@ func (me *Dir) CreateIfNotExists() (created bool, err error) {
 
 	return created, err
 }
-
 
 func (me *Dirs) Append(dir ...string) *Dirs {
 
@@ -156,14 +174,12 @@ func (me *Dirs) Append(dir ...string) *Dirs {
 	return &ret
 }
 
-
 func NewPath() *Paths {
 
 	var ret Paths
 
 	return &ret
 }
-
 
 func (me *Paths) AppendFile(file ...string) *Paths {
 
@@ -178,7 +194,6 @@ func (me *Paths) AppendFile(file ...string) *Paths {
 
 	return &ret
 }
-
 
 func (me *Paths) AppendDir(dir ...string) *Paths {
 
@@ -197,7 +212,6 @@ func (me *Paths) AppendDir(dir ...string) *Paths {
 
 	return &ret
 }
-
 
 func (me *BasePaths) CreateIfNotExists() (err error) {
 
@@ -226,7 +240,6 @@ func (me *BasePaths) CreateIfNotExists() (err error) {
 	return err
 }
 
-
 func (me *Paths) CreateIfNotExists() (err error) {
 
 	for _, p := range *me {
@@ -243,7 +256,6 @@ func (me *Paths) CreateIfNotExists() (err error) {
 	return err
 }
 
-
 func (me *Path) CreateIfNotExists() (created bool, err error) {
 
 	created, err = me.Dir.CreateIfNotExists()
@@ -255,7 +267,6 @@ func (me *Path) CreateIfNotExists() (created bool, err error) {
 
 	return created, err
 }
-
 
 //func (me *Path) DirName() (created bool, err error) {
 //
@@ -269,24 +280,20 @@ func (me *Path) CreateIfNotExists() (created bool, err error) {
 //	return created, err
 //}
 
-
 func (me *Dir) String() string {
 
 	return string(*me)
 }
-
 
 func (me *File) String() string {
 
 	return string(*me)
 }
 
-
 func (me *Path) String() string {
 
-	return filepath.FromSlash(me.Dir.String() + "/"+ me.File.String())
+	return filepath.FromSlash(me.Dir.String() + "/" + me.File.String())
 }
-
 
 func Split(fn string) *Path {
 
@@ -298,4 +305,3 @@ func Split(fn string) *Path {
 
 	return &pn
 }
-

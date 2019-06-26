@@ -5,12 +5,11 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
+	"github.com/gearboxworks/go-status/only"
 	"time"
 )
-
 
 func (me *Daemon) New(args ...Args) error {
 
@@ -32,7 +31,6 @@ func (me *Daemon) New(args ...Args) error {
 			err = me.EntityId.ProduceError("ospaths is nil")
 			break
 		}
-
 
 		if _args.EntityId == "" {
 			_args.EntityId = entity.DaemonEntityName
@@ -56,7 +54,7 @@ func (me *Daemon) New(args ...Args) error {
 			break
 		}
 
-		_args.daemons = make(ServicesMap)	// Mutex not required
+		_args.daemons = make(ServicesMap) // Mutex not required
 
 		_args.State.SetWant(states.StateIdle)
 		_args.State.SetNewState(states.StateIdle, err)
@@ -71,7 +69,6 @@ func (me *Daemon) New(args ...Args) error {
 
 	return err
 }
-
 
 // Start the M-DNS network handler.
 func (me *Daemon) StartHandler() error {
@@ -105,7 +102,6 @@ func (me *Daemon) StartHandler() error {
 	return err
 }
 
-
 // Stop the daemon handler.
 func (me *Daemon) StopHandler() error {
 
@@ -138,7 +134,6 @@ func (me *Daemon) StopHandler() error {
 	return err
 }
 
-
 func (me *Daemon) StopServices() error {
 
 	var err error
@@ -149,8 +144,8 @@ func (me *Daemon) StopServices() error {
 			break
 		}
 
-		for _, u := range me.GetManagedEntities() {		// Ignore Mutex
-			err = me.daemons[u].Stop()					// Ignore Mutex
+		for _, u := range me.GetManagedEntities() { // Ignore Mutex
+			err = me.daemons[u].Stop() // Ignore Mutex
 			if err == nil {
 				err = me.DeleteEntity(u)
 			}
@@ -163,7 +158,6 @@ func (me *Daemon) StopServices() error {
 
 	return err
 }
-
 
 // Print all services registered under daemon that I manage.
 func (me *Daemon) PrintServices() error {
@@ -181,7 +175,6 @@ func (me *Daemon) PrintServices() error {
 
 	return err
 }
-
 
 // Print all services registered under daemon that I manage.
 func (me *Daemon) ListStarted() (messages.MessageAddresses, error) {
@@ -205,7 +198,6 @@ func (me *Daemon) ListStarted() (messages.MessageAddresses, error) {
 
 	return sc, err
 }
-
 
 func (me *Daemon) TestMe() error {
 
@@ -257,4 +249,3 @@ func (me *Daemon) TestMe() error {
 
 	return err
 }
-

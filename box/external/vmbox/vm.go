@@ -15,36 +15,6 @@ import (
 	"time"
 )
 
-//type Box struct {
-//	Boxname         string
-//	VmBaseDir       string
-//	VmIsoDir        string
-//	VmIsoVersion    string
-//	VmIsoFile       string
-//	VmIsoUrl 		string
-//	VmIsoInfo	    Release
-//	VmIsoDlIndex	int
-//
-//	// SSH related - Need to fix this. It's used within CreateBox()
-//	SshUsername  string
-//	SshPassword  string
-//	SshPublicKey string
-//
-//	// State polling delays.
-//	NoWait      bool
-//	WaitDelay   time.Duration
-//	WaitRetries int
-//
-//	// Console related.
-//	ConsoleHost     string
-//	ConsolePort     string
-//	ConsoleOkString string
-//	ConsoleReadWait time.Duration
-//	ShowConsole     bool
-//
-//	OsBridge osbridge.OsBridger
-//}
-
 func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 
 	var err error
@@ -56,52 +26,6 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 		if err != nil {
 			break
 		}
-
-		//if _args.WaitDelay == 0 {
-		//	_args.WaitDelay = DefaultWaitDelay
-		//}
-		//
-		//if _args.WaitRetries == 0 {
-		//	_args.WaitRetries = DefaultWaitRetries
-		//}
-		//
-		//if _args.ConsoleHost == "" {
-		//	_args.ConsoleHost = DefaultConsoleHost
-		//}
-		//
-		//if _args.ConsolePort == "" {
-		//	_args.ConsolePort = DefaultConsolePort
-		//}
-		//
-		//if _args.ConsoleOkString == "" {
-		//	_args.ConsoleOkString = DefaultConsoleOkString
-		//}
-		//
-		//if _args.ConsoleReadWait == 0 {
-		//	_args.ConsoleReadWait = DefaultConsoleReadWait
-		//}
-		//
-		//if _args.SshUsername == "" {
-		//	_args.SshUsername = ssh.DefaultUsername
-		//}
-		//
-		//if _args.SshPassword == "" {
-		//	_args.SshPassword = ssh.DefaultPassword
-		//}
-		//
-		//if _args.SshPublicKey == "" {
-		//	_args.SshPublicKey = ssh.DefaultKeyFile
-		//}
-		//
-		//if _args.VmBaseDir == "" {
-		//	_args.VmBaseDir = string(OsBridge.GetUserConfigDir() + "/box/vm")
-		//}
-		//
-		//if _args.VmIsoDir == "" {
-		//	_args.VmIsoDir = string(OsBridge.GetUserConfigDir() + "/box/iso")
-		//}
-		//
-		//_args.VmIsoDlIndex = 100
 
 		if c.Name == "" {
 			err = me.EntityName.ProduceError("VM doesn't have a name")
@@ -140,6 +64,24 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 			c.SshPort = "2222"
 		}
 
+		if c.IconFile == nil {
+			err = me.OsPaths.UserConfigDir.AddFileToPath(IconLogoPng).FileExists()
+			if err != nil {
+				err = nil
+				// Not really an error.
+			} else {
+				c.IconFile = me.OsPaths.UserConfigDir.AddFileToPath(IconLogoPng)
+			}
+		}
+
+		if c.VmDir == nil {
+			c.VmDir = me.OsPaths.UserConfigDir.AddToPath("vm")
+		}
+		_, err = c.VmDir.CreateIfNotExists()
+		if err != nil {
+			break
+		}
+
 		err = me.Releases.UpdateReleases()
 		if err != nil {
 			break
@@ -171,7 +113,7 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 		sc.ApiState.SetNewAction(states.ActionStop)
 		sc.IsManaged = true
 		sc.osRelease = rel
-		sc.baseDir = me.OsPaths.UserConfigDir.AddToPath("vm")
+		//sc.baseDir = me.OsPaths.UserConfigDir.AddToPath("vm")
 		sc.Entry = &ServiceConfig{
 			Name:             sc.EntityName,
 			Version:          string(rel.Version),
@@ -180,11 +122,14 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 			ConsoleReadWait:  c.ConsoleReadWait,
 			ConsoleOkString:  c.ConsoleOkString,
 			ConsoleWaitDelay: c.ConsoleWaitDelay,
-			consoleMutex:     sync.RWMutex{},
 			SshHost:          c.SshHost,
 			SshPort:          c.SshPort,
-			retryMax:         DefaultRetries,
-			retryDelay:       DefaultVmWaitTime,
+			IconFile:         c.IconFile,
+			VmDir:            c.VmDir,
+
+			consoleMutex: sync.RWMutex{},
+			retryMax:     DefaultRetries,
+			retryDelay:   DefaultVmWaitTime,
 		}
 		sc.osPaths = me.OsPaths
 		sc.channels = me.Channels
@@ -192,6 +137,11 @@ func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 
 		var state states.State
 		state, err = sc.vbCreate()
+		if err != nil {
+			fmt.Printf("Gearbox: Error creating VM %s with '%v'\n", sc.EntityName, err)
+			break
+		}
+
 		switch state {
 		case states.StateError:
 			eblog.Debug(me.EntityId, "%v", err)
@@ -256,6 +206,7 @@ func (me *Vm) Start() error {
 
 		ok, err = me.vbStart(true)
 		if !ok {
+			fmt.Printf("Gearbox: failed to start VM\n")
 			break
 		}
 
@@ -273,6 +224,7 @@ func (me *Vm) Start() error {
 		me.channels.PublishState(me.ApiState)
 
 		eblog.Debug(me.EntityId, "started VM OK")
+		fmt.Printf("Gearbox: started VM OK\n")
 	}
 
 	eblog.LogIfNil(me, err)

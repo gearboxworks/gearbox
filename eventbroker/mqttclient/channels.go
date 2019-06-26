@@ -7,10 +7,9 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
-	"gearbox/eventbroker/only"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gearboxworks/go-status/only"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed from a channel
@@ -41,7 +40,6 @@ func stopHandler(event *messages.Message, i channels.Argument, r channels.Return
 	return &err
 }
 
-
 // Non-exposed channel function that responds to an "start" channel request.
 func startHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -67,7 +65,6 @@ func startHandler(event *messages.Message, i channels.Argument, r channels.Retur
 
 	return &err
 }
-
 
 // Non-exposed channel function that responds to a "status" channel request.
 func statusHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
@@ -102,7 +99,6 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 	return ret
 }
 
-
 // Non-exposed channel function that responds to a "register" channel request.
 func subscribeTopic(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -135,7 +131,6 @@ func subscribeTopic(event *messages.Message, i channels.Argument, r channels.Ret
 	return ret
 }
 
-
 // Non-exposed channel function that responds to an "unsubscribe" channel request.
 func unsubscribeTopic(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -165,7 +160,6 @@ func unsubscribeTopic(event *messages.Message, i channels.Argument, r channels.R
 	return &err
 }
 
-
 // Non-exposed channel function that responds to a "get" channel request.
 func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -180,10 +174,10 @@ func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnT
 		}
 
 		switch event.Text.String() {
-			case "topics":
-				ret = me.channelHandler.GetTopics()
-			case "topics/subs":
-				ret = me.channelHandler.GetTopics()
+		case "topics":
+			ret = me.channelHandler.GetTopics()
+		case "topics/subs":
+			ret = me.channelHandler.GetTopics()
 		}
 
 		fmt.Printf("topics: %v\n", ret)
@@ -197,16 +191,11 @@ func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnT
 	return &ret
 }
 
-
-
-
 func foo2(client mqtt.Client, msg mqtt.Message) {
 	fmt.Printf("* [%s] %s\n", msg.Topic(), string(msg.Payload()))
 }
-
 
 func defaultCallback(client mqtt.Client, msg mqtt.Message) {
 
 	fmt.Printf("* [%s] %s\n", msg.Topic(), string(msg.Payload()))
 }
-

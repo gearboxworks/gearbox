@@ -3,11 +3,10 @@ package network
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/grandcat/zeroconf"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
@@ -46,7 +45,7 @@ func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 		}
 		sc.EntityParent = &me.EntityId
 		sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
-		sc.State.SetNewAction(states.ActionStart)		// Was states.ActionRegister
+		sc.State.SetNewAction(states.ActionStart) // Was states.ActionRegister
 		sc.IsManaged = true
 		sc.channels = me.Channels
 		sc.channels.PublishState(sc.State)
@@ -89,7 +88,7 @@ func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 			break
 		}
 
-		sc.State.SetNewState(states.StateStarted, err)		// Was states.StateRegistered
+		sc.State.SetNewState(states.StateStarted, err) // Was states.StateRegistered
 		sc.channels.PublishState(sc.State)
 		eblog.Debug(me.EntityId, "registered service %s OK", sc.EntityId.String())
 	}
@@ -152,4 +151,3 @@ func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s ServiceC
 
 	return sc, err
 }
-

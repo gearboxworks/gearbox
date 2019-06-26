@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/fhmq/hmq/lib/topics"
+	"github.com/gearboxworks/go-status/only"
 	"net/url"
 )
-
 
 func (me *MqttClient) IsConnected() (bool, error) {
 
@@ -32,7 +31,6 @@ func (me *MqttClient) IsConnected() (bool, error) {
 
 	return ok, err
 }
-
 
 func (me *MqttClient) ConnectToServer(u string) error {
 
@@ -122,7 +120,6 @@ func (me *MqttClient) ConnectToServer(u string) error {
 	return err
 }
 
-
 func (me *MqttClient) GlobSubscribe(client messages.MessageAddress) error {
 
 	var err error
@@ -152,7 +149,6 @@ func (me *MqttClient) GlobSubscribe(client messages.MessageAddress) error {
 	return err
 }
 
-
 func MessageHandler(client mqtt.Client, message mqtt.Message) {
 
 	fmt.Printf("MessageHandler =>\n")
@@ -161,4 +157,3 @@ func MessageHandler(client mqtt.Client, message mqtt.Message) {
 	//fmt.Printf("mqtt.Client => %v\n", client)
 	//fmt.Printf("MessageHandler => %v\n", message)
 }
-

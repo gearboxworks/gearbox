@@ -4,27 +4,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/google/uuid"
 	"time"
 )
 
-
 type Message struct {
-	Time MessageTime
-	Source  MessageAddress
-	Topic MessageTopic
-	Text MessageText
+	Time   MessageTime
+	Source MessageAddress
+	Topic  MessageTopic
+	Text   MessageText
 
 	//PayLoad
 }
 
-
 type PayLoad struct {
 	Topic MessageTopic
-	Text MessageText
+	Text  MessageText
 }
-
 
 const (
 	Package                = "messages"
@@ -33,12 +30,10 @@ const (
 	InterfaceTypeSubTopics = "*" + Package + ".SubTopics"
 )
 
-
 func (me MessageText) ToMessageAddress() MessageAddress {
 
 	return MessageAddress(me.String())
 }
-
 
 func (me *Message) String() string {
 
@@ -50,7 +45,6 @@ func (me *Message) String() string {
 	)
 }
 
-
 func (me MessageAddress) ConstructMessage(to MessageAddress, subtopic SubTopic, text MessageText) Message {
 
 	//var err error
@@ -59,7 +53,7 @@ func (me MessageAddress) ConstructMessage(to MessageAddress, subtopic SubTopic, 
 	msgTemplate = Message{
 		Source: me,
 		Topic: MessageTopic{
-			Address: to,
+			Address:  to,
 			SubTopic: subtopic,
 		},
 		Text: text,
@@ -67,7 +61,6 @@ func (me MessageAddress) ConstructMessage(to MessageAddress, subtopic SubTopic, 
 
 	return msgTemplate
 }
-
 
 func (me MessageAddress) ConstructTopic(to MessageAddress, subtopic SubTopic) MessageTopic {
 
@@ -82,28 +75,26 @@ func (me MessageAddress) ConstructTopic(to MessageAddress, subtopic SubTopic) Me
 	return topicTemplate
 }
 
-
 func (me *MessageAddress) ProduceError(msg string, a ...interface{}) error {
 
 	if me == nil {
 		return errors.New(fmt.Sprintf(msg, a...))
 	} else {
-		return errors.New(fmt.Sprintf(me.String() + ": " + msg, a...))
+		return errors.New(fmt.Sprintf(me.String()+": "+msg, a...))
 	}
 }
-
 
 func ProduceError(me MessageAddress, msg string, a ...interface{}) error {
 
 	if me == "" {
 		return errors.New(fmt.Sprintf(msg, a...))
 	} else {
-		return errors.New(fmt.Sprintf(me.String() + ": " + msg, a...))
+		return errors.New(fmt.Sprintf(me.String()+": "+msg, a...))
 	}
 }
 
-
 type MessageTime time.Time
+
 func (me *MessageTime) IsNil() bool {
 
 	if *me == MessageTime(DefaultNilTime) {
@@ -125,8 +116,8 @@ func (me *MessageTime) Unix() int64 {
 	return time.Time(*me).Unix()
 }
 
-
 type Uuid uuid.UUID
+
 func (me *Uuid) IsNil() bool {
 
 	if me == nil {
@@ -152,8 +143,8 @@ func (me *Uuid) EnsureNotNil() error {
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("message address uuid is nil")
+	case me == nil:
+		err = errors.New("message address uuid is nil")
 	}
 
 	return err
@@ -163,16 +154,16 @@ func EnsureUuidNotNil(me *Uuid) error {
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("message address uuid is nil")
+	case me == nil:
+		err = errors.New("message address uuid is nil")
 	}
 
 	return err
 }
 
-
 type MessageAddress string
 type MessageAddresses []MessageAddress
+
 func GenerateAddress() *MessageAddress {
 
 	u := MessageAddress(uuid.New().String())
@@ -192,28 +183,28 @@ func (me *MessageAddress) EnsureNotNil() error {
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("message address is nil")
+	case me == nil:
+		err = errors.New("message address is nil")
 
-		case *me == "":
-			err = errors.New("message address is empty")
+	case *me == "":
+		err = errors.New("message address is empty")
 	}
 
 	return err
 }
 
-
 type MessageText string
+
 func (me *MessageText) EnsureNotNil() error {
 
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("message text is nil")
+	case me == nil:
+		err = errors.New("message text is nil")
 
-		case *me == "":
-			err = errors.New("message text is empty")
+	case *me == "":
+		err = errors.New("message text is empty")
 	}
 
 	return err
@@ -293,4 +284,3 @@ func (me *MessageText) ToMessage() (*Message, error) {
 
 	return &ret, err
 }
-

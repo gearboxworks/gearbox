@@ -3,15 +3,13 @@ package mqttClient
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
+	"github.com/gearboxworks/go-status/only"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a task.
-
 
 // Non-exposed task function - M-DNS initialization.
 func initMqttClient(task *tasks.Task, i ...interface{}) error {
@@ -75,7 +73,6 @@ func initMqttClient(task *tasks.Task, i ...interface{}) error {
 	return err
 }
 
-
 // Non-exposed task function - M-DNS start.
 func startMqttClient(task *tasks.Task, i ...interface{}) error {
 
@@ -107,7 +104,6 @@ func startMqttClient(task *tasks.Task, i ...interface{}) error {
 	return err
 }
 
-
 // Non-exposed task function - M-DNS monitoring.
 func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
 
@@ -121,13 +117,11 @@ func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-
 		// First monitor my current state.
 		if me.State.GetCurrent() != states.StateStarted {
 			err = me.EntityId.ProduceError("task needs restarting")
 			break
 		}
-
 
 		// Next do something else.
 		for range only.Once {
@@ -173,7 +167,6 @@ func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
 	return err
 }
 
-
 // Non-exposed task function - M-DNS stop.
 func stopMqttClient(task *tasks.Task, i ...interface{}) error {
 
@@ -206,4 +199,3 @@ func stopMqttClient(task *tasks.Task, i ...interface{}) error {
 
 	return err
 }
-

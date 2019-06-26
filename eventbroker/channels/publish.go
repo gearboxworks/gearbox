@@ -4,11 +4,10 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 	"time"
 )
-
 
 func (me *Channels) Publish(msg messages.Message) error {
 
@@ -64,7 +63,6 @@ func (me *Channels) Publish(msg messages.Message) error {
 	return err
 }
 
-
 func (me *Channels) GetCallbackReturn(msg messages.Message, waitForExecute int) (Return, error) {
 
 	var ret Return
@@ -111,8 +109,7 @@ func (me *Channels) GetCallbackReturn(msg messages.Message, waitForExecute int) 
 	return ret, err
 }
 
-
-func (me *Channels) SetCallbackReturnToNil(msg messages.Message) (error) {
+func (me *Channels) SetCallbackReturnToNil(msg messages.Message) error {
 
 	var err error
 
@@ -141,7 +138,6 @@ func (me *Channels) SetCallbackReturnToNil(msg messages.Message) (error) {
 
 	return err
 }
-
 
 func (me *Channels) PublishAndWaitForReturn(msg messages.Message, waitForExecute int) (Return, error) {
 
@@ -173,39 +169,37 @@ func (me *Channels) PublishAndWaitForReturn(msg messages.Message, waitForExecute
 	return ret, err
 }
 
-
 // Send channel message on state changes only.
 //func PublishState(me *Channels, caller *messages.MessageAddress, state *states.Status) {
 func PublishState(me *Channels, state *states.Status) {
 
 	switch {
-		case me == nil:
-			//fmt.Printf("me == nil: %s\n", state.String())
-		case state == nil:
-			//fmt.Printf("state == nil: %s\n", state.String())
-		case state.EnsureNotNil() != nil:
-			//fmt.Printf("state.EnsureNotNil() != nil: %s\n", state.String())
-		case !state.HasChangedState():
-			//fmt.Printf("!state.HasChangedState(): %s\n", state.String())
+	case me == nil:
+		//fmt.Printf("me == nil: %s\n", state.String())
+	case state == nil:
+		//fmt.Printf("state == nil: %s\n", state.String())
+	case state.EnsureNotNil() != nil:
+		//fmt.Printf("state.EnsureNotNil() != nil: %s\n", state.String())
+	case !state.HasChangedState():
+		//fmt.Printf("!state.HasChangedState(): %s\n", state.String())
 
-		case state.GetError() != nil:
-			//msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionError, messages.MessageText(state.GetError().Error()))
-			msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionError, state.ToMessageText())
-			//fmt.Printf("ERROR: %s\n", msg.String())
-			_ = me.Publish(msg)
+	case state.GetError() != nil:
+		//msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionError, messages.MessageText(state.GetError().Error()))
+		msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionError, state.ToMessageText())
+		//fmt.Printf("ERROR: %s\n", msg.String())
+		_ = me.Publish(msg)
 
-		case state.ExpectingNewState():
-			fallthrough
-		case state.HasChangedState():
-			//msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, messages.MessageText(state.GetCurrent()))
-			msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, state.ToMessageText())
-			//fmt.Printf("EXPECTING: %s\n", msg.String())
-			_ = me.Publish(msg)
+	case state.ExpectingNewState():
+		fallthrough
+	case state.HasChangedState():
+		//msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, messages.MessageText(state.GetCurrent()))
+		msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, state.ToMessageText())
+		//fmt.Printf("EXPECTING: %s\n", msg.String())
+		_ = me.Publish(msg)
 	}
 
 	return
 }
-
 
 func (me *Channels) PublishState(state *states.Status) {
 
@@ -214,14 +208,13 @@ func (me *Channels) PublishState(state *states.Status) {
 	return
 }
 
-
 func (me *Channels) PublishSpecificState(caller *messages.MessageAddress, state states.State) {
 
 	switch {
-		case me == nil:
-		case state == "":
-		case caller == nil:
-			return
+	case me == nil:
+	case state == "":
+	case caller == nil:
+		return
 	}
 
 	msg := caller.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, messages.MessageText(state))
@@ -229,4 +222,3 @@ func (me *Channels) PublishSpecificState(caller *messages.MessageAddress, state 
 
 	return
 }
-

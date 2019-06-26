@@ -3,7 +3,7 @@ package channels
 import (
 	"fmt"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 )
 
 // Mutex handling.
@@ -15,13 +15,12 @@ func (me *Channels) GetEntities() messages.MessageAddresses {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for s, _ := range me.subscribers {	// Managed by Mutex
+	for s := range me.subscribers { // Managed by Mutex
 		ret = append(ret, s)
 	}
 
 	return ret
 }
-
 
 func (me *Channels) GetManagedEntities() messages.MessageAddresses {
 
@@ -34,15 +33,14 @@ func (me *Channels) GetManagedEntities() messages.MessageAddresses {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for s, _ := range me.subscribers {	// Managed by Mutex
-		if me.subscribers[s].IsManaged {	// Managed by Mutex
+	for s := range me.subscribers { // Managed by Mutex
+		if me.subscribers[s].IsManaged { // Managed by Mutex
 			ret = append(ret, s)
 		}
 	}
 
 	return ret
 }
-
 
 func (me *Channels) AddEntity(client messages.MessageAddress, sc *Subscriber) error {
 	var err error
@@ -58,7 +56,6 @@ func (me *Channels) AddEntity(client messages.MessageAddress, sc *Subscriber) er
 
 	return err
 }
-
 
 func (me *Channels) DeleteEntity(client messages.MessageAddress) error {
 
@@ -78,7 +75,6 @@ func (me *Channels) DeleteEntity(client messages.MessageAddress) error {
 
 	return err
 }
-
 
 func (me *Subscriber) GetTopic(topic messages.SubTopic) (error, Callback, Argument, Return, ReturnType) {
 
@@ -107,10 +103,10 @@ func (me *Subscriber) GetTopic(topic messages.SubTopic) (error, Callback, Argume
 			break
 		}
 
-		cb = me.topics[topic].Callback			// Managed by Mutex
-		args = me.topics[topic].Argument		// Managed by Mutex
-		ret = me.topics[topic].Return			// Managed by Mutex
-		retType = me.topics[topic].ReturnType	// Managed by Mutex
+		cb = me.topics[topic].Callback        // Managed by Mutex
+		args = me.topics[topic].Argument      // Managed by Mutex
+		ret = me.topics[topic].Return         // Managed by Mutex
+		retType = me.topics[topic].ReturnType // Managed by Mutex
 	}
 
 	return err, cb, args, ret, retType
@@ -127,13 +123,12 @@ func (me *Subscriber) GetTopics() messages.SubTopics {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for t, _ := range me.topics {
+	for t := range me.topics {
 		ret = append(ret, t)
 	}
 
 	return ret
 }
-
 
 func (me *Channels) GetListeners(topic messages.MessageTopic) ([]string, error) {
 
@@ -157,7 +152,6 @@ func (me *Channels) GetListeners(topic messages.MessageTopic) ([]string, error) 
 	return ret, err
 }
 
-
 func (me *Channels) GetListenerTopics() (messages.Topics, error) {
 
 	var topics messages.Topics
@@ -177,7 +171,6 @@ func (me *Channels) GetListenerTopics() (messages.Topics, error) {
 	return topics, err
 }
 
-
 func (me *Subscriber) GetExecuted(sub messages.SubTopic) bool {
 
 	if me == nil {
@@ -187,7 +180,7 @@ func (me *Subscriber) GetExecuted(sub messages.SubTopic) bool {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	return me.topics[sub].Executed	// Managed by Mutex
+	return me.topics[sub].Executed // Managed by Mutex
 }
 
 func (me *Subscriber) SetExecuted(sub messages.SubTopic, v bool) {
@@ -199,11 +192,10 @@ func (me *Subscriber) SetExecuted(sub messages.SubTopic, v bool) {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
-	me.topics[sub].Executed = v		// Managed by Mutex
+	me.topics[sub].Executed = v // Managed by Mutex
 
 	return
 }
-
 
 func (me *Subscriber) AddTopic(topic messages.SubTopic, callback Callback, argInterface Argument, retType ReturnType) {
 	me.mutex.Lock()
@@ -222,7 +214,6 @@ func (me *Subscriber) AddTopic(topic messages.SubTopic, callback Callback, argIn
 
 	return
 }
-
 
 func (me *Subscriber) DeleteTopic(client messages.SubTopic) error {
 
@@ -244,11 +235,10 @@ func (me *Subscriber) DeleteTopic(client messages.SubTopic) error {
 	return err
 }
 
-
 func (me *Subscriber) GetReturns(sub messages.SubTopic) Return {
 
 	me.mutex.RLock()
-	r := me.topics[sub].Return	// Managed by Mutex
+	r := me.topics[sub].Return // Managed by Mutex
 	me.mutex.RUnlock()
 
 	return r
@@ -258,11 +248,10 @@ func (me *Subscriber) SetReturns(sub messages.SubTopic, v Return) {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
-	me.topics[sub].Return = v	// Managed by Mutex
+	me.topics[sub].Return = v // Managed by Mutex
 
 	return
 }
-
 
 //func (me *Subscriber) GetEntityId(client messages.MessageAddress) messages.MessageAddress {
 //
@@ -299,4 +288,3 @@ func (me *Subscriber) SetReturns(sub messages.SubTopic, v Return) {
 //
 //	return
 //}
-

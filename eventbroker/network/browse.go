@@ -4,11 +4,10 @@ import (
 	"context"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/grandcat/zeroconf"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
@@ -40,11 +39,11 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 				//fmt.Printf("Found: %v\n", *entry)
 				n := messages.MessageAddress(entry.ServiceName())
 				found[*u] = &Service{
-						EntityId: *u,
-						EntityName: n,
-						EntityParent: &me.EntityId,
-						Entry: Entry(*entry),
-						State: states.New(u, &n, me.EntityId),
+					EntityId:     *u,
+					EntityName:   n,
+					EntityParent: &me.EntityId,
+					Entry:        Entry(*entry),
+					State:        states.New(u, &n, me.EntityId),
 				}
 			}
 			// fmt.Println("No more entries.")
@@ -154,20 +153,20 @@ func (me *Service) compareService(e ServiceConfig) (bool, error) {
 		}
 
 		switch {
-			// Search for exact service definition.
-			case (me.Entry.Instance == e.Name.String()) &&
-				(me.Entry.Service == e.Type.String()) &&
-				(me.Entry.Domain == e.Domain.String()) &&
-				(me.Entry.Port == e.Port.ToInt()):
-				found = true
-				break
+		// Search for exact service definition.
+		case (me.Entry.Instance == e.Name.String()) &&
+			(me.Entry.Service == e.Type.String()) &&
+			(me.Entry.Domain == e.Domain.String()) &&
+			(me.Entry.Port == e.Port.ToInt()):
+			found = true
+			break
 
-			// Search just by name without port.
-			case (me.Entry.Instance == e.Name.String()) &&
-				(me.Entry.Service == e.Type.String()) &&
-				(me.Entry.Domain == e.Domain.String()):
-				found = true
-				break
+		// Search just by name without port.
+		case (me.Entry.Instance == e.Name.String()) &&
+			(me.Entry.Service == e.Type.String()) &&
+			(me.Entry.Domain == e.Domain.String()):
+			found = true
+			break
 		}
 
 		eblog.Debug(me.EntityId, "matched service %s to %s", me.EntityId.String(), e.EntityId.String())
@@ -190,7 +189,7 @@ func (me *ZeroConf) updateRegisteredServices() error {
 			break
 		}
 
-		for u, _ := range me.services {
+		for u := range me.services {
 			if _, ok = me.services[u]; !ok {
 				// Shouldn't ever see this, but hey, might as well be anal about it.
 				eblog.Debug(me.EntityId, "deleting entry %s", u.String())
@@ -229,4 +228,3 @@ func (me *ZeroConf) updateRegisteredServices() error {
 
 	return err
 }
-

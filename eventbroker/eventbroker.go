@@ -2,7 +2,6 @@ package eventbroker
 
 import (
 	"fmt"
-	"gearbox/global"
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/daemon"
 	"gearbox/eventbroker/eblog"
@@ -10,12 +9,12 @@ import (
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/mqttClient"
 	"gearbox/eventbroker/network"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/ospaths"
 	"gearbox/eventbroker/states"
+	"gearbox/global"
+	"github.com/gearboxworks/go-status/only"
 	"time"
 )
-
 
 func New(args ...Args) (*EventBroker, error) {
 
@@ -48,23 +47,19 @@ func New(args ...Args) (*EventBroker, error) {
 			break
 		}
 
-
 		//_args.Services.States = make(States)
 		//_args.Services.Callbacks = make(Callbacks)
 		//_args.Services.CallbackLocks = make(CallbackLocks)
 		//_args.Services.Logs = make(Logs, 0)
 		_args.Services = make(Services)
 
-
 		*me = EventBroker(_args)
 
-
 		// 0. Logger - enable logging.
-		me.Logger, err = eblog.NewLogger(me.OsPaths, )
+		me.Logger, err = eblog.NewLogger(me.OsPaths)
 		if err != nil {
 			break
 		}
-
 
 		// 1. Channel - provides inter-thread communications.
 		err = me.Channels.New(channels.Args{Boxname: me.Boxname, OsPaths: me.OsPaths})
@@ -76,13 +71,11 @@ func New(args ...Args) (*EventBroker, error) {
 			break
 		}
 
-
 		// 2. ZeroConf - provides discovery and management of network services.
 		err = me.ZeroConf.New(network.Args{Boxname: me.Boxname, Channels: &me.Channels, OsPaths: me.OsPaths})
 		if err != nil {
 			break
 		}
-
 
 		// 3. Daemon - provides control over arbitrary services.
 		err = me.Daemon.New(daemon.Args{Boxname: me.Boxname, Channels: &me.Channels, OsPaths: me.OsPaths})
@@ -90,16 +83,13 @@ func New(args ...Args) (*EventBroker, error) {
 			break
 		}
 
-
 		// 4. MQTT broker - provides inter-process communications.
-
 
 		// 5. MQTT client - provides inter-process communications.
 		err = me.MqttClient.New(mqttClient.Args{Boxname: me.Boxname, Channels: &me.Channels, OsPaths: me.OsPaths})
 		if err != nil {
 			break
 		}
-
 
 		me.State.SetWant(states.StateIdle)
 		if me.State.SetNewState(states.StateIdle, err) {
@@ -114,7 +104,6 @@ func New(args ...Args) (*EventBroker, error) {
 	return me, err
 }
 
-
 func (me *EventBroker) Start() error {
 
 	var err error
@@ -125,7 +114,6 @@ func (me *EventBroker) Start() error {
 			break
 		}
 
-
 		me.State.SetNewAction(states.ActionStart)
 		me.Channels.PublishState(me.State)
 
@@ -133,13 +121,11 @@ func (me *EventBroker) Start() error {
 		// Start the inter-thread service.
 		// Note: These will be started dynamically as clients are registered.
 
-
 		// 2. ZeroConf - start discovery and management of network services.
 		err = me.ZeroConf.StartHandler()
 		if err != nil {
 			break
 		}
-
 
 		// 3. Daemon - starts the daemon handler.
 		err = me.Daemon.StartHandler()
@@ -147,17 +133,14 @@ func (me *EventBroker) Start() error {
 			break
 		}
 
-
 		// 4. MQTT broker - start the inter-process communications.
 		// This will be started via the daemons process.
-
 
 		// 5. MQTT client - start the inter-process communications.
 		err = me.MqttClient.StartHandler()
 		if err != nil {
 			break
 		}
-
 
 		me.State.SetNewState(states.StateStarted, err)
 		me.Channels.PublishState(me.State)
@@ -170,7 +153,6 @@ func (me *EventBroker) Start() error {
 
 	return err
 }
-
 
 func (me *EventBroker) Stop() error {
 
@@ -213,13 +195,11 @@ func (me *EventBroker) Stop() error {
 	return err
 }
 
-
 func (me *EventBroker) Restart() error {
 	fmt.Printf("(me *EventBroker) RestartService() error\n")
 
 	return nil
 }
-
 
 func (me *EventBroker) Status() error {
 	fmt.Printf("(me *EventBroker) ServiceStatus() error\n")
@@ -227,13 +207,11 @@ func (me *EventBroker) Status() error {
 	return nil
 }
 
-
 func (me *EventBroker) Create() error {
 	fmt.Printf("(me *EventBroker) CreateService() error\n")
 
 	return nil
 }
-
 
 //func (me *EventBroker) SimpleLoop() {
 //
@@ -338,7 +316,6 @@ func (me *EventBroker) Create() error {
 //	return err
 //}
 
-
 func (me *EventBroker) StatusOf(client messages.MessageAddress) (states.Status, error) {
 
 	var ret states.Status
@@ -347,7 +324,7 @@ func (me *EventBroker) StatusOf(client messages.MessageAddress) (states.Status, 
 	msg := messages.Message{
 		Source: me.EntityId,
 		Topic: messages.MessageTopic{
-			Address: client,
+			Address:  client,
 			SubTopic: "status",
 		},
 		Text: "",
@@ -356,7 +333,7 @@ func (me *EventBroker) StatusOf(client messages.MessageAddress) (states.Status, 
 	wrapper := messages.Message{
 		Source: me.EntityId,
 		Topic: messages.MessageTopic{
-			Address: entity.BroadcastEntityName,
+			Address:  entity.BroadcastEntityName,
 			SubTopic: "get",
 		},
 		Text: msg.ToMessageText(),
@@ -379,8 +356,8 @@ func (me *EventBroker) StatusOf(client messages.MessageAddress) (states.Status, 
 	return ret, err
 }
 
-
 type SimpleState map[messages.MessageAddress]states.State
+
 func (me *EventBroker) GetSimpleStatus() (SimpleState, error) {
 
 	ret := make(SimpleState)
@@ -402,7 +379,6 @@ func (me *EventBroker) GetSimpleStatus() (SimpleState, error) {
 	return ret, err
 }
 
-
 func (me SimpleState) String() string {
 
 	var ret string
@@ -415,7 +391,6 @@ func (me SimpleState) String() string {
 
 	return ret
 }
-
 
 //func (me *EventBroker) TempLoop() error {
 //
@@ -632,7 +607,6 @@ func (me SimpleState) String() string {
 //	}
 //}
 
-
 //
 //
 //// Non-exposed channel function that responds to a "register" channel request.
@@ -699,4 +673,3 @@ func (me SimpleState) String() string {
 //
 //	return err
 //}
-

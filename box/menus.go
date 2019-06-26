@@ -8,7 +8,7 @@ import (
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
-	"github.com/getlantern/systray"
+	"github.com/gearboxworks/go-systray"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -121,12 +121,12 @@ func (me *Box) CreateMenus() {
 	systray.AddSeparator()
 
 	pid := os.Getpid()
-	me.menu["restart"] = &Menu{
-		MenuItem:      systray.AddMenuItem("Restart Box", fmt.Sprintf("Restart this app [pid:%v]", pid)),
-		PrefixToolTip: "",
-		PrefixMenu:    "",
-		CurrentIcon:   "",
-	}
+	//me.menu["restart"] = &Menu{
+	//	MenuItem: systray.AddMenuItem("Restart Box", fmt.Sprintf("Restart this app [pid:%v]", pid)),
+	//	PrefixToolTip: "",
+	//	PrefixMenu: "",
+	//	CurrentIcon: "",
+	//}
 
 	me.menu["quit"] = &Menu{
 		MenuItem:      systray.AddMenuItem("Quit", fmt.Sprintf("Terminate this app [pid:%v]", pid)),
@@ -314,7 +314,7 @@ func (me *Box) onReady() {
 		for {
 			select {
 			case <-me.menu["help"].MenuItem.ClickedCh:
-				fmt.Printf("Menu: Help\n")
+				fmt.Printf("Menu: Help.\n")
 				me.openAbout()
 
 			case <-me.menu["version"].MenuItem.ClickedCh:
@@ -328,17 +328,17 @@ func (me *Box) onReady() {
 				// Ignore.
 
 			case <-me.menu[menuVmStart].MenuItem.ClickedCh:
-				fmt.Printf("Menu: Start\n")
+				fmt.Printf("Menu: Start VM.\n")
 				msg := vmbox.ConstructVmMessage(entity.VmBoxEntityName, entity.VmEntityName, states.ActionStart)
 				_ = me.EventBroker.Channels.Publish(msg)
 
 			case <-me.menu[menuVmStop].MenuItem.ClickedCh:
-				fmt.Printf("Menu: Stop\n")
+				fmt.Printf("Menu: Stop VM.\n")
 				msg := vmbox.ConstructVmMessage(entity.VmBoxEntityName, entity.VmEntityName, states.ActionStop)
 				_ = me.EventBroker.Channels.Publish(msg)
 
 			case <-me.menu[menuVmAdmin].MenuItem.ClickedCh:
-				fmt.Printf("Menu: Admin\n")
+				fmt.Printf("Menu: Admin console.\n")
 				me.openAdmin()
 
 			case <-me.menu[menuVmSsh].MenuItem.ClickedCh:
@@ -346,24 +346,25 @@ func (me *Box) onReady() {
 				me.openTerminal()
 
 			case <-me.menu[menuVmCreate].MenuItem.ClickedCh:
-				fmt.Printf("Menu: Create\n")
+				fmt.Printf("Menu: Create VM.\n")
 				msg := vmbox.ConstructVmMessage(entity.VmBoxEntityName, entity.VmEntityName, states.ActionRegister)
 				_ = me.EventBroker.Channels.Publish(msg)
 
 			case <-me.menu[menuVmUpdate].MenuItem.ClickedCh:
-				fmt.Printf("Menu: Update\n")
+				fmt.Printf("Menu: Update VM ISO.\n")
 				msg := vmbox.ConstructVmMessage(entity.VmBoxEntityName, entity.VmEntityName, states.ActionUpdate)
 				_ = me.EventBroker.Channels.Publish(msg)
 
-			case <-me.menu["restart"].MenuItem.ClickedCh:
-				fmt.Printf("Menu: Restart\n")
-				if me.confirmDialog("Restart Gearbox", "This will restart Gearbox Box, but keep services running.\nAre you sure?") {
-					fmt.Printf("HEY!")
-					systray.Quit()
-				}
+				//case <- me.menu["restart"].MenuItem.ClickedCh:
+				//	fmt.Printf("Menu: Restart VM.\n")
+				//	if me.confirmDialog("Restart Gearbox", "This will restart Gearbox Box, but keep services running.\nAre you sure?") {
+				//		fmt.Printf("Shutting down!")
+				//		systray.Quit()
+				//	}
 
 			case <-me.menu["quit"].MenuItem.ClickedCh:
-				fmt.Printf("Menu: Quit\n")
+				fmt.Printf("Menu: Quit.\n")
+				fmt.Printf("Gearbox: Shutting down. (May take up to 2 minutes.)\n")
 				if me.confirmDialog("Shutdown Gearbox", "This will shutdown Gearbox and all Gearbox related services.\nAre you sure?") {
 					_ = me.VmBox.Stop()
 					_ = me.EventBroker.Stop()

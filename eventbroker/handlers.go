@@ -7,13 +7,12 @@ import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 	"sort"
 	"sync"
 	"time"
 )
-
 
 func (me *EventBroker) StartChannelHandler() error {
 
@@ -55,7 +54,6 @@ func (me *EventBroker) StartChannelHandler() error {
 	return err
 }
 
-
 func (me *EventBroker) StopChannelHandler() error {
 
 	var err error
@@ -79,7 +77,6 @@ func (me *EventBroker) StopChannelHandler() error {
 
 	return err
 }
-
 
 // Non-exposed channel function that responds to a "get" channel request.
 // This expects the message text to contain an embedded status request message.
@@ -108,23 +105,23 @@ func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnT
 		}
 
 		switch msg.Topic.SubTopic {
-			case states.ActionStatus:
-				//fmt.Printf("%d: Republish status request message: %s\n", time.Now().Unix(), msg.String())
-				var ir channels.Return
-				ir, err = me.Channels.PublishAndWaitForReturn(*msg, 200)
-				if err == nil {
-					//fmt.Printf("%d: OK - ir == %v\n", time.Now().Unix(), ir)
-				} else {
-					fmt.Printf("getHandler %d: ER - ir == %v /  err == %v\n", time.Now().Unix(), ir, err)
-					break
-				}
+		case states.ActionStatus:
+			//fmt.Printf("%d: Republish status request message: %s\n", time.Now().Unix(), msg.String())
+			var ir channels.Return
+			ir, err = me.Channels.PublishAndWaitForReturn(*msg, 200)
+			if err == nil {
+				//fmt.Printf("%d: OK - ir == %v\n", time.Now().Unix(), ir)
+			} else {
+				fmt.Printf("getHandler %d: ER - ir == %v /  err == %v\n", time.Now().Unix(), ir, err)
+				break
+			}
 
-				ret, err = states.InterfaceToTypeStatus(ir)
-				if err == nil {
-					//fmt.Printf("%d: OK - ret == %s\n", time.Now().Unix(), ret.String())
-				} else {
-					fmt.Printf("getHandler %d: ER - ret == nil / err == %v\n", time.Now().Unix(), err)
-				}
+			ret, err = states.InterfaceToTypeStatus(ir)
+			if err == nil {
+				//fmt.Printf("%d: OK - ret == %s\n", time.Now().Unix(), ret.String())
+			} else {
+				fmt.Printf("getHandler %d: ER - ret == nil / err == %v\n", time.Now().Unix(), err)
+			}
 		}
 
 		//unreg := me.EntityId.ConstructMessage(event.Text.ToMessageAddress(), states.ActionUnregister, messages.MessageText(u.String()))
@@ -144,7 +141,6 @@ func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnT
 	return ret
 }
 
-
 // Non-exposed channel function that responds to a "status" channel request.
 func statusHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -153,7 +149,6 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 	var state *states.Status
 	var sc *Service
 	var ok bool
-
 
 	for range only.Once {
 		me, err = InterfaceToTypeEventBroker(i)
@@ -177,7 +172,6 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 			fmt.Printf("Error %v - %s\n", err, event.String())
 			break
 		}
-
 
 		// Create callback reference if not already present.
 		sc, ok, err = me.AttachCallback(*state.EntityName, nil, nil)
@@ -214,7 +208,6 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 	return state
 }
 
-
 // Non-exposed channel function that responds to a "stop" channel request.
 func stopHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -250,7 +243,6 @@ func stopHandler(event *messages.Message, i channels.Argument, r channels.Return
 	return ret
 }
 
-
 // Non-exposed channel function that responds to a "start" channel request.
 func startHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
@@ -275,7 +267,6 @@ func startHandler(event *messages.Message, i channels.Argument, r channels.Retur
 
 	return ret
 }
-
 
 func (me Services) Exists(client messages.MessageAddress) (*Service, error) {
 
@@ -307,7 +298,6 @@ func (me Services) Exists(client messages.MessageAddress) (*Service, error) {
 
 	return ret, err
 }
-
 
 func (me Services) LookFor(client messages.MessageAddress) (*Service, error) {
 
@@ -346,7 +336,6 @@ func (me Services) LookFor(client messages.MessageAddress) (*Service, error) {
 	return ret, err
 }
 
-
 func (me *EventBroker) AttachCallback(client messages.MessageAddress, cb Callback, args interface{}) (*Service, bool, error) {
 
 	var err error
@@ -379,11 +368,11 @@ func (me *EventBroker) AttachCallback(client messages.MessageAddress, cb Callbac
 		}
 
 		ret = &Service{
-			State: states.New(&client, &client, entity.BroadcastEntityName),
+			State:    states.New(&client, &client, entity.BroadcastEntityName),
 			Callback: cb,
-			Args: args,
-			Logs: make(Logs, 0),
-			mutex: sync.RWMutex{},
+			Args:     args,
+			Logs:     make(Logs, 0),
+			mutex:    sync.RWMutex{},
 		}
 
 		me.Services[client] = ret
@@ -392,7 +381,6 @@ func (me *EventBroker) AttachCallback(client messages.MessageAddress, cb Callbac
 
 	return ret, ok, err
 }
-
 
 func (me Services) PrintStates() error {
 
@@ -420,7 +408,6 @@ func (me Services) PrintStates() error {
 	return err
 }
 
-
 func (me Services) EnsureNotNil() error {
 
 	var err error
@@ -431,8 +418,6 @@ func (me Services) EnsureNotNil() error {
 
 	return err
 }
-
-
 
 func (me *Service) updateState(state states.Status) error {
 
@@ -457,7 +442,6 @@ func (me *Service) updateState(state states.Status) error {
 
 	return err
 }
-
 
 func (me *Service) IsTheSame(state states.Status) bool {
 
@@ -503,7 +487,6 @@ func (me *Service) IsTheSame(state states.Status) bool {
 	return ok
 }
 
-
 func (me *Service) processCallback(state states.Status) error {
 
 	var err error
@@ -519,7 +502,6 @@ func (me *Service) processCallback(state states.Status) error {
 			break
 		}
 
-
 		// Ensure we process in the correct order.
 		me.mutex.Lock()
 		err = me.Callback(me.Args, state)
@@ -528,7 +510,6 @@ func (me *Service) processCallback(state states.Status) error {
 
 	return err
 }
-
 
 func (me *Service) PrintState() string {
 
@@ -549,7 +530,6 @@ func (me *Service) PrintState() string {
 	return ret
 }
 
-
 func (me *Service) EnsureNotNil() error {
 
 	var err error
@@ -561,8 +541,6 @@ func (me *Service) EnsureNotNil() error {
 	return err
 }
 
-
-
 func (me Callback) EnsureNotNil() error {
 
 	var err error
@@ -573,7 +551,6 @@ func (me Callback) EnsureNotNil() error {
 
 	return err
 }
-
 
 //func (me Services) DeleteState(client messages.SubTopic) error {
 //
@@ -594,4 +571,3 @@ func (me Callback) EnsureNotNil() error {
 //
 //	return err
 //}
-

@@ -3,11 +3,10 @@ package network
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
+	"github.com/gearboxworks/go-status/only"
 )
-
 
 func (me *ZeroConf) New(args ...Args) error {
 
@@ -29,7 +28,6 @@ func (me *ZeroConf) New(args ...Args) error {
 			err = me.EntityId.ProduceError("ospaths is nil")
 			break
 		}
-
 
 		if _args.EntityId == "" {
 			_args.EntityId = entity.NetworkEntityName
@@ -56,7 +54,6 @@ func (me *ZeroConf) New(args ...Args) error {
 
 		*me = ZeroConf(_args)
 
-
 		me.State.SetWant(states.StateIdle)
 		me.State.SetNewState(states.StateIdle, err)
 		eblog.Debug(me.EntityId, "init complete")
@@ -68,7 +65,6 @@ func (me *ZeroConf) New(args ...Args) error {
 
 	return err
 }
-
 
 // Start the M-DNS network handler.
 func (me *ZeroConf) StartHandler() error {
@@ -105,7 +101,6 @@ func (me *ZeroConf) StartHandler() error {
 	return err
 }
 
-
 // Stop the M-DNS network handler.
 func (me *ZeroConf) StopHandler() error {
 
@@ -138,7 +133,6 @@ func (me *ZeroConf) StopHandler() error {
 	return err
 }
 
-
 func (me *ZeroConf) StopServices() error {
 
 	var err error
@@ -149,7 +143,7 @@ func (me *ZeroConf) StopServices() error {
 			break
 		}
 
-		for u, _ := range me.services {
+		for u := range me.services {
 			if me.services[u].IsManaged {
 				_ = me.UnregisterByEntityId(u)
 				// Ignore error, will clean up when program exits.
@@ -162,7 +156,6 @@ func (me *ZeroConf) StopServices() error {
 
 	return err
 }
-
 
 // Print all services registered under M-DNS that I manage.
 func (me *ZeroConf) PrintServices() error {
@@ -180,4 +173,3 @@ func (me *ZeroConf) PrintServices() error {
 
 	return err
 }
-

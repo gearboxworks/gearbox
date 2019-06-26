@@ -3,8 +3,8 @@ package eblog
 import (
 	"fmt"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/ospaths"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/rifflock/lfshook"
 	"github.com/sebest/logrusly"
 	"github.com/sirupsen/logrus"
@@ -13,14 +13,13 @@ import (
 	"runtime"
 )
 
-
 // To be used with MyCaller()
 const (
-	callerStack0	= iota
-	callerStack1	= iota
-	CallerCurrent	= iota
-	CallerParent	= iota
-	CallerGrandParent = iota
+	callerStack0           = iota
+	callerStack1           = iota
+	CallerCurrent          = iota
+	CallerParent           = iota
+	CallerGrandParent      = iota
 	CallerGreatGrandParent = iota
 )
 
@@ -40,11 +39,11 @@ func MyCallerExtended(whichCaller int) (fileName string, lineNumber int) {
 	// skip 3 levels to get to the caller of whoever called Caller()
 	n := runtime.Callers(whichCaller, fpcs)
 	if n == 0 {
-		return          // Proper error handling would be better here.
+		return // Proper error handling would be better here.
 	}
 
 	// get the info of the actual function that's in the pointer
-	fun := runtime.FuncForPC(fpcs[0]-1)
+	fun := runtime.FuncForPC(fpcs[0] - 1)
 	if fun == nil {
 		return
 	}
@@ -68,19 +67,16 @@ func MyCaller(whichCaller int) (string, int) {
 	return fn, ln
 }
 
-
 type Caller struct {
-	File string
+	File       string
 	LineNumber int
-	Function string
+	Function   string
 }
 type Callers []Caller
 
-
 // Determine the calling functions that called this function.
 // IE: MyCaller's grand-parent.
-func MyCallers(whichCaller int, howMany int) (*Callers) {
-
+func MyCallers(whichCaller int, howMany int) *Callers {
 
 	if whichCaller == 0 {
 		whichCaller = CallerParent
@@ -120,7 +116,6 @@ func (me *Callers) Print() string {
 	return ret
 }
 
-
 // Check for a nil type.
 func IsNil(i interface{}) bool {
 	defer func() { recover() }()
@@ -132,7 +127,6 @@ func IsNil(i interface{}) bool {
 		return false
 	}
 }
-
 
 // Check for a nil type.
 func IsNotNil(i interface{}) bool {
@@ -146,34 +140,32 @@ func IsNotNil(i interface{}) bool {
 	}
 }
 
-
 // Check for a nil type.
 func LogIfNil(i interface{}, format ...interface{}) bool {
 
 	var ret bool
 
 	switch {
-		case reflect.ValueOf(i).String() == "":
+	case reflect.ValueOf(i).String() == "":
 
-		case i == nil:
-			fallthrough
-		case reflect.ValueOf(i).IsNil():
-			ret = true
+	case i == nil:
+		fallthrough
+	case reflect.ValueOf(i).IsNil():
+		ret = true
 
-			//callers := " NIL:["
-			//// Fetch last two callers.
-			//for _, d := range *MyCallers(CallerParent, howMany) {
-			//	callers += " <- " + d.Function + ":" + strconv.Itoa(d.LineNumber)
-			//}
-			//callers += "] "
+		//callers := " NIL:["
+		//// Fetch last two callers.
+		//for _, d := range *MyCallers(CallerParent, howMany) {
+		//	callers += " <- " + d.Function + ":" + strconv.Itoa(d.LineNumber)
+		//}
+		//callers += "] "
 
-			localLogger.printLog(logrus.ErrorLevel, "nil interface")
-			//status.Success("nil interface" + callers).Log()
-		}
+		localLogger.printLog(logrus.ErrorLevel, "nil interface")
+		//status.Success("nil interface" + callers).Log()
+	}
 
 	return ret
 }
-
 
 func Debug(client messages.MessageAddress, format string, a ...interface{}) {
 
@@ -183,12 +175,12 @@ func Debug(client messages.MessageAddress, format string, a ...interface{}) {
 
 	fn, ln := MyCaller(CallerParent)
 
-	localLogger.printLogOld(logrus.DebugLevel, fn, ln, string(client) + ": " + format, a...)
+	localLogger.printLogOld(logrus.DebugLevel, fn, ln, string(client)+": "+format, a...)
 }
-
 
 const SkipNilCheck = ""
 const howMany = 2
+
 // Check for a nil type or err and log.
 func LogIfError(address messages.MessageAddress, err error, format ...interface{}) bool {
 
@@ -217,7 +209,6 @@ func LogIfError(address messages.MessageAddress, err error, format ...interface{
 
 	return ret
 }
-
 
 var localLogger *Logger
 
@@ -272,8 +263,8 @@ func NewLogger(OsPaths *ospaths.BasePaths, args ...Logger) (*Logger, error) {
 			// fmt.Printf("Logging to files.")
 			pathMap := lfshook.PathMap{
 				logrus.DebugLevel: _args.LogFile.Name,
-				logrus.InfoLevel: _args.LogFile.Name,
-				logrus.WarnLevel: _args.LogFile.Name,
+				logrus.InfoLevel:  _args.LogFile.Name,
+				logrus.WarnLevel:  _args.LogFile.Name,
 				logrus.ErrorLevel: _args.LogFile.Name,
 				logrus.FatalLevel: _args.LogFile.Name,
 				logrus.PanicLevel: _args.LogFile.Name,
@@ -283,7 +274,6 @@ func NewLogger(OsPaths *ospaths.BasePaths, args ...Logger) (*Logger, error) {
 			// _args.logrusInstance.SetOutput(os.Stdout)
 			_args.logrusInstance.SetOutput(ioutil.Discard)
 		}
-
 
 		// Disabled to work on GOOS=windows
 		// Set sane values for Syslog based logging.
@@ -329,7 +319,6 @@ func NewLogger(OsPaths *ospaths.BasePaths, args ...Logger) (*Logger, error) {
 		//	}
 		//}
 
-
 		// Set defaults for Loggly based logging.
 		if _args.Loggly.Enabled == true {
 			if _args.Loggly.Token != "" {
@@ -340,7 +329,6 @@ func NewLogger(OsPaths *ospaths.BasePaths, args ...Logger) (*Logger, error) {
 				fmt.Printf("# Error: Loggly requires a customer token.\n")
 			}
 		}
-
 
 		*se = Logger(_args)
 
@@ -354,12 +342,10 @@ func NewLogger(OsPaths *ospaths.BasePaths, args ...Logger) (*Logger, error) {
 	return se, err
 }
 
-
 func (me *Logger) SetLevel(sl string) {
 	me.currentLevel = me.GetLevel(sl)
 	me.logrusInstance.SetLevel(me.currentLevel)
 }
-
 
 func (me *Logger) GetLevel(getLevel string) (returnLevel logrus.Level) {
 	returnLevel, _ = logrus.ParseLevel(getLevel)
@@ -367,12 +353,9 @@ func (me *Logger) GetLevel(getLevel string) (returnLevel logrus.Level) {
 	return
 }
 
-
-
 /*
 	if eblog.LogIfError(me, err) {
 		// Save last state.
 		me.State.Error = err
 	}
 */
-

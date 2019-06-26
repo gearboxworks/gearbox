@@ -1,17 +1,16 @@
 package vmbox
 
 import (
+	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
+	"github.com/gearboxworks/go-status/only"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a task.
-
 
 // Non-exposed task function - M-DNS initialization.
 func initVmBox(task *tasks.Task, i ...interface{}) error {
@@ -58,22 +57,16 @@ func initVmBox(task *tasks.Task, i ...interface{}) error {
 				break
 			}
 
-
 			// Hard coded for one Vm named "gearbox" for now...
 			sc := ServiceConfig{
-				Name: messages.MessageAddress(me.Boxname),
+				Name:    messages.MessageAddress(me.Boxname),
 				Version: "latest",
 			}
 			myVM, err := me.New(sc)
 			if err == nil {
 				eblog.Debug(me.EntityId, "VM: %v\n", myVM.State.GetStatus())
+				fmt.Printf("Gearbox: Created VM.\n")
 			}
-
-
-			//var state states.Status
-			//state, err = myVM.Status()
-			//fmt.Printf("Status: %s\n", state.String())
-
 
 			me.State.SetNewState(states.StateInitialized, err)
 			me.Channels.PublishState(me.State)
@@ -86,7 +79,6 @@ func initVmBox(task *tasks.Task, i ...interface{}) error {
 
 	return err
 }
-
 
 // Non-exposed task function - M-DNS start.
 func startVmBox(task *tasks.Task, i ...interface{}) error {
@@ -119,7 +111,6 @@ func startVmBox(task *tasks.Task, i ...interface{}) error {
 	return err
 }
 
-
 // Non-exposed task function - M-DNS monitoring.
 func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 
@@ -131,7 +122,6 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 		if err != nil {
 			break
 		}
-
 
 		//// First monitor my current state.
 		//if me.State.GetCurrent() != states.StateStarted {
@@ -170,7 +160,6 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 		////fmt.Printf("EXPECTING: %s\n", msg.String())
 		//_ = me.Channels.Publish(msg)
 
-
 		// Next do something else.
 		for range only.Once {
 
@@ -184,7 +173,18 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 					v.State.SetNewState(state, err)
 					v.channels.PublishState(v.State)
 
-					if state == states.StateStopped {
+					if state == states.StateUnregistered {
+						state, err = v.vbCreate()
+						if err != nil {
+							v.ApiState.SetNewState(state, err)
+							v.channels.PublishState(v.ApiState)
+							continue
+						}
+						fmt.Printf("Gearbox: Created unregistered VM.\n")
+					}
+
+					if (state == states.StateStopped) ||
+						(err != nil) {
 						v.ApiState.SetNewState(state, err)
 						v.channels.PublishState(v.ApiState)
 						continue
@@ -209,7 +209,6 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 
 	return err
 }
-
 
 // Non-exposed task function - M-DNS stop.
 func stopVmBox(task *tasks.Task, i ...interface{}) error {
@@ -243,4 +242,3 @@ func stopVmBox(task *tasks.Task, i ...interface{}) error {
 
 	return err
 }
-
