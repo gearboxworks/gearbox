@@ -730,10 +730,15 @@ func (me *Vm) cmdCreateHoNet() error {
 			break
 		}
 
+		me.Entry.HostOnlyNic.Name, err = me.cmdFindHoNet()
+		if err != nil {
+			break
+		}
 		if me.Entry.HostOnlyNic.Name != "" {
 			eblog.Debug(me.EntityId, "hostonlyif already created")
 			break
 		}
+
 
 		if me.Entry.HostOnlyNic.Ip == "" {
 			me.Entry.HostOnlyNic.Ip = DefaultHoIp
@@ -847,6 +852,58 @@ func (me *Vm) cmdDestroyHoNet() error {
 	eblog.LogIfError(me.EntityId, err)
 
 	return err
+}
+
+
+func (me *Vm) cmdFindHoNet() (string, error) {
+
+	var err error
+	var ret string
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		_, err = me.Run("list", "hostonlyifs", "-ls")
+		if err != nil {
+			break
+		}
+
+		o := me.Entry.cmdStdout
+		e := me.Entry.cmdStderr
+		fmt.Printf("%s\n%s\n", o, e)
+
+		var nic KeyValueMap
+		dr, ok := decodeResponse(me.Entry.cmdStdout, ':')
+		fmt.Printf("%v", dr)
+		if ok == true {
+			me.Entry.vmNics, ok = dr.decodeNics()
+			if ok == false {
+				err = me.EntityName.ProduceError("no NICs found")
+				break
+			}
+
+			for ret, nic = range me.Entry.vmNics {
+				if nic["IPAddress"] == me.Entry.HostOnlyNic.Ip {
+					break
+				}
+			}
+		}
+
+		if nic == nil {
+			err = me.EntityName.ProduceError("no NICs found")
+			break
+		}
+
+		eblog.Debug(me.EntityId, "using NIC '%s' for VM", nic)
+	}
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return ret, err
 }
 
 
@@ -1047,6 +1104,9 @@ func (me *Vm) Run(args ...string) (exitCode string, err error) {
 			vboxManagePath = VBOXMANAGE
 		}
 
+		me.Entry.cmdStdout = bytes.Buffer{}
+		me.Entry.cmdStderr = bytes.Buffer{}
+
 		eblog.Debug(me.EntityId, "EXEC:%v '%v'", vboxManagePath, strings.Join(args, ` `))
 		cmd := exec.Command(vboxManagePath, args...)
 		cmd.Stdout = os.Stdout
@@ -1120,6 +1180,32 @@ func (kvs *KeyValues) decodeBridgeIfs() (KeyValuesMap, bool) {
 
 		} else {
 			currentKv[kv.Key] = kv.Value
+		}
+	}
+
+	return kvm, ok
+}
+
+
+func (kvs *KeyValues) decodeNics() (KeyValuesMap, bool) {
+
+	ok := false
+	kvm := make(KeyValuesMap)
+	currentName := ""
+
+	currentKv := KeyValueMap{}
+	for _, kv := range *kvs {
+		// Output always ends with a 'VBoxNetworkName' key.
+		if kv.Key == "Name" && kv.Value != "" {
+			ok = true
+			currentName = kv.Value
+
+			kvm[currentName] = currentKv
+			currentKv = KeyValueMap{}
+
+		} else {
+			currentKv[kv.Key] = kv.Value
+			kvm[currentName] = currentKv
 		}
 	}
 

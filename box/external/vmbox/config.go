@@ -3,7 +3,7 @@ package vmbox
 import (
 	"encoding/json"
 	"gearbox/eventbroker/eblog"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 	"io/ioutil"
 	"os"
 	"path/filepath"
