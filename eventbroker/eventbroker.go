@@ -2,7 +2,6 @@ package eventbroker
 
 import (
 	"fmt"
-	"gearbox/global"
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/daemon"
 	"gearbox/eventbroker/eblog"
@@ -10,9 +9,10 @@ import (
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/mqttClient"
 	"gearbox/eventbroker/network"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/ospaths"
 	"gearbox/eventbroker/states"
+	"gearbox/global"
+	"github.com/gearboxworks/go-status/only"
 	"time"
 )
 

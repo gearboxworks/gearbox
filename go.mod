@@ -23,15 +23,12 @@ require (
 	github.com/gearboxworks/go-jsoncache v1.0.0
 	github.com/gearboxworks/go-osbridge v0.0.0-20190605062119-0e1c68c1c70f
 	github.com/gearboxworks/go-status v0.0.0-20190528175348-42860fb9e78f
+	github.com/gearboxworks/go-systray v0.0.0-20190626020534-3518af45bf7c
+	github.com/gearboxworks/systray v0.0.0-20190626013144-62522b18bfbe
 	github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813
 	github.com/gernest/wow v0.1.0
-	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
 	github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7
-	github.com/getlantern/golog v0.0.0-20170508214112-cca714f7feb5 // indirect
-	github.com/getlantern/hex v0.0.0-20190417191902-c6586a6fe0b7 // indirect
-	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55 // indirect
-	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f // indirect
-	github.com/getlantern/systray v0.0.0-20190131073753-26d5b920200d
+	github.com/getlantern/systray v0.0.0
 	github.com/go-bindata/go-bindata v1.0.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
@@ -53,7 +50,6 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/nsf/jsondiff v0.0.0-20190302080047-dbf513526b7f
 	github.com/olebedev/emitter v0.0.0-20190110104742-e8d1457e6aee
-	github.com/oxtoacart/bpool v0.0.0-20190227141107-8c4636f812cc // indirect
 	github.com/racker/perigee v0.1.0 // indirect
 	github.com/rackspace/gophercloud v1.0.0
 	github.com/radovskyb/watcher v1.0.6
@@ -82,3 +78,5 @@ require (
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/guregu/null.v2 v2.1.2 // indirect
 )
+
+replace github.com/getlantern/systray => github.com/gearboxworks/go-systray v0.0.0-20190626020534-3518af45bf7c

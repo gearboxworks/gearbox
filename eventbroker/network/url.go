@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"net"
 	"net/url"
 	"strconv"

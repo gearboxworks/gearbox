@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/states"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 	"os"
 	"os/exec"
 	"regexp"

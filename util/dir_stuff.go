@@ -1,10 +1,10 @@
 package util
 
 import (
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/mitchellh/go-homedir"
 	"os"
 	"path/filepath"

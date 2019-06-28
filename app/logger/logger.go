@@ -2,8 +2,8 @@ package logger
 
 import (
 	"fmt"
-	"gearbox/only"
 	"github.com/gearboxworks/go-osbridge"
+	"github.com/gearboxworks/go-status/only"
 
 	//	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-status"

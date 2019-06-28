@@ -2,7 +2,7 @@ package messages
 
 import (
 	"errors"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"reflect"
 )
 

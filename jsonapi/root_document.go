@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"gearbox/apiworks"
 	"gearbox/global"
-	"gearbox/only"
 	"gearbox/types"
 	"github.com/apcera/util/uuid"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"reflect"
 	"strings"
 )

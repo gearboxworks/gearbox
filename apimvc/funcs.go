@@ -2,8 +2,8 @@ package apimvc
 
 import (
 	"gearbox/gearbox"
-	"gearbox/only"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 )
 
 func noop(i ...interface{}) interface{} {

@@ -9,7 +9,6 @@ import (
 	"gearbox/dockerhub"
 	"gearbox/gears"
 	"gearbox/global"
-	"gearbox/only"
 	"gearbox/project"
 	"gearbox/service"
 	"gearbox/ssh"
@@ -17,6 +16,7 @@ import (
 	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"log"
 	"path/filepath"
 )

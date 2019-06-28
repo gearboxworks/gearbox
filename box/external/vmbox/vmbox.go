@@ -3,10 +3,10 @@ package vmbox
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"gearbox/global"
+	"github.com/gearboxworks/go-status/only"
 )
 
 
@@ -160,7 +160,7 @@ func (me *VmBox) StopVms() error {
 			break
 		}
 
-		for u, _ := range me.vms {
+		for u := range me.vms {
 			if me.vms[u].IsManaged {
 				_ = me.vms[u].Stop()
 				// Ignore error, will clean up when program exits.

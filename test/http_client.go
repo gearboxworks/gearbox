@@ -2,8 +2,8 @@ package test
 
 import (
 	"fmt"
-	"gearbox/only"
 	"github.com/gearboxworks/go-status"
+	"github.com/gearboxworks/go-status/only"
 	"io/ioutil"
 	"log"
 	"net/http"

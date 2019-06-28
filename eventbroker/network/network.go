@@ -3,9 +3,9 @@ package network
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
+	"github.com/gearboxworks/go-status/only"
 )
 
 
@@ -149,7 +149,7 @@ func (me *ZeroConf) StopServices() error {
 			break
 		}
 
-		for u, _ := range me.services {
+		for u := range me.services {
 			if me.services[u].IsManaged {
 				_ = me.UnregisterByEntityId(u)
 				// Ignore error, will clean up when program exits.

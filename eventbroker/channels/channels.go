@@ -5,7 +5,7 @@ import (
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"github.com/olebedev/emitter"
 	"sync"
 )

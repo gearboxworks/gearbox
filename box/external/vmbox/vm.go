@@ -7,7 +7,7 @@ import (
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 	"net"
 	"regexp"
 	"strings"

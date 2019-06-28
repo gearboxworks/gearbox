@@ -2,7 +2,7 @@ package states
 
 import (
 	"fmt"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"time"
 )
 

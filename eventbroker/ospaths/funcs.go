@@ -3,7 +3,7 @@ package ospaths
 import (
 	"errors"
 	"fmt"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	"os"
 )
 
@@ -15,7 +15,7 @@ func FileExists(f string) (os.FileInfo, error) {
 
 	for range only.Once {
 		if f == "" {
-			err = errors.New("File is nil")
+			err = errors.New("file is nil")
 			break
 		}
 

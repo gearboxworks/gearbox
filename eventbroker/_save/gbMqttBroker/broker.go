@@ -3,13 +3,13 @@ package gbMqttBroker
 
 import (
 	"fmt"
-	"gearbox/eventbroker/eblog"
 	"gearbox/box"
 	"gearbox/eventbroker/daemon"
+	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/tasks"
 	"gearbox/help"
-	"gearbox/eventbroker/only"
+	"github.com/gearboxworks/go-status/only"
 	//	oss "gearbox/os_support"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/fhmq/hmq/broker"
@@ -398,8 +398,7 @@ func (me *Mqtt) StartClientHandler() status.Status {
 	return sts
 }
 
-
-func (me *Mqtt) clientConnect() (status.Status) {
+func (me *Mqtt) clientConnect() status.Status {
 
 	var sts status.Status
 

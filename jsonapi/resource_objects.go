@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/apiworks"
-	"gearbox/only"
 	"github.com/clbanning/checkjson"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 )
 

@@ -3,7 +3,7 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 )
 
 type index map[string]int

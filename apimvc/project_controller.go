@@ -5,11 +5,11 @@ import (
 	"gearbox/apiworks"
 	"gearbox/config"
 	"gearbox/gearbox"
-	"gearbox/only"
 	"gearbox/project"
 	"gearbox/types"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 	"reflect"
 )

@@ -2,7 +2,7 @@ package service
 
 import (
 	"encoding/json"
-	"gearbox/only"
+	"github.com/gearboxworks/go-status/only"
 )
 
 type ServicerProxy struct {

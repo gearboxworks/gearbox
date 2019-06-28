@@ -2,8 +2,8 @@ package network
 
 import (
 	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/only"
 	"gearbox/eventbroker/states"
+	"github.com/gearboxworks/go-status/only"
 )
 
 
@@ -14,7 +14,7 @@ func (me *ZeroConf) GetEntities() messages.MessageAddresses {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for s, _ := range me.services {	// Managed by Mutex
+	for s := range me.services { // Managed by Mutex
 		ret = append(ret, s)
 	}
 
@@ -29,7 +29,7 @@ func (me *ZeroConf) GetManagedEntities() messages.MessageAddresses {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for s, _ := range me.services {	// Managed by Mutex
+	for s := range me.services { // Managed by Mutex
 		if me.services[s].IsManaged {	// Managed by Mutex
 			ret = append(ret, s)
 		}

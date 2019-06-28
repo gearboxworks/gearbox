@@ -3,11 +3,11 @@ package config
 import (
 	"fmt"
 	"gearbox/help"
-	"gearbox/only"
 	"gearbox/types"
 	"gearbox/util"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
+	"github.com/gearboxworks/go-status/only"
 	"net/http"
 	"os"
 	"path/filepath"
