@@ -224,6 +224,19 @@ func (me *Paths) AppendDir(dir ...string) *Paths {
 }
 
 
+func (me *BasePaths) EnsureNotNil() (err error) {
+
+	for range only.Once {
+		if me == nil {
+			err = errors.New("basepaths is nil")
+			break
+		}
+	}
+
+	return err
+}
+
+
 func (me *BasePaths) CreateIfNotExists() (err error) {
 
 	for range only.Once {

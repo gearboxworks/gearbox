@@ -7,7 +7,6 @@ import (
 	"gearbox/eventbroker/ospaths"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
-	"github.com/gearboxworks/go-status"
 	"sync"
 	"time"
 )
@@ -21,7 +20,15 @@ const (
 	DefaultConsoleWaitDelay = time.Second
 	DefaultBootWaitTime = time.Second * 60
 	DefaultRunWaitTime = time.Second * 5
+
 	DefaultConsoleOkString = "Gearbox Heartbeat"
+	Basedir     = "/home/gearbox/projects"
+	IconLogoPng = "app/dist/heartbeat/img/IconLogo.png"
+
+	DefaultHoIp = "192.168.42.1"
+	DefaultHoNetmask = "255.255.255.0"
+	DefaultHoDhcpLowerIp = "192.168.42.10"
+	DefaultHoDhcpUpperIp = "192.168.42.254"
 )
 
 
@@ -64,19 +71,13 @@ type Vm struct {
 }
 
 type ServiceConfig struct {
-	Name    messages.MessageAddress
-	Version string
-	//IsoFile        string
-	ConsoleHost      string
-	ConsolePort      string
-	ConsoleReadWait  time.Duration
-	ConsoleOkString  string
-	ConsoleWaitDelay time.Duration
-	consoleMutex     sync.RWMutex
-	SshHost          string
-	SshPort          string
+	Name             messages.MessageAddress
+	Version          string
+	Console          Console
+	Ssh              Ssh
 	IconFile         *ospaths.File
 	VmDir            *ospaths.Dir
+	HostOnlyNic      HostOnlyNic
 
 	retryMax         int
 	retryDelay       time.Duration
@@ -86,64 +87,34 @@ type ServiceConfig struct {
 	vmNics           KeyValuesMap
 }
 
+type Console struct {
+	Host      string
+	Port      string
+	ReadWait  time.Duration
+	OkString  string
+	WaitDelay time.Duration
+	mutex     sync.RWMutex
+}
+
+type Ssh struct {
+	Host string
+	Port string
+}
+
+type HostOnlyNic struct {
+	Name        string
+	Index       int
+	Ip          string
+	Netmask     string
+	DhcpLowerIp string
+	DhcpUpperIp string
+}
+
+
 const (
 	Package                    = "vmbox"
 	InterfaceTypeVmBox    = "*" + Package + ".VmBox"
 	InterfaceTypeService       = "*" + Package + ".Service"
 	InterfaceTypeServiceConfig = "*" + Package + ".ServiceConfig"
 )
-
-const (
-	Basedir     = "/home/gearbox/projects"
-)
-
-const (
-	VmStateInit			= ""
-	VmStateNotPresent	= "not present"
-	VmStatePowerOff 	= "poweroff"	// Valid VM state return from listvm
-	VmStatePaused 		= "paused"		// Valid VM state return from listvm
-	VmStateSaved 		= "saved"		// Valid VM state return from listvm
-	VmStateRunning  	= "running"		// Valid VM state return from listvm
-	VmStateStarting		= "starting"
-	VmStateStopping		= "stopping"
-	VmStateDontCare		= "dont care"
-	VmStateUnknown		= "unknown"
-
-	OkState      = "ok"
-	NotOkState   = "nok"
-)
-
-
-const (
-	IconLogoPng = "app/dist/heartbeat/img/IconLogo.png"
-)
-
-
-type BoxEntity struct {
-	Name         string
-	CurrentState string
-	WantState    string
-}
-
-type BoxState struct {
-	VM      BoxEntity
-	API     BoxEntity
-	LastSts status.Status
-}
-
-type VmDisplayState struct {
-	Name			string
-
-	VmIconState		string
-	VmTitleState	string
-	VmHintState		string
-
-	ApiIconState	string
-	ApiTitleState	string
-	ApiHintState	string
-
-	Title			string
-	Hint			string
-	Sts	    		status.Status
-}
 

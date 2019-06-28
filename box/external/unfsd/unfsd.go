@@ -892,7 +892,6 @@ func doesExist(path *ospaths.File) (bool, error) {
 func ReadFile(filename *ospaths.File) ([]byte, error) {
 
 	var data []byte
-	//var sts status.Status
 	var err error
 
 	for range only.Once {

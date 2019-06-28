@@ -58,6 +58,21 @@ func EnsureServiceNotNil(me *Vm) error {
 }
 
 
+func (me *ServiceConfig) EnsureNotNil() error {
+	var err error
+
+	switch {
+	case me == nil:
+		err = errors.New("VmBox Service instance is nil")
+	}
+
+	return err
+}
+func EnsureServiceConfigNotNil(me *ServiceConfig) error {
+	return me.EnsureNotNil()
+}
+
+
 // Ensure we don't duplicate services.
 func (me *VmBox) IsExisting(client messages.MessageAddress) *Vm {
 

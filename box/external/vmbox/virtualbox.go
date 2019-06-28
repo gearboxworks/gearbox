@@ -8,6 +8,7 @@ import (
 	"gearbox/only"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -74,7 +75,6 @@ func (me *Vm) vbCreate() (states.State, error) {
 			_ = me.cmdDestroyVm()
 			break
 		}
-
 	}
 
 	eblog.LogIfNil(me, err)
@@ -430,7 +430,12 @@ func (me *Vm) cmdCreateVm() error {
 		}
 
 		// stdout, stderr, sts = me.Run("createvm", "--name", me.Boxname, "--ostype", "Linux26_64", "--register", "--basefolder", me.VmBaseDir)
-		_, err = me.Run("createvm", "--name", me.EntityName.String(), "--ostype", "Linux26_64", "--register", "--basefolder", me.Entry.VmDir.String())
+		_, err = me.Run("createvm",
+			"--name", me.EntityName.String(),
+			"--ostype", "Linux26_64",
+			"--register",
+			"--basefolder", me.Entry.VmDir.String(),
+			)
 		if err != nil {
 			break
 		}
@@ -456,6 +461,11 @@ func (me *Vm) cmdModifyVm() error {
 		}
 
 		err = me.cmdModifyVmBasic()
+		if err != nil {
+			break
+		}
+
+		err = me.cmdCreateHoNet()
 		if err != nil {
 			break
 		}
@@ -501,7 +511,12 @@ func (me *Vm) cmdDestroyVm() error {
 			break
 		}
 
-		eblog.Debug(me.EntityId, "")
+		err = me.cmdDestroyHoNet()
+		if err != nil {
+			break
+		}
+
+		eblog.Debug(me.EntityId, "destroyed VM OK")
 	}
 
 	eblog.LogIfNil(me, err)
@@ -529,26 +544,38 @@ func (me *Vm) cmdModifyVmBasic() error {
 			name := me.EntityName.String()
 			icon := me.Entry.IconFile.String()
 			_, err = me.Run("modifyvm", name,
-				"--description", name + " OS VM", "--iconfile", icon)
+				"--description", name + " OS VM",
+				"--iconfile", icon,
+				)
 			if err != nil {
 				break
 			}
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--ioapic", "on", "--acpi", "on", "--biosbootmenu", "disabled", "--biosapic", "apic")
+			"--ioapic", "on",
+			"--acpi", "on",
+			"--biosbootmenu", "disabled",
+			"--biosapic", "apic",
+			)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--boot1", "dvd", "--boot2", "none", "--boot3", "none", "--boot4", "none")
+			"--boot1", "dvd",
+			"--boot2", "none",
+			"--boot3", "none",
+			"--boot4", "none",
+			)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--vrde", "off", "--autostart-enabled", "off")
+			"--vrde", "off",
+			"--autostart-enabled", "off",
+			)
 		if err != nil {
 			break
 		}
@@ -558,31 +585,45 @@ func (me *Vm) cmdModifyVmBasic() error {
 			cpus = 2
 		}
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--cpuhotplug", "on", "--cpus", strconv.Itoa(cpus), "--pae", "off", "--longmode", "on", "--largepages", "on", "--paravirtprovider", "default")
+			"--cpuhotplug", "on",
+			"--cpus", strconv.Itoa(cpus),
+			"--pae", "off",
+			"--longmode", "on",
+			"--largepages", "on",
+			"--paravirtprovider", "default",
+			)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--accelerate3d", "off", "--accelerate2dvideo", "off", "--mouse", "usbtablet")
+			"--accelerate3d", "off",
+			"--accelerate2dvideo", "off",
+			"--mouse", "usbtablet",
+			)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--defaultfrontend", "headless", "--snapshotfolder", "default")
+			"--defaultfrontend", "headless",
+			"--snapshotfolder", "default",
+			)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--memory", "2048", "--vram", "128")
+			"--memory", "2048",
+			"--vram", "128",
+			)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--audio", "none")
+			"--audio", "none",
+			)
 		if err != nil {
 			break
 		}
@@ -608,44 +649,198 @@ func (me *Vm) cmdModifyVmNetwork() error {
 			break
 		}
 
+		if me.Entry.HostOnlyNic.Name == "" {
+			eblog.Debug(me.EntityId, "hostonlyif not created")
+			break
+		}
+
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--nic1", "nat", "--nictype1", "82540EM", "--cableconnected1", "on", "--macaddress1", "auto")
+			"--nic2", "nat",
+			"--nictype2", "82540EM",
+			"--cableconnected2", "on",
+			"--macaddress2", "auto",
+			)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--natnet1", "default", "--natpf1", "API,tcp,,9970,,9970")
+			"--natnet2", "default",
+			"--natpf2", "API,tcp,,9970,,9970",
+			)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--natnet1", "default", "--natpf1", "SSH,tcp,," + me.Entry.SshPort + ",,22")
+			"--natnet2", "default",
+			"--natpf2", "SSH,tcp,," + me.Entry.Ssh.Port + ",,22",
+			)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--natnet1", "default", "--natpf1", "VMcontrol,tcp,,9971,,9971")
+			"--natnet2", "default",
+			"--natpf2", "VMcontrol,tcp,,9971,,9971",
+			)
 		if err != nil {
 			break
 		}
 
 		// _, _, sts = me.Run("modifyvm", me.Boxname, "--nic2", "bridged", "--bridgeadapter2", nic["Name"], "--nictype2", "82540EM", "--cableconnected2", "on", "--macaddress2", "auto", "--nicpromisc2", "deny")
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--nic2", "hostonly", "--hostonlyadapter2", "vboxnet0", "--nictype2", "82540EM", "--cableconnected2", "on", "--macaddress2", "auto", "--nicpromisc2", "deny")
+			"--nic1", "hostonly",
+			"--hostonlyadapter1", me.Entry.HostOnlyNic.Name,
+			"--nictype1", "82540EM",
+			"--cableconnected1", "on",
+			"--macaddress1", "auto",
+			"--nicpromisc1", "deny",
+			)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
-			"--uart1", "0x3f8", "4", "--uartmode1", "tcpserver", me.Entry.ConsolePort)
+			"--uart1", "0x3f8", "4",
+			"--uartmode1", "tcpserver", me.Entry.Console.Port,
+			)
 		if err != nil {
 			break
 		}
 
 		eblog.Debug(me.EntityId, "modified VM OK")
+	}
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return err
+}
+
+
+func (me *Vm) cmdCreateHoNet() error {
+
+	var err error
+
+	// fmt.Printf("cmdCreateHoNet() ENTRY.\n")
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		if me.Entry.HostOnlyNic.Name != "" {
+			eblog.Debug(me.EntityId, "hostonlyif already created")
+			break
+		}
+
+		if me.Entry.HostOnlyNic.Ip == "" {
+			me.Entry.HostOnlyNic.Ip = DefaultHoIp
+		}
+
+		if me.Entry.HostOnlyNic.Netmask == "" {
+			me.Entry.HostOnlyNic.Netmask = DefaultHoNetmask
+		}
+
+		if me.Entry.HostOnlyNic.DhcpLowerIp == "" {
+			me.Entry.HostOnlyNic.DhcpLowerIp = DefaultHoDhcpLowerIp
+		}
+
+		if me.Entry.HostOnlyNic.DhcpUpperIp == "" {
+			me.Entry.HostOnlyNic.DhcpUpperIp = DefaultHoDhcpUpperIp
+		}
+
+
+		// Such a pain in the neck this process...
+		_, err = me.Run("hostonlyif", "create")
+		if err != nil {
+			break
+		}
+
+		// Now we need to parse the output and look for this:
+		// Interface 'vboxnet2' was successfully created
+		re := regexp.MustCompile(`Interface '(\w+)' was successfully created`)
+		f := re.FindAllStringSubmatch(me.Entry.cmdStdout.String(), -1)
+		if len(f) == 0 {
+			err = me.EntityName.ProduceError("hostonlyif not created")
+			break
+		}
+		if len(f[0]) == 0 {
+			err = me.EntityName.ProduceError("hostonlyif not created")
+			break
+		}
+		me.Entry.HostOnlyNic.Name = f[0][1]
+
+
+
+		_, err = me.Run("hostonlyif",
+			"ipconfig", me.Entry.HostOnlyNic.Name,
+			"--ip", me.Entry.HostOnlyNic.Ip,
+			"--netmask", me.Entry.HostOnlyNic.Netmask,
+		)
+		if err != nil {
+			break
+		}
+
+
+		_, err = me.Run("dhcpserver", "add",
+			"--enable",
+			"--netname", "HostInterfaceNetworking-" + me.Entry.HostOnlyNic.Name,
+			"--ip", me.Entry.HostOnlyNic.Ip,
+			"--netmask", me.Entry.HostOnlyNic.Netmask,
+			"--lowerip", me.Entry.HostOnlyNic.DhcpLowerIp,
+			"--upperip", me.Entry.HostOnlyNic.DhcpUpperIp,
+		)
+		if err != nil {
+			break
+		}
+
+		eblog.Debug(me.EntityId, "hostonlyif created OK")
+	}
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return err
+}
+
+
+func (me *Vm) cmdDestroyHoNet() error {
+
+	var err error
+
+	// fmt.Printf("cmdCreateHoNet() ENTRY.\n")
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		if me.Entry.HostOnlyNic.Name == "" {
+			eblog.Debug(me.EntityId, "hostonlyif not created")
+			break
+		}
+
+
+		_, err = me.Run("hostonlyif",
+			"remove", me.Entry.HostOnlyNic.Name,
+			)
+		eblog.LogIfError(me.EntityId, err)	// Don't exit just yet, but log error.
+		//if err != nil {
+		//	break
+		//}
+
+		_, err = me.Run("dhcpserver", "remove",
+			"--netname", "HostInterfaceNetworking-" + me.Entry.HostOnlyNic.Name,
+		)
+		if err != nil {
+			break
+		}
+
+		me.Entry.HostOnlyNic.Name = ""
+
+		eblog.Debug(me.EntityId, "hostonlyif destroyed OK")
 	}
 
 	eblog.LogIfNil(me, err)
@@ -667,7 +862,13 @@ func (me *Vm) cmdModifyVmStorage() error {
 		}
 
 		_, err = me.Run("storagectl", me.EntityName.String(),
-			"--name", "SATA", "--add", "sata", "--controller", "IntelAHCI", "--portcount", "4", "--hostiocache", "off", "--bootable", "on")
+			"--name", "SATA",
+			"--add", "sata",
+			"--controller", "IntelAHCI",
+			"--portcount", "4",
+			"--hostiocache", "off",
+			"--bootable", "on",
+			)
 		if err != nil {
 			break
 		}
@@ -704,13 +905,24 @@ func (me *Vm) cmdModifyVmStorage() error {
 			order := strconv.Itoa(index)
 
 			// _, err = me.Run("createmedium", "disk", "--filename", fileName, "--size", disk.Size, "--format", disk.Format, "--variant", "Stream")
-			_, err = me.Run("createmedium", "disk", "--filename", fileName, "--size", disk.Size, "--format", disk.Format, "--variant", "Standard")
+			_, err = me.Run("createmedium", "disk",
+				"--filename", fileName,
+				"--size", disk.Size,
+				"--format", disk.Format,
+				"--variant", "Standard",
+				)
 			if err != nil {
 				break
 			}
 
 			_, err = me.Run("storageattach", me.EntityName.String(),
-				"--storagectl", "SATA", "--port", order, "--device", "0", "--type", "hdd", "--medium", fileName, "--hotpluggable", "off")
+				"--storagectl", "SATA",
+				"--port", order,
+				"--device", "0",
+				"--type", "hdd",
+				"--medium", fileName,
+				"--hotpluggable", "off",
+				)
 			if err != nil {
 				break
 			}
@@ -738,13 +950,23 @@ func (me *Vm) cmdModifyVmIso() error {
 		}
 
 		_, err = me.Run("storagectl", me.EntityName.String(),
-			"--name", "IDE", "--add", "ide", "--hostiocache", "on", "--bootable", "on")
+			"--name", "IDE",
+			"--add", "ide",
+			"--hostiocache", "on",
+			"--bootable", "on",
+			)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("storageattach", me.EntityName.String(),
-			"--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--tempeject", "on", "--medium", me.osRelease.File.String())
+			"--storagectl", "IDE",
+			"--port", "0",
+			"--device", "0",
+			"--type", "dvddrive",
+			"--tempeject", "on",
+			"--medium", me.osRelease.File.String(),
+			)
 		if err != nil {
 			break
 		}
@@ -990,24 +1212,6 @@ func decodeResponse(s bytes.Buffer, splitOn rune) (dr KeyValues, ok bool) {
 
 	return
 }
-
-
-
-
-//// RunCombinedError runs a VBoxManage command.  The output is stdout and the the
-//// combined err/stderr from the command.
-//func (me *Vm) RunCombinedError(args ...string) (string, error) {
-//
-//	wout, werr, err := me.Run(args...)
-//	if err != nil {
-//		if werr != "" {
-//			return wout, fmt.Errorf("%s: %s", err, werr)
-//		}
-//		return wout, err
-//	}
-//
-//	return wout, nil
-//}
 
 
 //#!/bin/bash
