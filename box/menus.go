@@ -42,7 +42,7 @@ func (me *Box) CreateMenus() {
 	}
 
 	me.menu["version"] = &Menu{
-		MenuItem:      systray.AddMenuItem("Gearbox (v0.5.9)", "Running v0.5.0"),
+		MenuItem:      systray.AddMenuItem("Gearbox (v0.5.0)", "Running v0.5.0"),
 		PrefixToolTip: "",
 		PrefixMenu:    "",
 		CurrentIcon:   "",
