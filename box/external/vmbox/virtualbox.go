@@ -871,8 +871,8 @@ func (me *Vm) cmdFindHoNet() (string, error) {
 			break
 		}
 
-		o := me.Entry.cmdStdout
-		e := me.Entry.cmdStderr
+		//o := me.Entry.cmdStdout
+		//e := me.Entry.cmdStderr
 		//fmt.Printf("%s\n%s\n", o, e)
 
 		var nic KeyValueMap
