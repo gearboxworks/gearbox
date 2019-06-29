@@ -108,6 +108,11 @@ func (me *Vm) vbDestroy() error {
 					break
 				}
 
+				err = me.DestroyConfig()
+				if err != nil {
+					break
+				}
+
 				eblog.Debug(me.EntityId, "VM destroyed OK")
 
 
@@ -465,7 +470,7 @@ func (me *Vm) cmdModifyVm() error {
 			break
 		}
 
-		err = me.cmdCreateHoNet()
+		err = me.cmdCreateHostOnlyNet()
 		if err != nil {
 			break
 		}
@@ -511,7 +516,7 @@ func (me *Vm) cmdDestroyVm() error {
 			break
 		}
 
-		err = me.cmdDestroyHoNet()
+		err = me.cmdDestroyHostOnlyNet()
 		if err != nil {
 			break
 		}
@@ -719,18 +724,18 @@ func (me *Vm) cmdModifyVmNetwork() error {
 }
 
 
-func (me *Vm) cmdCreateHoNet() error {
+func (me *Vm) cmdCreateHostOnlyNet() error {
 
 	var err error
 
-	// fmt.Printf("cmdCreateHoNet() ENTRY.\n")
+	// fmt.Printf("cmdCreateHostOnlyNet() ENTRY.\n")
 	for range only.Once {
 		err = me.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		me.Entry.HostOnlyNic.Name, err = me.cmdFindHoNet()
+		me.Entry.HostOnlyNic.Name, err = me.cmdFindHostOnlyNet()
 		if err != nil {
 			break
 		}
@@ -741,19 +746,19 @@ func (me *Vm) cmdCreateHoNet() error {
 
 
 		if me.Entry.HostOnlyNic.Ip == "" {
-			me.Entry.HostOnlyNic.Ip = DefaultHoIp
+			me.Entry.HostOnlyNic.Ip = DefaultHostOnlyIp
 		}
 
 		if me.Entry.HostOnlyNic.Netmask == "" {
-			me.Entry.HostOnlyNic.Netmask = DefaultHoNetmask
+			me.Entry.HostOnlyNic.Netmask = DefaultHostOnlyNetmask
 		}
 
 		if me.Entry.HostOnlyNic.DhcpLowerIp == "" {
-			me.Entry.HostOnlyNic.DhcpLowerIp = DefaultHoDhcpLowerIp
+			me.Entry.HostOnlyNic.DhcpLowerIp = DefaultHostOnlyDhcpLowerIp
 		}
 
 		if me.Entry.HostOnlyNic.DhcpUpperIp == "" {
-			me.Entry.HostOnlyNic.DhcpUpperIp = DefaultHoDhcpUpperIp
+			me.Entry.HostOnlyNic.DhcpUpperIp = DefaultHostOnlyDhcpUpperIp
 		}
 
 
@@ -778,7 +783,6 @@ func (me *Vm) cmdCreateHoNet() error {
 		me.Entry.HostOnlyNic.Name = f[0][1]
 
 
-
 		_, err = me.Run("hostonlyif",
 			"ipconfig", me.Entry.HostOnlyNic.Name,
 			"--ip", me.Entry.HostOnlyNic.Ip,
@@ -789,16 +793,32 @@ func (me *Vm) cmdCreateHoNet() error {
 		}
 
 
-		_, err = me.Run("dhcpserver", "add",
+		args := []string{
 			"--enable",
 			"--netname", "HostInterfaceNetworking-" + me.Entry.HostOnlyNic.Name,
 			"--ip", me.Entry.HostOnlyNic.Ip,
 			"--netmask", me.Entry.HostOnlyNic.Netmask,
 			"--lowerip", me.Entry.HostOnlyNic.DhcpLowerIp,
 			"--upperip", me.Entry.HostOnlyNic.DhcpUpperIp,
-		)
+		}
+		create := append([]string{"dhcpserver", "add"}, args...)
+		_, err = me.Run(create...)
 		if err != nil {
-			break
+			// Now we need to parse the output and look for this:
+			// DHCP server already exists
+			re := regexp.MustCompile(`DHCP server already exists`)
+			f := re.FindAllStringSubmatch(me.Entry.cmdStderr.String(), -1)
+			if len(f) == 0 {
+				// Some other error.
+				break
+			}
+
+			// Seems we have one already. So we want to modify it.
+			modify := append([]string{"dhcpserver", "modify"}, args...)
+			_, err = me.Run(modify...)
+			if err != nil {
+				break
+			}
 		}
 
 		eblog.Debug(me.EntityId, "hostonlyif created OK")
@@ -811,11 +831,11 @@ func (me *Vm) cmdCreateHoNet() error {
 }
 
 
-func (me *Vm) cmdDestroyHoNet() error {
+func (me *Vm) cmdDestroyHostOnlyNet() error {
 
 	var err error
 
-	// fmt.Printf("cmdCreateHoNet() ENTRY.\n")
+	// fmt.Printf("cmdCreateHostOnlyNet() ENTRY.\n")
 	for range only.Once {
 		err = me.EnsureNotNil()
 		if err != nil {
@@ -855,7 +875,7 @@ func (me *Vm) cmdDestroyHoNet() error {
 }
 
 
-func (me *Vm) cmdFindHoNet() (string, error) {
+func (me *Vm) cmdFindHostOnlyNet() (string, error) {
 
 	var err error
 	var ret string
@@ -885,8 +905,10 @@ func (me *Vm) cmdFindHoNet() (string, error) {
 				break
 			}
 
-			for ret, nic = range me.Entry.vmNics {
+			var tmpStr string
+			for tmpStr, nic = range me.Entry.vmNics {
 				if nic["IPAddress"] == me.Entry.HostOnlyNic.Ip {
+					ret = tmpStr
 					break
 				}
 			}
