@@ -148,11 +148,11 @@ func (me *Vm) VerifyConfig() error {
 		}
 
 		if me.Entry.Ssh.Host == "" {
-			me.Entry.Ssh.Host = "localhost"
+			me.Entry.Ssh.Host = DefaultSshHost
 		}
 
 		if me.Entry.Ssh.Port == "" {
-			me.Entry.Ssh.Port = "2222"
+			me.Entry.Ssh.Port = DefaultSshPort
 		}
 
 		if me.Entry.IconFile == nil {
@@ -204,6 +204,32 @@ func (me *Vm) ConfigExists() error {
 		}
 
 		eblog.Debug(me.EntityId, "VM config exists")
+	}
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return err
+}
+
+
+func (me *Vm) DestroyConfig() error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		file := me.Entry.VmDir.AddFileToPath("%s.json", me.Entry.Name)
+		err = file.FileDelete()
+		if err != nil {
+			break
+		}
+
+		eblog.Debug(me.EntityId, "VM config removed")
 	}
 
 	eblog.LogIfNil(me, err)
