@@ -135,6 +135,22 @@ func (me *File) FileExists() error {
 }
 
 
+func (me *File) FileDelete() error {
+
+	var err error
+
+	_, err = os.Stat(me.String())
+	if os.IsNotExist(err) {
+		return err
+
+	} else {
+		err = os.Remove(me.String())
+	}
+
+	return err
+}
+
+
 func (me *Dir) DirExists() error {
 
 	var err error
