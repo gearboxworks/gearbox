@@ -873,11 +873,11 @@ func (me *Vm) cmdFindHoNet() (string, error) {
 
 		o := me.Entry.cmdStdout
 		e := me.Entry.cmdStderr
-		fmt.Printf("%s\n%s\n", o, e)
+		//fmt.Printf("%s\n%s\n", o, e)
 
 		var nic KeyValueMap
 		dr, ok := decodeResponse(me.Entry.cmdStdout, ':')
-		fmt.Printf("%v", dr)
+		//fmt.Printf("%v", dr)
 		if ok == true {
 			me.Entry.vmNics, ok = dr.decodeNics()
 			if ok == false {
@@ -892,10 +892,10 @@ func (me *Vm) cmdFindHoNet() (string, error) {
 			}
 		}
 
-		if nic == nil {
-			err = me.EntityName.ProduceError("no NICs found")
-			break
-		}
+		//if nic == nil {
+		//	err = me.EntityName.ProduceError("no NICs found")
+		//	break
+		//}
 
 		eblog.Debug(me.EntityId, "using NIC '%s' for VM", nic)
 	}
