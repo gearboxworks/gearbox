@@ -735,15 +735,6 @@ func (me *Vm) cmdCreateHostOnlyNet() error {
 			break
 		}
 
-		me.Entry.HostOnlyNic.Name, err = me.cmdFindHostOnlyNet()
-		if err != nil {
-			break
-		}
-		if me.Entry.HostOnlyNic.Name != "" {
-			eblog.Debug(me.EntityId, "hostonlyif already created")
-			break
-		}
-
 
 		if me.Entry.HostOnlyNic.Ip == "" {
 			me.Entry.HostOnlyNic.Ip = DefaultHostOnlyIp
@@ -759,6 +750,16 @@ func (me *Vm) cmdCreateHostOnlyNet() error {
 
 		if me.Entry.HostOnlyNic.DhcpUpperIp == "" {
 			me.Entry.HostOnlyNic.DhcpUpperIp = DefaultHostOnlyDhcpUpperIp
+		}
+
+
+		me.Entry.HostOnlyNic.Name, err = me.cmdFindHostOnlyNet()
+		if err != nil {
+			break
+		}
+		if me.Entry.HostOnlyNic.Name != "" {
+			eblog.Debug(me.EntityId, "hostonlyif already created")
+			break
 		}
 
 
