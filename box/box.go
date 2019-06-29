@@ -70,6 +70,7 @@ func New(OsBridge osbridge.OsBridger, args ...Args) (*Box, status.Status) {
 	return hb, sts
 }
 
+
 func (me *Box) BoxDaemon() (sts status.Status) {
 
 	var err error
@@ -152,7 +153,6 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 			break
 		}
 
-		fmt.Printf("Dropping in.\n")
 		me.VmBox, err = vmbox.New(vmbox.Args{Channels: &me.EventBroker.Channels, OsPaths: me.EventBroker.OsPaths, Boxname: me.Boxname})
 		if err != nil {
 			break
@@ -164,33 +164,10 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 			break
 		}
 
-		//me.osRelease = me.VmBox.Releases.Selected
-		//me.menu["version"].MenuItem.SetTitle(fmt.Sprintf("Gearbox (v%s)", me.osRelease.Version))
-		//me.menu["version"].MenuItem.SetTooltip(fmt.Sprintf("Running v%s", me.osRelease.Version))
-
 		// Setup systray menus.
 		fmt.Printf("Gearbox: Starting systray.\n")
 		systray.Run(me.onReady, me.onExit)
-
-		//time.Sleep(time.Second * 10)
-		//state, _ := me.EventBroker.GetSimpleStatus()
-		//fmt.Printf("STATUS:\n%s", state.String())
-
-		//me.EventBroker.SimpleLoop()
-
-		//fmt.Printf("Breaking out.\n")
-		//time.Sleep(time.Second * 2)
-		//_ = me.EventBroker.Stop()
-
-		// Create a new VM Box instance.
-		//fmt.Printf("Gearbox: Creating unfsd instance.\n")
-		//me.NfsInstance, sts = unfsd.NewUnfsd(me.OsBridge)
-
-		// Should never exit, unless we get a signal to do so.
 	}
-
-	//eblog.LogIfNil(me, err)
-	//eblog.LogIfError(me.EntityId, err)
 
 	if err != nil {
 		sts = status.Fail().
@@ -200,6 +177,7 @@ func (me *Box) BoxDaemon() (sts status.Status) {
 
 	return sts
 }
+
 
 func (me *Box) StartBox() (sts status.Status) {
 
@@ -250,6 +228,7 @@ func (me *Box) StartBox() (sts status.Status) {
 	return sts
 }
 
+
 func (me *Box) StopBox() (sts status.Status) {
 
 	var err error
@@ -282,6 +261,7 @@ func (me *Box) StopBox() (sts status.Status) {
 	return sts
 }
 
+
 func (me *Box) RestartBox() (sts status.Status) {
 
 	for range only.Once {
@@ -299,6 +279,7 @@ func (me *Box) RestartBox() (sts status.Status) {
 
 	return sts
 }
+
 
 func (me *Box) GetState() (sts status.Status) {
 
@@ -336,11 +317,35 @@ func (me *Box) GetState() (sts status.Status) {
 	return sts
 }
 
+
 func (me *Box) CreateBox() (sts status.Status) {
 
 	for range only.Once {
 
 		fmt.Printf("Not implemented.\n")
+
+	}
+
+	return sts
+}
+
+
+func (me *Box) DestroyBox() (sts status.Status) {
+
+	for range only.Once {
+
+		var err error
+
+		me.VmBox, err = vmbox.New(vmbox.Args{Channels: &me.EventBroker.Channels, OsPaths: me.EventBroker.OsPaths, Boxname: me.Boxname})
+		if err != nil {
+			break
+		}
+
+		err = me.VmBox.Stop()
+		if err != nil {
+			sts = status.Wrap(err).SetMessage("VM manager was not able to start")
+			break
+		}
 
 	}
 
