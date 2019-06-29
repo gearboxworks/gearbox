@@ -20,15 +20,17 @@ const (
 	DefaultConsoleWaitDelay = time.Second
 	DefaultBootWaitTime = time.Second * 60
 	DefaultRunWaitTime = time.Second * 5
+	DefaultSshHost = "gearbox.local"
+	DefaultSshPort = "22"
 
 	DefaultConsoleOkString = "Gearbox Heartbeat"
 	Basedir     = "/home/gearbox/projects"
 	IconLogoPng = "app/dist/heartbeat/img/IconLogo.png"
 
-	DefaultHoIp = "192.168.42.1"
-	DefaultHoNetmask = "255.255.255.0"
-	DefaultHoDhcpLowerIp = "192.168.42.10"
-	DefaultHoDhcpUpperIp = "192.168.42.254"
+	DefaultHostOnlyIp = "192.168.42.1"
+	DefaultHostOnlyNetmask = "255.255.255.0"
+	DefaultHostOnlyDhcpLowerIp = "192.168.42.10"
+	DefaultHostOnlyDhcpUpperIp = "192.168.42.254"
 )
 
 
