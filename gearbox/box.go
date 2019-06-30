@@ -21,8 +21,7 @@ func (me *Gearbox) RunAsDaemon(args *box.Args) (sts status.Status) {
 	for range only.Once {
 		var bx *box.Box
 
-		args.SetOsBridge(me.GetOsBridge())
-		bx, sts = box.New(args)
+		bx, sts = newBox(me, args)
 		if is.Error(sts) {
 			break
 		}
@@ -42,8 +41,7 @@ func (me *Gearbox) StartBox(args *box.Args) (sts status.Status) {
 	for range only.Once {
 		var bx *box.Box
 
-		args.SetOsBridge(me.GetOsBridge())
-		bx, sts = box.New(args)
+		bx, sts = newBox(me, args)
 		if is.Error(sts) {
 			break
 		}
@@ -63,8 +61,7 @@ func (me *Gearbox) StopBox(args *box.Args) (sts status.Status) {
 	for range only.Once {
 		var bx *box.Box
 
-		args.SetOsBridge(me.GetOsBridge())
-		bx, sts = box.New(args)
+		bx, sts = newBox(me, args)
 		if is.Error(sts) {
 			break
 		}
@@ -84,8 +81,7 @@ func (me *Gearbox) RestartBox(args *box.Args) (sts status.Status) {
 	for range only.Once {
 		var bx *box.Box
 
-		args.SetOsBridge(me.GetOsBridge())
-		bx, sts = box.New(args)
+		bx, sts = newBox(me, args)
 		if is.Error(sts) {
 			break
 		}
@@ -105,8 +101,7 @@ func (me *Gearbox) PrintBoxStatus(args *box.Args) (sts status.Status) {
 	for range only.Once {
 		var bx *box.Box
 
-		args.SetOsBridge(me.GetOsBridge())
-		bx, sts = box.New(args)
+		bx, sts = newBox(me, args)
 		if is.Error(sts) {
 			break
 		}
