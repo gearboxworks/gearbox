@@ -28,6 +28,7 @@ export default new Vuex.Store({
   },
   state: {
     stacks: [],
+    removedStacks: {},
     services: [],
     gearspecs: [],
     projects: [],
@@ -386,6 +387,11 @@ export default new Vuex.Store({
     },
     setProjectsFilter ({ commit }, payload) {
       commit('SET_PROJECTS_FILTER', payload)
+    },
+    getDirectory ({ commit }, payload) {
+      return HTTP.head(
+        'directories/' + encodeURI(payload.dir)
+      )
     }
   },
   mutations: {
@@ -438,20 +444,34 @@ export default new Vuex.Store({
     },
     ADD_PROJECT_STACK (state, payload) {
       const { projectId, stackId } = payload
+      const actualStackId = stackId.replace('(removed)', '')
       const project = this.getters.projectBy('id', projectId)
-      const stack = this.getters.stackBy('id', stackId)
+      const stack = this.getters.stackBy('id', actualStackId)
+      // console.log('ADD_PROJECT_STACK', stackId, actualStackId)
       if (project && stack && stack.attributes.members.length) {
         if (typeof project.attributes.stack === 'undefined') {
           Vue.set(project.attributes, 'stack', [])
         }
         stack.attributes.members.forEach((el, idx) => {
-          const serviceId = this.getters.preselectServiceId(el.services, el.default_service)
           if (el.gearspec_id) {
-            // reactive!
-            project.attributes.stack.push({
-              service_id: serviceId, // it's ok if it is empty
-              gearspec_id: el.gearspec_id
-            })
+            const item = project.attributes.stack.find(it => it.gearspec_id === el.gearspec_id)
+            if (item && stackId !== actualStackId) {
+              // if el.gearspec_id already exists, mark it with isRemoved = false
+              Vue.set(item, 'isRemoved', false)
+            } else {
+              // reactive!
+              const serviceId = this.getters.preselectServiceId(el.services, el.default_service)
+              if (item) {
+                Vue.set(item, 'isRemoved', false)
+                Vue.set(item, 'service_id', serviceId)
+              } else {
+                project.attributes.stack.push({
+                  service_id: serviceId, // it's ok if serviceId is empty
+                  gearspec_id: el.gearspec_id,
+                  isRemoved: false
+                })
+              }
+            }
           }
         })
       }
@@ -459,18 +479,27 @@ export default new Vuex.Store({
     REMOVE_PROJECT_STACK (state, payload) {
       const { projectId, stackId } = payload
       const project = this.getters.projectBy('id', projectId)
-      if (project) {
-        /**
-         * We need to remove all elements of project.stack that that have service_id starting with shortStackName, e.g. "wordpress/"
-         *
-         * For deleting array items in javascript with forEach() and splice())
-         * @see https://gist.github.com/chad3814/2924672
-         */
-        const shortStackName = stackId.split('/')[1]
-        for (let i = project.attributes.stack.length - 1; i >= 0; i--) {
-          if (project.attributes.stack[i].gearspec_id.split('/')[1] === shortStackName) {
-            Vue.delete(project.attributes.stack, i)
-          }
+      if (!project) {
+        return
+      }
+      const shortStackName = stackId.split('/')[1]
+
+      // if (typeof state.removedStacks[projectId] === 'undefined') {
+      //   Vue.set(state.removedStacks, projectId, [])
+      // }
+
+      /**
+       * We need to remove all elements of project.stack that that have service_id starting with shortStackName, e.g. "wordpress/"
+       *
+       * For deleting array items in javascript with forEach() and splice())
+       * @see https://gist.github.com/chad3814/2924672
+       */
+      for (let i = project.attributes.stack.length - 1; i >= 0; i--) {
+        if (project.attributes.stack[i].gearspec_id.split('/')[1] === shortStackName) {
+          Vue.set(project.attributes.stack[i], 'isRemoved', true)
+          // state.removedStacks[projectId].push(project.attributes.stack[i])
+          // console.log(projectId, stackId, project.attributes.stack[i])
+          // Vue.delete(project.attributes.stack, i)
         }
       }
     },

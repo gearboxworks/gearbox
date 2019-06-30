@@ -80,8 +80,8 @@
           >
             <b-select id="sort-by" variant="secondary" v-model="sortBy">
               <option :value="null" disabled>Sort by...</option>
-              <option value="access-date">Access date</option>
-              <option value="creation-date">Creation date</option>
+              <option value="access-date" disabled>Access date</option>
+              <option value="creation-date" disabled>Creation date</option>
               <option value="project-title">Project title</option>
             </b-select>
           </b-form-group>
@@ -149,11 +149,11 @@
       </div>
 
       <div class="current-filter">
-        <b-badge title="Project State" :variant="statesVariant">{{labelStates}}</b-badge>
-        <b-badge title="Project Locations" :variant="(showBasedirs == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{labelBasedirs}}</b-badge>
-        <b-badge title="Stacks" :variant="(showStacks == 'all') ? 'secondary' : 'warning'">{{labelStacks}}</b-badge>
-        <b-badge title="Programs" :variant="(showPrograms == 'all') ? 'secondary' : 'warning'">{{labelPrograms}}</b-badge>
-        <b-badge title="Sorting">{{labelSorting}}</b-badge>
+        <b-badge title="Filter by state" :variant="statesVariant">{{labelStates}}</b-badge>
+        <b-badge title="Filter by location" :variant="(showBasedirs == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{labelBasedirs}}</b-badge>
+        <b-badge title="Filter by used stack" :variant="(showStacks == 'all') ? 'secondary' : 'warning'">{{labelStacks}}</b-badge>
+        <b-badge title="Filter by used program" :variant="(showPrograms == 'all') ? 'secondary' : 'warning'">{{labelPrograms}}</b-badge>
+        <b-badge title="Sorting order">{{labelSorting}}</b-badge>
       </div>
     </div>
   </div>
@@ -230,7 +230,7 @@ export default {
       showStacks: 'all',
       showPrograms: 'all',
 
-      sortBy: 'access-date',
+      sortBy: 'project-title',
       sortAscending: true,
       viewMode: 'cards'
     }

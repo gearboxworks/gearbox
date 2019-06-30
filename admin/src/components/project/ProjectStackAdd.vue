@@ -16,10 +16,10 @@
     >
       <option value="" disabled>{{hasStacksNotInProject ? 'Add stack...' : 'All stacks already added'}}</option>
       <option
-        v-for="(stack,stackId) in stacksNotInProject"
+        v-for="(item,stackId) in stacksNotInProject"
         :key="stackId"
         :value="stackId"
-      >{{stack.attributes.stackname}}</option>
+      >{{item.stack.attributes.stackname + (item.isRemoved ? ' (removed)': '') + (item.isDefault? ' (default)': '')}}</option>
     </b-form-select>
     <b-input-group-append>
       <b-button
@@ -79,16 +79,19 @@ export default {
     stacksNotInProject () {
       const result = {}
 
-      const projectStack = this.project.attributes.stack
-        ? this.groupProjectServicesByStack(this.project.attributes.stack)
-        : {}
+      const projectStack = this.projectGearsGroupedByStack
 
       for (const idx in this.allStacks) {
         const stack = this.allStacks[idx]
         if (typeof projectStack[stack.id] === 'undefined') {
-          result[stack.id] = stack
+          result[stack.id] = { stack, isRemoved: false }
+        } else if (projectStack[stack.id].isRemoved) {
+          // TODO if the services in the removed stack are exactly the same as in the default version of it, show only one option!
+          result[stack.id] = { stack, isRemoved: false, isDefault: true }
+          result[stack.id + '(removed)'] = { stack, isRemoved: true }
         }
       }
+      // console.log('stacksNotInProject', result)
       return result
     },
     hasStacksNotInProject () {
@@ -97,6 +100,9 @@ export default {
     servicesInProject () {
       const result = {}
       for (let idx = 0; idx > this.stack.length; idx++) {
+        if (this.stack[idx].isRemoved) {
+          continue
+        }
         const s = this.serviceBy('id', this.stack[idx].service_id)
         if (s) {
           result[this.stack[idx].service_id] = s
@@ -113,28 +119,35 @@ export default {
         }
       }
       return result
+    },
+    projectGearsGroupedByStack () {
+      var result = {}
+      if (this.project.attributes.stack) {
+        this.project.attributes.stack.forEach((stackMember, idx) => {
+          // if (stackMember.isRemoved) {
+          //   return
+          // }
+          const gearspec = this.gearspecBy('id', stackMember.gearspec_id)
+          const service = this.serviceBy('id', stackMember.service_id)
+          if (gearspec && service) {
+            // console.log(result, gearspec.attributes.stack_id, gearspec.attributes.role)
+            if (typeof result[gearspec.attributes.stack_id] === 'undefined') {
+              result[gearspec.attributes.stack_id] = {
+                isRemoved: stackMember.isRemoved || false
+              }
+            }
+            result[gearspec.attributes.stack_id][gearspec.attributes.role] = service
+          }
+        })
+      }
+      // console.log('projectGearsGroupedByStack', result)
+      return result
     }
   },
   methods: {
     ...mapActions(['addProjectStack']),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
-    groupProjectServicesByStack (projectStack) {
-      var result = {}
-      projectStack.forEach((stackMember, idx) => {
-        const gearspec = this.gearspecBy('id', stackMember.gearspec_id)
-        const service = this.serviceBy('id', stackMember.service_id)
-        if (gearspec && service) {
-          // console.log(result, gearspec.attributes.stack_id, gearspec.attributes.role)
-          if (typeof result[gearspec.attributes.stack_id] === 'undefined') {
-            result[gearspec.attributes.stack_id] = {}
-          }
-          result[gearspec.attributes.stack_id][gearspec.attributes.role] = service
-        }
-      })
-      // console.log('groupProjectStacks', result)
-      return result
     },
     maybeAddProjectStack (stackId) {
       if (!stackId) {
@@ -164,7 +177,6 @@ export default {
       }
     }
   }
-  ///
 }
 </script>
 <style scoped>

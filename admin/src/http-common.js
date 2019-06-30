@@ -3,6 +3,7 @@ import axios from 'axios'
 
 const HTTP = axios.create({
   baseURL: `http://127.0.0.1:9999/`,
+  crossDomain: true,
   headers: {
     'Content-Type': 'application/vnd.api+json'
   }

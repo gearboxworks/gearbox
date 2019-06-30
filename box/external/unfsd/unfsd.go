@@ -24,7 +24,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
 )
 
@@ -411,7 +410,7 @@ func (me *Unfsd) writeNfsExport() status.Status {
 
 	// Force UNFSD to re-read exports file.
 	if me.getPid() > 0 {
-		syscall.Kill(me.getPid(), syscall.SIGHUP)
+//		syscall.Kill(me.getPid(), syscall.SIGHUP)
 	}
 
 	sts = status.Success("UNFSD: Exported:\n %s", serviced_exports)

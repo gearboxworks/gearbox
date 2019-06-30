@@ -68,6 +68,9 @@ export default {
       var result = {}
       const stackItems = this.project.attributes.stack || []
       stackItems.forEach(stackItem => {
+        if (stackItem.isRemoved) {
+          return
+        }
         const gearspec = this.gearspecBy('id', stackItem.gearspec_id)
         if (gearspec) {
           if (typeof result[gearspec.attributes.stack_id] === 'undefined') {
@@ -87,6 +90,7 @@ export default {
           })
         }
       })
+      // console.log(result)
       return result
     }
   },

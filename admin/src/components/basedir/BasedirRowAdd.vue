@@ -15,7 +15,7 @@
         <b-button
           type="submit.prevent"
           :variant="touched['add'] ? 'outline-info': 'outline-secondary'"
-          @click.prevent="onCreateBasedir"
+          @click.prevent="onAddBasedir"
           :disabled="!touched['add']"
           class="btn--add"
           title="Add new directory reference"
@@ -63,7 +63,8 @@ export default {
   },
   methods: {
     ...mapActions({
-      'createBasedir': 'basedirs/create'
+      'createBasedir': 'basedirs/create',
+      'getDirectory': 'getDirectory'
     }),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
@@ -87,7 +88,7 @@ export default {
         ? null
         : (this.errors[basedirId] === 'no error')
     },
-    onCreateBasedir () {
+    onAddBasedir () {
       const ctrl = this.$refs['create-basedir'].$el
       const basedir = ctrl.value
 
@@ -96,14 +97,25 @@ export default {
           basedir
         }
       }
+
+      this.getDirectory({ 'dir': basedir })
+        .then(r => r ? r.data : null)
+        .then(response => {
+          console.log('getDirectory ok', basedir, response)
+        })
+        .catch(e => {
+          console.log('getDirectory err', basedir, e)
+        })
+
       this.createBasedir(recordData)
         .then((res) => {
-          console.log(res)
+          console.log(res, this)
           this.$set(this.touched, 'add', true)
           this.$delete(this.errors, 'add')
           ctrl.value = ''
         })
         .catch(res => {
+          console.log(res, this)
           this.$set(this.errors, 'add', res.data.errors[0].title || res.statusText)
           this.$delete(this.touched, 'add')
         })
