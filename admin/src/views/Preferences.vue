@@ -9,7 +9,7 @@
         :key="basedir.id"
         :basedir="basedir"
         :tab-offset="index"
-        :is-deletable="basedirs.length > 1"
+        :is-deletable="basedir.id !== 'default'"
       />
     </div>
     <div class="basedirs-loading"

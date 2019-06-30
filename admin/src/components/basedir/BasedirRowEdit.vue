@@ -63,7 +63,7 @@
       :variant="basedir.id === isDeletable ? 'outline-secondary':'outline-warning'"
       @click.prevent="onDeleteBasedir"
       :disabled="!isDeletable"
-      :title="isDeletable ? 'Delete this directory': 'Cannot delete the last directory' "
+      :title="isDeletable ? 'Delete this directory': 'Cannot delete the default directory' "
       class="btn--delete"
       :tabindex="tabOffset+2"
     >
