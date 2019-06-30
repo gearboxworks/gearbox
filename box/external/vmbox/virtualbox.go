@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"gearbox/eventbroker/eblog"
+	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/osdirs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"os"
@@ -22,7 +24,6 @@ type Disk struct {
 }
 type Disks []Disk
 
-
 func (me *Vm) vbCreate() (states.State, error) {
 
 	var err error
@@ -36,37 +37,34 @@ func (me *Vm) vbCreate() (states.State, error) {
 
 		state, err = me.cmdVmInfo()
 		switch state {
-			case states.StateError:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateError:
+			eblog.Debug(me.EntityId, "%v", err)
 
+		case states.StateStopped:
+			fallthrough
+		case states.StateStarted:
+			err = nil // msgs.MakeError(me.EntityName,"VM already created")
+			eblog.Debug(me.EntityId, "VM already created")
 
-			case states.StateStopped:
-				fallthrough
-			case states.StateStarted:
-				err = nil		// me.EntityName.ProduceError("VM already created")
-				eblog.Debug(me.EntityId, "VM already created")
+		case states.StateUnregistered:
+			eblog.Debug(me.EntityId, "creating VM")
+			err = me.cmdCreateVm()
+			if err != nil {
+				break
+			}
 
+			eblog.Debug(me.EntityId, "modifying VM")
+			err = me.cmdModifyVm()
+			if err != nil {
+				break
+			}
 
-			case states.StateUnregistered:
-				eblog.Debug(me.EntityId, "creating VM")
-				err = me.cmdCreateVm()
-				if err != nil {
-					break
-				}
+			state, err = me.cmdVmInfo()
 
-				eblog.Debug(me.EntityId, "modifying VM")
-				err = me.cmdModifyVm()
-				if err != nil {
-					break
-				}
+			eblog.Debug(me.EntityId, "VM created OK")
 
-				state, err = me.cmdVmInfo()
-
-				eblog.Debug(me.EntityId, "VM created OK")
-
-
-			case states.StateUnknown:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateUnknown:
+			eblog.Debug(me.EntityId, "%v", err)
 		}
 
 		if err != nil {
@@ -82,7 +80,6 @@ func (me *Vm) vbCreate() (states.State, error) {
 	return state, err
 }
 
-
 func (me *Vm) vbDestroy() error {
 
 	var err error
@@ -96,37 +93,33 @@ func (me *Vm) vbDestroy() error {
 		var state states.State
 		state, err = me.cmdVmInfo()
 		switch state {
-			case states.StateError:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateError:
+			eblog.Debug(me.EntityId, "%v", err)
 
+		case states.StateStopped:
+			eblog.Debug(me.EntityId, "destroying VM")
+			err = me.cmdDestroyVm()
+			if err != nil {
+				break
+			}
 
-			case states.StateStopped:
-				eblog.Debug(me.EntityId, "destroying VM")
-				err = me.cmdDestroyVm()
-				if err != nil {
-					break
-				}
+			err = me.DestroyConfig()
+			if err != nil {
+				break
+			}
 
-				err = me.DestroyConfig()
-				if err != nil {
-					break
-				}
+			eblog.Debug(me.EntityId, "VM destroyed OK")
 
-				eblog.Debug(me.EntityId, "VM destroyed OK")
+		case states.StateStarted:
+			err = msgs.MakeError(me.EntityName, "VM not stopped")
+			eblog.Debug(me.EntityId, "%v", err)
 
+		case states.StateUnregistered:
+			err = msgs.MakeError(me.EntityName, "VM doesn't exist")
+			eblog.Debug(me.EntityId, "%v", err)
 
-			case states.StateStarted:
-				err = me.EntityName.ProduceError("VM not stopped")
-				eblog.Debug(me.EntityId, "%v", err)
-
-
-			case states.StateUnregistered:
-				err = me.EntityName.ProduceError("VM doesn't exist")
-				eblog.Debug(me.EntityId, "%v", err)
-
-
-			case states.StateUnknown:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateUnknown:
+			eblog.Debug(me.EntityId, "%v", err)
 		}
 
 	}
@@ -136,7 +129,6 @@ func (me *Vm) vbDestroy() error {
 
 	return err
 }
-
 
 func (me *Vm) vbStart(wait bool) (bool, error) {
 
@@ -152,39 +144,35 @@ func (me *Vm) vbStart(wait bool) (bool, error) {
 		var state states.State
 		state, err = me.cmdVmInfo()
 		switch state {
-			case states.StateError:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateError:
+			eblog.Debug(me.EntityId, "%v", err)
 
+		case states.StateStopped:
+			// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
+			_, err = me.Run("startvm", me.EntityName.String(), "--type", "headless")
+			if err != nil {
+				break
+			}
 
-			case states.StateStopped:
-				// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
-				_, err = me.Run("startvm", me.EntityName.String(), "--type", "headless")
-				if err != nil {
-					break
-				}
+			ok, err = me.vbWaitForState(states.StateStarted)
+			if err != nil {
+				break
+			}
+			if !ok {
+				break
+			}
 
-				ok, err = me.vbWaitForState(states.StateStarted)
-				if err != nil {
-					break
-				}
-				if !ok {
-					break
-				}
+			eblog.Debug(me.EntityId, "VM started OK")
 
-				eblog.Debug(me.EntityId, "VM started OK")
+		case states.StateStarted:
+			err = msgs.MakeError(me.EntityName, "VM already started")
+			eblog.Debug(me.EntityId, "%v", err)
 
+		case states.StateUnregistered:
+			eblog.Debug(me.EntityId, "%v", err)
 
-			case states.StateStarted:
-				err = me.EntityName.ProduceError("VM already started")
-				eblog.Debug(me.EntityId, "%v", err)
-
-
-			case states.StateUnregistered:
-				eblog.Debug(me.EntityId, "%v", err)
-
-
-			case states.StateUnknown:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateUnknown:
+			eblog.Debug(me.EntityId, "%v", err)
 		}
 
 	}
@@ -194,7 +182,6 @@ func (me *Vm) vbStart(wait bool) (bool, error) {
 
 	return ok, err
 }
-
 
 func (me *Vm) vbStop(force bool, wait bool) (bool, error) {
 
@@ -210,42 +197,38 @@ func (me *Vm) vbStop(force bool, wait bool) (bool, error) {
 		var state states.State
 		state, err = me.cmdVmInfo()
 		switch state {
-			case states.StateError:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateError:
+			eblog.Debug(me.EntityId, "%v", err)
 
+		case states.StateStopped:
+			eblog.Debug(me.EntityId, "VM already stopped")
 
-			case states.StateStopped:
-				eblog.Debug(me.EntityId, "VM already stopped")
+		case states.StateStarted:
+			// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
+			if force {
+				_, err = me.Run("controlvm", me.EntityName.String(), "poweroff")
+			} else {
+				_, err = me.Run("controlvm", me.EntityName.String(), "acpipowerbutton")
+			}
+			if err != nil {
+				break
+			}
 
+			ok, err = me.vbWaitForState(states.StateStarted)
+			if err != nil {
+				break
+			}
+			if !ok {
+				break
+			}
 
-			case states.StateStarted:
-				// stdout, stderr, err := me.Run("showvminfo", vm, "--machinereadable")
-				if force {
-					_, err = me.Run("controlvm", me.EntityName.String(), "poweroff")
-				} else {
-					_, err = me.Run("controlvm", me.EntityName.String(), "acpipowerbutton")
-				}
-				if err != nil {
-					break
-				}
+			eblog.Debug(me.EntityId, "VM stopped OK")
 
-				ok, err = me.vbWaitForState(states.StateStarted)
-				if err != nil {
-					break
-				}
-				if !ok {
-					break
-				}
+		case states.StateUnregistered:
+			eblog.Debug(me.EntityId, "%v", err)
 
-				eblog.Debug(me.EntityId, "VM stopped OK")
-
-
-			case states.StateUnregistered:
-				eblog.Debug(me.EntityId, "%v", err)
-
-
-			case states.StateUnknown:
-				eblog.Debug(me.EntityId, "%v", err)
+		case states.StateUnknown:
+			eblog.Debug(me.EntityId, "%v", err)
 		}
 
 	}
@@ -255,7 +238,6 @@ func (me *Vm) vbStop(force bool, wait bool) (bool, error) {
 
 	return ok, err
 }
-
 
 func (me *Vm) vbStatus() (states.State, error) {
 
@@ -276,7 +258,6 @@ func (me *Vm) vbStatus() (states.State, error) {
 
 	return state, err
 }
-
 
 func (me *Vm) vbWaitForState(want states.State) (bool, error) {
 
@@ -317,8 +298,6 @@ func (me *Vm) vbWaitForState(want states.State) (bool, error) {
 	return ok, err
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////
 func (me *Vm) cmdVmInfo() (states.State, error) {
 
@@ -343,7 +322,7 @@ func (me *Vm) cmdVmInfo() (states.State, error) {
 			if err != nil {
 				if exitCode == exitCodeMissingVm {
 					state = states.StateUnregistered
-					err = me.EntityName.ProduceError("VM not registered")
+					err = msgs.MakeError(me.EntityName, "VM not registered")
 				} else {
 					state = states.StateError
 				}
@@ -353,7 +332,7 @@ func (me *Vm) cmdVmInfo() (states.State, error) {
 			kvs, ok := decodeResponse(me.Entry.cmdStdout, '=')
 			if ok == false {
 				state = states.StateError
-				err = me.EntityName.ProduceError("can't decode showvminfo response")
+				err = msgs.MakeError(me.EntityName, "can't decode showvminfo response")
 				break
 			}
 
@@ -361,25 +340,25 @@ func (me *Vm) cmdVmInfo() (states.State, error) {
 			kvm, ok = kvs.decodeShowVmInfo()
 			if ok == false {
 				state = states.StateError
-				err = me.EntityName.ProduceError("can't decode showvminfo output")
+				err = msgs.MakeError(me.EntityName, "can't decode showvminfo output")
 				break
 			}
 			me.Entry.vmInfo = kvm
 
 			switch me.Entry.vmInfo["VMState"] {
-				case "poweroff":
-					fallthrough
-				case "paused":
-					fallthrough
-				case "saved":
-					state = states.StateStopped
+			case "poweroff":
+				fallthrough
+			case "paused":
+				fallthrough
+			case "saved":
+				state = states.StateStopped
 
-				case "running":
-					state = states.StateStarted
+			case "running":
+				state = states.StateStarted
 
-				default:
-					state = states.StateUnknown
-					err = me.EntityName.ProduceError("VM is in an unknown state")
+			default:
+				state = states.StateUnknown
+				err = msgs.MakeError(me.EntityName, "VM is in an unknown state")
 			}
 
 			// 	VmStatePowerOff 	= "poweroff"	// Valid VM state return from listvm
@@ -421,7 +400,6 @@ func (me *Vm) cmdVmInfo() (states.State, error) {
 	return state, err
 }
 
-
 func (me *Vm) cmdCreateVm() error {
 
 	var err error
@@ -438,8 +416,8 @@ func (me *Vm) cmdCreateVm() error {
 			"--name", me.EntityName.String(),
 			"--ostype", "Linux26_64",
 			"--register",
-			"--basefolder", me.Entry.VmDir.String(),
-			)
+			"--basefolder", me.Entry.VmDir,
+		)
 		if err != nil {
 			break
 		}
@@ -452,7 +430,6 @@ func (me *Vm) cmdCreateVm() error {
 
 	return err
 }
-
 
 func (me *Vm) cmdModifyVm() error {
 
@@ -498,7 +475,6 @@ func (me *Vm) cmdModifyVm() error {
 	return err
 }
 
-
 func (me *Vm) cmdDestroyVm() error {
 
 	var err error
@@ -529,7 +505,6 @@ func (me *Vm) cmdDestroyVm() error {
 	return err
 }
 
-
 func (me *Vm) cmdModifyVmBasic() error {
 
 	var err error
@@ -540,17 +515,17 @@ func (me *Vm) cmdModifyVmBasic() error {
 			break
 		}
 
-		err = me.Entry.IconFile.FileExists()
+		err = osdirs.CheckFileExists(me.Entry.IconFile)
 		if err == nil {
 			// Just don't add the icon if the file doesn't exist.
 
-			// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", me.Entry.IconFile.String())
+			// stdout, stderr, sts = me.Run("modifyvm", me.Boxname, "--description", me.Boxname + " OS VM", "--iconfile", me.Entry.IconFile)
 			name := me.EntityName.String()
-			icon := me.Entry.IconFile.String()
+			icon := me.Entry.IconFile
 			_, err = me.Run("modifyvm", name,
-				"--description", name + " OS VM",
+				"--description", name+" OS VM",
 				"--iconfile", icon,
-				)
+			)
 			if err != nil {
 				break
 			}
@@ -561,7 +536,7 @@ func (me *Vm) cmdModifyVmBasic() error {
 			"--acpi", "on",
 			"--biosbootmenu", "disabled",
 			"--biosapic", "apic",
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -571,7 +546,7 @@ func (me *Vm) cmdModifyVmBasic() error {
 			"--boot2", "none",
 			"--boot3", "none",
 			"--boot4", "none",
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -579,7 +554,7 @@ func (me *Vm) cmdModifyVmBasic() error {
 		_, err = me.Run("modifyvm", me.EntityName.String(),
 			"--vrde", "off",
 			"--autostart-enabled", "off",
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -604,7 +579,7 @@ func (me *Vm) cmdModifyVmBasic() error {
 			"--accelerate3d", "off",
 			"--accelerate2dvideo", "off",
 			"--mouse", "usbtablet",
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -612,7 +587,7 @@ func (me *Vm) cmdModifyVmBasic() error {
 		_, err = me.Run("modifyvm", me.EntityName.String(),
 			"--defaultfrontend", "headless",
 			"--snapshotfolder", "default",
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -620,14 +595,14 @@ func (me *Vm) cmdModifyVmBasic() error {
 		_, err = me.Run("modifyvm", me.EntityName.String(),
 			"--memory", "2048",
 			"--vram", "128",
-			)
+		)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
 			"--audio", "none",
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -640,7 +615,6 @@ func (me *Vm) cmdModifyVmBasic() error {
 
 	return err
 }
-
 
 func (me *Vm) cmdModifyVmNetwork() error {
 
@@ -663,7 +637,7 @@ func (me *Vm) cmdModifyVmNetwork() error {
 			"--nictype2", "82540EM",
 			"--cableconnected2", "on",
 			"--macaddress2", "auto",
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -671,15 +645,15 @@ func (me *Vm) cmdModifyVmNetwork() error {
 		_, err = me.Run("modifyvm", me.EntityName.String(),
 			"--natnet2", "default",
 			"--natpf2", "API,tcp,,9970,,9970",
-			)
+		)
 		if err != nil {
 			break
 		}
 
 		_, err = me.Run("modifyvm", me.EntityName.String(),
 			"--natnet2", "default",
-			"--natpf2", "SSH,tcp,," + me.Entry.Ssh.Port + ",,22",
-			)
+			"--natpf2", "SSH,tcp,,"+me.Entry.Ssh.Port+",,22",
+		)
 		if err != nil {
 			break
 		}
@@ -687,7 +661,7 @@ func (me *Vm) cmdModifyVmNetwork() error {
 		_, err = me.Run("modifyvm", me.EntityName.String(),
 			"--natnet2", "default",
 			"--natpf2", "VMcontrol,tcp,,9971,,9971",
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -700,7 +674,7 @@ func (me *Vm) cmdModifyVmNetwork() error {
 			"--cableconnected1", "on",
 			"--macaddress1", "auto",
 			"--nicpromisc1", "deny",
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -708,7 +682,7 @@ func (me *Vm) cmdModifyVmNetwork() error {
 		_, err = me.Run("modifyvm", me.EntityName.String(),
 			"--uart1", "0x3f8", "4",
 			"--uartmode1", "tcpserver", me.Entry.Console.Port,
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -722,7 +696,6 @@ func (me *Vm) cmdModifyVmNetwork() error {
 	return err
 }
 
-
 func (me *Vm) cmdCreateHostOnlyNet() error {
 
 	var err error
@@ -733,7 +706,6 @@ func (me *Vm) cmdCreateHostOnlyNet() error {
 		if err != nil {
 			break
 		}
-
 
 		if me.Entry.HostOnlyNic.Ip == "" {
 			me.Entry.HostOnlyNic.Ip = DefaultHostOnlyIp
@@ -751,7 +723,6 @@ func (me *Vm) cmdCreateHostOnlyNet() error {
 			me.Entry.HostOnlyNic.DhcpUpperIp = DefaultHostOnlyDhcpUpperIp
 		}
 
-
 		me.Entry.HostOnlyNic.Name, err = me.cmdFindHostOnlyNet()
 		if err != nil {
 			break
@@ -760,7 +731,6 @@ func (me *Vm) cmdCreateHostOnlyNet() error {
 			eblog.Debug(me.EntityId, "hostonlyif already created")
 			break
 		}
-
 
 		// Such a pain in the neck this process...
 		_, err = me.Run("hostonlyif", "create")
@@ -773,15 +743,14 @@ func (me *Vm) cmdCreateHostOnlyNet() error {
 		re := regexp.MustCompile(`Interface '(\w+)' was successfully created`)
 		f := re.FindAllStringSubmatch(me.Entry.cmdStdout.String(), -1)
 		if len(f) == 0 {
-			err = me.EntityName.ProduceError("hostonlyif not created")
+			err = msgs.MakeError(me.EntityName, "hostonlyif not created")
 			break
 		}
 		if len(f[0]) == 0 {
-			err = me.EntityName.ProduceError("hostonlyif not created")
+			err = msgs.MakeError(me.EntityName, "hostonlyif not created")
 			break
 		}
 		me.Entry.HostOnlyNic.Name = f[0][1]
-
 
 		_, err = me.Run("hostonlyif",
 			"ipconfig", me.Entry.HostOnlyNic.Name,
@@ -791,7 +760,6 @@ func (me *Vm) cmdCreateHostOnlyNet() error {
 		if err != nil {
 			break
 		}
-
 
 		args := []string{
 			"--enable",
@@ -830,7 +798,6 @@ func (me *Vm) cmdCreateHostOnlyNet() error {
 	return err
 }
 
-
 func (me *Vm) cmdDestroyHostOnlyNet() error {
 
 	var err error
@@ -847,17 +814,16 @@ func (me *Vm) cmdDestroyHostOnlyNet() error {
 			break
 		}
 
-
 		_, err = me.Run("hostonlyif",
 			"remove", me.Entry.HostOnlyNic.Name,
-			)
-		eblog.LogIfError(me.EntityId, err)	// Don't exit just yet, but log error.
+		)
+		eblog.LogIfError(me.EntityId, err) // Don't exit just yet, but log error.
 		//if err != nil {
 		//	break
 		//}
 
 		_, err = me.Run("dhcpserver", "remove",
-			"--netname", "HostInterfaceNetworking-" + me.Entry.HostOnlyNic.Name,
+			"--netname", "HostInterfaceNetworking-"+me.Entry.HostOnlyNic.Name,
 		)
 		if err != nil {
 			break
@@ -873,7 +839,6 @@ func (me *Vm) cmdDestroyHostOnlyNet() error {
 
 	return err
 }
-
 
 func (me *Vm) cmdFindHostOnlyNet() (string, error) {
 
@@ -901,7 +866,7 @@ func (me *Vm) cmdFindHostOnlyNet() (string, error) {
 		if ok == true {
 			me.Entry.vmNics, ok = dr.decodeNics()
 			if ok == false {
-				err = me.EntityName.ProduceError("no NICs found")
+				err = msgs.MakeError(me.EntityName, "no NICs found")
 				break
 			}
 
@@ -915,7 +880,7 @@ func (me *Vm) cmdFindHostOnlyNet() (string, error) {
 		}
 
 		//if nic == nil {
-		//	err = me.EntityName.ProduceError("no NICs found")
+		//	err = msgs.MakeError(me.EntityName,"no NICs found")
 		//	break
 		//}
 
@@ -927,7 +892,6 @@ func (me *Vm) cmdFindHostOnlyNet() (string, error) {
 
 	return ret, err
 }
-
 
 func (me *Vm) cmdModifyVmStorage() error {
 
@@ -947,7 +911,7 @@ func (me *Vm) cmdModifyVmStorage() error {
 			"--portcount", "4",
 			"--hostiocache", "off",
 			"--bootable", "on",
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -955,41 +919,38 @@ func (me *Vm) cmdModifyVmStorage() error {
 		// SIGH - Needs to be not hard-coded.
 		disks := Disks{}
 		disks = append(disks, Disk{
-			Name: "Gearbox-Opt.vdi",
+			Name:   "Gearbox-Opt.vdi",
 			Format: "VDI",
-			Size: "1024",
+			Size:   "1024",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Docker.vdi",
+			Name:   "Gearbox-Docker.vdi",
 			Format: "VDI",
-			Size: "16384",
+			Size:   "16384",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Projects.vdi",
+			Name:   "Gearbox-Projects.vdi",
 			Format: "VDI",
-			Size: "16384",
+			Size:   "16384",
 		})
 		disks = append(disks, Disk{
-			Name: "Gearbox-Config.vdi",
+			Name:   "Gearbox-Config.vdi",
 			Format: "VDI",
-			Size: "1024",
+			Size:   "1024",
 		})
 
 		for index, disk := range disks {
-			//fileName := me.baseDir.String() + "/" + me.EntityName.String() + "/" + disk.Name
-			fileName := me.Entry.VmDir.
-				AddToPath(me.EntityName.String()).
-				AddFileToPath(disk.Name).
-				String()
+
+			fileName := osdirs.AddPaths(me.Entry.VmDir, me.EntityName.String())
+			fileName = osdirs.AddFilef(fileName, disk.Name)
 			order := strconv.Itoa(index)
 
-			// _, err = me.Run("createmedium", "disk", "--filename", fileName, "--size", disk.Size, "--format", disk.Format, "--variant", "Stream")
 			_, err = me.Run("createmedium", "disk",
 				"--filename", fileName,
 				"--size", disk.Size,
 				"--format", disk.Format,
 				"--variant", "Standard",
-				)
+			)
 			if err != nil {
 				break
 			}
@@ -1001,7 +962,7 @@ func (me *Vm) cmdModifyVmStorage() error {
 				"--type", "hdd",
 				"--medium", fileName,
 				"--hotpluggable", "off",
-				)
+			)
 			if err != nil {
 				break
 			}
@@ -1015,7 +976,6 @@ func (me *Vm) cmdModifyVmStorage() error {
 
 	return err
 }
-
 
 func (me *Vm) cmdModifyVmIso() error {
 
@@ -1033,7 +993,7 @@ func (me *Vm) cmdModifyVmIso() error {
 			"--add", "ide",
 			"--hostiocache", "on",
 			"--bootable", "on",
-			)
+		)
 		if err != nil {
 			break
 		}
@@ -1044,8 +1004,8 @@ func (me *Vm) cmdModifyVmIso() error {
 			"--device", "0",
 			"--type", "dvddrive",
 			"--tempeject", "on",
-			"--medium", me.osRelease.File.String(),
-			)
+			"--medium", me.osRelease.File,
+		)
 		if err != nil {
 			break
 		}
@@ -1058,7 +1018,6 @@ func (me *Vm) cmdModifyVmIso() error {
 
 	return err
 }
-
 
 func (me *Vm) findFirstNic() error {
 
@@ -1081,7 +1040,7 @@ func (me *Vm) findFirstNic() error {
 		if ok == true {
 			me.Entry.vmNics, ok = dr.decodeBridgeIfs()
 			if ok == false {
-				err = me.EntityName.ProduceError("no NICs found")
+				err = msgs.MakeError(me.EntityName, "no NICs found")
 				break
 			}
 
@@ -1093,7 +1052,7 @@ func (me *Vm) findFirstNic() error {
 		}
 
 		if nic == nil {
-			err = me.EntityName.ProduceError("no NICs found")
+			err = msgs.MakeError(me.EntityName, "no NICs found")
 			break
 		}
 
@@ -1105,7 +1064,6 @@ func (me *Vm) findFirstNic() error {
 
 	return err
 }
-
 
 // Run runs a VBoxManage command.
 func (me *Vm) Run(args ...string) (exitCode string, err error) {
@@ -1140,17 +1098,17 @@ func (me *Vm) Run(args ...string) (exitCode string, err error) {
 			exitCode = strings.TrimPrefix(err.Error(), "exit status ")
 
 			switch exitCode {
-				case exitCodeMissingVm:
-					err = me.EntityName.ProduceError("VirtualBox command error '%v'", cmd.Stderr)
-					//fmt.Printf("stdout:%v\n", stdout.String())
-					//fmt.Printf("stderr:%v\n", stderr.String())
-					//fmt.Printf("returnCode:'%v'\n", returnCode)
+			case exitCodeMissingVm:
+				err = msgs.MakeError(me.EntityName, "VirtualBox command error '%v'", cmd.Stderr)
+				//fmt.Printf("stdout:%v\n", stdout.String())
+				//fmt.Printf("stderr:%v\n", stderr.String())
+				//fmt.Printf("returnCode:'%v'\n", returnCode)
 
-				default:
-					err = me.EntityName.ProduceError("failed to run command '%v'", err.Error())
-					fmt.Printf("stdout:%v\n", me.Entry.cmdStdout.String())
-					fmt.Printf("stderr:%v\n", me.Entry.cmdStderr.String())
-					fmt.Printf("returnCode:'%v'\n", exitCode)
+			default:
+				err = msgs.MakeError(me.EntityName, "failed to run command '%v'", err.Error())
+				fmt.Printf("stdout:%v\n", me.Entry.cmdStdout.String())
+				fmt.Printf("stderr:%v\n", me.Entry.cmdStderr.String())
+				fmt.Printf("returnCode:'%v'\n", exitCode)
 			}
 		}
 
@@ -1164,22 +1122,19 @@ func (me *Vm) Run(args ...string) (exitCode string, err error) {
 }
 
 const (
-	exitCodeOK = "0"
+	exitCodeOK        = "0"
 	exitCodeMissingVm = "1"
-	exitCodeCmdError = "2"
+	exitCodeCmdError  = "2"
 )
 
-
-
 type KeyValue struct {
-	Key	string
+	Key   string
 	Value string
 }
 type KeyValues []KeyValue
 
 type KeyValueMap map[string]string
 type KeyValuesMap map[string]KeyValueMap
-
 
 func (kvs *KeyValues) decodeBridgeIfs() (KeyValuesMap, bool) {
 
@@ -1208,7 +1163,6 @@ func (kvs *KeyValues) decodeBridgeIfs() (KeyValuesMap, bool) {
 	return kvm, ok
 }
 
-
 func (kvs *KeyValues) decodeNics() (KeyValuesMap, bool) {
 
 	ok := false
@@ -1234,7 +1188,6 @@ func (kvs *KeyValues) decodeNics() (KeyValuesMap, bool) {
 	return kvm, ok
 }
 
-
 func (kvs *KeyValues) decodeShowVmInfo() (KeyValueMap, bool) {
 
 	ok := false
@@ -1252,7 +1205,6 @@ func (kvs *KeyValues) decodeShowVmInfo() (KeyValueMap, bool) {
 
 	return kvm, ok
 }
-
 
 func lineToKey(s string, splitOn rune) (ld KeyValue, ok bool) {
 
@@ -1299,7 +1251,6 @@ func lineToKey(s string, splitOn rune) (ld KeyValue, ok bool) {
 	return
 }
 
-
 func decodeResponse(s bytes.Buffer, splitOn rune) (dr KeyValues, ok bool) {
 
 	ok = false
@@ -1320,7 +1271,6 @@ func decodeResponse(s bytes.Buffer, splitOn rune) (dr KeyValues, ok bool) {
 
 	return
 }
-
 
 //#!/bin/bash
 //
@@ -1401,4 +1351,3 @@ func decodeResponse(s bytes.Buffer, splitOn rune) (dr KeyValues, ok bool) {
 //# Create IDE bus for ISO.
 //VBoxManage storagectl ${VM_NAME} --name "IDE" --add ide --hostiocache on --bootable on
 //VBoxManage storageattach ${VM_NAME} --storagectl "IDE" --port 0 --device 0 --type dvddrive --tempeject on  --medium $HOME/.gearbox/box/iso/gearbox-0.5.0.iso
-

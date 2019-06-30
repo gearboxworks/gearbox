@@ -2,16 +2,14 @@ package network
 
 import (
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"github.com/gearboxworks/go-status/only"
 )
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a task.
-
 
 // Non-exposed task function - M-DNS initialization.
 func initZeroConf(task *tasks.Task, i ...interface{}) error {
@@ -58,11 +56,11 @@ func initZeroConf(task *tasks.Task, i ...interface{}) error {
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("get"), getHandler, me, messages.InterfaceTypeSubTopics)
+			err = me.channelHandler.Subscribe(msgs.SubTopic("get"), getHandler, me, msgs.InterfaceTypeSubTopics)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("scan"), scanServices, me, states.InterfaceTypeError)
+			err = me.channelHandler.Subscribe(msgs.SubTopic("scan"), scanServices, me, states.InterfaceTypeError)
 			if err != nil {
 				break
 			}
@@ -78,7 +76,6 @@ func initZeroConf(task *tasks.Task, i ...interface{}) error {
 
 	return err
 }
-
 
 // Non-exposed task function - M-DNS start.
 func startZeroConf(task *tasks.Task, i ...interface{}) error {
@@ -108,10 +105,8 @@ func startZeroConf(task *tasks.Task, i ...interface{}) error {
 		eblog.LogIfError(me.EntityId, err)
 	}
 
-
 	return err
 }
-
 
 // Non-exposed task function - M-DNS monitoring.
 func monitorZeroConf(task *tasks.Task, i ...interface{}) error {
@@ -125,13 +120,11 @@ func monitorZeroConf(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-
 		// First monitor my current state.
 		if me.State.GetCurrent() != states.StateStarted {
-			err = me.EntityId.ProduceError("task needs restarting")
+			err = msgs.MakeError(me.EntityId, "task needs restarting")
 			break
 		}
-
 
 		// Next do something else.
 		for range only.Once {
@@ -168,7 +161,6 @@ func monitorZeroConf(task *tasks.Task, i ...interface{}) error {
 	return err
 }
 
-
 // Non-exposed task function - M-DNS stop.
 func stopZeroConf(task *tasks.Task, i ...interface{}) error {
 
@@ -201,4 +193,3 @@ func stopZeroConf(task *tasks.Task, i ...interface{}) error {
 
 	return err
 }
-

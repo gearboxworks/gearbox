@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 )
@@ -12,9 +12,8 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 // Executed from a channel
 
-
 // Non-exposed channel function that responds to an "stop" channel request.
-func stopHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func stopHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *ZeroConf
@@ -39,9 +38,8 @@ func stopHandler(event *messages.Message, i channels.Argument, r channels.Return
 	return &err
 }
 
-
 // Non-exposed channel function that responds to an "start" channel request.
-func startHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func startHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *ZeroConf
@@ -66,9 +64,8 @@ func startHandler(event *messages.Message, i channels.Argument, r channels.Retur
 	return &err
 }
 
-
 // Non-exposed channel function that responds to a "status" channel request.
-func statusHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func statusHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *ZeroConf
@@ -85,7 +82,7 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 			ret = me.State.GetStatus()
 		} else {
 			// Get status of specific sub
-			sc := me.IsExisting(messages.MessageAddress(event.Text))
+			sc := me.IsExisting(msgs.Address(event.Text))
 			if sc != nil {
 				ret, err = sc.GetStatus()
 			}
@@ -100,9 +97,8 @@ func statusHandler(event *messages.Message, i channels.Argument, r channels.Retu
 	return ret
 }
 
-
 // Non-exposed channel function that responds to a "register" channel request.
-func registerService(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func registerService(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var me *ZeroConf
 	var ret *Service
@@ -118,7 +114,7 @@ func registerService(event *messages.Message, i channels.Argument, r channels.Re
 		ce, err = DeconstructMdnsMessage(event)
 		//err = json.Unmarshal(event.Text.ByteArray(), &ce)
 		if err != nil {
-			err = me.EntityId.ProduceError("cannot deconstruct MDNS message with error '%v'", err)
+			err = msgs.MakeError(me.EntityId, "cannot deconstruct MDNS message with error '%v'", err)
 			break
 		}
 
@@ -136,9 +132,8 @@ func registerService(event *messages.Message, i channels.Argument, r channels.Re
 	return ret
 }
 
-
 // Non-exposed channel function that responds to an "unregister" channel request.
-func unregisterService(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func unregisterService(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var me *ZeroConf
 	var err error
@@ -150,12 +145,12 @@ func unregisterService(event *messages.Message, i channels.Argument, r channels.
 		}
 
 		// Use message element as the UUID.
-		err = me.UnregisterByEntityId(event.Text.ToMessageAddress())
+		err = me.UnregisterByEntityId(event.Text.ToAddress())
 		if err != nil {
 			break
 		}
 
-		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", event.Text.ToMessageAddress())
+		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", event.Text.ToAddress())
 	}
 
 	eblog.LogIfNil(me, err)
@@ -164,13 +159,12 @@ func unregisterService(event *messages.Message, i channels.Argument, r channels.
 	return &err
 }
 
-
 // Non-exposed channel function that responds to a "get" channel request.
-func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func getHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *ZeroConf
-	var ret messages.SubTopics
+	var ret msgs.SubTopics
 
 	for range only.Once {
 		me, err = InterfaceToTypeZeroConf(i)
@@ -179,10 +173,10 @@ func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnT
 		}
 
 		switch event.Text.String() {
-			case "topics":
-				ret = me.channelHandler.GetTopics()
-			case "topics/subs":
-				ret = me.channelHandler.GetTopics()
+		case "topics":
+			ret = me.channelHandler.GetTopics()
+		case "topics/subs":
+			ret = me.channelHandler.GetTopics()
 		}
 
 		fmt.Printf("topics: %v\n", ret)
@@ -196,9 +190,8 @@ func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnT
 	return &ret
 }
 
-
 // Non-exposed channel function that responds to a "scan" channel request.
-func scanServices(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func scanServices(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var me *ZeroConf
 	var err error
@@ -222,4 +215,3 @@ func scanServices(event *messages.Message, i channels.Argument, r channels.Retur
 
 	return &err
 }
-

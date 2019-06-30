@@ -1,14 +1,15 @@
 package vmbox
 
 import (
+	"errors"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"gearbox/global"
 	"github.com/gearboxworks/go-status/only"
 )
-
 
 func New(args ...Args) (*VmBox, error) {
 
@@ -26,20 +27,19 @@ func New(args ...Args) (*VmBox, error) {
 		//foo := Args{}
 		//err = copier.Copy(&foo, &_args)
 		//if err != nil {
-		//	err = _args.EntityId.ProduceError("unable to copy config args")
+		//	err = msgs.MakeError(_args.EntityId,"unable to copy config args")
 		//	break
 		//}
 
 		if _args.Channels == nil {
-			err = _args.EntityId.ProduceError("channel pointer is nil")
+			err = msgs.MakeError(_args.EntityId, "channel pointer is nil")
 			break
 		}
 
 		if _args.OsPaths == nil {
-			err = _args.EntityId.ProduceError("ospaths is nil")
+			err = msgs.MakeError(_args.EntityId, "ospaths is nil")
 			break
 		}
-
 
 		if _args.EntityId == "" {
 			_args.EntityId = entity.VmBoxEntityName
@@ -53,7 +53,7 @@ func New(args ...Args) (*VmBox, error) {
 			_args.EntityParent = _args.EntityId
 		}
 
-		_args.State = states.New(&_args.EntityId, &_args.EntityId, entity.SelfEntityName)
+		_args.State = states.New(_args.EntityId, _args.EntityId, entity.SelfEntityName)
 
 		if _args.Boxname == "" {
 			_args.Boxname = global.Brandname
@@ -69,19 +69,18 @@ func New(args ...Args) (*VmBox, error) {
 
 		*me = VmBox(_args)
 
-
-		me.State.SetWant(states.StateIdle)
-		me.State.SetNewState(states.StateIdle, err)
+		me.SetWantState(states.StateIdle)
+		me.SetStateError(err)
+		me.SetState(states.StateIdle)
 		eblog.Debug(me.EntityId, "init complete")
 	}
 
-	me.Channels.PublishState(me.State)
+	me.PublishChannelState(me.State)
 	eblog.LogIfNil(me, err)
 	eblog.LogIfError(me.EntityId, err)
 
 	return me, err
 }
-
 
 // Start the VmBox handler.
 func (me *VmBox) Start() error {
@@ -94,19 +93,23 @@ func (me *VmBox) Start() error {
 			break
 		}
 
-		me.State.SetNewAction(states.ActionStart)
-		me.Channels.PublishState(me.State)
+		me.SetStateAction(states.ActionStart)
+		me.PublishChannelState(me.State)
 
 		for range only.Once {
 			me.Task, err = tasks.StartTask(initVmBox, startVmBox, monitorVmBox, stopVmBox, me)
-			me.State.SetError(err)
+			me.SetStateError(err)
 			if err != nil {
+				eblog.LogIfError(msgs.Address("unable to start tasks"), err)
 				break
 			}
 		}
 
-		me.State.SetNewState(states.StateStarted, err)
-		me.Channels.PublishState(me.State)
+		if err == nil {
+			me.SetState(states.StateStarted)
+		}
+
+		me.PublishChannelState(me.State)
 		eblog.Debug(me.EntityId, "started task handler")
 	}
 
@@ -115,7 +118,6 @@ func (me *VmBox) Start() error {
 
 	return err
 }
-
 
 // Stop the VmBox handler.
 func (me *VmBox) Stop() error {
@@ -128,19 +130,24 @@ func (me *VmBox) Stop() error {
 			break
 		}
 
-		me.State.SetNewAction(states.ActionStop)
-		me.Channels.PublishState(me.State)
+		me.SetStateAction(states.ActionStop)
+		me.PublishChannelState(me.State)
 
-		for range only.Once {
-			_ = me.StopVms()
-			// Ignore error, will clean up when program exits.
-
-			err = me.Task.Stop()
+		err = me.StopVms()
+		if err != nil {
+			eblog.LogIfError(msgs.Address("VM failed to stop"), err)
 		}
 
-		me.State.SetNewState(states.StateStopped, err)
-		me.Channels.PublishState(me.State)
+		err = me.Task.Stop()
+		if err != nil {
+			me.SetStateError(err)
+		} else {
+			me.SetState(states.StateStopped)
+		}
+
+		me.PublishChannelState(me.State)
 		eblog.Debug(me.EntityId, "stopped task handler")
+
 	}
 
 	eblog.LogIfNil(me, err)
@@ -148,7 +155,6 @@ func (me *VmBox) Stop() error {
 
 	return err
 }
-
 
 func (me *VmBox) StopVms() error {
 
@@ -161,10 +167,11 @@ func (me *VmBox) StopVms() error {
 		}
 
 		for u := range me.vms {
-			if me.vms[u].IsManaged {
-				_ = me.vms[u].Stop()
-				// Ignore error, will clean up when program exits.
+			if !me.vms[u].IsManaged {
+				continue
 			}
+			err = me.vms[u].Stop()
+			eblog.LogIfError(msgs.Address("VM failed to stop"), err)
 		}
 	}
 
@@ -174,3 +181,29 @@ func (me *VmBox) StopVms() error {
 	return err
 }
 
+func (me *VmBox) EnsureNotNil() (err error) {
+	if me == nil {
+		err = errors.New("VmBox instance is nil")
+	}
+	return err
+}
+
+func (me *VmBox) SetStateError(err error) {
+	me.State.Error = err
+}
+
+func (me *VmBox) SetState(s states.State) {
+	me.State.SetState(s)
+}
+
+func (me *VmBox) SetStateAction(a states.Action) {
+	me.State.SetNewAction(a)
+}
+
+func (me *VmBox) PublishChannelState(state *states.Status) {
+	me.Channels.PublishState(me.State)
+}
+
+func (me *VmBox) SetWantState(s states.State) {
+	me.State.SetWant(s)
+}

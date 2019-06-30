@@ -3,16 +3,14 @@ package vmbox
 import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"github.com/gearboxworks/go-status/only"
 )
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a task.
-
 
 // Non-exposed task function - M-DNS initialization.
 func initVmBox(task *tasks.Task, i ...interface{}) error {
@@ -59,10 +57,9 @@ func initVmBox(task *tasks.Task, i ...interface{}) error {
 				break
 			}
 
-
 			// Hard coded for one Vm named "gearbox" for now...
 			sc := ServiceConfig{
-				Name: messages.MessageAddress(me.Boxname),
+				Name:    msgs.Address(me.Boxname),
 				Version: "latest",
 			}
 			myVM, err := me.New(sc)
@@ -70,7 +67,6 @@ func initVmBox(task *tasks.Task, i ...interface{}) error {
 				eblog.Debug(me.EntityId, "VM: %v\n", myVM.State.GetStatus())
 				fmt.Printf("Gearbox: Created VM.\n")
 			}
-
 
 			me.State.SetNewState(states.StateInitialized, err)
 			me.Channels.PublishState(me.State)
@@ -83,7 +79,6 @@ func initVmBox(task *tasks.Task, i ...interface{}) error {
 
 	return err
 }
-
 
 // Non-exposed task function - M-DNS start.
 func startVmBox(task *tasks.Task, i ...interface{}) error {
@@ -104,7 +99,6 @@ func startVmBox(task *tasks.Task, i ...interface{}) error {
 			// Function to restart services should they die.
 			// Will only be executed if monitor task fails.
 
-
 			me.State.SetNewState(states.StateStarted, err)
 			me.Channels.PublishState(me.State)
 			eblog.Debug(me.EntityId, "task handler init completed OK")
@@ -116,7 +110,6 @@ func startVmBox(task *tasks.Task, i ...interface{}) error {
 
 	return err
 }
-
 
 // Non-exposed task function - M-DNS monitoring.
 func monitorVmBox(task *tasks.Task, i ...interface{}) error {
@@ -130,10 +123,9 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-
 		//// First monitor my current state.
 		//if me.State.GetCurrent() != states.StateStarted {
-		//	err = messages.ProduceError(entity.VmBoxEntityName, "task needs restarting")
+		//	err = msg.MakeError(entity.VmBoxEntityName, "task needs restarting")
 		//	break
 		//}
 		//
@@ -145,14 +137,14 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 		//		// Leave it to the user.
 		//
 		//	case IsoFileIsDownloading:
-		//		// Send periodic messages to Heartbeat.
-		//		//msg := messages.Message{
+		//		// Send periodic msg to Heartbeat.
+		//		//msg := msg.Message{
 		//		//	Source: me.EntityId,
-		//		//	Topic: messages.MessageTopic{
+		//		//	Topic: msg.Topic{
 		//		//		Address:  entity.BroadcastEntityName,
 		//		//		SubTopic: states.ActionUpdate,
 		//		//	},
-		//		//	Text: messages.MessageText(fmt.Sprintf("%s:%d", me.Releases.Selected.File.String(), me.Releases.Selected.DlIndex)),
+		//		//	Text: msg.Text(fmt.Sprintf("%s:%d", me.Releases.Selected.File.String(), me.Releases.Selected.DlIndex)),
 		//		//}
 		//		//_ = me.Channels.Publish(msg)
 		//
@@ -163,11 +155,10 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 		//	//
 		//}
 		//
-		//f := messages.MessageAddress("update")
-		//msg := f.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, "90%")
+		//f := msg.Address("update")
+		//msg := f.MakeMessage(entity.BroadcastEntityName, states.ActionStatus, "90%")
 		////fmt.Printf("EXPECTING: %s\n", msg.String())
 		//_ = me.Channels.Publish(msg)
-
 
 		// Next do something else.
 		for range only.Once {
@@ -219,7 +210,6 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 	return err
 }
 
-
 // Non-exposed task function - M-DNS stop.
 func stopVmBox(task *tasks.Task, i ...interface{}) error {
 
@@ -252,4 +242,3 @@ func stopVmBox(task *tasks.Task, i ...interface{}) error {
 
 	return err
 }
-

@@ -67,12 +67,12 @@ type Gearboxer interface {
 	RequestAvailableContainers(...*dockerhub.ContainerQuery) (dockerhub.ContainerNames, status.Status)
 
 	// VM related.
-	BoxDaemon(box.Args) status.Status
-	StartBox(box.Args) status.Status
-	StopBox(box.Args) status.Status
-	RestartBox(box.Args) status.Status
-	CreateBox(box.Args) status.Status
-	PrintBoxStatus(box.Args) status.Status
+	BoxDaemon(*box.Args) status.Status
+	StartBox(*box.Args) status.Status
+	StopBox(*box.Args) status.Status
+	RestartBox(*box.Args) status.Status
+	CreateBox(*box.Args) status.Status
+	PrintBoxStatus(*box.Args) status.Status
 	ConnectSSH(ssh.Args) status.Status
 
 	SetConfig(config.Configer)
@@ -287,7 +287,7 @@ func (me *Gearbox) WriteAssetsToAdminWebRoot() {
 	}
 	for _, afn := range AssetNames() {
 		afn = filepath.FromSlash(afn)
-		err := RestoreAsset(string(hc.GetUserConfigDir()), afn)
+		err := RestoreAsset(hc.GetUserConfigDir(), afn)
 		if err != nil {
 			afn = fmt.Sprintf("'%s/%s'", hc.GetUserConfigDir(), afn)
 			log.Printf("Could not restore asset '%s': %v\n", afn, err.Error())

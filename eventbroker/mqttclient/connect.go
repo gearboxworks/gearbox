@@ -3,14 +3,13 @@ package mqttClient
 import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/fhmq/hmq/lib/topics"
 	"github.com/gearboxworks/go-status/only"
 	"net/url"
 )
-
 
 func (me *MqttClient) IsConnected() (bool, error) {
 
@@ -32,7 +31,6 @@ func (me *MqttClient) IsConnected() (bool, error) {
 
 	return ok, err
 }
-
 
 func (me *MqttClient) ConnectToServer(u string) error {
 
@@ -62,7 +60,7 @@ func (me *MqttClient) ConnectToServer(u string) error {
 
 		me.Server, err = url.Parse(u)
 		if err != nil {
-			err = me.EntityId.ProduceError("unable to parse config")
+			err = msgs.MakeError(me.EntityId, "unable to parse config")
 			break
 		}
 
@@ -73,23 +71,23 @@ func (me *MqttClient) ConnectToServer(u string) error {
 			p, ok := me.Server.User.Password()
 			if !ok {
 				// err = errors.New(string(states.StateUnregistered))
-				err = me.EntityId.ProduceError(string(states.StateError))
+				err = msgs.MakeError(me.EntityId, string(states.StateError))
 				break
 			}
 			me.instance.options.SetPassword(p)
 		}
 
-		myWill := me.EntityId.CreateTopic(states.ActionStatus).String()
+		myWill := msgs.NewTopic(me.EntityId, states.ActionStatus).String()
 		me.instance.options.SetWill(myWill, "stopped", topics.QosFailure, false)
 		eblog.Debug(me.EntityId, "MqttClient setting LWaT as '%s' on %s", myWill, me.Server.String())
 
 		me.instance.client = mqtt.NewClient(me.instance.options)
 		if me.instance.client == nil {
-			err = me.EntityId.ProduceError("unable to create client")
+			err = msgs.MakeError(me.EntityId, "unable to create client")
 			break
 		}
 
-		topic := me.EntityId.ConstructTopic(me.EntityId, states.ActionGlob)
+		topic := me.EntityId.MakeTopic(me.EntityId, states.ActionGlob)
 
 		// uri.Path[1:len(uri.Path)]
 		err = topic.EnsureNotNil()
@@ -99,7 +97,7 @@ func (me *MqttClient) ConnectToServer(u string) error {
 
 		me.instance.token = me.instance.client.Connect()
 		if me.instance.token == nil {
-			err = me.EntityId.ProduceError("unable to connect to %s", me.EntityId.String(), me.Server.String())
+			err = msgs.MakeError(me.EntityId, "unable to connect to %s", me.EntityId.String(), me.Server.String())
 			break
 		}
 
@@ -122,8 +120,7 @@ func (me *MqttClient) ConnectToServer(u string) error {
 	return err
 }
 
-
-func (me *MqttClient) GlobSubscribe(client messages.MessageAddress) error {
+func (me *MqttClient) GlobSubscribe(client msgs.Address) error {
 
 	var err error
 	var ok bool
@@ -152,7 +149,6 @@ func (me *MqttClient) GlobSubscribe(client messages.MessageAddress) error {
 	return err
 }
 
-
 func MessageHandler(client mqtt.Client, message mqtt.Message) {
 
 	fmt.Printf("MessageHandler =>\n")
@@ -161,4 +157,3 @@ func MessageHandler(client mqtt.Client, message mqtt.Message) {
 	//fmt.Printf("mqtt.Client => %v\n", client)
 	//fmt.Printf("MessageHandler => %v\n", message)
 }
-

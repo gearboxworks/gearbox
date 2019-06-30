@@ -1,10 +1,29 @@
-package messages
+package msgs
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gearboxworks/go-status/only"
+	"github.com/google/uuid"
 	"reflect"
 )
+
+func MakeAddress() Address {
+	return Address(uuid.New().String())
+}
+
+func MakeError(me Address, msg string, args ...interface{}) error {
+	if me == "" {
+		return errors.New(fmt.Sprintf(msg, args...))
+	} else {
+		return errors.New(fmt.Sprintf(me.String()+": "+msg, args...))
+	}
+}
+
+func SprintfTopic(address Address, topic SubTopic) string {
+
+	return fmt.Sprintf(TopicPattern, address.String(), topic.String())
+}
 
 func InterfaceToTypeSubTopics(i interface{}) (*SubTopics, error) {
 
@@ -28,4 +47,3 @@ func InterfaceToTypeSubTopics(i interface{}) (*SubTopics, error) {
 
 	return zc, err
 }
-

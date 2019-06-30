@@ -1,12 +1,11 @@
 package eblog
 
 import (
-	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/ospaths"
+	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/osdirs"
 	"github.com/sebest/logrusly"
 	"github.com/sirupsen/logrus"
 )
-
 
 const (
 	PanicLevel = logrus.PanicLevel
@@ -21,15 +20,14 @@ const defaultLogFile = "eventbroker.log"
 
 const DefaultEntityName = "eblog"
 
-
 type Logger struct {
-	EntityId   *messages.MessageAddress
-	EntityName messages.MessageAddress
-	OsPaths    *ospaths.BasePaths
+	EntityId   *msgs.Address
+	EntityName msgs.Address
+	OsPaths    *osdirs.BaseDirs
 	//Sts        status.Status
-	DebugMode  bool    `json:"debug"`
-	Loggly     Loggly  `json:"loggly"`
-	LogFile    LogFile `json:"logfile"`
+	DebugMode bool    `json:"debug"`
+	Loggly    Loggly  `json:"loggly"`
+	LogFile   LogFile `json:"logfile"`
 	// Disabled to work on GOOS=windows
 	//Syslog    Syslog  `json:"syslog"`
 
@@ -44,7 +42,7 @@ type Loggly struct {
 	Token   string `json:"token"`
 	Server  string `json:"server"`
 	Tag     string `json:"tag"`
-	hook *logrusly.LogglyHook
+	hook    *logrusly.LogglyHook
 }
 
 // Disabled to work on GOOS=windows

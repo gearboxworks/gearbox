@@ -3,13 +3,13 @@ package states
 import (
 	"encoding/json"
 	"errors"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/entity"
+	"gearbox/eventbroker/msgs"
 	"github.com/gearboxworks/go-status/only"
 	"reflect"
 	"sync"
 	"time"
 )
-
 
 func InterfaceToTypeStatus(i interface{}) (*Status, error) {
 
@@ -61,18 +61,17 @@ func InterfaceToTypeError(i interface{}) (*error, error) {
 	return zc, err
 }
 
-
-func New(client *messages.MessageAddress, name *messages.MessageAddress, parent messages.MessageAddress) *Status {
+func New(client msgs.Address, name msgs.Address, parent msgs.Address) *Status {
 
 	var ret Status
 
-	if (*name == "") || (*name == "self") {
-		*name = *client
+	if name == "" || name == entity.SelfEntityName {
+		name = client
 	}
 
 	ret = Status{
-		EntityId:   client,
-		EntityName: name,
+		EntityId:   &client,
+		EntityName: &name,
 		ParentId:   &parent,
 		Action:     ActionIdle,
 		Want:       StateIdle,
@@ -86,33 +85,29 @@ func New(client *messages.MessageAddress, name *messages.MessageAddress, parent 
 	return &ret
 }
 
-
 func EnsureNotNil(me *Status) error {
-
 	return me.EnsureNotNil()
 }
-
 
 func (me *Status) EnsureNotNil() error {
 
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("status.Status is nil")
+	case me == nil:
+		err = errors.New("status.Status is nil")
 
-		//case me.mutex == nil:
-		//	err = errors.New("status.mutex is nil")
+	//case me.mutex == nil:
+	//	err = errors.New("status.mutex is nil")
 
-		case me.EntityId == nil:
-			err = errors.New("status.EntityId is nil")
+	case me.EntityId == nil:
+		err = errors.New("status.EntityId is nil")
 	}
 
 	return err
 }
 
-
-func (me *Status) ToMessageText() messages.MessageText {
+func (me *Status) ToMessageText() msgs.Text {
 
 	var err error
 	var j []byte
@@ -130,11 +125,10 @@ func (me *Status) ToMessageText() messages.MessageText {
 		}
 	}
 
-	return messages.MessageText(j)
+	return msgs.Text(j)
 }
 
-
-func FromMessageText(me messages.MessageText) (*Status, error) {
+func FromMessageText(me msgs.Text) (*Status, error) {
 
 	var err error
 	var ret Status
@@ -155,4 +149,3 @@ func FromMessageText(me messages.MessageText) (*Status, error) {
 
 	return &ret, err
 }
-

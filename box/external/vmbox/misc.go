@@ -1,21 +1,20 @@
 package vmbox
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
 
 //// Unsubscribe a service by method defined by a UUID reference.
-//func (me *VmBox) UnsubscribeByUuid(client messages.MessageAddress) error {
+//func (me *VmBox) UnsubscribeByUuid(client msg.MessageAddress) error {
 //
 //	var err error
 //
 //	for range only.Once {
-//		err = me.EnsureNotNil()
+//		err = me.EnsureNotEmpty()
 //		if err != nil {
 //			break
 //		}
 //
-//		err = me.services[client].EnsureNotNil()
+//		err = me.services[client].EnsureNotEmpty()
 //		if err != nil {
 //			break
 //		}
@@ -45,18 +44,18 @@ package vmbox
 //}
 //
 //// Unsubscribe a service via a channel defined by a UUID reference.
-//func (me *VmBox) UnsubscribeByChannel(caller messages.MessageAddress, u messages.MessageAddress) error {
+//func (me *VmBox) UnsubscribeByChannel(caller msg.MessageAddress, u msg.MessageAddress) error {
 //
 //	var err error
 //
 //	for range only.Once {
-//		err = me.EnsureNotNil()
+//		err = me.EnsureNotEmpty()
 //		if err != nil {
 //			break
 //		}
 //
-//		//unreg := me.EntityId.Construct(me.EntityId, states.ActionUnsubscribe, messages.MessageText(u.String()))
-//		unreg := caller.ConstructMessage(me.EntityId, states.ActionUnsubscribe, messages.MessageText(u.String()))
+//		//unreg := me.EntityId.Construct(me.EntityId, states.ActionUnsubscribe, msg.MessageText(u.String()))
+//		unreg := caller.MakeMessage(me.EntityId, states.ActionUnsubscribe, msg.MessageText(u.String()))
 //		err = me.Channels.Publish(unreg)
 //		if err != nil {
 //			break
@@ -71,14 +70,14 @@ package vmbox
 //	return err
 //}
 //
-//// Register a service by method defined by a *CreateTopic structure.
+//// Register a service by method defined by a *NewTopic structure.
 //func (me *VmBox) Subscribe(ce ServiceConfig) (*Service, error) {
 //
 //	var err error
 //	var sc Service
 //
 //	for range only.Once {
-//		err = me.EnsureNotNil()
+//		err = me.EnsureNotEmpty()
 //		if err != nil {
 //			break
 //		}
@@ -89,8 +88,8 @@ package vmbox
 //		}
 //
 //		// Create new client entry.
-//		sc.EntityId = *messages.GenerateAddress()
-//		sc.EntityName = messages.MessageAddress(ce.Name)
+//		sc.EntityId = *msg.GenerateAddress()
+//		sc.EntityName = msg.MessageAddress(ce.Name)
 //		sc.EntityParent = &me.EntityId
 //		sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
 //		sc.State.SetNewAction(states.ActionSubscribe)
@@ -114,4 +113,3 @@ package vmbox
 //
 //	return &sc, err
 //}
-

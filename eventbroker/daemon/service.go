@@ -1,9 +1,11 @@
 package daemon
 
 import (
+	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/network"
+	"gearbox/eventbroker/osdirs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"github.com/kardianos/service"
@@ -11,7 +13,6 @@ import (
 	"path/filepath"
 	"strings"
 )
-
 
 func (srv *Service) Start() error {
 
@@ -62,7 +63,6 @@ func (srv *Service) Start() error {
 	return nil
 }
 
-
 func (srv *Service) Stop() error {
 
 	var err error
@@ -107,7 +107,6 @@ func (srv *Service) Stop() error {
 	return err
 }
 
-
 func (srv *Service) Status(publish bool) (states.Status, error) {
 
 	var err error
@@ -138,7 +137,6 @@ func (srv *Service) Status(publish bool) (states.Status, error) {
 	return *srv.State, err
 }
 
-
 func (srv *Service) decodeServiceState() (states.State, error) {
 
 	var err error
@@ -162,32 +160,31 @@ func (srv *Service) decodeServiceState() (states.State, error) {
 		// service.ErrNotInstalled
 
 		switch {
-			case err == service.ErrNameFieldRequired:
-				state = states.StateError
+		case err == service.ErrNameFieldRequired:
+			state = states.StateError
 
-			case err == service.ErrNoServiceSystemDetected:
-				state = states.StateError
+		case err == service.ErrNoServiceSystemDetected:
+			state = states.StateError
 
-			case err == service.ErrNotInstalled:
-				state = states.StateUnregistered
+		case err == service.ErrNotInstalled:
+			state = states.StateUnregistered
 
-			case serviceState == service.StatusUnknown:
-				state = states.StateUnknown
+		case serviceState == service.StatusUnknown:
+			state = states.StateUnknown
 
-			case serviceState == service.StatusStopped:
-				state = states.StateStopped
+		case serviceState == service.StatusStopped:
+			state = states.StateStopped
 
-			case serviceState == service.StatusRunning:
-				state = states.StateStarted
+		case serviceState == service.StatusRunning:
+			state = states.StateStarted
 
-			default:
-				state = states.StateError
+		default:
+			state = states.StateError
 		}
 	}
 
 	return state, err
 }
-
 
 func (srv *Service) RegisterMDNS() error {
 
@@ -224,7 +221,6 @@ func (srv *Service) RegisterMDNS() error {
 	return nil
 }
 
-
 func (srv *Service) UnregisterMDNS() error {
 
 	var err error
@@ -260,7 +256,6 @@ func (srv *Service) UnregisterMDNS() error {
 	return nil
 }
 
-
 func translateState(i service.Status, err error) (states.State, error) {
 
 	var s states.State
@@ -274,31 +269,30 @@ func translateState(i service.Status, err error) (states.State, error) {
 	// service.ErrNotInstalled
 
 	switch {
-		case err == service.ErrNameFieldRequired:
-			s = states.StateError
+	case err == service.ErrNameFieldRequired:
+		s = states.StateError
 
-		case err == service.ErrNoServiceSystemDetected:
-			s = states.StateError
+	case err == service.ErrNoServiceSystemDetected:
+		s = states.StateError
 
-		case err == service.ErrNotInstalled:
-			s = states.StateUnregistered
+	case err == service.ErrNotInstalled:
+		s = states.StateUnregistered
 
-		case i == service.StatusUnknown:
-			s = states.StateUnknown
+	case i == service.StatusUnknown:
+		s = states.StateUnknown
 
-		case i == service.StatusStopped:
-			s = states.StateStopped
+	case i == service.StatusStopped:
+		s = states.StateStopped
 
-		case i == service.StatusRunning:
-			s = states.StateStarted
+	case i == service.StatusRunning:
+		s = states.StateStarted
 
-		default:
-			s = states.StateError
+	default:
+		s = states.StateError
 	}
 
 	return s, err
 }
-
 
 func (me *Daemon) FindServiceFiles() ([]string, error) {
 
@@ -311,24 +305,21 @@ func (me *Daemon) FindServiceFiles() ([]string, error) {
 			break
 		}
 
-		checkIn := me.OsPaths.EventBrokerEtcDir.AddToPath(DefaultJsonDir)
-		err = checkIn.DirExists()
-		if err != nil {
+		// @TODO What does "checkIn" mean? Can we use a non-ambiguous name?
+		checkIn := osdirs.AddPaths(me.BaseDirs.EventBrokerEtcDir, DefaultJsonDir)
+		if !osdirs.DirExists(checkIn) {
+			err = fmt.Errorf("directory '%s' does not exist", checkIn)
 			break
 		}
 
 		eblog.Debug(me.EntityId, "Finding service files within %s", checkIn)
-		err = filepath.Walk(checkIn.String(), func(path string, info os.FileInfo, err error) error {
+		err = filepath.Walk(checkIn, func(path string, info os.FileInfo, err error) error {
 			if strings.HasSuffix(path, ".json") {
 				files = append(files, path)
 			}
 			return nil
 		})
-		if err != nil {
-			break
-		}
 	}
-
 	return files, err
-}
 
+}

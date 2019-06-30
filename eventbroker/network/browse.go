@@ -3,12 +3,11 @@ package network
 import (
 	"context"
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"github.com/grandcat/zeroconf"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
@@ -28,7 +27,7 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 		eblog.Debug(me.EntityId, "service scan started")
 		resolver, err := zeroconf.NewResolver(nil)
 		if err != nil {
-			err = me.EntityId.ProduceError("failed to initialize scan resolver")
+			err = msgs.MakeError(me.EntityId, "failed to initialize scan resolver")
 			break
 		}
 
@@ -36,15 +35,15 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 		entries := make(chan *zeroconf.ServiceEntry)
 		go func(results <-chan *zeroconf.ServiceEntry) {
 			for entry := range results {
-				u := messages.GenerateAddress()
+				u := msgs.MakeAddress()
 				//fmt.Printf("Found: %v\n", *entry)
-				n := messages.MessageAddress(entry.ServiceName())
-				found[*u] = &Service{
-						EntityId: *u,
-						EntityName: n,
-						EntityParent: &me.EntityId,
-						Entry: Entry(*entry),
-						State: states.New(u, &n, me.EntityId),
+				n := msgs.Address(entry.ServiceName())
+				found[u] = &Service{
+					EntityId:     u,
+					EntityName:   n,
+					EntityParent: &me.EntityId,
+					Entry:        Entry(*entry),
+					State:        states.New(u, n, me.EntityId),
 				}
 			}
 			// fmt.Println("No more entries.")
@@ -54,7 +53,7 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 		defer cancel()
 		err = resolver.Browse(ctx, s, d, entries)
 		if err != nil {
-			err = me.EntityId.ProduceError("failed to scan network")
+			err = msgs.MakeError(me.EntityId, "failed to scan network")
 			break
 		}
 
@@ -154,20 +153,20 @@ func (me *Service) compareService(e ServiceConfig) (bool, error) {
 		}
 
 		switch {
-			// Search for exact service definition.
-			case (me.Entry.Instance == e.Name.String()) &&
-				(me.Entry.Service == e.Type.String()) &&
-				(me.Entry.Domain == e.Domain.String()) &&
-				(me.Entry.Port == e.Port.ToInt()):
-				found = true
-				break
+		// Search for exact service definition.
+		case (me.Entry.Instance == e.Name) &&
+			(me.Entry.Service == e.Type) &&
+			(me.Entry.Domain == e.Domain) &&
+			(me.Entry.Port == e.Port.ToInt()):
+			found = true
+			break
 
-			// Search just by name without port.
-			case (me.Entry.Instance == e.Name.String()) &&
-				(me.Entry.Service == e.Type.String()) &&
-				(me.Entry.Domain == e.Domain.String()):
-				found = true
-				break
+		// Search just by name without port.
+		case (me.Entry.Instance == e.Name) &&
+			(me.Entry.Service == e.Type) &&
+			(me.Entry.Domain == e.Domain):
+			found = true
+			break
 		}
 
 		eblog.Debug(me.EntityId, "matched service %s to %s", me.EntityId.String(), e.EntityId.String())
@@ -229,4 +228,3 @@ func (me *ZeroConf) updateRegisteredServices() error {
 
 	return err
 }
-

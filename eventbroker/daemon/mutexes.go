@@ -1,16 +1,15 @@
 package daemon
 
 import (
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"time"
 )
 
+func (me *Daemon) GetEntities() msgs.Addresses {
 
-func (me *Daemon) GetEntities() messages.MessageAddresses {
-
-	var ret messages.MessageAddresses
+	var ret msgs.Addresses
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
@@ -22,16 +21,15 @@ func (me *Daemon) GetEntities() messages.MessageAddresses {
 	return ret
 }
 
+func (me *Daemon) GetManagedEntities() msgs.Addresses {
 
-func (me *Daemon) GetManagedEntities() messages.MessageAddresses {
-
-	var ret messages.MessageAddresses
+	var ret msgs.Addresses
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
 	for s := range me.daemons { // Managed by Mutex
-		if me.daemons[s].IsManaged {	// Managed by Mutex
+		if me.daemons[s].IsManaged { // Managed by Mutex
 			ret = append(ret, s)
 		}
 	}
@@ -39,8 +37,7 @@ func (me *Daemon) GetManagedEntities() messages.MessageAddresses {
 	return ret
 }
 
-
-func (me *Daemon) AddEntity(client messages.MessageAddress, sc *Service) error {
+func (me *Daemon) AddEntity(client msgs.Address, sc *Service) error {
 	var err error
 
 	me.mutex.Lock()
@@ -49,14 +46,13 @@ func (me *Daemon) AddEntity(client messages.MessageAddress, sc *Service) error {
 	if _, ok := me.daemons[client]; !ok { // Managed by Mutex
 		me.daemons[client] = sc
 	} else {
-		err = me.EntityId.ProduceError("service %s already exists", client)
+		err = msgs.MakeError(me.EntityId, "service %s already exists", client)
 	}
 
 	return err
 }
 
-
-func (me *Daemon) DeleteEntity(client messages.MessageAddress) error {
+func (me *Daemon) DeleteEntity(client msgs.Address) error {
 
 	var err error
 
@@ -65,7 +61,7 @@ func (me *Daemon) DeleteEntity(client messages.MessageAddress) error {
 
 	for range only.Once {
 		if _, ok := me.daemons[client]; !ok { // Managed by Mutex
-			err = me.EntityId.ProduceError("service doesn't exist")
+			err = msgs.MakeError(me.EntityId, "service doesn't exist")
 			break
 		}
 
@@ -75,23 +71,21 @@ func (me *Daemon) DeleteEntity(client messages.MessageAddress) error {
 	return err
 }
 
-
-func (me *Daemon) EnsureDaemonNotNil(client messages.MessageAddress) error {
+func (me *Daemon) EnsureDaemonNotNil(client msgs.Address) error {
 
 	var err error
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	if _, ok := me.daemons[client]; !ok {		// Managed by Mutex
-		err = me.EntityId.ProduceError("service doesn't exist")
+	if _, ok := me.daemons[client]; !ok { // Managed by Mutex
+		err = msgs.MakeError(me.EntityId, "service doesn't exist")
 	} else {
-		err = me.daemons[client].EnsureNotNil()	// Managed by Mutex
+		err = me.daemons[client].EnsureNotNil() // Managed by Mutex
 	}
 
 	return err
 }
-
 
 // Ensure we don't duplicate services.
 func (me *Daemon) FindExistingConfig(him ServiceConfig) (*Service, error) {
@@ -102,7 +96,7 @@ func (me *Daemon) FindExistingConfig(him ServiceConfig) (*Service, error) {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for _, ce := range me.daemons {	// Managed by Mutex
+	for _, ce := range me.daemons { // Managed by Mutex
 		err = ce.IsExisting(him)
 		if err != nil {
 			sc = ce
@@ -113,16 +107,15 @@ func (me *Daemon) FindExistingConfig(him ServiceConfig) (*Service, error) {
 	return sc, err
 }
 
-
 // Ensure we don't duplicate services.
-func (me *Daemon) IsExisting(s messages.MessageAddress) *Service {
+func (me *Daemon) IsExisting(s msgs.Address) *Service {
 
 	var sc *Service
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for _, sc = range me.daemons {	// Managed by Mutex
+	for _, sc = range me.daemons { // Managed by Mutex
 		if sc.EntityId == s {
 			break
 		}
@@ -131,22 +124,19 @@ func (me *Daemon) IsExisting(s messages.MessageAddress) *Service {
 	return sc
 }
 
-
-func (me *Daemon) GetTopics() messages.SubTopics {
+func (me *Daemon) GetTopics() msgs.SubTopics {
 
 	return me.channelHandler.GetTopics()
 }
-
 
 func (me *Service) GetIsManaged() bool {
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
-	return me.IsManaged	// Managed by Mutex
+	return me.IsManaged // Managed by Mutex
 }
 
-
-func (me *Service) GetEntityId() (messages.MessageAddress, error) {
+func (me *Service) GetEntityId() (msgs.Address, error) {
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
@@ -156,9 +146,8 @@ func (me *Service) GetEntityId() (messages.MessageAddress, error) {
 		return "", err
 	}
 
-	return me.EntityId, err		// Managed by Mutex
+	return me.EntityId, err // Managed by Mutex
 }
-
 
 func (me *Service) GetConfig() (ServiceConfig, error) {
 
@@ -172,9 +161,8 @@ func (me *Service) GetConfig() (ServiceConfig, error) {
 		return sc, err
 	}
 
-	return sc, err		// Managed by Mutex
+	return sc, err // Managed by Mutex
 }
-
 
 func (me *Service) GetStatus() (*states.Status, error) {
 
@@ -185,12 +173,11 @@ func (me *Service) GetStatus() (*states.Status, error) {
 
 	err := me.EnsureNotNil()
 	if err == nil {
-		sc = me.State		// Managed by Mutex
+		sc = me.State // Managed by Mutex
 	}
 
 	return sc, err
 }
-
 
 func (me *Daemon) GetServiceFiles() map[string]time.Time {
 
@@ -199,26 +186,24 @@ func (me *Daemon) GetServiceFiles() map[string]time.Time {
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	for _, ce := range me.daemons {	// Managed by Mutex
+	for _, ce := range me.daemons { // Managed by Mutex
 		jc[ce.JsonFile.Name] = ce.JsonFile.LastModTime
 	}
 
 	return jc
 }
 
-
 //
 //
-//func (me *Daemon) _GetEntityId(u messages.MessageAddress) (messages.MessageAddress, error) {
+//func (me *Daemon) _GetEntityId(u msg.Address) (msg.Address, error) {
 //
 //	me.mutex.RLock()
 //	defer me.mutex.RUnlock()
 //
-//	err := me.EnsureNotNil(u)
+//	err := me.EnsureNotEmpty(u)
 //	if err != nil {
 //		return "", err
 //	}
 //
 //	return me.daemons[u].EntityId, err	// Managed by Mutex
 //}
-

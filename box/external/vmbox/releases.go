@@ -6,8 +6,8 @@ import (
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/ospaths"
+	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/osdirs"
 	"gearbox/eventbroker/states"
 	"gearbox/global"
 	"github.com/cavaliercoder/grab"
@@ -19,33 +19,28 @@ import (
 	"time"
 )
 
-// 	"fmt"
-//	"github.com/src/github.com/google/go-github/github"
-//	"golang.org/x/net/context"
-//	"strings"
-
 type Releases struct {
-	Map             ReleasesMap
-	Latest	        *Release
-	Selected        *Release
-	BaseDir         *ospaths.Dir
+	Map      ReleasesMap
+	Latest   *Release
+	Selected *Release
+	BaseDir  osdirs.Dir
 
-	channels        *channels.Channels
+	channels *channels.Channels
 }
 type ReleasesMap map[Version]*Release
-//type Release github.RepositoryRelease
+
 type Version string
 
 type Release struct {
 	Version       Version
-	File          *ospaths.File
+	File          osdirs.File
 	Size          int64
 	Url           string
 	Instance      *github.RepositoryRelease
 	DlIndex       int
 	IsDownloading bool
 
-	channels      *channels.Channels
+	channels *channels.Channels
 }
 
 type ReleaseSelector struct {
@@ -54,9 +49,8 @@ type ReleaseSelector struct {
 	UntilDate       time.Time
 	SpecificVersion string
 	RegexpVersion   string
-	Latest			*bool
+	Latest          *bool
 }
-
 
 func NewReleases(c *channels.Channels) (*Releases, error) {
 
@@ -64,10 +58,10 @@ func NewReleases(c *channels.Channels) (*Releases, error) {
 	var err error
 
 	for range only.Once {
-		p := ospaths.New("")
+		p := osdirs.New()
 
 		me := Releases{}
-		me.BaseDir = p.UserConfigDir.AddToPath("iso")
+		me.BaseDir = p.AppendToUserConfigDir("iso")
 		me.Map = make(ReleasesMap)
 		me.channels = c
 
@@ -83,7 +77,6 @@ func NewReleases(c *channels.Channels) (*Releases, error) {
 
 	return ret, err
 }
-
 
 func (me *Releases) ShowReleases() error {
 	var err error
@@ -129,7 +122,6 @@ func (me *Releases) ShowReleases() error {
 	return err
 }
 
-
 func (me *Release) ShowRelease() error {
 	var err error
 
@@ -140,7 +132,7 @@ func (me *Release) ShowRelease() error {
 		}
 
 		if me.Instance.Name == nil {
-			err = messages.ProduceError(entity.VmBoxEntityName,"no release version specified")
+			err = msgs.MakeError(entity.VmBoxEntityName, "no release version specified")
 			break
 		}
 
@@ -168,7 +160,6 @@ func (me *Release) ShowRelease() error {
 	return err
 }
 
-
 func (me *Releases) UpdateReleases() error {
 
 	var rm = make(ReleasesMap)
@@ -180,9 +171,9 @@ func (me *Releases) UpdateReleases() error {
 			break
 		}
 
-		if me.BaseDir == nil {
-			p := ospaths.New("")
-			me.BaseDir = p.UserConfigDir.AddToPath("iso")
+		if me.BaseDir == "" {
+			p := osdirs.New()
+			me.BaseDir = p.AppendToUserConfigDir("iso")
 		}
 
 		me.Map = rm
@@ -193,7 +184,7 @@ func (me *Releases) UpdateReleases() error {
 
 		releases, _, err := client.Repositories.ListReleases(context.Background(), "gearboxworks", "gearbox-os", opt)
 		if err != nil {
-			err = messages.ProduceError(entity.VmBoxEntityName,"can't fetch GitHub releases")
+			err = msgs.MakeError(entity.VmBoxEntityName, "can't fetch GitHub releases")
 			break
 		}
 
@@ -206,8 +197,8 @@ func (me *Releases) UpdateReleases() error {
 			name := Version(rel.GetName())
 
 			release := Release{
-				Version: name,
-				Url: "",
+				Version:  name,
+				Url:      "",
 				Instance: rel,
 				channels: me.channels,
 			}
@@ -217,7 +208,7 @@ func (me *Releases) UpdateReleases() error {
 				if strings.HasSuffix(asset.GetBrowserDownloadURL(), ".iso") {
 					// Return the first ISO found.
 					release.Url = asset.GetBrowserDownloadURL()
-					release.File = me.BaseDir.AddFileToPath(asset.GetName())
+					release.File = osdirs.AddFilef(me.BaseDir, asset.GetName())
 					release.Size = int64(asset.GetSize())
 					break
 				}
@@ -248,7 +239,6 @@ func (me *Releases) UpdateReleases() error {
 
 	return err
 }
-
 
 /*
 Updates the following:
@@ -286,7 +276,6 @@ func (me *Releases) SelectRelease(selector ReleaseSelector) (*Release, error) {
 	return r, err
 }
 
-
 func (me *Release) GetIso() error {
 
 	var err error
@@ -297,16 +286,15 @@ func (me *Release) GetIso() error {
 			break
 		}
 
-		if me.File.String() == "" {
-			err = messages.ProduceError(entity.VmBoxEntityName, "no Gearbox OS iso file defined VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
+		if me.File == "" {
+			err = msgs.MakeError(entity.VmBoxEntityName, "no Gearbox OS iso file defined VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File)
 			break
 		}
 
 		if me.Url == "" {
-			err = messages.ProduceError(entity.VmBoxEntityName, "no Gearbox OS iso url defined VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
+			err = msgs.MakeError(entity.VmBoxEntityName, "no Gearbox OS iso url defined VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File)
 			break
 		}
-
 
 		var state int
 		state, err = me.IsIsoFilePresent()
@@ -314,55 +302,52 @@ func (me *Release) GetIso() error {
 			break
 		}
 
-
 		// Start download
 		me.DlIndex = 0
 		me.IsDownloading = true
 		client := grab.NewClient()
-		req, _ := grab.NewRequest(me.File.String(), me.Url)
-		eblog.Debug("downloading ISO from URL %s", req.URL().String())
+		req, _ := grab.NewRequest(me.File, me.Url)
+		eblog.Debug("", "downloading ISO from URL %s", req.URL())
 		resp := client.Do(req)
 		// fmt.Printf("  %v\n", resp.HTTPResponse.Status)
 		fmt.Printf("%s VM: Downloading ISO from '%s' to '%s'. Size:%d\n",
 			global.Brandname,
 			me.Url,
-			me.File.String(),
+			me.File,
 			resp.Size)
-
 
 		// start UI loop
 		t := time.NewTicker(500 * time.Millisecond)
 		defer t.Stop()
 
-		Loop:
-			for {
-				select {
-					case <-t.C:
-						me.DlIndex = int(100*resp.Progress())
-						me.publishDownloadState()
-						//fmt.Printf("Downloading '%s' transferred %v / %v bytes (%d%%)\n", me.File.String(), resp.BytesComplete(), resp.Size, me.DlIndex)
-						fmt.Printf("%s VM: Downloading ISO - %d%% complete.\r",
-							global.Brandname,
-							me.DlIndex)
+	Loop:
+		for {
+			select {
+			case <-t.C:
+				me.DlIndex = int(100 * resp.Progress())
+				me.publishDownloadState()
+				//fmt.Printf("Downloading '%s' transferred %v / %v bytes (%d%%)\n", me.File, resp.BytesComplete(), resp.Size, me.DlIndex)
+				fmt.Printf("%s VM: Downloading ISO - %d%% complete.\r",
+					global.Brandname,
+					me.DlIndex)
 
-					case <-resp.Done:
-						// download is complete
-						break Loop
-				}
+			case <-resp.Done:
+				// download is complete
+				break Loop
 			}
+		}
 
 		// check for errors
 		if err := resp.Err(); err != nil {
 			fmt.Printf("\nDownload failed\n")
-			err = messages.ProduceError(entity.VmBoxEntityName, "ISO download failed VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
+			err = msgs.MakeError(entity.VmBoxEntityName, "ISO download failed VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File)
 			break
 		}
 		fmt.Printf("%s VM: Downloaded ISO completed OK.\n",
 			global.Brandname,
 		)
 
-
-		eblog.Debug(entity.VmBoxEntityName, "ISO fetched from '%s' and saved to '%s'. Size:%d", me.Url, me.File.String(), resp.Size)
+		eblog.Debug(entity.VmBoxEntityName, "ISO fetched from '%s' and saved to '%s'. Size:%d", me.Url, me.File, resp.Size)
 		me.DlIndex = 100
 		me.publishDownloadState()
 		me.IsDownloading = false
@@ -374,23 +359,22 @@ func (me *Release) GetIso() error {
 	return err
 }
 
-
 func (me *Release) publishDownloadState() {
 
-	client := messages.MessageAddress(entity.VmUpdateEntityName)
-	state := states.New(&client, &client, entity.VmBoxEntityName)
+	client := msgs.Address(entity.VmUpdateEntityName)
+	state := states.New(client, client, entity.VmBoxEntityName)
 	state.SetWant("100%")
 	state.SetCurrent(states.State(fmt.Sprintf("%d%%", me.DlIndex)))
 
-	f := messages.MessageAddress(states.ActionUpdate)
-	msg := f.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, state.ToMessageText())
+	f := msgs.Address(states.ActionUpdate)
+	msg := f.MakeMessage(entity.BroadcastEntityName, states.ActionStatus, state.ToMessageText())
 	_ = me.channels.Publish(msg)
 }
 
+const IsoFileNeedsToDownload = 0
+const IsoFileIsDownloading = 1
+const IsoFileDownloaded = 2
 
-const IsoFileNeedsToDownload	= 0
-const IsoFileIsDownloading		= 1
-const IsoFileDownloaded			= 2
 func (me *Release) IsIsoFilePresent() (int, error) {
 
 	var err error
@@ -403,39 +387,33 @@ func (me *Release) IsIsoFilePresent() (int, error) {
 			break
 		}
 
-		if me.File.String() == "" {
-			err = messages.ProduceError(entity.VmBoxEntityName, "no Gearbox OS iso file defined VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
+		if me.File == "" {
+			err = msgs.MakeError(entity.VmBoxEntityName, "no Gearbox OS iso file defined VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File)
 			break
 		}
 
-		stat, err = os.Stat(me.File.String())
+		stat, err = os.Stat(me.File)
 		if os.IsNotExist(err) {
-			err = messages.ProduceError("ISO file needs to download from GitHub VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
+			err = msgs.MakeError("", "ISO file needs to download from GitHub VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File)
 			ret = IsoFileNeedsToDownload
 			break
 		}
 
 		if me.IsDownloading {
-			err = messages.ProduceError("ISO file still downloading VmIsoUrl:%s VmIsoFile:%s Percent:%d", me.Url, me.File.String(), me.DlIndex)
+			err = msgs.MakeError("", "ISO file still downloading VmIsoUrl:%s VmIsoFile:%s Percent:%d", me.Url, me.File, me.DlIndex)
 			ret = IsoFileIsDownloading
 			break
 		}
 
 		if stat.Size() != me.Size {
-			err = messages.ProduceError("ISO file needs to re-download from GitHub VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
+			err = msgs.MakeError("", "ISO file needs to re-download from GitHub VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File)
 			ret = IsoFileNeedsToDownload
 			break
 		}
 
-		//if me.DlIndex < 100 {
-		//	err = messages.ProduceError("ISO file needs to re-download from GitHub VmIsoUrl:%s VmIsoFile:%s", me.Url, me.File.String())
-		//	ret = IsoFileNeedsToDownload
-		//	break
-		//}
-
 		ret = IsoFileDownloaded
 		me.DlIndex = 100
-		eblog.Debug(entity.VmBoxEntityName, "ISO already fetched from '%s' and saved to '%s'", me.Url, me.File.String())
+		eblog.Debug(entity.VmBoxEntityName, "ISO already fetched from '%s' and saved to '%s'", me.Url, me.File)
 	}
 
 	eblog.LogIfNil(me, err)
@@ -444,25 +422,19 @@ func (me *Release) IsIsoFilePresent() (int, error) {
 	return ret, err
 }
 
-
 func (me *Releases) EnsureNotNil() error {
 
 	var err error
 
 	for range only.Once {
 		if me == nil {
-			err = errors.New("Releases is nil")
+			err = errors.New("releases is nil")
 			break
 		}
 	}
 
 	return err
 }
-
-func EnsureReleasesNotNil(me *Releases) error {
-	return me.EnsureNotNil()
-}
-
 
 func (me *ReleasesMap) EnsureNotNil() error {
 
@@ -470,18 +442,13 @@ func (me *ReleasesMap) EnsureNotNil() error {
 
 	for range only.Once {
 		if me == nil {
-			err = errors.New("Release is nil")
+			err = errors.New("release is nil")
 			break
 		}
 	}
 
 	return err
 }
-
-func EnsureReleasesMapNotNil(me *ReleasesMap) error {
-	return me.EnsureNotNil()
-}
-
 
 func (me *Release) EnsureNotNil() error {
 
@@ -489,214 +456,10 @@ func (me *Release) EnsureNotNil() error {
 
 	for range only.Once {
 		if me == nil {
-			err = errors.New("Release is nil")
+			err = errors.New("release is nil")
 			break
 		}
 	}
 
 	return err
 }
-
-func EnsureReleaseNotNil(me *Release) error {
-	return me.EnsureNotNil()
-}
-
-
-
-
-//func EnsureReleaseNotNil(rm *Release) (sts status.Status) {
-//	if rm == nil {
-//		sts = status.Fail(&status.Args{
-//			Message: "unexpected error",
-//			Help:    help.ContactSupportHelp(), // @TODO need better support here
-//			Data:    VmStateUnknown,
-//		})
-//	}
-//
-//	return sts
-//}
-
-//type ReleaseAsset struct {
-//	ID                 *int64     `json:"id,omitempty"`
-//	URL                *string    `json:"url,omitempty"`
-//	Name               *string    `json:"name,omitempty"`
-//	Label              *string    `json:"label,omitempty"`
-//	State              *string    `json:"state,omitempty"`
-//	ContentType        *string    `json:"content_type,omitempty"`
-//	Size               *int       `json:"size,omitempty"`
-//	DownloadCount      *int       `json:"download_count,omitempty"`
-//	CreatedAt          *Timestamp `json:"created_at,omitempty"`
-//	UpdatedAt          *Timestamp `json:"updated_at,omitempty"`
-//	BrowserDownloadURL *string    `json:"browser_download_url,omitempty"`
-//	Uploader           *User      `json:"uploader,omitempty"`
-//	NodeID             *string    `json:"node_id,omitempty"`
-//}
-//
-//type RepositoryRelease struct {
-//	ID              *int64         `json:"id,omitempty"`
-//	TagName         *string        `json:"tag_name,omitempty"`
-//	TargetCommitish *string        `json:"target_commitish,omitempty"`
-//	Name            *string        `json:"name,omitempty"`
-//	Body            *string        `json:"body,omitempty"`
-//	Draft           *bool          `json:"draft,omitempty"`
-//	Prerelease      *bool          `json:"prerelease,omitempty"`
-//	CreatedAt       *Timestamp     `json:"created_at,omitempty"`
-//	PublishedAt     *Timestamp     `json:"published_at,omitempty"`
-//	URL             *string        `json:"url,omitempty"`
-//	HTMLURL         *string        `json:"html_url,omitempty"`
-//	AssetsURL       *string        `json:"assets_url,omitempty"`
-//	Assets          []ReleaseAsset `json:"assets,omitempty"`
-//	UploadURL       *string        `json:"upload_url,omitempty"`
-//	ZipballURL      *string        `json:"zipball_url,omitempty"`
-//	TarballURL      *string        `json:"tarball_url,omitempty"`
-//	Author          *User          `json:"author,omitempty"`
-//	NodeID          *string        `json:"node_id,omitempty"`
-//}
-//
-//
-//Data returned:
-//
-//release.ID=0xc000289538
-//release.TagName=0xc0002964c0
-//release.TargetCommitish=0xc0002964d0
-//release.Name=0xc0002964e0
-//release.Body=0xc000296770
-//release.Draft=0xc00028955b
-//release.Prerelease=0xc00028957d
-//release.CreatedAt=2019-05-23 02:34:10 +0000 UTC
-//release.PublishedAt=2019-05-23 02:43:04 +0000 UTC
-//release.URL=0xc000296470
-//release.HTMLURL=0xc0002964a0
-//release.AssetsURL=0xc000296480
-//release.Assets=[github.ReleaseAsset{
-//	ID:12825393,
-//	URL:"https://api.github.com/repos/gearboxworks/gearbox-os/releases/assets/12825393",
-//	Name:"gearbox-0.5.0.iso",
-//	State:"uploaded",
-//	ContentType:"application/octet-stream",
-//	Size:67108864,
-//	DownloadCount:0,
-//	CreatedAt:github.Timestamp{2019-05-23 02:37:48 +0000 UTC},
-//	UpdatedAt:github.Timestamp{2019-05-23 02:42:56 +0000 UTC},
-//	BrowserDownloadURL:"https://github.com/gearboxworks/gearbox-os/releases/download/0.5.0/gearbox-0.5.0.iso",
-//	Uploader:github.User{
-//		Login:"MickMake",
-//		ID:17118367,
-//		NodeID:"MDQ6VXNlcjE3MTE4MzY3",
-//		AvatarURL:"https://avatars0.githubusercontent.com/u/17118367?v=4",
-//		HTMLURL:"https://github.com/MickMake",
-//		GravatarID:"",
-//		Type:"User",
-//		SiteAdmin:false,
-//		URL:"https://api.github.com/users/MickMake",
-//		EventsURL:"https://api.github.com/users/MickMake/events{/privacy}",
-//		FollowingURL:"https://api.github.com/users/MickMake/following{/other_user}",
-//		FollowersURL:"https://api.github.com/users/MickMake/followers",
-//		GistsURL:"https://api.github.com/users/MickMake/gists{/gist_id}",
-//		OrganizationsURL:"https://api.github.com/users/MickMake/orgs",
-//		ReceivedEventsURL:"https://api.github.com/users/MickMake/received_events",
-//		ReposURL:"https://api.github.com/users/MickMake/repos",
-//		StarredURL:"https://api.github.com/users/MickMake/starred{/owner}{/repo}",
-//		SubscriptionsURL:"https://api.github.com/users/MickMake/subscriptions"
-//		},
-//	NodeID:"MDEyOlJlbGVhc2VBc3NldDEyODI1Mzkz"
-//	}]
-//release.UploadURL=0xc000296490
-//release.ZipballURL=0xc000296760
-//release.TarballURL=0xc000296750
-//release.Author=github.User{Login:"MickMake", ID:17118367, NodeID:"MDQ6VXNlcjE3MTE4MzY3", AvatarURL:"https://avatars0.githubusercontent.com/u/17118367?v=4", HTMLURL:"https://github.com/MickMake", GravatarID:"", Type:"User", SiteAdmin:false, URL:"https://api.github.com/users/MickMake", EventsURL:"https://api.github.com/users/MickMake/events{/privacy}", FollowingURL:"https://api.github.com/users/MickMake/following{/other_user}", FollowersURL:"https://api.github.com/users/MickMake/followers", GistsURL:"https://api.github.com/users/MickMake/gists{/gist_id}", OrganizationsURL:"https://api.github.com/users/MickMake/orgs", ReceivedEventsURL:"https://api.github.com/users/MickMake/received_events", ReposURL:"https://api.github.com/users/MickMake/repos", StarredURL:"https://api.github.com/users/MickMake/starred{/owner}{/repo}", SubscriptionsURL:"https://api.github.com/users/MickMake/subscriptions"}
-//release.NodeID=0xc0002964b0
-//
-//
-//type Release struct {
-//	Name string
-//	UploadURL string
-//	ZipballURL string
-//	TarballURL string
-//	Body string
-//	AssetsURL string
-//	URL string
-//	HTMLURL string
-//	Name string
-//    Assets
-//}
-//type Releases []Release
-//
-//type Asset struct {
-//      Name
-//      ID
-//      URL
-//      Size
-//      CreatedAt
-//      UpdatedAt
-//      BrowserDownloadURL
-//      State
-//      ContentType
-//      DownloadCount
-//      NodeID
-//}
-//type Assets []Asset
-//
-//
-//
-//
-//   Assets for release:	0.5.0
-//   UploadURL: 			https://uploads.github.com/repos/gearboxworks/gearbox-os/releases/17531887/assets{?name,label}
-//   ZipballURL: 			https://api.github.com/repos/gearboxworks/gearbox-os/zipball/0.5.0
-//   TarballURL: 			https://api.github.com/repos/gearboxworks/gearbox-os/tarball/0.5.0
-//   Body: 				0.5.0 pre-release
-//   AssetsURL: 			https://api.github.com/repos/gearboxworks/gearbox-os/releases/17531887/assets
-//   URL: 				https://api.github.com/repos/gearboxworks/gearbox-os/releases/17531887
-//   HTMLURL:				https://github.com/gearboxworks/gearbox-os/releases/tag/0.5.0
-//   foo: 				0.5.0
-//   Name:				gearbox-0.5.0.iso
-//   ID:					12825393
-//   URL:					https://api.github.com/repos/gearboxworks/gearbox-os/releases/assets/12825393
-//   Size:				67108864
-//   CreatedAt:			2019-05-23 02:37:48 +0000 UTC
-//   UpdatedAt:			2019-05-23 02:42:56 +0000 UTC
-//   BrowserDownloadURL:	https://github.com/gearboxworks/gearbox-os/releases/download/0.5.0/gearbox-0.5.0.iso
-//   State:				uploaded
-//   ContentType:			application/octet-stream
-//   DownloadCount:		0
-//   NodeID:				MDEyOlJlbGVhc2VBc3NldDEyODI1Mzkz
-//
-//	fmt.Printf(`
-//		release.ID=%v
-//		release.TagName=%v
-//		release.TargetCommitish=%v
-//		release.Name=%v
-//		release.Body=%v
-//		release.Draft=%v
-//		release.Prerelease=%v
-//		release.CreatedAt=%v
-//		release.PublishedAt=%v
-//		release.URL=%v
-//		release.HTMLURL=%v
-//		release.AssetsURL=%v
-//		release.Assets=%v
-//		release.UploadURL=%v
-//		release.ZipballURL=%v
-//		release.TarballURL=%v
-//		release.Author=%v
-//		release.NodeID=%v\n`,
-//		release.ID,
-//		release.TagName,
-//		release.TargetCommitish,
-//		release.Name,
-//		release.Body,
-//		release.Draft,
-//		release.Prerelease,
-//		release.CreatedAt,
-//		release.PublishedAt,
-//		release.URL,
-//		release.HTMLURL,
-//		release.AssetsURL,
-//		release.Assets,
-//		release.UploadURL,
-//		release.ZipballURL,
-//		release.TarballURL,
-//		release.Author,
-//		release.NodeID,
-//		)
-

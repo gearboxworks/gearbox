@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"gearbox/box/external/vmbox"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/osdirs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"github.com/gearboxworks/go-systray"
@@ -153,7 +154,7 @@ func (me *Box) UpdateMenus() {
 	//	me.SetStateMenu(k, v)
 	//}
 	//
-	//control := messages.MessageAddresses{"admin", "create", "update", "start", "stop", "ssh"}
+	//control := msg.Addresses{"admin", "create", "update", "start", "stop", "ssh"}
 	//for _, v := range control {
 	//	if me.menu.Exists(v) {
 	//		me.SetControlMenu(v, states.ActionIdle)
@@ -166,7 +167,7 @@ func (me *Box) UpdateMenus() {
 
 }
 
-func (me *Box) SetStateMenu(m messages.MessageAddress, state states.State) {
+func (me *Box) SetStateMenu(m msgs.Address, state states.State) {
 	// This can clearly be refactored a LOT.
 
 	if _, ok := me.menu[m]; !ok {
@@ -203,7 +204,7 @@ func (me *Box) SetStateMenu(m messages.MessageAddress, state states.State) {
 	return
 }
 
-func (me *Box) SetControlMenu(m messages.MessageAddress, state states.State) {
+func (me *Box) SetControlMenu(m msgs.Address, state states.State) {
 	// This can clearly be refactored a LOT.
 
 	if _, ok := me.menu[m]; !ok {
@@ -466,7 +467,7 @@ func (me *Box) getIcon(s string) []byte {
 		return nil
 	}
 
-	fp := me.baseDir.AddFileToPath(s).String()
+	fp := osdirs.AddFilef(me.baseDir, s)
 
 	b, err := ioutil.ReadFile(fp)
 	if err != nil {
@@ -490,7 +491,7 @@ func (me Menus) EnsureNotNil() error {
 	return err
 }
 
-func (me Menus) Exists(item messages.MessageAddress) bool {
+func (me Menus) Exists(item msgs.Address) bool {
 
 	var ret bool
 

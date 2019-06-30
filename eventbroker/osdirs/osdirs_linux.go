@@ -1,6 +1,6 @@
 // +build linux
 
-package ospaths
+package osdirs
 
 import "github.com/gearboxworks/go-osbridge"
 

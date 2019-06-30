@@ -2,13 +2,16 @@
 
 package gearbox
 
-import "github.com/gearboxworks/go-osbridge"
+import (
+	"gearbox/global"
+	"github.com/gearboxworks/go-osbridge"
+)
 
 func GetOsBridge(project types.Name, userdata types.RelativePath) *osbridge.OsBridge {
 	return osbridge.NewOsBridge(&osbridge.Args{
 		ProjectName:  project,
 		UserDataPath: userdata,
-		AdminPath:    NixAdminPath,
-		ProjectDir:   LinuxSuggestedBasedir,
+		AdminPath:    global.NixAdminPath,
+		ProjectDir:   global.LinuxSuggestedBasedir,
 	})
 }

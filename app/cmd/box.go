@@ -26,8 +26,7 @@ var boxCmd = &cobra.Command{
 }
 
 func init() {
-	var boxArgs box.Args
-
+	boxArgs := &box.Args{}
 	RootCmd.AddCommand(boxCmd)
 	boxCmd.AddCommand(&cobra.Command{
 		Use: "start",

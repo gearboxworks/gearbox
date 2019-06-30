@@ -10,7 +10,6 @@ import (
 	"reflect"
 )
 
-
 func (me *EventBroker) EnsureNotNil() error {
 
 	var err error
@@ -21,7 +20,6 @@ func (me *EventBroker) EnsureNotNil() error {
 	return err
 }
 
-
 func (me *EventBroker) RegisterService(topic string, args ...string) {
 	fmt.Printf("RegisterService\n")
 
@@ -30,13 +28,11 @@ func (me *EventBroker) RegisterService(topic string, args ...string) {
 	return
 }
 
-
 var ServiceMqtt = network.ServiceConfig{
 	Name:   "_gearbox-mqtt",
 	Type:   "_mqtt._tcp",
 	Domain: "local",
 }
-
 
 func InterfaceToTypeEventBroker(i interface{}) (*EventBroker, error) {
 
@@ -66,7 +62,6 @@ func InterfaceToTypeEventBroker(i interface{}) (*EventBroker, error) {
 	return me, err
 }
 
-
 func (me *EventBroker) FindMqttBroker() (*url.URL, error) {
 
 	var err error
@@ -95,14 +90,13 @@ func (me *EventBroker) FindMqttBroker() (*url.URL, error) {
 	return u, err
 }
 
-
 //func (me *EventBroker) zcByChannel(s network.ServiceConfig) (*network.Service, error) {
 //
 //	var err error
 //	var sc *network.Service
 //
 //	fmt.Printf("Register service by channel...\n")
-//	sc, err = me.ZeroConf.RegisterByChannel(messages.MessageAddress(me.EntityId), s)
+//	sc, err = me.ZeroConf.RegisterByChannel(msg.MessageAddress(me.EntityId), s)
 //
 //	return sc, err
 //}
@@ -188,16 +182,16 @@ func (me *EventBroker) FindMqttBroker() (*url.URL, error) {
 //
 //
 //	//fmt.Printf("Start channel...\n")
-//	//channelService, _ := me.Channels.StartHandler(messages.MessageAddress(serviceName))
-//	//err = channelService.Subscribe(messages.SubTopic("start"), manageService, s1ref)
+//	//channelService, _ := me.Channels.StartHandler(msg.MessageAddress(serviceName))
+//	//err = channelService.Subscribe(msg.SubTopic("start"), manageService, s1ref)
 //	//if err != nil {
 //	//	return
 //	//}
-//	//err = channelService.Subscribe(messages.SubTopic("stop"), manageService, s1ref)
+//	//err = channelService.Subscribe(msg.SubTopic("stop"), manageService, s1ref)
 //	//if err != nil {
 //	//	return
 //	//}
-//	//err = channelService.Subscribe(messages.SubTopic("status"), manageService, s1ref)
+//	//err = channelService.Subscribe(msg.SubTopic("status"), manageService, s1ref)
 //	//if err != nil {
 //	//	return
 //	//}
@@ -209,4 +203,3 @@ func (me *EventBroker) FindMqttBroker() (*url.URL, error) {
 //	//fmt.Printf("Stopping channel...\n")
 //	//_ = channelService.StopHandler()
 //}
-

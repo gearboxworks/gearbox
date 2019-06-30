@@ -1,13 +1,35 @@
 package network
 
 import (
+	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
+	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/osdirs"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"github.com/gearboxworks/go-status/only"
+	"sync"
+	"time"
 )
 
+type ZeroConf struct {
+	EntityId msgs.Address
+	Boxname  string
+	State    *states.Status
+	Task     *tasks.Task
+	Channels *channels.Channels
+
+	mutex           sync.RWMutex // Mutex control for map.
+	channelHandler  *channels.Subscriber
+	restartAttempts int
+	waitTime        time.Duration
+	domain          string
+	services        ServicesMap
+	scannedServices ServicesMap
+	OsPaths         *osdirs.BaseDirs
+}
+type Args ZeroConf
 
 func (me *ZeroConf) New(args ...Args) error {
 
@@ -21,20 +43,19 @@ func (me *ZeroConf) New(args ...Args) error {
 		}
 
 		if _args.Channels == nil {
-			err = me.EntityId.ProduceError("channel pointer is nil")
+			err = msgs.MakeError(me.EntityId, "channel pointer is nil")
 			break
 		}
 
 		if _args.OsPaths == nil {
-			err = me.EntityId.ProduceError("ospaths is nil")
+			err = msgs.MakeError(me.EntityId, "ospaths is nil")
 			break
 		}
-
 
 		if _args.EntityId == "" {
 			_args.EntityId = entity.NetworkEntityName
 		}
-		_args.State = states.New(&_args.EntityId, &_args.EntityId, entity.SelfEntityName)
+		_args.State = states.New(_args.EntityId, _args.EntityId, entity.SelfEntityName)
 
 		if _args.Boxname == "" {
 			_args.Boxname = entity.NetworkEntityName
@@ -56,7 +77,6 @@ func (me *ZeroConf) New(args ...Args) error {
 
 		*me = ZeroConf(_args)
 
-
 		me.State.SetWant(states.StateIdle)
 		me.State.SetNewState(states.StateIdle, err)
 		eblog.Debug(me.EntityId, "init complete")
@@ -68,7 +88,6 @@ func (me *ZeroConf) New(args ...Args) error {
 
 	return err
 }
-
 
 // Start the M-DNS network handler.
 func (me *ZeroConf) StartHandler() error {
@@ -83,9 +102,6 @@ func (me *ZeroConf) StartHandler() error {
 
 		me.State.SetNewAction(states.ActionStart)
 		me.Channels.PublishState(me.State)
-
-		//fmt.Printf("Sleeping with the fishes....\n")
-		//break
 
 		for range only.Once {
 			me.Task, err = tasks.StartTask(initZeroConf, startZeroConf, monitorZeroConf, stopZeroConf, me)
@@ -104,7 +120,6 @@ func (me *ZeroConf) StartHandler() error {
 
 	return err
 }
-
 
 // Stop the M-DNS network handler.
 func (me *ZeroConf) StopHandler() error {
@@ -138,7 +153,6 @@ func (me *ZeroConf) StopHandler() error {
 	return err
 }
 
-
 func (me *ZeroConf) StopServices() error {
 
 	var err error
@@ -163,7 +177,6 @@ func (me *ZeroConf) StopServices() error {
 	return err
 }
 
-
 // Print all services registered under M-DNS that I manage.
 func (me *ZeroConf) PrintServices() error {
 
@@ -180,4 +193,3 @@ func (me *ZeroConf) PrintServices() error {
 
 	return err
 }
-

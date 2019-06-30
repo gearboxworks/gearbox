@@ -1,6 +1,6 @@
 package entity
 
-import "gearbox/eventbroker/messages"
+import "gearbox/eventbroker/msgs"
 
 const (
 	ChannelEntityName    = "eventbroker-channels"
@@ -12,14 +12,14 @@ const (
 	UnfsdEntityName      = "unfsd"
 	MqttBrokerEntityName = "mqtt"
 
-	HeartbeatEntityName  = "heartbeat"
-	ApiEntityName        = "api"
-	VmBoxEntityName      = "vm"
-	VmUpdateEntityName   = "update"
-	VmEntityName         = "Gearbox"
+	HeartbeatEntityName = "heartbeat"
+	ApiEntityName       = "api"
+	VmBoxEntityName     = "vm"
+	VmUpdateEntityName  = "update"
+	VmEntityName        = "Gearbox"
 )
 
 //var SelfEntityName = "self"
 
-var AllEntities = messages.MessageAddresses{ChannelEntityName, NetworkEntityName, DaemonEntityName, MqttClientEntityName}
-var PartialEntities = messages.MessageAddresses{NetworkEntityName, DaemonEntityName, MqttClientEntityName}
+var AllEntities = msgs.Addresses{ChannelEntityName, NetworkEntityName, DaemonEntityName, MqttClientEntityName}
+var PartialEntities = msgs.Addresses{NetworkEntityName, DaemonEntityName, MqttClientEntityName}
