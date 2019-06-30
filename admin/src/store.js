@@ -112,9 +112,9 @@ export default new Vuex.Store({
           }
           continue
         }
-        projects = projects.filter(p => getters.filterProjectsBy(field, values).includes(p))
+        projects = (projects.filter(p => getters.filterProjectsBy(field, values).includes(p)))
       }
-      return projects
+      return projects.concat().sort((a, b) => a.id > b.id ? 1 : (a.id === b.id) ? 0 : -1)
     },
     projectStackItemIndexBy: (state) => (project, fieldName, fieldValue) => {
       let memberIndex = -1
@@ -160,7 +160,7 @@ export default new Vuex.Store({
           text: el.attributes.stackname
         })
       })
-      return options
+      return options.sort((a, b) => a.value > b.value ? 1 : (a.value === b.value) ? 0 : -1)
     },
     servicesAsOptions: (state) => {
       const options = []
@@ -185,7 +185,7 @@ export default new Vuex.Store({
           })
         }
       })
-      return options
+      return options.sort((a, b) => a.value > b.value ? 1 : (a.value === b.value) ? 0 : -1)
     },
     basedirsAsOptions: (state) => {
       const options = []
@@ -195,7 +195,7 @@ export default new Vuex.Store({
           text: el.attributes.basedir
         })
       })
-      return options
+      return options.sort((a, b) => a.value > b.value ? 1 : (a.value === b.value) ? 0 : -1)
     },
     hasExtraBasedirs: (state) => {
       return state.basedirs.records.length > 1

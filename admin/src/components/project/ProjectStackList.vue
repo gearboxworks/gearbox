@@ -91,7 +91,23 @@ export default {
         }
       })
       // console.log(result)
-      return result
+
+      /**
+       * sort gears by gear role
+       */
+      Object.keys(result).forEach((stackId) => {
+        result[stackId] = result[stackId].sort((a, b) => a.gearspec.attributes.role > b.gearspec.attributes.role ? 1 : (a.gearspec.attributes.role === b.gearspec.attributes.role) ? 0 : -1)
+      })
+
+      /**
+       * sort stacks by stack id
+       */
+      return Object.keys(result).sort().reduce(function (r, key) {
+        // eslint-disable-next-line no-param-reassign
+        r[key] = result[key]
+        return r
+      }, {})
+
     }
   },
   methods: {
