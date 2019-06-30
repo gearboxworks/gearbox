@@ -70,8 +70,8 @@ func (me *DirectoryController) GetListIds(ctx *Context, filterPath ...FilterPath
 
 func (me *DirectoryController) GetItem(ctx *Context, dir ItemId) (item ItemModeler, sts Status) {
 	for range only.Once {
-		var d types.AbsoluteDir
-		d, sts = UnescapeDirectory(types.AbsoluteDir(dir))
+		var d types.Dir
+		d, sts = UnescapeDirectory(types.Dir(dir))
 		if is.Error(sts) {
 			break
 		}
@@ -127,14 +127,14 @@ func (me *DirectoryController) UpdateItem(ctx *Context, item ItemModeler) (im It
 		SetMessage("cannot delete directory '%s'", item.GetId())
 }
 
-func (me *DirectoryController) maybeGetDirectoryDirectory(dm *DirectoryModel, itemid ItemId) types.AbsoluteDir {
-	dir := types.AbsoluteDir(dm.GetId())
+func (me *DirectoryController) maybeGetDirectoryDirectory(dm *DirectoryModel, itemid ItemId) types.Dir {
+	dir := types.Dir(dm.GetId())
 	for range only.Once {
 		if dir != "" {
 			break
 		}
 		if itemid != "" {
-			dir = types.AbsoluteDir(itemid)
+			dir = types.Dir(itemid)
 			break
 		}
 	}
@@ -211,7 +211,7 @@ func GetDirectoryFilterMap() FilterMap {
 	return FilterMap{}
 }
 
-func FindDirectory(dir types.AbsoluteDir) (item ItemModeler, sts Status) {
+func FindDirectory(dir types.Dir) (item ItemModeler, sts Status) {
 	d := &DirectoryModel{}
 	for range only.Once {
 		if !util.DirExists(dir) {
@@ -226,7 +226,7 @@ func FindDirectory(dir types.AbsoluteDir) (item ItemModeler, sts Status) {
 	return d, sts
 }
 
-func CanAddDirectory(dir types.AbsoluteDir) (sts Status) {
+func CanAddDirectory(dir types.Dir) (sts Status) {
 	for range only.Once {
 		hd, err := homedir.Dir()
 		if err != nil {
@@ -252,7 +252,7 @@ func CanAddDirectory(dir types.AbsoluteDir) (sts Status) {
 	return sts
 }
 
-func AddDirectory(dir types.AbsoluteDir) (sts Status) {
+func AddDirectory(dir types.Dir) (sts Status) {
 	for range only.Once {
 		sts = CanAddDirectory(dir)
 		if is.Error(sts) {
@@ -269,7 +269,7 @@ func AddDirectory(dir types.AbsoluteDir) (sts Status) {
 	return sts
 }
 
-func UnescapeDirectory(dir types.AbsoluteDir) (d types.AbsoluteDir, sts Status) {
+func UnescapeDirectory(dir types.Dir) (d types.Dir, sts Status) {
 	for range only.Once {
 		cleandir, err := url.QueryUnescape(string(dir))
 		if err != nil {
@@ -277,7 +277,7 @@ func UnescapeDirectory(dir types.AbsoluteDir) (d types.AbsoluteDir, sts Status) 
 				SetMessage("unable to unencode directory '%d'", dir).
 				SetHttpStatus(http.StatusBadRequest)
 		}
-		d = types.AbsoluteDir(cleandir)
+		d = types.Dir(cleandir)
 	}
 	return d, sts
 }

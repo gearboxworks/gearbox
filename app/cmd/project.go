@@ -63,14 +63,14 @@ func init() {
 		Args:  cobra.RangeArgs(1, 2),
 		Short: "Add a new directory on a host computer to the list of project roots in use.",
 		Run: func(cmd *cobra.Command, args []string) {
-			var dir types.AbsoluteDir
+			var dir types.Dir
 			var basedir types.Nickname
 			switch len(args) {
 			case 2:
 				basedir = types.Nickname(args[1])
 				fallthrough
 			case 1:
-				dir = types.AbsoluteDir(args[0])
+				dir = types.Dir(args[0])
 			}
 			if dir != "" {
 				sts := gearbox.Instance.AddBasedir(dir, basedir)
