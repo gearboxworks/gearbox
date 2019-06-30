@@ -130,7 +130,7 @@ func init() {
 			"This maintains low-level communications with important Gearbox applications and tools. " +
 			"It also provides a user systray for control of Gearbox. ",
 		Run: func(cmd *cobra.Command, args []string) {
-			sts := gearbox.Instance.BoxDaemon(boxArgs)
+			sts := gearbox.Instance.RunAsDaemon(boxArgs)
 			if is.Error(sts) {
 				status.Log(sts)
 				fmt.Println(sts.Message())

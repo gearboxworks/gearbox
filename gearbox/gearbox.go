@@ -67,7 +67,7 @@ type Gearboxer interface {
 	RequestAvailableContainers(...*dockerhub.ContainerQuery) (dockerhub.ContainerNames, status.Status)
 
 	// VM related.
-	BoxDaemon(*box.Args) status.Status
+	RunAsDaemon(*box.Args) status.Status
 	StartBox(*box.Args) status.Status
 	StopBox(*box.Args) status.Status
 	RestartBox(*box.Args) status.Status
@@ -307,14 +307,6 @@ func (me *Gearbox) GetProject(hostname types.Hostname) (p *project.Project, sts 
 	return p, sts
 }
 
-//func (me Gearboxer) GetProjects() string {
-//	j, err := json.Marshal(me.GetProjectMap())
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	return string(j)
-//}
-//
 func (me *Gearbox) Admin(viewer ViewerType) {
 	aui := NewAdminUi(me, viewer)
 	aui.Initialize()

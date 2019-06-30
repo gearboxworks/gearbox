@@ -16,7 +16,7 @@ func newBox(me Gearboxer, args *box.Args) (bx *box.Box, sts status.Status) {
 	return bx, sts
 }
 
-func (me *Gearbox) BoxDaemon(args *box.Args) (sts status.Status) {
+func (me *Gearbox) RunAsDaemon(args *box.Args) (sts status.Status) {
 
 	for range only.Once {
 		var bx *box.Box
