@@ -200,14 +200,12 @@ export default {
   }
 
   .input-group--stack,
-  .input-group--location,
-  .input-group--note {
+  .input-group--location {
     margin-bottom: 0.5rem;
   }
 
   .input-group--stack:not(.is-collapsed),
-  .input-group--location:not(.is-collapsed),
-  .input-group--note:not(.is-collapsed) {
+  .input-group--location:not(.is-collapsed) {
     position: absolute;
     width: calc(100% - 1.5rem);
     z-index: 3;
@@ -241,10 +239,7 @@ export default {
 
   .input-group--note.is-collapsed{
     margin-right: 0;
-  }
-
-  .input-group--note {
-    float: right;
+    float:right;
   }
 
 </style>

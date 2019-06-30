@@ -403,6 +403,7 @@ export default new Vuex.Store({
       if (!p) {
         state.projects.records.push(project)
       } else {
+        console.log('SET_PROJECT.stack', project.attributes.stack)
         Vue.set(p.attributes, 'stack', project.attributes.stack)
       }
     },
