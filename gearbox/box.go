@@ -7,13 +7,8 @@ import (
 	"github.com/gearboxworks/go-status/only"
 )
 
-func newBox(me Gearboxer, args *box.Args) (bx *box.Box, sts status.Status) {
-
-	args.SetOsBridge(me.GetOsBridge())
-	bx, _ = box.New(args)
-	//sts = bx.Initialize()
-
-	return bx, sts
+func (me *Gearbox) CreateBox(*box.Args) status.Status {
+	panic("implement me")
 }
 
 func (me *Gearbox) RunAsDaemon(args *box.Args) (sts status.Status) {
@@ -117,6 +112,10 @@ func (me *Gearbox) PrintBoxStatus(args *box.Args) (sts status.Status) {
 	return sts
 }
 
-func (me *Gearbox) CreateBox(*box.Args) status.Status {
-	panic("implement me")
+func newBox(me Gearboxer, args *box.Args) (bx *box.Box, sts status.Status) {
+
+	args.SetOsBridge(me.GetOsBridge())
+	bx, _ = box.New(args)
+
+	return bx, sts
 }
