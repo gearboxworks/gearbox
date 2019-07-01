@@ -63,7 +63,7 @@ func (me *ZeroConf) Browse(s string, d string) (ServicesMap, error) {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return found, err
 }
@@ -104,7 +104,7 @@ func (me *ZeroConf) FindService(e ServiceConfig) (*Service, error) {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return sc, err
 }
@@ -224,7 +224,7 @@ func (me *ZeroConf) updateRegisteredServices() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }

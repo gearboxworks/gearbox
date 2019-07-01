@@ -71,7 +71,7 @@ func initZeroConf(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -102,7 +102,7 @@ func startZeroConf(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -155,7 +155,7 @@ func monitorZeroConf(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -187,7 +187,7 @@ func stopZeroConf(task *tasks.Task, i ...interface{}) error {
 			eblog.Debug(me.EntityId, "task handler stopped OK")
 		}
 
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 		eblog.LogIfNil(me, err)
 	}
 

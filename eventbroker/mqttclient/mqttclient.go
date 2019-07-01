@@ -67,7 +67,7 @@ func (me *MqttClient) New(args ...Args) error {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -100,7 +100,7 @@ func (me *MqttClient) StartHandler() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -132,7 +132,7 @@ func (me *MqttClient) StopHandler() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -156,7 +156,7 @@ func (me *MqttClient) StopServices() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }

@@ -63,7 +63,7 @@ func (me *Channels) Subscribe(client msgs.Topic, callback Callback, argInterface
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &sub, err
 }
@@ -78,33 +78,31 @@ func (me *Subscriber) Subscribe(topic msgs.SubTopic, callback Callback, argInter
 			break
 		}
 
-		for range only.Once {
-			err = topic.EnsureNotEmpty()
-			if err != nil {
-				break
-			}
-
-			if callback == nil {
-				err = msgs.MakeError(me.EntityId, "callback function is empty")
-				break
-			}
-
-			if retType == "" {
-				err = msgs.MakeError(me.EntityId, "return type is empty")
-				break
-			}
-
-			me.State.SetNewAction(states.ActionSubscribe)
-
-			me.AddTopic(topic, callback, argInterface, retType)
-
-			me.State.SetNewState(states.StateSubscribed, err)
-			eblog.Debug(me.EntityId, "channel new subscriber: %s", msgs.SprintfTopic(me.EntityId, topic))
+		err = topic.EnsureNotEmpty()
+		if err != nil {
+			break
 		}
+
+		if callback == nil {
+			err = msgs.MakeError(me.EntityId, "callback function is empty")
+			break
+		}
+
+		if retType == "" {
+			err = msgs.MakeError(me.EntityId, "return type is empty")
+			break
+		}
+
+		me.State.SetNewAction(states.ActionSubscribe)
+
+		me.AddTopic(topic, callback, argInterface, retType)
+
+		me.State.SetNewState(states.StateSubscribed, err)
+		eblog.Debug(me.EntityId, "channel new subscriber: %s", msgs.SprintfTopic(me.EntityId, topic))
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }

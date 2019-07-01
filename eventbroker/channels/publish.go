@@ -58,7 +58,7 @@ func (me *Channels) Publish(msg msgs.Message) error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -104,7 +104,7 @@ func (me *Channels) GetCallbackReturn(msg msgs.Message, waitForExecute int) (Ret
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return ret, err
 }
@@ -134,7 +134,7 @@ func (me *Channels) SetCallbackReturnToNil(msg msgs.Message) error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -164,7 +164,7 @@ func (me *Channels) PublishAndWaitForReturn(msg msgs.Message, waitForExecute int
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return ret, err
 }

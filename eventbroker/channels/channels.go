@@ -47,7 +47,7 @@ func (me *Channels) New(args ...Args) error {
 
 	me.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -66,7 +66,7 @@ func (me *Channels) StopHandler() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -88,7 +88,7 @@ func (me *Channels) StopClientHandler(client msgs.Address) {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return
 }
@@ -110,7 +110,7 @@ func (me *Subscriber) StopHandler() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return nil
 }
@@ -162,7 +162,7 @@ func (me *Channels) StartClientHandler(client msgs.Address) (*Subscriber, error)
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &sub, err
 }
@@ -241,7 +241,7 @@ func (me *Channels) rxHandler(client msgs.Address) error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }

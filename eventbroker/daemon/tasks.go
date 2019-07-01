@@ -71,7 +71,7 @@ func initDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -102,7 +102,7 @@ func startDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -169,7 +169,7 @@ func monitorDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -202,7 +202,7 @@ func stopDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err

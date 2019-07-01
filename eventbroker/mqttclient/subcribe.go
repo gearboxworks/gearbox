@@ -65,7 +65,7 @@ func (me *MqttClient) Subscribe(ce ServiceConfig) (*Service, error) {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &sc, err
 }
@@ -109,7 +109,7 @@ func (me *MqttClient) SubscribeByChannel(caller msgs.Address, s Topic) (*Service
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return sc, err
 }

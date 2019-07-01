@@ -45,7 +45,7 @@ func (me *MqttClient) UnsubscribeByUuid(client msgs.Address) error {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -72,7 +72,7 @@ func (me *MqttClient) UnsubscribeByChannel(caller msgs.Address, u msgs.Address) 
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }

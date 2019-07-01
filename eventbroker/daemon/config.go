@@ -37,7 +37,7 @@ func ReadJsonConfig(f string) (*ServiceConfig, error) {
 		}
 	}
 
-	if eblog.LogIfError(eblog.SkipNilCheck, err) {
+	if eblog.LogIfError(err) {
 		// Save last state.
 		// me.State.Error = err
 	}

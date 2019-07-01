@@ -115,7 +115,7 @@ func (me *MqttClient) ConnectToServer(u string) error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }

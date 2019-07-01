@@ -2,6 +2,7 @@ package vmbox
 
 import (
 	"fmt"
+	"gearbox/box/external/virtualbox"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
@@ -62,7 +63,7 @@ func initVmBox(task *tasks.Task, i ...interface{}) error {
 				Name:    msgs.Address(me.Boxname),
 				Version: "latest",
 			}
-			myVM, err := me.New(sc)
+			myVM, err := me.MakeVm(sc)
 			if err == nil {
 				eblog.Debug(me.EntityId, "VM: %v\n", myVM.State.GetStatus())
 				fmt.Printf("Gearbox: Created VM.\n")
@@ -74,7 +75,7 @@ func initVmBox(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -105,7 +106,7 @@ func startVmBox(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -169,12 +170,12 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 					// then ignore any state broadcasts.
 
 					var state states.State
-					state, err = v.vbStatus()
+					state, err = virtualbox.VmStatus(v)
 					v.State.SetNewState(state, err)
 					v.channels.PublishState(v.State)
 
 					if state == states.StateUnregistered {
-						state, err = v.vbCreate()
+						state, err = virtualbox.CreateVm(v)
 						if err != nil {
 							v.ApiState.SetNewState(state, err)
 							v.channels.PublishState(v.ApiState)
@@ -204,7 +205,7 @@ func monitorVmBox(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -237,7 +238,7 @@ func stopVmBox(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err

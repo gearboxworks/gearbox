@@ -11,6 +11,10 @@ import (
 	"path/filepath"
 )
 
+// @TODO These look like they really should be a config type, not part of Vm.
+//       Or ideally, this should be delegated to a config interface that would
+//       handle reading and writing instead of duplicating that logic here.
+//
 func (me *Vm) ReadConfig() error {
 
 	var err error
@@ -47,7 +51,7 @@ func (me *Vm) ReadConfig() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -58,7 +62,7 @@ func (me *Vm) WriteConfig() error {
 	var data []byte
 	var perm os.FileMode
 
-	perm = 0664
+	perm = 0664 // @TODO Use constant
 
 	for range only.Once {
 
@@ -101,7 +105,7 @@ func (me *Vm) WriteConfig() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -155,14 +159,14 @@ func (me *Vm) VerifyConfig() error {
 		}
 
 		if me.Entry.IconFile == "" {
-			fp := me.osPaths.AddFileToUserConfigDir(IconLogoPng)
+			fp := me.osDirs.AddFileToUserConfigDir(IconLogoPng)
 			if osdirs.CheckFileExists(fp) == nil {
 				me.Entry.IconFile = fp
 			}
 		}
 
 		if me.Entry.VmDir == "" {
-			me.Entry.VmDir = me.osPaths.AppendToUserConfigDir("vm")
+			me.Entry.VmDir = me.osDirs.AppendToUserConfigDir("vm")
 		}
 		_, err = osdirs.CreateIfNotExists(me.Entry.VmDir)
 		if err != nil {
@@ -176,7 +180,7 @@ func (me *Vm) VerifyConfig() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -201,7 +205,7 @@ func (me *Vm) ConfigExists() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -226,7 +230,7 @@ func (me *Vm) DestroyConfig() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }

@@ -95,7 +95,7 @@ func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &sc, err
 }
@@ -147,7 +147,7 @@ func (me *ZeroConf) RegisterByChannel(caller msgs.Address, s ServiceConfig) (*Se
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return sc, err
 }

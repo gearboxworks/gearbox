@@ -43,7 +43,7 @@ func stopHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &err
 }
@@ -79,7 +79,7 @@ func startHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTyp
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &err
 }
@@ -116,7 +116,7 @@ func statusHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTy
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return ret
 }
@@ -137,17 +137,6 @@ func updateHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTy
 			break
 		}
 
-		//if event.Text.String() == entity.SelfEntityName {
-		//	// Get status of Daemon by default
-		//	ret = me.State.GetStatus()
-		//} else {
-		//	// Get status of specific entity
-		//	sc := me.IsExisting(msg.Address(event.Text))
-		//	if sc != nil {
-		//		ret, err = sc.GetStatus()
-		//	}
-		//}
-
 		if !me.Releases.Selected.IsDownloading {
 			err = me.Releases.Selected.GetIso()
 		}
@@ -156,7 +145,7 @@ func updateHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTy
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &err
 }
@@ -183,22 +172,18 @@ func createHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTy
 			// Get status of specific entity
 			sc := me.IsExisting(msgs.Address(event.Text))
 			if sc == nil {
-				_, err = me.New(ServiceConfig{
+				_, err = me.MakeVm(ServiceConfig{
 					Name:    msgs.Address(event.Text),
 					Version: "latest",
 				})
 			}
 		}
 
-		//if !me.Releases.Selected.IsDownloading {
-		//	err = me.Releases.Selected.GetIso()
-		//}
-
 		eblog.Debug(me.EntityId, "createHandler() via channel")
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &err
 }

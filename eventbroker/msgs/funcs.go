@@ -8,6 +8,8 @@ import (
 	"reflect"
 )
 
+// @TODO "Make" is shorter than "Generate" and means the same
+//
 func MakeAddress() Address {
 	return Address(uuid.New().String())
 }

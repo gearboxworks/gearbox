@@ -45,7 +45,7 @@ func (me *ZeroConf) UnregisterByEntityId(client msgs.Address) error {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -73,7 +73,7 @@ func (me *ZeroConf) UnregisterByChannel(caller msgs.Address, u msgs.Address) err
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }

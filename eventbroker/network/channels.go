@@ -33,7 +33,7 @@ func stopHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &err
 }
@@ -59,7 +59,7 @@ func startHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTyp
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &err
 }
@@ -92,7 +92,7 @@ func statusHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTy
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return ret
 }
@@ -127,7 +127,7 @@ func registerService(event *msgs.Message, i channels.Argument, r channels.Return
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return ret
 }
@@ -154,7 +154,7 @@ func unregisterService(event *msgs.Message, i channels.Argument, r channels.Retu
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &err
 }
@@ -185,7 +185,7 @@ func getHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType)
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &ret
 }
@@ -211,7 +211,7 @@ func scanServices(event *msgs.Message, i channels.Argument, r channels.ReturnTyp
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &err
 }

@@ -68,7 +68,7 @@ func (me *Daemon) UnregisterByEntityId(client msgs.Address) error {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -96,7 +96,7 @@ func (me *Daemon) UnregisterByChannel(caller msgs.Address, u msgs.Address) error
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -138,7 +138,7 @@ func (me *Daemon) UnregisterByFile(f string) (*Service, error) {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return s, err
 }

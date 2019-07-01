@@ -168,7 +168,7 @@ func DeconstructMdnsMessage(event *msgs.Message) (ServiceConfig, error) {
 			fmt.Printf("##########################################################\nWHY?: %s\n", event.String())
 
 			fmt.Printf("registerService: %s\n", event.String())
-			fmt.Printf("Callers: %v\n", eblog.MyCallers(eblog.CallerCurrent, 3).Print())
+			fmt.Printf("Callers: %v\n", eblog.MyCallers(eblog.CurrentCaller, 3))
 			fmt.Print("")
 			break
 		}
@@ -188,9 +188,9 @@ func InterfaceToTypeZeroConf(i interface{}) (*ZeroConf, error) {
 			break
 		}
 
-		checkType := reflect.ValueOf(i)
-		//fmt.Printf("InterfaceToTypeZeroConf = %v\n", checkType.Type().String())
-		if checkType.Type().String() != InterfaceTypeZeroConf {
+		value := reflect.ValueOf(i)
+		//fmt.Printf("InterfaceToTypeZeroConf = %v\n", value.Type().String())
+		if value.Type().String() != InterfaceTypeZeroConf {
 			err = errors.New("interface type not " + InterfaceTypeZeroConf)
 			break
 		}
@@ -219,8 +219,8 @@ func InterfaceToTypeService(i interface{}) (*Service, error) {
 			break
 		}
 
-		checkType := reflect.ValueOf(i)
-		if checkType.Type().String() != InterfaceTypeService {
+		value := reflect.ValueOf(i)
+		if value.Type().String() != InterfaceTypeService {
 			err = errors.New("interface type not " + InterfaceTypeService)
 			break
 		}
@@ -282,7 +282,7 @@ func (me *Service) Print() error {
 	return err
 }
 
-func (me *Entry) IsTheSame(e Entry) (bool, error) {
+func (me *Entry) IsEqualTo(e Entry) (bool, error) {
 
 	var same bool
 	var err error
@@ -316,7 +316,7 @@ func (me *Entry) UpdateService(e Entry) (bool, error) {
 			break
 		}
 
-		ok, err := me.IsTheSame(e)
+		ok, err := me.IsEqualTo(e)
 		if err != nil {
 			break
 		}

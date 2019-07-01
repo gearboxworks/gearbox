@@ -49,7 +49,7 @@ func (me *EventBroker) StartChannelHandler() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -72,7 +72,7 @@ func (me *EventBroker) StopChannelHandler() error {
 		eblog.Debug(me.EntityId, "task handler stopped OK")
 	}
 
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 	eblog.LogIfNil(me, err)
 
 	return err
@@ -136,7 +136,7 @@ func getHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType)
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return ret
 }
@@ -174,7 +174,7 @@ func statusHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTy
 		}
 
 		// Create callback reference if not already present.
-		sc, ok, err = me.AttachCallback(*state.EntityName, nil, nil)
+		sc, ok, err = me.AttachCallback(state.EntityName, nil, nil)
 		if err != nil {
 			break
 		}
@@ -203,7 +203,7 @@ func statusHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTy
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return state
 }
@@ -238,7 +238,7 @@ func stopHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return ret
 }
@@ -263,7 +263,7 @@ func startHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTyp
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return ret
 }
@@ -321,11 +321,11 @@ func (me Services) LookFor(client msgs.Address) (*Service, error) {
 				break
 			}
 
-			if *ret.State.EntityId == client {
+			if ret.State.EntityId == client {
 				break
 			}
 
-			if *ret.State.EntityName == client {
+			if ret.State.EntityName == client {
 				break
 			}
 		}
@@ -454,8 +454,8 @@ func (me *Service) IsTheSame(state states.Status) bool {
 			break
 		}
 
-		if state.EntityId == nil {
-			err = errors.New("status.EntityId is nil")
+		if state.EntityId == "" {
+			err = errors.New("status.EntityId is empty")
 			break
 		}
 

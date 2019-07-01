@@ -1,7 +1,7 @@
 package states
 
-type State string
+type State = string
 
-func (me State) String() string {
-	return string(me)
-}
+//func (me State) String() string {
+//	return string(me)
+//}

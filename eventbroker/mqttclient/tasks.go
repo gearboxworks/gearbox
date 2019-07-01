@@ -67,7 +67,7 @@ func initMqttClient(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -98,7 +98,7 @@ func startMqttClient(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -161,7 +161,7 @@ func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
@@ -194,7 +194,7 @@ func stopMqttClient(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err

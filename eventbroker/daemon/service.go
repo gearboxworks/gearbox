@@ -58,7 +58,7 @@ func (srv *Service) Start() error {
 	}
 
 	eblog.LogIfNil(srv, err)
-	eblog.LogIfError(srv.EntityId, err)
+	eblog.LogIfError(err)
 
 	return nil
 }
@@ -102,7 +102,7 @@ func (srv *Service) Stop() error {
 	}
 
 	eblog.LogIfNil(srv, err)
-	eblog.LogIfError(srv.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -123,7 +123,7 @@ func (srv *Service) Status(publish bool) (states.Status, error) {
 		srv.State.SetNewState(state, err)
 
 		if srv.State.HasChangedState() {
-			eblog.Debug(srv.EntityId, "status current:%s last:%s", srv.State.GetCurrent().String(), srv.State.GetLast().String())
+			eblog.Debug(srv.EntityId, "status current:%s last:%s", srv.State.GetCurrent(), srv.State.GetLast())
 
 			if publish {
 				srv.channels.PublishState(srv.State)
@@ -132,7 +132,7 @@ func (srv *Service) Status(publish bool) (states.Status, error) {
 	}
 
 	eblog.LogIfNil(srv, err)
-	eblog.LogIfError(srv.EntityId, err)
+	eblog.LogIfError(err)
 
 	return *srv.State, err
 }
@@ -216,7 +216,7 @@ func (srv *Service) RegisterMDNS() error {
 	}
 
 	eblog.LogIfNil(srv, err)
-	eblog.LogIfError(srv.EntityId, err)
+	eblog.LogIfError(err)
 
 	return nil
 }
@@ -251,7 +251,7 @@ func (srv *Service) UnregisterMDNS() error {
 	}
 
 	eblog.LogIfNil(srv, err)
-	eblog.LogIfError(srv.EntityId, err)
+	eblog.LogIfError(err)
 
 	return nil
 }

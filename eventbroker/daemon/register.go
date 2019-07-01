@@ -137,7 +137,7 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return sc, err
 }
@@ -183,7 +183,7 @@ func (me *Daemon) RegisterByChannel(caller msgs.Address, s ServiceConfig) (*netw
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return sc, err
 }
@@ -239,7 +239,7 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return s, err
 }

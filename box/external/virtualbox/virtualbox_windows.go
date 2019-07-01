@@ -1,5 +1,6 @@
 // +build windows
-package vmbox
+
+package virtualbox
 
 import (
 	"os"

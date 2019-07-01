@@ -110,7 +110,7 @@ func New(args ...Args) (*EventBroker, error) {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return me, err
 }
@@ -160,7 +160,7 @@ func (me *EventBroker) Start() error {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -277,7 +277,7 @@ func (me *EventBroker) GetSimpleStatus() (SimpleStatus, error) {
 
 		for _, v := range me.Services {
 			v.mutex.RLock()
-			ret[*v.State.EntityName] = v.State.Current
+			ret[v.State.EntityName] = v.State.Current
 			v.mutex.RUnlock()
 		}
 	}

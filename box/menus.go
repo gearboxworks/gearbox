@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gearbox/box/external/vmbox"
+	"gearbox/eventbroker/ebutil"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/osdirs"
@@ -198,8 +199,8 @@ func (me *Box) SetStateMenu(m msgs.Address, state states.State) {
 	default:
 		mi.MenuItem.SetIcon(me.getIcon(IconWarning))
 	}
-	mi.MenuItem.SetTitle(mi.PrefixMenu + state.String())
-	mi.MenuItem.SetTooltip(mi.PrefixToolTip + state.String())
+	mi.MenuItem.SetTitle(mi.PrefixMenu + state)
+	mi.MenuItem.SetTooltip(mi.PrefixToolTip + state)
 
 	return
 }
@@ -300,8 +301,8 @@ func (me *Box) SetControlMenu(m msgs.Address, state states.State) {
 		_ = me.menu[menuVmStop].Disable()
 		_ = me.menu[menuVmSsh].Disable()
 	}
-	mi.MenuItem.SetTitle(mi.PrefixMenu + state.String())
-	mi.MenuItem.SetTooltip(mi.PrefixToolTip + state.String())
+	mi.MenuItem.SetTitle(mi.PrefixMenu + state)
+	mi.MenuItem.SetTooltip(mi.PrefixToolTip + state)
 
 	return
 }
@@ -316,7 +317,10 @@ func (me *Box) onReady() {
 			select {
 			case <-me.menu["help"].MenuItem.ClickedCh:
 				fmt.Printf("Menu: Help.\n")
-				me.openAbout()
+				err := me.openAbout()
+				if err != nil {
+					ebutil.LogError(err)
+				}
 
 			case <-me.menu["version"].MenuItem.ClickedCh:
 				fmt.Printf("Menu: Version\n")
@@ -340,11 +344,17 @@ func (me *Box) onReady() {
 
 			case <-me.menu[menuVmAdmin].MenuItem.ClickedCh:
 				fmt.Printf("Menu: Admin console.\n")
-				me.openAdmin()
+				err := me.openAdmin()
+				if err != nil {
+					ebutil.LogError(err)
+				}
 
 			case <-me.menu[menuVmSsh].MenuItem.ClickedCh:
 				fmt.Printf("Menu: SSH\n")
-				me.openTerminal()
+				err := me.openTerminal()
+				if err != nil {
+					ebutil.LogError(err)
+				}
 
 			case <-me.menu[menuVmCreate].MenuItem.ClickedCh:
 				fmt.Printf("Menu: Create VM.\n")

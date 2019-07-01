@@ -44,7 +44,7 @@ func (me *Channels) UnSubscribe(client msgs.Topic) error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
@@ -76,7 +76,7 @@ func (me *Subscriber) UnSubscribe(client msgs.SubTopic) error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
