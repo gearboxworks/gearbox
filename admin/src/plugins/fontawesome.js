@@ -29,7 +29,8 @@ import {
   faClone,
   faTimes,
   faReply,
-  faCircleNotch
+  faCircleNotch,
+  faPencilAlt
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
@@ -62,5 +63,6 @@ library.add(faClone)
 library.add(faTimes)
 library.add(faReply)
 library.add(faCircleNotch)
+library.add(faPencilAlt)
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)

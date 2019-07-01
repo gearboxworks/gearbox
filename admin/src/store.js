@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
-import { getConfig as raxConfig } from 'retry-axios'
+// import { getConfig as raxConfig } from 'retry-axios'
 import HTTP from './http-common'
 import { mapResourceModules } from '@reststate/vuex'
 
@@ -253,15 +253,15 @@ export default new Vuex.Store({
             'projects/' + project.id,
             {
               crossDomain: true,
-              raxConfig: {
-                // You can detect when a retry is happening, and figure out how many
-                // retry attempts have been made
-                onRetryAttempt: (err) => {
-                  const cfg = raxConfig(err)
-                  commit('SET_NETWORK_ERROR', err.message)
-                  commit('SET_REMAINING_RETRIES', cfg.retry - cfg.currentRetryAttempt)
-                }
-              }
+              // raxConfig: {
+              //   // You can detect when a retry is happening, and figure out how many
+              //   // retry attempts have been made
+              //   onRetryAttempt: (err) => {
+              //     const cfg = raxConfig(err)
+              //     commit('SET_NETWORK_ERROR', err.message)
+              //     commit('SET_REMAINING_RETRIES', cfg.retry - cfg.currentRetryAttempt)
+              //   }
+              // }
             }
           ).catch((error, config) => {
             // handle error

@@ -107,7 +107,6 @@ export default {
         r[key] = result[key]
         return r
       }, {})
-
     }
   },
   methods: {
