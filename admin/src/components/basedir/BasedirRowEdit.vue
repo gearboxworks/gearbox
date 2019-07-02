@@ -38,7 +38,8 @@
         title="Copy to clipboard"
         v-b-tooltip.hover
         class="btn--copy-dir"
-        @click.prevent="onCopyToClipboard"
+        v-clipboard:copy="currentValue"
+        v-clipboard:success="onCopyToClipboard"
       >
         <font-awesome-icon
           :icon="['fa', 'clone']"
@@ -219,10 +220,11 @@ export default {
           // this.isModified = false
         })
     },
-    onCopyToClipboard () {
-      // @TODO implement copy to clipboard
-      // @see https://github.com/Inndy/vue-clipboard2
-      console.log('TODO: implement copy to clipboard')
+    onCopyToClipboard (e) {
+      /**
+       * @see https://github.com/Inndy/vue-clipboard2
+       */
+      // console.log('Copied', e.text)
     },
     onOpenDirectory () {
       // TODO call API method to open directory in file manager

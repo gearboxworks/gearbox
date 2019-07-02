@@ -17,7 +17,7 @@
         href="#"
         class="btn--copy-dir"
         v-if="!isCollapsed"
-        @click="onCopyToClipboard"
+        @click.stop="onCopyToClipboard"
       >
         <font-awesome-icon
           :icon="['fa', 'clone']"
@@ -102,9 +102,11 @@ export default {
       }
     },
     onCopyToClipboard () {
-      // @TODO implement copy to clipboard
-      // @see https://github.com/Inndy/vue-clipboard2
-      console.log('TODO: implement copy to clipboard')
+      /**
+       * @see https://github.com/Inndy/vue-clipboard2
+       */
+      this.$copyText(this.$refs[`${this.projectBase}location`].$el.value).then((e) => console.log('Copied:', e.text))
+
       if (this.isMultimodal) {
         this.$nextTick(() => {
           this.isCollapsed = true
