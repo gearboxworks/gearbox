@@ -41,6 +41,12 @@
 
       <b-form-group>
         <label :for="`${gearControlId}-input`">{{gearspec.attributes.role}}:</label>
+
+<!--        <cool-select-->
+<!--          value="Option2"-->
+<!--          :items="[{'text':'Option1'}, {'text':'Option2'}]"-->
+<!--        />-->
+
         <b-form-select
           :ref="`${gearControlId}-select`"
           :value="preselectClosestGearServiceId"
@@ -63,6 +69,7 @@
 <script>
 
 import { mapGetters } from 'vuex'
+// import { CoolSelect } from 'vue-cool-select'
 
 export default {
   name: 'StackGear',
@@ -95,6 +102,9 @@ export default {
       isSwitchingSame: false,
       isSwitchingSameAgain: false
     }
+  },
+  components: {
+    // CoolSelect
   },
   computed: {
     ...mapGetters(['serviceBy', 'gearspecBy', 'stackBy', 'stackDefaultServiceByRole', 'stackServicesByRole', 'preselectServiceId']),

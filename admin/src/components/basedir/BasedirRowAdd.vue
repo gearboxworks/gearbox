@@ -2,10 +2,10 @@
   <b-form-row :class="{'form-row--basedir-add': true, 'is-updating': isUpdating}">
     <b-input-group :class="{'input-group--basedir-edit': true}" role="tabpanel">
       <b-form-input
-        ref="create-basedir"
+        v-model="currentValue"
         type="text"
         class="basedir"
-        placeholder="Input existing directory..."
+        placeholder="Input directory..."
         @keyup="touch('add')"
         @change="touch('add')"
         :state="inputState('add')"
@@ -18,13 +18,20 @@
           @click.prevent="onAddBasedir"
           :disabled="!touched['add']"
           class="btn--add"
-          title="Add new directory reference"
+          :title="currentValue ? 'Add directory': 'First, input some directory!'"
           :tabindex="tabOffset+1"
         >
           <font-awesome-icon :icon="['fa', 'plus']" />
         </b-button>
       </b-input-group-append>
     </b-input-group>
+
+    <div :class="{confirmation: true, visible: notfound[currentValue]}">
+      This dir does not exist. Would you like to create it?
+      <a class="yes" @click.stop="createDir(currentValue)" title="Create directory">Yes</a>
+      |
+      <a class="no" @click.stop="notfound[currentValue]=0" title="Try a different dir">No</a>
+    </div>
 
     <div class="invalid-feedback d-block">{{errors['add'] || '&nbsp;'}}</div>
   </b-form-row>
@@ -45,8 +52,10 @@ export default {
   data () {
     return {
       isUpdating: false,
+      currentValue: '',
       errors: {},
       touched: {},
+      notfound: {},
       alertShow: false,
       alertContent: 'content',
       alertDismissible: true,
@@ -63,7 +72,7 @@ export default {
   },
   methods: {
     ...mapActions({
-      'createBasedir': 'basedirs/create',
+      'doCreateBasedir': 'basedirs/create',
       'getDirectory': 'getDirectory'
     }),
     escAttr (value) {
@@ -80,8 +89,13 @@ export default {
       this.alertShow = true
     },
     touch (basedirId) {
-      this.$set(this.touched, basedirId, true)
-      this.$delete(this.errors, basedirId)
+      if (this.currentValue) {
+        this.$set(this.touched, basedirId, true)
+        this.$delete(this.errors, basedirId)
+      } else {
+        this.$delete(this.touched, basedirId)
+        this.$delete(this.errors, basedirId)
+      }
     },
     inputState (basedirId) {
       return typeof this.errors[basedirId] === 'undefined'
@@ -89,33 +103,44 @@ export default {
         : (this.errors[basedirId] === 'no error')
     },
     onAddBasedir () {
-      const ctrl = this.$refs['create-basedir'].$el
-      const basedir = ctrl.value
+      const basedir = this.currentValue
+      if (!basedir) {
+        return
+      }
 
+      this.getDirectory({ 'dir': basedir })
+        .then(r => r ? r.data : null)
+        .then(response => {
+          this.createDir(basedir)
+        })
+        .catch(e => {
+        /**
+         * TODO deal with a code which indicates that the dir is invalid! Maybe 409?
+         */
+          if (e.response.status === 404) {
+            this.$set(this.notfound, basedir, 1)
+          } else {
+            this.$delete(this.notfound, basedir)
+          }
+        })
+    },
+    createDir (basedir) {
       const recordData = {
         'attributes': {
           basedir
         }
       }
 
-      this.getDirectory({ 'dir': basedir })
-        .then(r => r ? r.data : null)
-        .then(response => {
-          console.log('getDirectory ok', basedir, response)
-        })
-        .catch(e => {
-          console.log('getDirectory err', basedir, e)
-        })
-
-      this.createBasedir(recordData)
+      this.doCreateBasedir(recordData)
         .then((res) => {
-          console.log(res, this)
+          // console.log(res, this)
           this.$set(this.touched, 'add', true)
           this.$delete(this.errors, 'add')
-          ctrl.value = ''
+          this.$delete(this.notfound, this.currentValue)
+          this.currentValue = ''
         })
         .catch(res => {
-          console.log(res, this)
+          // console.log(res, this)
           this.$set(this.errors, 'add', res.data.errors[0].title || res.statusText)
           this.$delete(this.touched, 'add')
         })
@@ -139,6 +164,28 @@ export default {
 
   .btn--add {
     width: 3rem;
+  }
+
+  .confirmation{
+    margin-top: 7px;
+    font-size: 93%;
+    transition: opacity 400ms ease-in;
+    opacity: 0;
+    color: var(--gray)
+  }
+  .confirmation.visible{
+    opacity: 1;
+  }
+  .no, .yes {
+    cursor: pointer;
+  }
+
+  .yes {
+    color: var(--success) !important;
+  }
+
+  .no {
+    color: var(--warning) !important;
   }
 
 </style>
