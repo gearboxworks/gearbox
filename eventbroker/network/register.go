@@ -2,12 +2,11 @@ package network
 
 import (
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"github.com/grandcat/zeroconf"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
@@ -33,20 +32,20 @@ func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 		if s.EntityId != "" {
 			sc.EntityId = s.EntityId
 		} else {
-			sc.EntityId = *messages.GenerateAddress()
+			sc.EntityId = msgs.MakeAddress()
 		}
 		if s.EntityName != "" {
-			sc.EntityName = messages.MessageAddress(s.EntityName)
+			sc.EntityName = msgs.Address(s.EntityName)
 		} else {
 			if s.Name != "" {
-				sc.EntityName = messages.MessageAddress(s.Name)
+				sc.EntityName = msgs.Address(s.Name)
 			} else {
 				sc.EntityName = sc.EntityId
 			}
 		}
 		sc.EntityParent = &me.EntityId
-		sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
-		sc.State.SetNewAction(states.ActionStart)		// Was states.ActionRegister
+		sc.State = states.New(sc.EntityId, sc.EntityName, me.EntityId)
+		sc.State.SetNewAction(states.ActionStart) // Was states.ActionRegister
 		sc.IsManaged = true
 		sc.channels = me.Channels
 		sc.channels.PublishState(sc.State)
@@ -66,20 +65,20 @@ func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 
 		// Consider using RegisterProxy() instead.
 		sc.instance, err = zeroconf.Register(
-			s.Name.String(),
-			s.Type.String(),
-			s.Domain.String(),
+			s.Name,
+			s.Type,
+			s.Domain,
 			s.Port.ToInt(),
 			s.Text,
 			nil)
 		if err != nil {
-			err = me.EntityId.ProduceError("unable to register service")
+			err = msgs.MakeError(me.EntityId, "unable to register service")
 			break
 		}
 
-		sc.Entry.Instance = s.Name.String()
-		sc.Entry.Service = s.Type.String()
-		sc.Entry.Domain = s.Domain.String()
+		sc.Entry.Instance = s.Name
+		sc.Entry.Service = s.Type
+		sc.Entry.Domain = s.Domain
 		sc.Entry.Port = s.Port.ToInt()
 		sc.Entry.Text = s.Text
 		sc.Entry.TTL = s.TTL
@@ -89,21 +88,21 @@ func (me *ZeroConf) Register(s ServiceConfig) (*Service, error) {
 			break
 		}
 
-		sc.State.SetNewState(states.StateStarted, err)		// Was states.StateRegistered
+		sc.State.SetNewState(states.StateStarted, err) // Was states.StateRegistered
 		sc.channels.PublishState(sc.State)
 		eblog.Debug(me.EntityId, "registered service %s OK", sc.EntityId.String())
 	}
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &sc, err
 }
 
 // Register a service via a channel defined by a *CreateEntry structure and
 // returns a *Service structure if successful.
-func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s ServiceConfig) (*Service, error) {
+func (me *ZeroConf) RegisterByChannel(caller msgs.Address, s ServiceConfig) (*Service, error) {
 
 	var err error
 	var sc *Service
@@ -148,8 +147,7 @@ func (me *ZeroConf) RegisterByChannel(caller messages.MessageAddress, s ServiceC
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return sc, err
 }
-

@@ -3,13 +3,12 @@ package channels
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"github.com/olebedev/emitter"
 	"sync"
 )
-
 
 func (me *Channels) New(args ...Args) error {
 
@@ -22,16 +21,15 @@ func (me *Channels) New(args ...Args) error {
 			_args = args[0]
 		}
 
-		if _args.OsPaths == nil {
-			err = me.EntityId.ProduceError("ospaths is nil")
+		if _args.OsDirs == nil {
+			err = msgs.MakeError(me.EntityId, "ospaths is nil")
 			break
 		}
-
 
 		if _args.EntityId == "" {
 			_args.EntityId = entity.ChannelEntityName
 		}
-		_args.State = states.New(&_args.EntityId, &_args.EntityId, entity.SelfEntityName)
+		_args.State = states.New(_args.EntityId, _args.EntityId, entity.SelfEntityName)
 
 		if _args.Boxname == "" {
 			_args.Boxname = entity.ChannelEntityName
@@ -42,7 +40,6 @@ func (me *Channels) New(args ...Args) error {
 
 		*me = Channels(_args)
 
-
 		me.State.SetWant(states.StateIdle)
 		me.State.SetNewState(states.StateIdle, err)
 		eblog.Debug(me.EntityId, "init complete")
@@ -50,44 +47,10 @@ func (me *Channels) New(args ...Args) error {
 
 	me.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
-
-func (me *Channels) StartHandler() error {
-
-	// Just a stub function.
-	var err error
-
-	//for range only.Once {
-	//	err = me.EnsureNotNil()
-	//	if err != nil {
-	//		break
-	//	}
-	//
-	//me.State.SetNewState(states.StateStarting, err)
-	//PublishCallerState(me.Channels, &me.EntityId, &me.State)
-	//
-	//	for range only.Once {
-	//		me.Task, err = tasks.StartTask(initDaemon, startDaemon, monitorDaemon, stopDaemon, me)
-	//		if err != nil {
-	//			break
-	//		}
-	//	}
-	//
-	//	if me.State.SetNewState(states.StateStarted, err) {
-	//		eblog.Debug(me.EntityId, "started task handler")
-	//	}
-	//}
-	//
-	//channels.PublishCallerState(me.Channels, &me.EntityId, &me.State)
-	//eblog.LogIfError(me, err)
-
-	return err
-}
-
 
 func (me *Channels) StopHandler() error {
 
@@ -103,13 +66,12 @@ func (me *Channels) StopHandler() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
 
-
-func (me *Channels) StopClientHandler(client messages.MessageAddress)  {
+func (me *Channels) StopClientHandler(client msgs.Address) {
 
 	var err error
 
@@ -119,22 +81,17 @@ func (me *Channels) StopClientHandler(client messages.MessageAddress)  {
 			break
 		}
 
-		topicStop := client.CreateTopic(states.ActionStop)
-		//topicStop := messages.MessageTopic{
-		//	Address:  client,
-		//	SubTopic: messages.SubTopicStop,
-		//}
+		topicStop := msgs.NewTopic(client, states.ActionStop)
 
 		eblog.Debug(me.EntityId, "StopHandler:'%s'", topicStop.String())
 		me.instance.emitter.Off(topicStop.String())
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return
 }
-
 
 func (me *Subscriber) StopHandler() error {
 
@@ -146,20 +103,19 @@ func (me *Subscriber) StopHandler() error {
 			break
 		}
 
-		topicStop := me.EntityId.CreateTopic(states.ActionStop)
+		topicStop := msgs.NewTopic(me.EntityId, states.ActionStop)
 
 		eblog.Debug(me.EntityId, "StopHandler:'%s'", topicStop.String())
 		me.parentInstance.emitter.Off(topicStop.String())
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return nil
 }
 
-
-func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscriber, error) {
+func (me *Channels) StartClientHandler(client msgs.Address) (*Subscriber, error) {
 
 	var err error
 	var sub Subscriber
@@ -170,7 +126,7 @@ func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscri
 			break
 		}
 
-		err = client.EnsureNotNil()
+		err = client.EnsureNotEmpty()
 		if err != nil {
 			break
 		}
@@ -180,14 +136,14 @@ func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscri
 		}
 
 		sub = Subscriber{
-			EntityId:  client,
-			EntityName:  client,
+			EntityId:     client,
+			EntityName:   client,
 			EntityParent: &me.EntityId,
-			State: states.New(&client, &client, me.EntityId),
-			IsManaged: true,
+			State:        states.New(client, client, me.EntityId),
+			IsManaged:    true,
 
-			topics: make(References),
-			mutex: sync.RWMutex{},
+			topics:         make(References),
+			mutex:          sync.RWMutex{},
 			parentInstance: &me.instance,
 		}
 		err = me.AddEntity(client, &sub)
@@ -206,13 +162,12 @@ func (me *Channels) StartClientHandler(client messages.MessageAddress) (*Subscri
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &sub, err
 }
 
-
-func (me *Channels) rxHandler(client messages.MessageAddress) error {
+func (me *Channels) rxHandler(client msgs.Address) error {
 
 	var err error
 
@@ -222,13 +177,11 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 			break
 		}
 
-		//wgChannel := make(chan int)
-		//var wg sync.WaitGroup
 		child := 0
 
 		eblog.Debug(me.EntityId, "channels handler started '%s'.", client.String())
-		topicGlob := client.CreateTopicGlob().String()
-		topicExit := client.CreateTopic(states.ActionStop).String()
+		topicGlob := msgs.NewGlobTopic(client).String()
+		topicExit := msgs.NewTopic(client, states.ActionStop).String()
 
 		for me.instance.events = range me.instance.emitter.On(topicGlob) {
 			if me.instance.events.Args == nil {
@@ -237,16 +190,21 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 			}
 
 			// Only one message ever sent.
-			msg := me.instance.events.Args[0].(messages.Message)
+			msg := me.instance.events.Args[0].(msgs.Message)
 
-			eblog.Debug(me.EntityId, "Event(%s) Time:%d Src:%s Text:%s", msg.Topic.String(), msg.Time.Convert().Unix(), msg.Source.String(), msg.Text.String())
-			if me.instance.events.OriginalTopic == topicExit { //} && (msg.Text.String() == me.EntityId.String()) {
+			eblog.Debug(me.EntityId, "Event(%s) Time:%d Src:%s Text:%s",
+				msg.Topic.String(),
+				msg.Time.Convert().Unix(),
+				msg.Source.String(),
+				msg.Text.String(),
+			)
+			if me.instance.events.OriginalTopic == topicExit {
 				eblog.Debug(me.EntityId, "EXIT TIME: %s => %s", me.instance.events.OriginalTopic, topicGlob)
 				me.instance.emitter.Off(topicGlob)
 			}
 
 			// Always replace topic with the correct one. Never trust calling entity.
-			msg.Topic = messages.StringToTopic(me.instance.events.OriginalTopic)
+			msg.Topic = msgs.StringToTopic(me.instance.events.OriginalTopic)
 
 			// Split topic from the /address/topic format
 			client := msg.Topic.Address
@@ -262,28 +220,19 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 
 				// Execute callback in thread.
 				go func(c int) {
-					//defer wg.Done()
-					// eblog.Debug(me.EntityId, "Callback(%s)	Time:%v	Src:%s	Text:%s", msg.Topic, msg.Time.Convert().Unix(), msg.Src, msg.Text)
-					//fmt.Printf("AAARGH: %v/%v - %s\n", client, topic, msg.String())
 					sub.SetExecuted(topic, false)
 					if ret != nil {
 						r := callback(&msg, args, retType)
 						sub.SetReturns(topic, r)
 					} else {
-						 _ = callback(&msg, args, retType)
+						_ = callback(&msg, args, retType)
 					}
 					sub.SetExecuted(topic, true)
 
-					//wgChannel <- c
 				}(child)
-				//wg.Add(1)
 				child++
 			}
 		}
-
-		//eblog.Debug(me.EntityId, "WAIT")
-		//debug.PrintStack()
-		//wg.Wait()
 
 		eblog.Debug(me.EntityId, "channels handler stopped '%s'.", client.String())
 
@@ -292,18 +241,16 @@ func (me *Channels) rxHandler(client messages.MessageAddress) error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
 
-
-func (me *Channels) GetEntityId() messages.MessageAddress {
+func (me *Channels) GetEntityId() msgs.Address {
 
 	if me == nil {
-		return messages.MessageAddress("")
+		return msgs.Address("")
 	}
 
 	return me.EntityId
 }
-

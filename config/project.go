@@ -14,15 +14,15 @@ import (
 type Projects []*Project
 
 type Project struct {
-	Hostname types.Hostname     `json:"hostname"`
-	Enabled  bool               `json:"enabled"`
-	Basedir  types.Nickname     `json:"basedir"`
-	Notes    string             `json:"notes"`
-	Path     types.RelativePath `json:"path"`
-	Config   Configer           `json:"-"`
+	Hostname types.Hostname `json:"hostname"`
+	Enabled  bool           `json:"enabled"`
+	Basedir  types.Nickname `json:"basedir"`
+	Notes    string         `json:"notes"`
+	Path     types.Path     `json:"path"`
+	Config   Configer       `json:"-"`
 }
 
-func NewProject(cfg Configer, path types.RelativePath) *Project {
+func NewProject(cfg Configer, path types.Path) *Project {
 	p := Project{
 		Path:   path,
 		Config: cfg,
@@ -31,20 +31,20 @@ func NewProject(cfg Configer, path types.RelativePath) *Project {
 	return &p
 }
 
-func (me *Project) GetDir() (dir types.AbsoluteDir, sts Status) {
+func (me *Project) GetDir() (dir types.Dir, sts Status) {
 	for range only.Once {
 		dir, sts = me.Config.GetBasedir(me.Basedir)
 		if status.IsError(sts) {
 			break
 		}
-		dir = types.AbsoluteDir(filepath.FromSlash(fmt.Sprintf("%s/%s", dir, me.Path)))
+		dir = types.Dir(filepath.FromSlash(fmt.Sprintf("%s/%s", dir, me.Path)))
 	}
 	return dir, sts
 }
 
-func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts Status) {
+func (me *Project) GetFilepath() (fp types.Filepath, sts Status) {
 	for range only.Once {
-		var bd types.AbsoluteDir
+		var bd types.Dir
 		bd, sts = me.Config.GetBasedir(me.Basedir)
 		if status.IsError(sts) {
 			break
@@ -54,13 +54,13 @@ func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts Status) {
 	return fp, sts
 }
 
-func (me *Project) GetFullpath() (dp types.AbsoluteDir, sts Status) {
+func (me *Project) GetFullpath() (dp types.Dir, sts Status) {
 	for range only.Once {
 		dp, sts = me.Config.ExpandBasedirPath(me.Basedir, me.Path)
 		if is.Error(sts) {
 			break
 		}
-		dp = types.AbsoluteDir(filepath.FromSlash(string(dp)))
+		dp = types.Dir(filepath.FromSlash(string(dp)))
 	}
 	return dp, sts
 }

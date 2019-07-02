@@ -3,7 +3,7 @@ package daemon
 import (
 	"errors"
 	"fmt"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/network"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
@@ -54,11 +54,11 @@ func (me *Service) EnsureNotNil() error {
 	case me == nil:
 		err = errors.New("daemon service instance is nil")
 	case (me.IsManaged == true) && me.instance.cmd == nil:
-		err = me.EntityId.ProduceError("service cmd instance nil")
+		err = msgs.MakeError(me.EntityId, "service cmd instance nil")
 	case (me.IsManaged == true) && me.instance.exit == nil:
-		err = me.EntityId.ProduceError("service exit func is nil")
+		err = msgs.MakeError(me.EntityId, "service exit func is nil")
 	case (me.IsManaged == true) && me.instance.service == nil:
-		err = me.EntityId.ProduceError("service instance is nil")
+		err = msgs.MakeError(me.EntityId, "service instance is nil")
 	}
 
 	return err
@@ -123,7 +123,7 @@ func WaitForTimeout(wt time.Duration) bool {
 	case <-sig:
 		exitState = false
 		// Exit by user
-	case <-tc:
+	case <-tc: // @TODO For `<-tc` GoLand reports "Receiver may block because of a nil channel"
 		exitState = true
 		// Exit by timeout
 	}
@@ -144,7 +144,7 @@ func SimpleWaitLoop(t string, i int, d time.Duration) {
 	return
 }
 
-func (me *Daemon) GetId() messages.MessageAddress {
+func (me *Daemon) GetId() msgs.Address {
 
 	return me.EntityId
 }
@@ -283,44 +283,11 @@ func (me *Service) Print() error {
 			err = errors.New("software error")
 			break
 		}
-
-		//if (me.instance == nil) && (me.IsManaged == true) {
-		//	fmt.Printf("# Entry(deleted): %v", me.EntityId)
-		//} else {
 		fmt.Printf("# Entry: %v", me.EntityId)
-		//}
-
-		//err = me.Entry.Print()
-		if err != nil {
-			break
-		}
 	}
 
 	return err
 }
-
-//func (me *ServiceConfig) IsTheSame(e ServiceConfig) (bool, error) {
-//
-//	var same bool
-//	var err error
-//
-//	for range only.Once {
-//		if me == nil {
-//			err = errors.New("software error")
-//			same = false
-//			break
-//		}
-//
-//		//if (me.Instance == e.Instance) &&
-//		//	(trimDot(me.Service) == trimDot(e.Service)) &&
-//		//	(trimDot(me.Domain) == trimDot(e.Domain)) &&
-//		//	(me.Port == e.Port) {
-//		//	same = true
-//		//}
-//	}
-//
-//	return same, err
-//}
 
 func (me *programInstance) Start(s service.Service) error {
 	panic("implement me")
@@ -347,22 +314,22 @@ func (me *Service) IsExisting(him ServiceConfig) error {
 
 	switch {
 	case me.Entry.Config.Name == him.Config.Name:
-		err = me.EntityId.ProduceError("Daemon service Name:%s already exists", me.Entry.Config.Name)
+		err = msgs.MakeError(me.EntityId, "daemon service Name:%s already exists", me.Entry.Config.Name)
 
 	case me.Entry.Config.DisplayName == him.Config.DisplayName:
-		err = me.EntityId.ProduceError("Daemon service DisplayName:%s already exists", me.Entry.DisplayName)
+		err = msgs.MakeError(me.EntityId, "daemon service DisplayName:%s already exists", me.Entry.DisplayName)
 
 	case me.Entry.Config.Executable == him.Config.Executable:
-		err = me.EntityId.ProduceError("Daemon service Executable:%s already exists", me.Entry.Config.Executable)
+		err = msgs.MakeError(me.EntityId, "daemon service Executable:%s already exists", me.Entry.Config.Executable)
 
 	case me.Entry.UrlPtr == him.UrlPtr:
-		err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.UrlPtr)
+		err = msgs.MakeError(me.EntityId, "daemon service Url:%s already exists", me.Entry.UrlPtr)
 
 	case me.Entry.Url == him.Url:
-		err = me.EntityId.ProduceError("Daemon service Url:%s already exists", me.Entry.UrlPtr)
+		err = msgs.MakeError(me.EntityId, "daemon service Url:%s already exists", me.Entry.UrlPtr)
 
 	case (me.Entry.UrlPtr.Hostname() == him.UrlPtr.Hostname()) && (me.Entry.UrlPtr.Port() == him.UrlPtr.Port()):
-		err = me.EntityId.ProduceError("Daemon service Host:%s:%s already exists", me.Entry.UrlPtr.Hostname(), me.Entry.UrlPtr.Port())
+		err = msgs.MakeError(me.EntityId, "daemon service Host:%s:%s already exists", me.Entry.UrlPtr.Hostname(), me.Entry.UrlPtr.Port())
 	}
 
 	return err
@@ -458,15 +425,8 @@ func (me *Service) IsRegistered() bool {
 	return ret
 }
 
-//execCwd, _ := os.Getwd()
-//if execCwd == "/" {
-//execCwd = string(OsBridge.GetAdminRootDir())
-//}
-//_args.ServiceData.Path = execCwd
-
 func (j *ServiceUrl) UnmarshalJSON(b []byte) error {
 	// Strip off the surrounding quotes and add a domain, one reason you might want a custom type
-
 	u, err := url.Parse(fmt.Sprintf("%s", b[1:len(b)-1]))
 	if err == nil {
 		j.URL = u
@@ -484,19 +444,21 @@ func (me *Service) CreateMdnsEntry() (*network.ServiceConfig, error) {
 	for range only.Once {
 
 		if me.Entry.MdnsType == "" {
-			err = me.EntityId.ProduceError("MdnsType not set")
+			err = msgs.MakeError(me.EntityId, "MdnsType not set")
 			break
 		}
 
 		foo := strings.ReplaceAll(me.Entry.Config.Name, ".", "_")
 		zc = network.ServiceConfig{
-			// Name:   network.Name(strings.ToLower("_" + global.Brandname + "-" + me.Entry.Config.Name)),
-			EntityId:   *messages.GenerateAddress(),
-			EntityName: me.EntityName, // + "-zeroconf",
+			EntityId:   msgs.MakeAddress(),
+			EntityName: me.EntityName,
 			Name:       network.Name(strings.ToLower("_" + foo)),
-			Type:       network.Type(fmt.Sprintf("_%s._tcp", me.Entry.MdnsType)),
-			Domain:     network.DefaultDomain,
-			Port:       network.Port(me.Entry.UrlPtr.Port()),
+
+			//@TODO Can we create a constant for "_%s._tcp"?  What would it's name be?
+			//
+			Type:   network.Type(fmt.Sprintf("_%s._tcp", me.Entry.MdnsType)),
+			Domain: network.DefaultDomain,
+			Port:   network.Port(me.Entry.UrlPtr.Port()),
 		}
 	}
 

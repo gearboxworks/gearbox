@@ -23,9 +23,9 @@ type ProjectModel struct {
 	Enabled       bool                    `json:"enabled"`
 	Basedir       types.Nickname          `json:"basedir"`
 	Notes         string                  `json:"notes"`
-	Path          types.RelativePath      `json:"path"`
-	ProjectDir    types.AbsoluteDir       `json:"project_dir"`
-	Filepath      types.AbsoluteFilepath  `json:"filepath"`
+	Path          types.Path              `json:"path"`
+	ProjectDir    types.Dir               `json:"project_dir"`
+	Filepath      types.Filepath          `json:"filepath"`
 	Aliases       project.HostnameAliases `json:"aliases,omitempty"`
 	Stack         ProjectStackItems       `json:"stack,omitempty"`
 	ConfigProject *config.Project         `json:"-"`

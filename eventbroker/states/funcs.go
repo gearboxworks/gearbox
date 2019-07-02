@@ -3,13 +3,10 @@ package states
 import (
 	"encoding/json"
 	"errors"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"github.com/gearboxworks/go-status/only"
 	"reflect"
-	"sync"
-	"time"
 )
-
 
 func InterfaceToTypeStatus(i interface{}) (*Status, error) {
 
@@ -61,80 +58,11 @@ func InterfaceToTypeError(i interface{}) (*error, error) {
 	return zc, err
 }
 
-
-func New(client *messages.MessageAddress, name *messages.MessageAddress, parent messages.MessageAddress) *Status {
-
-	var ret Status
-
-	if (*name == "") || (*name == "self") {
-		*name = *client
-	}
-
-	ret = Status{
-		EntityId:   client,
-		EntityName: name,
-		ParentId:   &parent,
-		Action:     ActionIdle,
-		Want:       StateIdle,
-		Current:    StateIdle,
-		Last:       StateIdle,
-		LastWhen:   time.Now(),
-		Error:      nil,
-		mutex:      &sync.RWMutex{},
-	}
-
-	return &ret
-}
-
-
 func EnsureNotNil(me *Status) error {
-
 	return me.EnsureNotNil()
 }
 
-
-func (me *Status) EnsureNotNil() error {
-
-	var err error
-
-	switch {
-		case me == nil:
-			err = errors.New("status.Status is nil")
-
-		//case me.mutex == nil:
-		//	err = errors.New("status.mutex is nil")
-
-		case me.EntityId == nil:
-			err = errors.New("status.EntityId is nil")
-	}
-
-	return err
-}
-
-
-func (me *Status) ToMessageText() messages.MessageText {
-
-	var err error
-	var j []byte
-
-	for range only.Once {
-		err = me.EnsureNotNil()
-		if err != nil {
-			j = []byte("{}")
-			break
-		}
-
-		j, err = json.Marshal(me)
-		if err != nil {
-			break
-		}
-	}
-
-	return messages.MessageText(j)
-}
-
-
-func FromMessageText(me messages.MessageText) (*Status, error) {
+func FromMessageText(me msgs.Text) (*Status, error) {
 
 	var err error
 	var ret Status
@@ -155,4 +83,3 @@ func FromMessageText(me messages.MessageText) (*Status, error) {
 
 	return &ret, err
 }
-

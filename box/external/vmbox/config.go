@@ -3,13 +3,18 @@ package vmbox
 import (
 	"encoding/json"
 	"gearbox/eventbroker/eblog"
+	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/osdirs"
 	"github.com/gearboxworks/go-status/only"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
-
+// @TODO These look like they really should be a config type, not part of Vm.
+//       Or ideally, this should be delegated to a config interface that would
+//       handle reading and writing instead of duplicating that logic here.
+//
 func (me *Vm) ReadConfig() error {
 
 	var err error
@@ -21,13 +26,13 @@ func (me *Vm) ReadConfig() error {
 			break
 		}
 
-		file := me.Entry.VmDir.AddFileToPath("%s.json", me.Entry.Name)
-		err = file.FileExists()
+		file := osdirs.AddFilef(me.Entry.VmDir, JsonFilePattern, me.Entry.Name)
+		err = osdirs.CheckFileExists(file)
 		if err != nil {
 			break
 		}
 
-		data, err = ioutil.ReadFile(file.String())
+		data, err = ioutil.ReadFile(file)
 		if err != nil {
 			break
 		}
@@ -46,11 +51,10 @@ func (me *Vm) ReadConfig() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
 
 func (me *Vm) WriteConfig() error {
 
@@ -58,7 +62,7 @@ func (me *Vm) WriteConfig() error {
 	var data []byte
 	var perm os.FileMode
 
-	perm = 0664
+	perm = 0664 // @TODO Use constant
 
 	for range only.Once {
 
@@ -67,14 +71,14 @@ func (me *Vm) WriteConfig() error {
 			break
 		}
 
-		_, err = me.Entry.VmDir.CreateIfNotExists()
+		_, err = osdirs.CreateIfNotExists(me.Entry.VmDir)
 		if err != nil {
 			break
 		}
 
-		file := me.Entry.VmDir.AddFileToPath("%s.json", me.Entry.Name)
+		file := osdirs.AddFilef(me.Entry.VmDir, JsonFilePattern, me.Entry.Name)
 
-		tempfile, err := ioutil.TempFile(me.Entry.VmDir.String(), filepath.Base(file.String()))
+		tempfile, err := ioutil.TempFile(me.Entry.VmDir, filepath.Base(file))
 		if err != nil {
 			break
 		}
@@ -93,7 +97,7 @@ func (me *Vm) WriteConfig() error {
 			break
 		}
 
-		if err = os.Rename(name, file.String()); err != nil {
+		if err = os.Rename(name, file); err != nil {
 			break
 		}
 
@@ -101,11 +105,10 @@ func (me *Vm) WriteConfig() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
 
 func (me *Vm) VerifyConfig() error {
 
@@ -119,7 +122,7 @@ func (me *Vm) VerifyConfig() error {
 		}
 
 		if me.Entry.Name == "" {
-			err = me.EntityName.ProduceError("VM doesn't have a name")
+			err = msgs.MakeError(me.EntityName, "VM doesn't have a name")
 			break
 		}
 
@@ -148,27 +151,24 @@ func (me *Vm) VerifyConfig() error {
 		}
 
 		if me.Entry.Ssh.Host == "" {
-			me.Entry.Ssh.Host = "localhost"
+			me.Entry.Ssh.Host = DefaultSshHost
 		}
 
 		if me.Entry.Ssh.Port == "" {
-			me.Entry.Ssh.Port = "2222"
+			me.Entry.Ssh.Port = DefaultSshPort
 		}
 
-		if me.Entry.IconFile == nil {
-			err = me.osPaths.UserConfigDir.AddFileToPath(IconLogoPng).FileExists()
-			if err != nil {
-				err = nil
-				// Not really an error.
-			} else {
-				me.Entry.IconFile = me.osPaths.UserConfigDir.AddFileToPath(IconLogoPng)
+		if me.Entry.IconFile == "" {
+			fp := me.osDirs.AddFileToUserConfigDir(IconLogoPng)
+			if osdirs.CheckFileExists(fp) == nil {
+				me.Entry.IconFile = fp
 			}
 		}
 
-		if me.Entry.VmDir == nil {
-			me.Entry.VmDir = me.osPaths.UserConfigDir.AddToPath("vm")
+		if me.Entry.VmDir == "" {
+			me.Entry.VmDir = me.osDirs.AppendToUserConfigDir("vm")
 		}
-		_, err = me.Entry.VmDir.CreateIfNotExists()
+		_, err = osdirs.CreateIfNotExists(me.Entry.VmDir)
 		if err != nil {
 			break
 		}
@@ -176,16 +176,14 @@ func (me *Vm) VerifyConfig() error {
 		me.Entry.retryMax = DefaultRetries
 		me.Entry.retryDelay = DefaultVmWaitTime
 
-
 		eblog.Debug(me.EntityId, "VM config is OK")
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
 
 func (me *Vm) ConfigExists() error {
 
@@ -197,8 +195,8 @@ func (me *Vm) ConfigExists() error {
 			break
 		}
 
-		file := me.Entry.VmDir.AddFileToPath("%s.json", me.Entry.Name)
-		err = file.FileExists()
+		file := osdirs.AddFilef(me.Entry.VmDir, JsonFilePattern, me.Entry.Name)
+		err = osdirs.CheckFileExists(file)
 		if err != nil {
 			break
 		}
@@ -207,8 +205,32 @@ func (me *Vm) ConfigExists() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
 
+func (me *Vm) DestroyConfig() error {
+
+	var err error
+
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
+
+		file := osdirs.AddFilef(me.Entry.VmDir, JsonFilePattern, me.Entry.Name)
+		err = osdirs.FileDelete(file)
+		if err != nil {
+			break
+		}
+
+		eblog.Debug(me.EntityId, "VM config removed")
+	}
+
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(err)
+
+	return err
+}

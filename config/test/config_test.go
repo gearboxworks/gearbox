@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-var ProjectPaths = map[types.RelativePath]bool{
+var ProjectPaths = map[types.Path]bool{
 	"/site1.local": true,
 	"/site2.local": true,
 	"/site3.test":  true,
@@ -47,13 +47,13 @@ func TestEmptyConfig(t *testing.T) {
 						t.Error(sts.Message())
 						return
 					}
-					var basedir types.AbsoluteDir
+					var basedir types.Dir
 					basedir, sts = c.GetBasedir(p.Basedir)
 					if is.Error(sts) {
 						t.Error(sts.Message())
 						return
 					}
-					path := util.ExtractRelativePath(types.AbsoluteFilepath(util.FileDir(fp)), basedir)
+					path := util.ExtractRelativePath(types.Filepath(util.FileDir(fp)), basedir)
 					if _, ok := ProjectPaths[path]; !ok {
 						t.Error(fmt.Sprintf("path '%s' not found", path))
 					}

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/network"
-	"gearbox/eventbroker/ospaths"
+	"gearbox/eventbroker/osdirs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"github.com/kardianos/service"
@@ -14,7 +14,6 @@ import (
 	"os/exec"
 	"time"
 )
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
@@ -51,25 +50,25 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 
 		// Check platform.
 		if c.SkipPlatform() {
-			// err = me.EntityId.ProduceError("service shouldn't run on this host")
+			// err = msgs.MakeError(me.EntityId,"service shouldn't run on this host")
 			sc = nil
 			break
 		}
 
 		// Create new daemon entry.
 		for range only.Once {
-			sc.EntityId = *messages.GenerateAddress()
+			sc.EntityId = msgs.MakeAddress()
 			if c.EntityName != "" {
-				sc.EntityName = messages.MessageAddress(c.EntityName)
+				sc.EntityName = msgs.Address(c.EntityName)
 			} else {
 				if c.Name != "" {
-					sc.EntityName = messages.MessageAddress(c.Name)
+					sc.EntityName = msgs.Address(c.Name)
 				} else {
 					sc.EntityName = sc.EntityId
 				}
 			}
 			sc.EntityParent = &me.EntityId
-			sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
+			sc.State = states.New(sc.EntityId, sc.EntityName, me.EntityId)
 			sc.State.SetNewAction(states.ActionRegister)
 			sc.IsManaged = true
 			sc.channels = me.Channels
@@ -138,15 +137,14 @@ func (me *Daemon) Register(c ServiceConfig) (*Service, error) {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return sc, err
 }
 
-
 // Register a service via a channel defined by a *CreateEntry structure and
 // returns a *Service structure if successful.
-func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s ServiceConfig) (*network.Service, error) {
+func (me *Daemon) RegisterByChannel(caller msgs.Address, s ServiceConfig) (*network.Service, error) {
 
 	var err error
 	var j []byte
@@ -163,8 +161,8 @@ func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s ServiceCon
 			break
 		}
 
-		// reg := me.EntityId.Construct(caller, states.ActionRegister, messages.MessageText(j))
-		reg := caller.ConstructMessage(me.EntityId, states.ActionRegister, messages.MessageText(j))
+		// reg := me.EntityId.Construct(caller, states.ActionRegister, msg.Text(j))
+		reg := caller.MakeMessage(me.EntityId, states.ActionRegister, msgs.Text(j))
 		err = me.Channels.Publish(reg)
 		if err != nil {
 			break
@@ -175,7 +173,7 @@ func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s ServiceCon
 			break
 		}
 
-		sc, err = network.InterfaceToTypeService(rs)	// sc = rs.(*Service)
+		sc, err = network.InterfaceToTypeService(rs) // sc = rs.(*Service)
 		if err != nil {
 			break
 		}
@@ -185,11 +183,10 @@ func (me *Daemon) RegisterByChannel(caller messages.MessageAddress, s ServiceCon
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return sc, err
 }
-
 
 // Register a service by method defined by a *CreateEntry structure.
 func (me *Daemon) RegisterByFile(f string) (*Service, error) {
@@ -223,7 +220,6 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 			break
 		}
 
-
 		s, err = me.Register(*sc)
 		if err != nil {
 			break
@@ -231,7 +227,6 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 		if s == nil {
 			break
 		}
-
 
 		info, err := os.Stat(f)
 		if err != nil {
@@ -244,11 +239,10 @@ func (me *Daemon) RegisterByFile(f string) (*Service, error) {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return s, err
 }
-
 
 func (me *Daemon) LoadServiceFiles() error {
 
@@ -290,7 +284,6 @@ func (me *Daemon) LoadServiceFiles() error {
 	return err
 }
 
-
 // Create a service by method defined by a *CreateEntry structure.
 func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 
@@ -305,33 +298,31 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 
 		sc = &c
 
-
 		// Basic sanity checks.
 		if sc.MdnsType == "" {
-			err = me.EntityId.ProduceError("service MdnsType not defined")
+			err = msgs.MakeError(me.EntityId, "service MdnsType not defined")
 			break
 		}
 
 		if sc.Config.Name == "" {
-			err = me.EntityId.ProduceError("service Name not defined")
+			err = msgs.MakeError(me.EntityId, "service Name not defined")
 			break
 		}
 
 		if sc.Config.DisplayName == "" {
-			err = me.EntityId.ProduceError("service DisplayName not defined")
+			err = msgs.MakeError(me.EntityId, "service DisplayName not defined")
 			break
 		}
 
 		if sc.Config.Description == "" {
-			err = me.EntityId.ProduceError("service Description not defined")
+			err = msgs.MakeError(me.EntityId, "service Description not defined")
 			break
 		}
 
 		if sc.Config.Executable == "" {
-			err = me.EntityId.ProduceError("service Executable not defined")
+			err = msgs.MakeError(me.EntityId, "service Executable not defined")
 			break
 		}
-
 
 		sc.autoHost = "0.0.0.0"
 		sc.autoPort = "0"
@@ -348,54 +339,47 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 		//	sc.Dependencies = []string{}
 		//}
 
-
 		// Parse paths.
-		dirs := ospaths.NewPath()
+		dirs := osdirs.NewPaths()
 		sc.Config.ChRoot = me.ParsePaths(*sc, sc.Config.ChRoot)
 		dirs = dirs.AppendDir(sc.Config.ChRoot)
 
-
 		sc.Config.Executable = me.ParsePaths(*sc, sc.Config.Executable)
 		dirs = dirs.AppendFile(sc.Config.Executable)
-		_, err = ospaths.FileExists(sc.Config.Executable)
+		_, err = osdirs.FileExists(sc.Config.Executable)
 		if err != nil {
 			break
 		}
-		_, err = ospaths.FileSetExecutePerms(sc.Config.Executable)
+		_, err = osdirs.FileSetExecutePerms(sc.Config.Executable)
 		if err != nil {
 			break
 		}
-
 
 		if sc.Config.WorkingDirectory == "" {
-			sc.Config.WorkingDirectory = me.OsPaths.EventBrokerWorkingDir.String()
+			sc.Config.WorkingDirectory = me.BaseDirs.EventBrokerWorkingDir
 		} else {
 			sc.Config.WorkingDirectory = me.ParsePaths(*sc, sc.Config.WorkingDirectory)
 		}
 		dirs = dirs.AppendDir(sc.Config.WorkingDirectory)
 
-
 		if sc.Stdout == "" {
-			sc.Stdout = me.OsPaths.EventBrokerLogDir.AddFileToPath("%s-error.log", sc.Name).String()
+			sc.Stdout = osdirs.AddFilef(me.BaseDirs.EventBrokerLogDir, "%s-error.log", sc.Name)
 		} else {
 			sc.Stdout = me.ParsePaths(*sc, sc.Stdout)
 		}
 		dirs = dirs.AppendFile(sc.Stdout)
 
-
 		if sc.Stderr == "" {
-			sc.Stderr = me.OsPaths.EventBrokerLogDir.AddFileToPath("%s.log", sc.Name).String()
+			sc.Stderr = osdirs.AddFilef(me.BaseDirs.EventBrokerLogDir, "%s.log", sc.Name)
 		} else {
 			sc.Stderr = me.ParsePaths(*sc, sc.Stderr)
 		}
 		dirs = dirs.AppendFile(sc.Stderr)
 
-
 		err = dirs.CreateIfNotExists()
 		if err != nil {
 			break
 		}
-
 
 		// Parse envs and arguments.
 		for k, v := range sc.Env {
@@ -409,4 +393,3 @@ func (me *Daemon) createEntry(c ServiceConfig) (*ServiceConfig, error) {
 
 	return sc, err
 }
-

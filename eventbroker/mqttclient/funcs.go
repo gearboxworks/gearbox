@@ -3,6 +3,7 @@ package mqttClient
 import (
 	"errors"
 	"fmt"
+	"gearbox/eventbroker/msgs"
 	"github.com/gearboxworks/go-status/only"
 	"reflect"
 )
@@ -12,14 +13,14 @@ func (me *MqttClient) EnsureNotNil() error {
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("MqttClient instance is nil")
-		//case me.instance.client == nil:
-		//	err = me.EntityId.ProduceError("client instance nil")
-		//case me.instance.token == nil:
-		//	err = me.EntityId.ProduceError("client token nil")
-		case me.instance.options == nil:
-			err = me.EntityId.ProduceError("client options nil")
+	case me == nil:
+		err = errors.New("MqttClient instance is nil")
+	//case me.instance.client == nil:
+	//	err = msgs.MakeError(me.EntityId,"client instance nil")
+	//case me.instance.token == nil:
+	//	err = msgs.MakeError(me.EntityId,"client token nil")
+	case me.instance.options == nil:
+		err = msgs.MakeError(me.EntityId, "client options nil")
 	}
 
 	return err
@@ -28,14 +29,13 @@ func EnsureNotNil(me *MqttClient) error {
 	return me.EnsureNotNil()
 }
 
-
 func (me *ServicesMap) EnsureNotNil() error {
 
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("MqttClient ServicesMap instance is nil")
+	case me == nil:
+		err = errors.New("MqttClient ServicesMap instance is nil")
 	}
 
 	return err
@@ -44,15 +44,14 @@ func EnsureServicesMapNotNil(me *ServicesMap) error {
 	return me.EnsureNotNil()
 }
 
-
 func (me *Service) EnsureNotNil() error {
 	var err error
 
 	switch {
-		case me == nil:
-			err = errors.New("MqttClient Service instance is nil")
-		case (me.IsManaged == true) && me.instance == nil:
-			err = me.EntityId.ProduceError("service cmd instance nil")
+	case me == nil:
+		err = errors.New("MqttClient Service instance is nil")
+	case (me.IsManaged == true) && me.instance == nil:
+		err = msgs.MakeError(me.EntityId, "service cmd instance nil")
 	}
 
 	return err
@@ -61,23 +60,21 @@ func EnsureServiceNotNil(me *Service) error {
 	return me.EnsureNotNil()
 }
 
-
 // Ensure we don't duplicate services.
 func (me *Service) IsExisting(him ServiceConfig) error {
 
 	var err error
 
 	switch {
-		case me.Entry.Topic == him.Topic:
-			err = me.EntityId.ProduceError("MqttClient service Topic:%s already exists", me.Entry.Topic)
+	case me.Entry.Topic == him.Topic:
+		err = msgs.MakeError(me.EntityId, "MqttClient service Topic:%s already exists", me.Entry.Topic)
 
-		case me.Entry.Name == him.Name:
-			err = me.EntityId.ProduceError("MqttClient service Name:%s already exists", me.Entry.Name)
+	case me.Entry.Name == him.Name:
+		err = msgs.MakeError(me.EntityId, "MqttClient service Name:%s already exists", me.Entry.Name)
 	}
 
 	return err
 }
-
 
 // Ensure we don't duplicate services.
 func (me *ServicesMap) IsExisting(him ServiceConfig) error {
@@ -93,7 +90,6 @@ func (me *ServicesMap) IsExisting(him ServiceConfig) error {
 
 	return err
 }
-
 
 func InterfaceToTypeMqttClient(i interface{}) (*MqttClient, error) {
 
@@ -123,7 +119,6 @@ func InterfaceToTypeMqttClient(i interface{}) (*MqttClient, error) {
 	return zc, err
 }
 
-
 func InterfaceToTypeService(i interface{}) (*Service, error) {
 
 	var err error
@@ -152,7 +147,6 @@ func InterfaceToTypeService(i interface{}) (*Service, error) {
 	return s, err
 }
 
-
 func (me *ServicesMap) Print() error {
 
 	var err error
@@ -174,7 +168,6 @@ func (me *ServicesMap) Print() error {
 
 	return err
 }
-
 
 func (me *Service) Print() error {
 

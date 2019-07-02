@@ -1,14 +1,8 @@
 package box
 
 import (
-	"gearbox/box/external/unfsd"
-	"gearbox/box/external/vmbox"
-	"gearbox/eventbroker"
-	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/ospaths"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
-	"github.com/gearboxworks/go-osbridge"
-
 	//	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-systray"
 	"time"
@@ -22,42 +16,11 @@ import (
 //	Unfsd   unfsd.UnfsdState
 //}
 
-type Box struct {
-	EntityId    messages.MessageAddress
-	EntityName  messages.MessageAddress
-	Boxname     string
-	Version     string
-	NfsExports  *unfsd.Unfsd
-	State       *states.Status
-	menu        Menus
-	EventBroker *eventbroker.EventBroker
-	VmBox       *vmbox.VmBox
+type Version = string
 
-	// SSH related - Need to fix this. It's used within CreateBox()
-	SshUsername  string
-	SshPassword  string
-	SshPublicKey string
+const LatestVersion Version = "latest"
 
-	// State polling delays.
-	NoWait      bool
-	WaitDelay   time.Duration
-	WaitRetries int
-
-	// Console related.
-	ConsoleHost     string
-	ConsolePort     string
-	ConsoleOkString string
-	ConsoleReadWait time.Duration
-	ShowConsole     bool
-
-	baseDir  *ospaths.Dir
-	pidFile  string
-	osBridge osbridge.OsBridger
-	osPaths  *ospaths.BasePaths
-}
-type Args Box
-
-type Menus map[messages.MessageAddress]*Menu
+type Menus map[msgs.Address]*Menu
 type Menu struct {
 	MenuItem      *systray.MenuItem
 	PrefixToolTip string

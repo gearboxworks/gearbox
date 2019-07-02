@@ -3,14 +3,13 @@ package channels
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"time"
 )
 
-
-func (me *Channels) Publish(msg messages.Message) error {
+func (me *Channels) Publish(msg msgs.Message) error {
 
 	var err error
 
@@ -29,19 +28,19 @@ func (me *Channels) Publish(msg messages.Message) error {
 			msg.Time = msg.Time.Now()
 		}
 
-		if msg.Source.EnsureNotNil() != nil {
+		if msg.Source.EnsureNotEmpty() != nil {
 			msg.Source = me.EntityId
 		}
 
-		if msg.Topic.Address.EnsureNotNil() != nil {
-			err = me.EntityId.ProduceError("no destination for channel message")
+		if msg.Topic.Address.EnsureNotEmpty() != nil {
+			err = msgs.MakeError(me.EntityId, "no destination for channel message")
 			break
 		}
 
-		// eblog.Debug(me.EntityId, "Publish(%s) =>\tmsg.CreateTopic():%v\tme.instance.emitter:%v", msg.Topic.String(), msg, me.instance.emitter)
+		// eblog.Debug(me.EntityId, "Publish(%s) =>\tmsg.NewTopic():%v\tme.instance.emitter:%v", msg.Topic.String(), msg, me.instance.emitter)
 		me.instance.emits = me.instance.emitter.Emit(msg.Topic.String(), msg)
 		if me.instance.emits == nil {
-			err = me.EntityId.ProduceError("failed to send channel message")
+			err = msgs.MakeError(me.EntityId, "failed to send channel message")
 			break
 		}
 
@@ -49,23 +48,22 @@ func (me *Channels) Publish(msg messages.Message) error {
 		/*
 			select {
 				case <-me.emits:
-					// err = me.EntityId.ProduceError("channel message sent OK")
+					// err = msgs.MakeError(me.EntityId,"channel message sent OK")
 
 				case <-time.After(time.Second * 10):
-					err = me.EntityId.ProduceError("timeout sending channel message")
+					err = msgs.MakeError(me.EntityId,"timeout sending channel message")
 					close(me.emits)
 			}
 		*/
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
 
-
-func (me *Channels) GetCallbackReturn(msg messages.Message, waitForExecute int) (Return, error) {
+func (me *Channels) GetCallbackReturn(msg msgs.Message, waitForExecute int) (Return, error) {
 
 	var ret Return
 	var err error
@@ -78,7 +76,7 @@ func (me *Channels) GetCallbackReturn(msg messages.Message, waitForExecute int) 
 
 		client := msg.Topic.Address
 		if _, ok := me.subscribers[client]; !ok {
-			err = me.EntityId.ProduceError("unknown channel subscriber")
+			err = msgs.MakeError(me.EntityId, "unknown channel subscriber")
 			break
 		}
 
@@ -97,7 +95,7 @@ func (me *Channels) GetCallbackReturn(msg messages.Message, waitForExecute int) 
 
 		// MUTEX if me.subscribers[client].Executed[subtopic] == false {
 		if me.subscribers[client].GetExecuted(subtopic) == false {
-			err = me.EntityId.ProduceError("no response from channel")
+			err = msgs.MakeError(me.EntityId, "no response from channel")
 			break
 		}
 
@@ -106,12 +104,12 @@ func (me *Channels) GetCallbackReturn(msg messages.Message, waitForExecute int) 
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return ret, err
 }
 
-func (me *Channels) SetCallbackReturnToNil(msg messages.Message) error {
+func (me *Channels) SetCallbackReturnToNil(msg msgs.Message) error {
 
 	var err error
 
@@ -136,13 +134,12 @@ func (me *Channels) SetCallbackReturnToNil(msg messages.Message) error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
 
-
-func (me *Channels) PublishAndWaitForReturn(msg messages.Message, waitForExecute int) (Return, error) {
+func (me *Channels) PublishAndWaitForReturn(msg msgs.Message, waitForExecute int) (Return, error) {
 
 	var err error
 	var ret Return
@@ -167,44 +164,42 @@ func (me *Channels) PublishAndWaitForReturn(msg messages.Message, waitForExecute
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return ret, err
 }
 
-
 // Send channel message on state changes only.
-//func PublishState(me *Channels, caller *messages.MessageAddress, state *states.Status) {
+//func PublishState(me *Channels, caller *msg.Address, state *states.Status) {
 func PublishState(me *Channels, state *states.Status) {
 
 	switch {
-		case me == nil:
-			//fmt.Printf("me == nil: %s\n", state.String())
-		case state == nil:
-			//fmt.Printf("state == nil: %s\n", state.String())
-		case state.EnsureNotNil() != nil:
-			//fmt.Printf("state.EnsureNotNil() != nil: %s\n", state.String())
-		case !state.HasChangedState():
-			//fmt.Printf("!state.HasChangedState(): %s\n", state.String())
+	case me == nil:
+		//fmt.Printf("me == nil: %s\n", state.String())
+	case state == nil:
+		//fmt.Printf("state == nil: %s\n", state.String())
+	case state.EnsureNotNil() != nil:
+		//fmt.Printf("state.EnsureNotEmpty() != nil: %s\n", state.String())
+	case !state.HasChangedState():
+		//fmt.Printf("!state.HasChangedState(): %s\n", state.String())
 
-		case state.GetError() != nil:
-			//msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionError, messages.MessageText(state.GetError().Error()))
-			msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionError, state.ToMessageText())
-			//fmt.Printf("ERROR: %s\n", msg.String())
-			_ = me.Publish(msg)
+	case state.GetError() != nil:
+		//msg := state.EntityId.MakeMessage(entity.BroadcastEntityName, states.ActionError, msg.Text(state.GetError().Error()))
+		msg := state.EntityId.MakeMessage(entity.BroadcastEntityName, states.ActionError, state.ToMessageText())
+		//fmt.Printf("ERROR: %s\n", msg.String())
+		_ = me.Publish(msg)
 
-		case state.ExpectingNewState():
-			fallthrough
-		case state.HasChangedState():
-			//msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, messages.MessageText(state.GetCurrent()))
-			msg := state.EntityId.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, state.ToMessageText())
-			//fmt.Printf("EXPECTING: %s\n", msg.String())
-			_ = me.Publish(msg)
+	case state.ExpectingNewState():
+		fallthrough
+	case state.HasChangedState():
+		//msg := state.EntityId.MakeMessage(entity.BroadcastEntityName, states.ActionStatus, msg.Text(state.GetCurrent()))
+		msg := state.EntityId.MakeMessage(entity.BroadcastEntityName, states.ActionStatus, state.ToMessageText())
+		//fmt.Printf("EXPECTING: %s\n", msg.String())
+		_ = me.Publish(msg)
 	}
 
 	return
 }
-
 
 func (me *Channels) PublishState(state *states.Status) {
 
@@ -213,19 +208,17 @@ func (me *Channels) PublishState(state *states.Status) {
 	return
 }
 
-
-func (me *Channels) PublishSpecificState(caller *messages.MessageAddress, state states.State) {
+func (me *Channels) PublishSpecificState(caller *msgs.Address, state states.State) {
 
 	switch {
-		case me == nil:
-		case state == "":
-		case caller == nil:
-			return
+	case me == nil:
+	case state == "":
+	case caller == nil:
+		return
 	}
 
-	msg := caller.ConstructMessage(entity.BroadcastEntityName, states.ActionStatus, messages.MessageText(state))
+	msg := caller.MakeMessage(entity.BroadcastEntityName, states.ActionStatus, msgs.Text(state))
 	_ = me.Publish(msg)
 
 	return
 }
-

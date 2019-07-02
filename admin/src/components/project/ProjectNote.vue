@@ -35,7 +35,7 @@
     </b-button>
 
     <b-tooltip triggers="hover" :target="`${projectBase}button`" placement="top">
-      {{isCollapsed ? ( notes ? 'View notes' : 'Add notes' ) : 'Cancel changes'}}
+      {{isCollapsed ? ( notes ? 'View notes' : 'Add notes' ) : 'Cancel changes!'}}
     </b-tooltip>
 
     <b-button

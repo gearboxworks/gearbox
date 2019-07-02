@@ -4,10 +4,10 @@ import (
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/daemon"
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/mqttClient"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/network"
-	"gearbox/eventbroker/ospaths"
+	"gearbox/eventbroker/osdirs"
 	"gearbox/eventbroker/states"
 	"github.com/olebedev/emitter"
 	"sync"
@@ -20,10 +20,11 @@ const (
 	DefaultEntityName        = "eventbroker"
 )
 
-
 type Event emitter.Event
+
 var _ EventService = (*EventBroker)(nil)
 var Instance EventService
+
 type EventService interface {
 	Create() error
 	Start() error
@@ -32,54 +33,53 @@ type EventService interface {
 	Status() error
 }
 
-
 type EventBroker struct {
-	EntityId       messages.MessageAddress
-	Boxname        string
-	SubBaseDir     string
-	State          *states.Status
+	EntityId   msgs.Address
+	Boxname    string
+	SubBaseDir string
+	State      *states.Status
 
-	Channels       channels.Channels
-	ZeroConf       network.ZeroConf
-	Daemon         daemon.Daemon
-	MqttClient     mqttClient.MqttClient
+	Channels   channels.Channels
+	ZeroConf   network.ZeroConf
+	Daemon     daemon.Daemon
+	MqttClient mqttClient.MqttClient
 
-	Services       Services
-	Logger         *eblog.Logger
+	Services Services
+	Logger   *eblog.Logger
 
-	OsPaths        *ospaths.BasePaths
+	OsDirs         *osdirs.BaseDirs
 	channelHandler *channels.Subscriber
 }
 type Args EventBroker
 
-
 type Callback func(args interface{}, state states.Status) error
 
-//type States map[messages.MessageAddress]states.Status
-//type Callbacks map[messages.MessageAddress]Callback
-//type CallbackLocks map[messages.MessageAddress]sync.RWMutex // Mutex control for map
+//type States map[msg.Address]states.Status
+//type Callbacks map[msg.Address]Callback
+//type CallbackLocks map[msg.Address]sync.RWMutex // Mutex control for map
 type Log struct {
 	When  time.Time
 	State states.Status
 	//states.State
 }
+
 const LogSize = 128
+
 type Logs []Log
 type Service struct {
-	State         *states.Status
-	Callback      Callback
-	Args          interface{}
-	Logs          Logs
+	State    *states.Status
+	Callback Callback
+	Args     interface{}
+	Logs     Logs
 
-	mutex         sync.RWMutex	// Mutex control for map.
+	mutex sync.RWMutex // Mutex control for map.
 }
-type Services map[messages.MessageAddress]*Service
-
+type Services map[msgs.Address]*Service
 
 // type Callback func(state states.Status) error
-//type States map[messages.MessageAddress]states.Status
-//type Callbacks map[messages.MessageAddress]Callback
-//type CallbackLocks map[messages.MessageAddress]sync.RWMutex // Mutex control for map
+//type States map[msg.Address]states.Status
+//type Callbacks map[msg.Address]Callback
+//type CallbackLocks map[msg.Address]sync.RWMutex // Mutex control for map
 //type Log struct {
 //	When  time.Time
 //	State states.Status
@@ -103,7 +103,7 @@ type Services map[messages.MessageAddress]*Service
 //func (me *ServiceAction) String() string {
 //	return ""
 //}
-//type Entities map[messages.MessageAddress]*Entity
+//type Entities map[msg.Address]*Entity
 //type EntityLog []Entities
 //type Entity struct {
 //	State	 states.Status
@@ -117,4 +117,3 @@ type Services map[messages.MessageAddress]*Service
 //type ServiceDataLog []ServiceDataEntry
 //type RegisterServices []ServiceData
 //type RegisterServicesMap map[string]*ServiceData
-

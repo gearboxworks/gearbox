@@ -47,8 +47,8 @@ type Args SSH
 const DefaultUsername = "gearbox"
 const DefaultPassword = "box"
 const DefaultKeyFile = "./keyfile.pub"
-const DefaultSshHost = "127.0.0.1"
-const DefaultSshPort = "2222"
+const DefaultSshHost = "gearbox.local"
+const DefaultSshPort = "22"
 const DefaultStatusLineUpdateDelay = time.Second * 2
 
 func NewSSH(args ...Args) *SSH {
