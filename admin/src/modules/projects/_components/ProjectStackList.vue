@@ -22,7 +22,7 @@
 
 <script>
 
-import StackCard from '../stack/StackCard.vue'
+import StackCard from '../../../components/stack/StackCard.vue'
 // import StackCardSelect from './StackCardSelect'
 
 import { mapGetters } from 'vuex'
@@ -99,10 +99,11 @@ export default {
         result[stackId] = result[stackId].sort((a, b) => a.gearspec.attributes.role > b.gearspec.attributes.role ? 1 : (a.gearspec.attributes.role === b.gearspec.attributes.role) ? 0 : -1)
       })
 
+      // console.log('groupedStackItems', result)
       /**
        * sort stacks by stack id
        */
-      return Object.keys(result).sort().reduce(function (r, key) {
+      return Object.keys(result).sort().reduce((r, key) => {
         // eslint-disable-next-line no-param-reassign
         r[key] = result[key]
         return r

@@ -68,7 +68,7 @@
 
 <script>
 
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 // import { CoolSelect } from 'vue-cool-select'
 
 export default {
@@ -176,6 +176,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions({ changeProjectService: 'projects/changeService' }),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
@@ -200,7 +201,7 @@ export default {
           }
         }
       }
-      this.$store.dispatch('changeProjectService', { 'projectId': this.project.id, gearspecId: this.gearspec.id, serviceId: selectedServiceId })
+      this.changeProjectService({ project: this.project, gearspecId: this.gearspec.id, serviceId: selectedServiceId })
       this.closePopover()
     },
     closePopover () {

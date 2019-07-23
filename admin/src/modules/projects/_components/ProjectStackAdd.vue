@@ -64,7 +64,7 @@ export default {
   data () {
     return {
       id: this.project.id,
-      ...this.project.attributes,
+      // ...this.project.attributes,
       selectedStack: '',
       isCollapsed: true,
       isModified: false,
@@ -72,10 +72,47 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ serviceBy: 'serviceBy', gearspecBy: 'gearspecBy', allGearspecs: 'gearspecs/all', allStacks: 'stacks/all', hasExtraBasedirs: 'hasExtraBasedirs' }),
+    ...mapGetters({
+      serviceBy: 'serviceBy',
+      gearspecBy: 'gearspecBy',
+      stackBy: 'stackBy',
+      allGearspecs: 'gearspecs/all',
+      allStacks: 'stacks/all',
+      hasExtraBasedirs: 'hasExtraBasedirs',
+      stackDefaultServiceByRole: 'stackDefaultServiceByRole',
+      stackServicesByRole: 'stackServicesByRole',
+      preselectServiceId: 'preselectServiceId'
+    }),
     projectBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
     },
+    projectGearsGroupedByStack () {
+      var result = {}
+      if (this.project.attributes.stack) {
+        this.project.attributes.stack.forEach((stackMember, idx) => {
+          // if (stackMember.isRemoved) {
+          //   return
+          // }
+          const gearspec = this.gearspecBy('id', stackMember.gearspec_id)
+
+          const stack = this.stackBy('id', gearspec.attributes.stack_id)
+          const serviceId = this.preselectClosestGearServiceId(stack, gearspec.id, stackMember.service_id)
+          const service = serviceId ? this.serviceBy('id', serviceId) : null
+
+          if (gearspec && service) {
+            // console.log(result, gearspec.attributes.stack_id, gearspec.attributes.role)
+            if (typeof result[gearspec.attributes.stack_id] === 'undefined') {
+              result[gearspec.attributes.stack_id] = {
+                isRemoved: stackMember.isRemoved || false
+              }
+            }
+            result[gearspec.attributes.stack_id][gearspec.attributes.role] = service
+          }
+        })
+      }
+      return result
+    },
+
     stacksNotInProject () {
       const result = {}
 
@@ -91,76 +128,67 @@ export default {
           result[stack.id + '(removed)'] = { stack, isRemoved: true }
         }
       }
-      // console.log('stacksNotInProject', result)
+
       return result
     },
+
     hasStacksNotInProject () {
       return Object.entries(this.stacksNotInProject).length > 0
-    },
-    servicesInProject () {
-      const result = {}
-      for (let idx = 0; idx > this.stack.length; idx++) {
-        if (this.stack[idx].isRemoved) {
-          continue
-        }
-        const s = this.serviceBy('id', this.stack[idx].service_id)
-        if (s) {
-          result[this.stack[idx].service_id] = s
-        }
-      }
-      return result
-    },
-    gearsInProject () {
-      const result = {}
-      for (let idx = 0; idx > this.stack.length; idx++) {
-        const g = this.gearspecBy('id', this.stack[idx].gearspec_id)
-        if (g) {
-          result[this.stack[idx].gearspec_id] = g
-        }
-      }
-      return result
-    },
-    projectGearsGroupedByStack () {
-      var result = {}
-      if (this.project.attributes.stack) {
-        this.project.attributes.stack.forEach((stackMember, idx) => {
-          // if (stackMember.isRemoved) {
-          //   return
-          // }
-          const gearspec = this.gearspecBy('id', stackMember.gearspec_id)
-          const service = this.serviceBy('id', stackMember.service_id)
-          if (gearspec && service) {
-            // console.log(result, gearspec.attributes.stack_id, gearspec.attributes.role)
-            if (typeof result[gearspec.attributes.stack_id] === 'undefined') {
-              result[gearspec.attributes.stack_id] = {
-                isRemoved: stackMember.isRemoved || false
-              }
-            }
-            result[gearspec.attributes.stack_id][gearspec.attributes.role] = service
-          }
-        })
-      }
-      // console.log('projectGearsGroupedByStack', result)
-      return result
     }
+    //
+    // servicesInProject () {
+    //   const result = {}
+    //   for (let idx = 0; idx > this.stack.length; idx++) {
+    //     if (this.stack[idx].isRemoved) {
+    //       continue
+    //     }
+    //     const s = this.serviceBy('id', this.stack[idx].service_id)
+    //     if (s) {
+    //       result[this.stack[idx].service_id] = s
+    //     }
+    //   }
+    //   return result
+    // },
+    // gearsInProject () {
+    //   const result = {}
+    //   for (let idx = 0; idx > this.stack.length; idx++) {
+    //     const g = this.gearspecBy('id', this.stack[idx].gearspec_id)
+    //     if (g) {
+    //       result[this.stack[idx].gearspec_id] = g
+    //     }
+    //   }
+    //   return result
+    // }
   },
   methods: {
-    ...mapActions(['addProjectStack']),
+    ...mapActions({ addProjectStack: 'projects/addStack' }),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
+    },
+    preselectClosestGearServiceId (stack, gearspecId, requestedServiceId) {
+      const defaultService = this.stackDefaultServiceByRole(stack, gearspecId)
+      /**
+       * As an example, for php:7.1.18 it will select php:7.1 or php:7 if exact match is not possible
+       */
+      return this.preselectServiceId(
+        this.stackServicesByRole(stack, gearspecId),
+        defaultService,
+        requestedServiceId
+      )
     },
     maybeAddProjectStack (stackId) {
       if (!stackId) {
         return
       }
       this.isUpdating = true
-      this.addProjectStack({ 'projectId': this.id, stackId }).then(() => {
-        this.isUpdating = false
-        this.isCollapsed = true
-        this.selectedStack = ''
-        this.isModified = false
-        this.$emit('maybe-hide-alert', 'Please add some stacks first!')
-      })
+      this.addProjectStack({ project: this.project, stackId })
+        .then(() => {
+          this.isUpdating = false
+          this.isCollapsed = true
+          this.selectedStack = ''
+          this.isModified = false
+          this.$emit('maybe-hide-alert', 'Please add some stacks first!')
+        })
     },
     onButtonClicked () {
       if (this.isCollapsed) {

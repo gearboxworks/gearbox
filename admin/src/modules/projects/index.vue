@@ -13,18 +13,18 @@
       </b-card-group>
       <table class="projects-table" v-else>
         <thead>
-          <tr>
-            <th class="th--state">State</th><th class="th--hostname">Project Name</th><th class="th--location">Location</th><th class="th--stack">Stack</th><th class="th--notes">Notes</th>
-          </tr>
+        <tr>
+          <th class="th--state">State</th><th class="th--hostname">Project Name</th><th class="th--location">Location</th><th class="th--stack">Stack</th><th class="th--notes">Notes</th>
+        </tr>
         </thead>
         <tbody>
-          <project-row
-            v-for="(project, projectIndex) in projects"
-            :key="project.id"
-            :project="project"
-            :projectIndex="projectIndex"
-          >
-          </project-row>
+        <project-row
+          v-for="(project, projectIndex) in projects"
+          :key="project.id"
+          :project="project"
+          :projectIndex="projectIndex"
+        >
+        </project-row>
         </tbody>
       </table>
     </div>
@@ -36,15 +36,24 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import ProjectsDrawer from '../components/ProjectsDrawer'
-import ProjectCard from '../components/project/card/ProjectCard'
-import ProjectRow from '../components/project/row/ProjectRow'
+import store from './_store'
+
+import ProjectsDrawer from './_components/ProjectsDrawer'
+import ProjectCard from './_components/card/ProjectCard'
+import ProjectRow from './_components/row/ProjectRow'
 
 export default {
-  name: 'ProjectList',
+  name: 'Projects',
   data () {
     return {
       viewMode: 'cards'
+    }
+  },
+  created () {
+    const STORE_KEY = 'projects'
+    // eslint-disable-next-line no-underscore-dangle
+    if (!(STORE_KEY in this.$store._modules.root._children)) {
+      this.$store.registerModule(STORE_KEY, store)
     }
   },
   components: {
@@ -54,7 +63,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      'projects': 'filteredProjects'
+      'projects': 'projects/filteredProjects'
     })
   },
   methods: {
@@ -79,10 +88,11 @@ export default {
       // const gearspecs = this.$store.getters['gearspecs/all']
     })
 
-    this.$store.dispatch('projects/loadAll').then(() => {
-      // const projects = this.$store.getters['projects/all']
-    }).then(() => {
-      this.$store.dispatch('loadProjectDetails')
+    this.$store.dispatch('projects/loadAllHeaders').then(() => {
+      // console.log('after loadAllHeaders', this.$store.state.projects.records)
+      this.$store.dispatch('projects/loadDetailsForAll').then((result) => {
+        // console.log('all details loaded', result)
+      })
     })
   }
 }

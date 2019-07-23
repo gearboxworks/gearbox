@@ -98,7 +98,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['addProjectNote']),
+    ...mapActions({ updateProjectNotes: 'projects/updateNotes' }),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
@@ -125,13 +125,10 @@ export default {
     },
     maybeSubmit () {
       this.isUpdating = true
-      /**
-       * TODO: deal with timestamp
-       */
-      this.addProjectNote(
+      this.updateProjectNotes(
         {
-          projectId: this.id,
-          text: this.notes
+          project: this.project,
+          notes: this.notes
         }
       ).then(() => {
         this.isCollapsed = true

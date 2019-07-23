@@ -32,14 +32,15 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex'
-
+import { createNamespacedHelpers } from 'vuex'
 import ProjectToolbar from '../ProjectToolbar'
 import ProjectHostname from '../ProjectHostname'
 import ProjectLocation from '../ProjectLocation'
 import ProjectNote from '../ProjectNote'
 import ProjectStackAdd from '../ProjectStackAdd'
 import ProjectStackList from '../ProjectStackList'
+
+const { mapActions } = createNamespacedHelpers('projects')
 
 export default {
   name: 'ProjectCard',
@@ -82,7 +83,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['changeProjectState']),
+    ...mapActions({ updateProjectState: 'updateState' }),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
@@ -108,7 +109,7 @@ export default {
     onRunStop () {
       if (this.project.attributes.stack && this.project.attributes.stack.length > 0) {
         this.isUpdating = true
-        this.changeProjectState({ 'projectId': this.id, 'isEnabled': !this.isRunning })
+        this.updateProjectState({ project: this.project, isEnabled: !this.isRunning })
           .then((status) => {
             this.isUpdating = false
             this.hideAlert()

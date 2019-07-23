@@ -79,7 +79,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['updateProjectHostname']),
+    ...mapActions({ updateProjectHostname: 'projects/updateHostname' }),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
@@ -112,7 +112,7 @@ export default {
        */
       this.updateProjectHostname(
         {
-          projectId: this.id,
+          project: this.project,
           hostname: value
         }
       ).then(() => {

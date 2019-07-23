@@ -161,7 +161,7 @@
 
 <script>
 
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
 export default {
   name: 'ProjectsDrawer',
@@ -239,6 +239,9 @@ export default {
     // escAttr (value) {
     //   return value.replace(/\//g, '-').replace(/\./g, '-')
     // }
+    ...mapActions({
+      setProjectsFilter: 'projects/setProjectsFilter'
+    }),
     toggleState (value, attribute) {
       const states = this.showStates
       const running = states.indexOf('running') !== -1
@@ -258,12 +261,12 @@ export default {
       }
     },
     changeFilter (values, field) {
-      this.$store.dispatch('setProjectsFilter', { field, values })
+      this.setProjectsFilter({ field, values })
     }
   },
   watch: {
     showStates: function (val, oldVal) {
-      this.$store.dispatch('setProjectsFilter', { field: 'states', values: this.showStates })
+      this.setProjectsFilter({ field: 'states', values: this.showStates })
     }
   }
 }

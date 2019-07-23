@@ -12,7 +12,7 @@
         />
           <span class="sr-only">More actions</span>
         </template>
-        <b-dropdown-item href="#" @click.prevent="removeProjectStack">Remove stack</b-dropdown-item>
+        <b-dropdown-item href="#" @click.prevent="onRemoveProjectStack">Remove stack</b-dropdown-item>
       </b-dropdown>
     </div>
 
@@ -77,6 +77,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
 
 export default {
   name: 'StackToolbar',
@@ -111,14 +112,17 @@ export default {
     }
   },
   methods: {
+    ...mapActions({
+      removeProjectStack: 'projects/removeStack'
+    }),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
-    removeProjectStack (stackId) {
+    onRemoveProjectStack (stackId) {
       if (this.project.attributes.enabled) {
         this.$emit('show-alert', 'Cannot remove stack while the project is running!')
       } else {
-        this.$store.dispatch('removeProjectStack', { 'projectId': this.project.id, 'stackId': this.stackId })
+        this.removeProjectStack({ project: this.project, stackId: this.stackId })
       }
     }
   }

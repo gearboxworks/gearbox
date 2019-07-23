@@ -75,7 +75,10 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['changeProjectState']),
+    ...mapActions({
+      updateProjectState: 'projects/updateState',
+      updateProjectDetails: 'projects/updateDetails'
+    }),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
@@ -90,20 +93,15 @@ export default {
       this.alertShow = true
     },
     maybeSubmit (ev) {
-      this.$store.dispatch(
-        'updateProject',
-        {
-          id: this.id,
-          attributes: this.$data
-        }
-      ).then(() => {
-        // this.$router.push('/project/' + this.hostname)
-      })
+      this.updateProjectDetails({ projectId: this.id, attributes: this.$data })
+        .then(() => {
+          // this.$router.push('/project/' + this.hostname)
+        })
     },
     onRunStop () {
       if (this.project.attributes.stack && this.project.attributes.stack.length > 0) {
         this.isUpdating = true
-        this.changeProjectState({ 'projectId': this.id, 'isEnabled': !this.isRunning })
+        this.updateProjectState({ 'project': this.project, 'isEnabled': !this.isRunning })
           .then((status) => {
             this.isUpdating = false
           })
