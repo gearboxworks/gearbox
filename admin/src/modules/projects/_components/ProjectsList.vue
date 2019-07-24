@@ -151,9 +151,4 @@ export default {
   .th--notes {
     width: 300px;
   }
-
-  .is-empty{
-    margin-left: 1rem;
-  }
-
 </style>

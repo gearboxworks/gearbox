@@ -14,7 +14,7 @@
     <div
       v-else
       key="projects-content"
-      class="filtered-projects is-empty"
+      class="is-empty"
     >
       <h5>No projects match the current criteria.</h5>
     </div>
@@ -81,3 +81,11 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.is-empty{
+  margin-left: 1rem;
+  padding-left: 0;
+  padding-right: 1rem;
+}
+</style>

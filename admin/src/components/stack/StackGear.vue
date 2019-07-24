@@ -70,7 +70,7 @@
             </option>
           </optgroup>
         </b-form-select>
-        <b-alert :show="!stackItem.service" variant="warning">Note, the currently selected version of the service is different from what is in project specification!</b-alert>
+        <b-alert :show="(defaultService || !!stackItem.serviceId) && !stackItem.service" variant="warning">Could not find the requested version (v.{{stackItem.serviceId.split(':')[1]}}), will use the closest match (v.{{preselectClosestGearServiceId.split(':')[1]}}) instead.</b-alert>
         <b-alert :show="project.attributes.enabled">Note, you cannot change this service while the project is running!</b-alert>
       </b-form-group>
     </b-popover>
