@@ -1,16 +1,27 @@
 <template>
 
   <div id="app">
-    <b-alert :show="isConnectionProblem" variant="warning">
+
+    <b-alert
+      :show="isConnectionProblem"
+      variant="warning"
+    >
       <h4>Connection Problem</h4>
       <p>It seems that Gearbox Server is not running. Remaining connection attempts: {{remainingRetries}}</p>
     </b-alert>
-    <b-alert show v-if="isUnrecoverableConnectionProblem" variant="danger">
+    <b-alert
+      v-if="isUnrecoverableConnectionProblem"
+      show
+      variant="danger"
+    >
       <h4>Connection Problem</h4>
       <p>Failed to connect to Gearbox Server.</p>
     </b-alert>
+
     <the-top-bar />
+
     <router-view></router-view>
+
   </div>
 </template>
 
@@ -27,9 +38,11 @@ export default {
       // console.log('isConnectionProblem', this.$store.state.connectionStatus.networkError, this.$store.state.connectionStatus.remainingRetries)
       return this.$store.state.connectionStatus.networkError && this.$store.state.connectionStatus.remainingRetries > 0
     },
+
     remainingRetries () {
       return this.$store.state.connectionStatus.remainingRetries
     },
+
     isUnrecoverableConnectionProblem () {
       return this.$store.state.connectionStatus.networkError
         ? (this.$store.state.connectionStatus.remainingRetries === 0)
