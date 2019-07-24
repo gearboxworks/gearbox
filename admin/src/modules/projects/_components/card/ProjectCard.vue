@@ -3,8 +3,19 @@
     class="card--project"
   >
     <div class="clearfix">
-      <project-hostname :project="project" :projectIndex="projectIndex" :is-multimodal="true" @show-alert="showAlert"></project-hostname>
-      <project-toolbar :project="project" :projectIndex="projectIndex" @run-stop="onRunStop" :isUpdating="isUpdating"></project-toolbar>
+      <project-hostname
+        :project="project"
+        :projectIndex="projectIndex"
+        :is-multimodal="true"
+        @show-alert="showAlert"
+      />
+
+      <project-toolbar
+        :project="project"
+        :projectIndex="projectIndex"
+        @run-stop="onRunStop"
+        :isUpdating="isUpdating"
+      />
     </div>
 
     <b-alert
@@ -13,17 +24,32 @@
       :variant="alertVariant"
       @dismissed="alertShow=false"
       fade
-    >{{alertContent}}</b-alert>
+    >
+      {{alertContent}}
+    </b-alert>
 
     <div class="clearfix" slot="footer">
 
-      <project-stack-list :project="project" :projectIndex="projectIndex"></project-stack-list>
+      <project-stack-list
+        :project="project"
+        :projectIndex="projectIndex"
+      />
 
-      <project-stack-add :project="project" :projectIndex="projectIndex" @maybe-hide-alert="maybeHideAlert"></project-stack-add>
+      <project-stack-add
+        :project="project"
+        :projectIndex="projectIndex"
+        @maybe-hide-alert="maybeHideAlert"
+      />
 
-      <project-location :project="project" :projectIndex="projectIndex"></project-location>
+      <project-location
+        :project="project"
+        :projectIndex="projectIndex"
+      />
 
-      <project-note :project="project" :projectIndex="projectIndex"></project-note>
+      <project-note
+        :project="project"
+        :projectIndex="projectIndex"
+      />
 
     </div>
 
@@ -44,6 +70,14 @@ const { mapActions } = createNamespacedHelpers('projects')
 
 export default {
   name: 'ProjectCard',
+  components: {
+    ProjectToolbar,
+    ProjectHostname,
+    ProjectLocation,
+    ProjectStackList,
+    ProjectStackAdd,
+    ProjectNote
+  },
   props: {
     project: {
       type: Object,
@@ -65,14 +99,6 @@ export default {
       alertVariant: 'warning',
       isUpdating: false
     }
-  },
-  components: {
-    ProjectToolbar,
-    ProjectHostname,
-    ProjectLocation,
-    ProjectStackList,
-    ProjectStackAdd,
-    ProjectNote
   },
   computed: {
     projectBase () {

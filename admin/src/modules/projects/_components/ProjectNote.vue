@@ -17,7 +17,9 @@
       @keyup.esc="isCollapsed = true"
     />
 
-    <div class="notes-wrapper" v-if="!isCollapsed && !isEditing && notes && !isModified">
+    <div class="notes-wrapper"
+         v-if="!isCollapsed && !isEditing && notes && !isModified"
+    >
       <VueMarkdown>{{notes}}</VueMarkdown>
     </div>
 
@@ -34,7 +36,11 @@
       <span v-if="!isUpdating && !notes">{{isCollapsed ? '+' : ''}}</span>
     </b-button>
 
-    <b-tooltip triggers="hover" :target="`${projectBase}button`" placement="top">
+    <b-tooltip
+      triggers="hover"
+      :target="`${projectBase}button`"
+      placement="top"
+    >
       {{isCollapsed ? ( notes ? 'View notes' : 'Add notes' ) : 'Cancel changes!'}}
     </b-tooltip>
 
@@ -48,11 +54,13 @@
     >
       <font-awesome-icon
         v-if="isUpdating"
+        key="status-icon"
         icon="circle-notch"
         spin
       />
       <font-awesome-icon
         v-else
+        key="status-icon"
         :icon="['fa', isEditing ? 'check': 'pencil-alt' ]"
       />
     </b-button>
@@ -69,6 +77,9 @@ import VueMarkdown from 'vue-markdown'
 
 export default {
   name: 'ProjectNote',
+  components: {
+    VueMarkdown
+  },
   props: {
     project: {
       type: Object,
@@ -78,9 +89,6 @@ export default {
       type: Number,
       required: true
     }
-  },
-  components: {
-    VueMarkdown
   },
   data () {
     return {
@@ -95,6 +103,11 @@ export default {
   computed: {
     projectBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
+    }
+  },
+  watch: {
+    notes: function (val, oldVal) {
+      this.isModified = !!val
     }
   },
   methods: {
@@ -135,11 +148,6 @@ export default {
         this.isModified = false
         this.isUpdating = false
       })
-    }
-  },
-  watch: {
-    notes: function (val, oldVal) {
-      this.isModified = !!val
     }
   }
 }

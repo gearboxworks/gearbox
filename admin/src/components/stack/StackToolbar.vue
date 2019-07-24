@@ -1,23 +1,33 @@
 <template>
   <div class="toolbar-list">
-    <div class="toolbar-item toolbar-item--more" :key="projectBase+stackId+'more'">
+    <div
+      class="toolbar-item toolbar-item--more"
+      :key="projectBase+stackId+'more'"
+    >
       <b-dropdown
         variant="link"
         no-caret
         title="More stack actions"
         v-b-tooltip.hover
       >
-        <template slot="button-content"><font-awesome-icon
-          :icon="['fa', 'ellipsis-v']"
-        />
+        <template slot="button-content">
+          <font-awesome-icon :icon="['fa', 'ellipsis-v']" />
           <span class="sr-only">More actions</span>
         </template>
-        <b-dropdown-item href="#" @click.prevent="onRemoveProjectStack">Remove stack</b-dropdown-item>
+        <b-dropdown-item @click.prevent="onRemoveProjectStack">Remove stack</b-dropdown-item>
       </b-dropdown>
     </div>
 
-    <transition name="icons" v-if="isWordPress" tag="ul">
-      <li v-if="isRunning" :class="['toolbar-item', 'toolbar-item--frontend']" :key="projectBase+stackId+'frontend'">
+    <transition
+      v-if="isWordPress"
+      name="icons"
+      tag="ul"
+    >
+      <li
+        v-if="isRunning"
+        :class="['toolbar-item', 'toolbar-item--frontend']"
+        :key="projectBase+stackId+'frontend'"
+      >
         <a target="_blank"
            :href="`//${hostname}/`"
            :title="'Open Frontend'+ (isRunning ? '' : ' (not running)')"
@@ -30,8 +40,17 @@
         </a>
       </li>
     </transition>
-    <transition name="icons" v-if="isWordPress" tag="ul">
-      <li v-if="isRunning" :class="['toolbar-item', 'toolbar-item--dashboard']" :key="projectBase+stackId+'dashboard'">
+
+    <transition
+      v-if="isWordPress"
+      name="icons"
+      tag="ul"
+    >
+      <li
+        v-if="isRunning"
+        :class="['toolbar-item', 'toolbar-item--dashboard']"
+        :key="projectBase+stackId+'dashboard'"
+      >
         <a target="_blank"
            :href="`//${hostname}/wp-admin/`"
            :title="'Open Dashboard'+ (isRunning ? '' : ' (not running)')"
@@ -44,8 +63,17 @@
         </a>
       </li>
     </transition>
-    <transition name="icons" v-if="isWordPress" tag="ul">
-      <li v-if="isRunning" :class="['toolbar-item', 'toolbar-item--adminer']" :key="projectBase+stackId+'adminer'">
+
+    <transition
+      v-if="isWordPress"
+      name="icons"
+      tag="ul"
+    >
+      <li
+        v-if="isRunning"
+        :class="['toolbar-item', 'toolbar-item--adminer']"
+        :key="projectBase+stackId+'adminer'"
+      >
         <a target="_blank"
            :href="`//${hostname}/wp-admin/`"
            :title="'Open Adminer'+ (isRunning ? '' : ' (not running)')"
@@ -58,8 +86,17 @@
         </a>
       </li>
     </transition>
-    <transition name="icons" v-if="isWordPress" tag="ul">
-      <li v-if="isRunning" :class="['toolbar-item', 'toolbar-item--frontend']" :key="projectBase+stackId+'mailhog'">
+
+    <transition
+      v-if="isWordPress"
+      name="icons"
+      tag="ul"
+    >
+      <li
+        v-if="isRunning"
+        :class="['toolbar-item', 'toolbar-item--frontend']"
+        :key="projectBase+stackId+'mailhog'"
+      >
         <a target="_blank"
            :href="`//${hostname}:4003`"
            :title="'Open Mailhog'+ (isRunning ? '' : ' (not running)')"
@@ -104,9 +141,11 @@ export default {
     projectBase () {
       return 'gb-' + this.escAttr(this.project.id) + '-'
     },
+
     hostname () {
       return this.project.attributes.hostname
     },
+
     isRunning () {
       return this.project.attributes.enabled
     }
@@ -115,9 +154,11 @@ export default {
     ...mapActions({
       removeProjectStack: 'projects/removeStack'
     }),
+
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     onRemoveProjectStack (stackId) {
       if (this.project.attributes.enabled) {
         this.$emit('show-alert', 'Cannot remove stack while the project is running!')

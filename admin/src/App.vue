@@ -9,18 +9,18 @@
       <h4>Connection Problem</h4>
       <p>Failed to connect to Gearbox Server.</p>
     </b-alert>
-    <top-bar />
+    <the-top-bar />
     <router-view></router-view>
   </div>
 </template>
 
 <script>
-import TopBar from './components/TopBar.vue'
+import TheTopBar from './components/TheTopBar'
 
 export default {
   name: 'App',
   components: {
-    TopBar
+    TheTopBar
   },
   computed: {
     isConnectionProblem () {

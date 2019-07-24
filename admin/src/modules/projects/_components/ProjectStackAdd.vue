@@ -14,12 +14,16 @@
       :ref="`${projectBase}-select`"
       autofocus
     >
-      <option value="" disabled>{{hasStacksNotInProject ? 'Add stack...' : 'All stacks already added'}}</option>
+      <option value="" disabled>
+        {{hasStacksNotInProject ? 'Add stack...' : 'All stacks already added'}}
+      </option>
       <option
         v-for="(item,stackId) in stacksNotInProject"
         :key="stackId"
         :value="stackId"
-      >{{item.stack.attributes.stackname + (item.isRemoved ? ' (removed)': '') + (item.isDefault? ' (default)': '')}}</option>
+      >
+        {{item.stack.attributes.stackname + (item.isRemoved ? ' (removed)': '') + (item.isDefault? ' (default)': '')}}
+      </option>
     </b-form-select>
     <b-input-group-append>
       <b-button
@@ -32,11 +36,13 @@
       >
         <font-awesome-icon
           v-if="isUpdating"
+          key="status-icon"
           icon="circle-notch"
           spin
         />
         <font-awesome-icon
           v-else
+          key="status-icon"
           :icon="['fa', (isCollapsed ? 'layer-group' : (isModified ? 'check' : 'times'))]"
         />
         <span>{{(isCollapsed && !isUpdating) ? '+' : ''}}</span>
@@ -83,9 +89,11 @@ export default {
       stackServicesByRole: 'stackServicesByRole',
       preselectServiceId: 'preselectServiceId'
     }),
+
     projectBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
     },
+
     projectGearsGroupedByStack () {
       var result = {}
       if (this.project.attributes.stack) {
@@ -161,10 +169,14 @@ export default {
     // }
   },
   methods: {
-    ...mapActions({ addProjectStack: 'projects/addStack' }),
+    ...mapActions({
+      addProjectStack: 'projects/addStack'
+    }),
+
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     preselectClosestGearServiceId (stack, gearspecId, requestedServiceId) {
       const defaultService = this.stackDefaultServiceByRole(stack, gearspecId)
       /**
@@ -176,6 +188,7 @@ export default {
         requestedServiceId
       )
     },
+
     maybeAddProjectStack (stackId) {
       if (!stackId) {
         return
@@ -190,6 +203,7 @@ export default {
           this.$emit('maybe-hide-alert', 'Please add some stacks first!')
         })
     },
+
     onButtonClicked () {
       if (this.isCollapsed) {
         this.isCollapsed = false

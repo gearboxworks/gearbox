@@ -1,6 +1,9 @@
 <template>
   <b-form-row :class="{'form-row--basedir-add': true, 'is-updating': isUpdating}">
-    <b-input-group :class="{'input-group--basedir-edit': true}" role="tabpanel">
+    <b-input-group
+      :class="{'input-group--basedir-edit': true}"
+      role="tabpanel"
+    >
       <b-form-input
         v-model="currentValue"
         type="text"
@@ -62,10 +65,11 @@ export default {
       alertVariant: 'warning'
     }
   },
-  components: {
-  },
   computed: {
-    ...mapGetters(['basedirBy']),
+    ...mapGetters([
+      'basedirBy'
+    ]),
+
     ctrlBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
     }
@@ -75,9 +79,11 @@ export default {
       'doCreateBasedir': 'basedirs/create',
       'getDirectory': 'getDirectory'
     }),
+
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     showAlert (alert) {
       if (typeof alert === 'string') {
         this.alertContent = alert
@@ -88,6 +94,7 @@ export default {
       }
       this.alertShow = true
     },
+
     touch (basedirId) {
       if (this.currentValue) {
         this.$set(this.touched, basedirId, true)
@@ -97,11 +104,13 @@ export default {
         this.$delete(this.errors, basedirId)
       }
     },
+
     inputState (basedirId) {
       return typeof this.errors[basedirId] === 'undefined'
         ? null
         : (this.errors[basedirId] === 'no error')
     },
+
     onAddBasedir () {
       const basedir = this.currentValue
       if (!basedir) {
@@ -124,6 +133,7 @@ export default {
           }
         })
     },
+
     createDir (basedir) {
       const recordData = {
         'attributes': {

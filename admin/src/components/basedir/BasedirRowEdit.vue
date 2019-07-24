@@ -3,7 +3,9 @@
     :class="{'form-row--basedir-edit': true, 'is-updating': isUpdating, 'is-modified': isModified,'is-deleting': isDeleting}"
   >
 
-    <b-input-group :class="{'input-group--basedir-edit': true}" role="tabpanel">
+    <b-input-group
+      :class="{'input-group--basedir-edit': true}"
+      role="tabpanel">
 
       <b-form-input
         v-model="currentValue"
@@ -16,7 +18,9 @@
         placeholder="Path"
         tabindex="tabOffset"
       />
-      <b-input-group-append v-if="isModified">
+      <b-input-group-append
+        v-if="isModified"
+      >
         <b-button
           type="submit.prevent"
           :variant="isModified ? 'outline-info': 'outline-secondary'"
@@ -26,8 +30,17 @@
           title="Update directory reference"
           :tabindex="tabOffset+1"
         >
-          <font-awesome-icon v-if="isUpdating" spin :icon="['fa', 'circle-notch']" />
-          <font-awesome-icon v-else :icon="['fa', 'check']" />
+          <font-awesome-icon
+            v-if="isUpdating"
+            key="status-icon"
+            spin
+            :icon="['fa', 'circle-notch']"
+          />
+          <font-awesome-icon
+            v-else
+            key="status-icon"
+            :icon="['fa', 'check']"
+          />
         </b-button>
       </b-input-group-append>
     </b-input-group>
@@ -67,18 +80,27 @@
       class="btn--delete"
       :tabindex="tabOffset+2"
     >
-      <font-awesome-icon v-if="isDeleting" spin :icon="['fa', 'circle-notch']" />
-      <font-awesome-icon v-else :icon="['fa', 'trash-alt']" />
+      <font-awesome-icon
+        v-if="isDeleting"
+        key="status-icon"
+        spin
+        :icon="['fa', 'circle-notch']"
+      />
+      <font-awesome-icon
+        v-else
+        key="status-icon"
+        :icon="['fa', 'trash-alt']"
+      />
     </b-button>
 
-    <div :class="{confirmation: true, visible: notfound[currentValue]}" v-if="!errors">
+    <div v-if="!errors" :class="{confirmation: true, visible: notfound[currentValue]}">
       This dir does not exist. Would you like to create it?
       <a class="yes" @click.stop="updateDir(currentValue)" title="Create directory">Yes</a>
       |
       <a class="no" @click.stop="notfound[currentValue]=0" title="Try a different dir">No</a>
     </div>
 
-    <div class="invalid-feedback d-block" v-if="errors">{{errors}}</div>
+    <div v-if="errors" class="invalid-feedback d-block">{{errors}}</div>
   </b-form-row>
 
 </template>
@@ -118,13 +140,15 @@ export default {
       alertVariant: 'warning'
     }
   },
-  components: {
-  },
   computed: {
-    ...mapGetters(['basedirBy']),
+    ...mapGetters([
+      'basedirBy'
+    ]),
+
     ctrlBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
     },
+
     isValid () {
       return (this.errors === '') ? null : false
     }
@@ -135,9 +159,11 @@ export default {
       'doUpdateBasedir': 'basedirs/update',
       'doDeleteBasedir': 'basedirs/delete'
     }),
+
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     showAlert (alert) {
       if (typeof alert === 'string') {
         this.alertContent = alert
@@ -148,12 +174,14 @@ export default {
       }
       this.alertShow = true
     },
+
     touch () {
       const basedir = this.currentValue
       // console.log(this.currentValue, this.basedir.attributes.basedir)
       this.isModified = basedir && (basedir !== this.basedir.attributes.basedir)
       this.errors = ''
     },
+
     onUpdateBasedir () {
       const basedir = this.currentValue
 
@@ -177,6 +205,7 @@ export default {
           }
         })
     },
+
     updateDir (basedir) {
       if (!this.isModified) {
         return
@@ -206,6 +235,7 @@ export default {
         console.log('fail', res.response)
       })
     },
+
     onDeleteBasedir () {
       this.isDeleting = true
       this.doDeleteBasedir({ id: this.id })
@@ -220,6 +250,7 @@ export default {
           // this.isModified = false
         })
     },
+
     onCopyToClipboard (e) {
       /**
        * @see https://github.com/Inndy/vue-clipboard2

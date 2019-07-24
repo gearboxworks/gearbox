@@ -1,5 +1,9 @@
 <template>
-  <b-input-group :id="`${projectBase}location`"  :class="{'input-group--location': true, 'is-collapsed': isCollapsed, 'is-multimodal': isMultimodal}" role="tabpanel">
+  <b-input-group
+    :id="`${projectBase}location`"
+    :class="{'input-group--location': true, 'is-collapsed': isCollapsed, 'is-multimodal': isMultimodal}"
+    role="tabpanel"
+  >
     <b-form-input
       readonly
       :ref="`${projectBase}location`"

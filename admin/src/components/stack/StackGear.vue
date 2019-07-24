@@ -53,10 +53,21 @@
           :tabindex="projectIndex*100+stackIndex*10+itemIndex+9"
           @change="onChangeService($event)"
         >
-          <option value="" v-if="!defaultService">Do not run this service</option>
+          <option v-if="!defaultService" value="">Do not run this service</option>
           <option disabled :value="null">Select service...</option>
-          <optgroup v-for="(services, groupLabel) in servicesGroupedByRole" :label="groupLabel" :key="groupLabel">
-            <option v-for="serviceId in services" :value="serviceId" :key="serviceId" :disabled="project.attributes.enabled">{{serviceId.replace('gearboxworks/','')}}</option>
+          <optgroup
+            v-for="(services, groupLabel) in servicesGroupedByRole"
+            :label="groupLabel"
+            :key="groupLabel"
+          >
+            <option
+              v-for="serviceId in services"
+              :value="serviceId"
+              :key="serviceId"
+              :disabled="project.attributes.enabled"
+            >
+              {{serviceId.replace('gearboxworks/','')}}
+            </option>
           </optgroup>
         </b-form-select>
         <b-alert :show="!stackItem.service" variant="warning">Note, the currently selected version of the service is different from what is in project specification!</b-alert>
@@ -73,6 +84,9 @@ import { mapGetters, mapActions } from 'vuex'
 
 export default {
   name: 'StackGear',
+  components: {
+    // CoolSelect
+  },
   props: {
     'project': {
       type: Object,
@@ -103,17 +117,24 @@ export default {
       isSwitchingSameAgain: false
     }
   },
-  components: {
-    // CoolSelect
-  },
   computed: {
-    ...mapGetters(['serviceBy', 'gearspecBy', 'stackBy', 'stackDefaultServiceByRole', 'stackServicesByRole', 'preselectServiceId']),
+    ...mapGetters([
+      'serviceBy',
+      'gearspecBy',
+      'stackBy',
+      'stackDefaultServiceByRole',
+      'stackServicesByRole',
+      'preselectServiceId'
+    ]),
+
     projectBase () {
       return 'gb-' + this.escAttr(this.project.id) + '-'
     },
+
     gearspec () {
       return this.stackItem.gearspec
     },
+
     service () {
       let service = null
       if (this.stackItem.service) {
@@ -126,15 +147,19 @@ export default {
       }
       return service
     },
+
     stack () {
       return this.stackBy('id', this.gearspec.attributes.stack_id)
     },
+
     gearControlId () {
       return this.projectBase + (this.stack ? this.stack.attributes.stackname + '-' : '') + this.gearspec.attributes.role
     },
+
     defaultService () {
       return this.stackDefaultServiceByRole(this.stack, this.stackItem.gearspecId)
     },
+
     preselectClosestGearServiceId () {
       /**
        * As an example, for php:7.1.18 it will select php:7.1 or php:7 if exact match is not possible
@@ -145,6 +170,7 @@ export default {
         this.stackItem.serviceId
       )
     },
+
     servicesGroupedByRole () {
       const services = this.stackServicesByRole(this.stack, this.gearspec.id)
       // console.log(services)
@@ -158,6 +184,7 @@ export default {
       }
       return result
     },
+
     programTooltip () {
       const serviceId = this.stackItem.serviceId
       const attributes = (serviceId && this.service) ? this.service.attributes : null
@@ -176,10 +203,14 @@ export default {
     }
   },
   methods: {
-    ...mapActions({ changeProjectService: 'projects/changeService' }),
+    ...mapActions({
+      changeProjectService: 'projects/changeService'
+    }),
+
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     onChangeService (selectedServiceId) {
       const previousId = this.service ? this.service.id : ''
       const program1 = previousId ? previousId.split('/')[1].split(':')[0] : ''
@@ -204,9 +235,11 @@ export default {
       this.changeProjectService({ project: this.project, gearspecId: this.gearspec.id, serviceId: selectedServiceId })
       this.closePopover()
     },
+
     closePopover () {
       this.$root.$emit('bv::hide::popover', this.gearControlId)
     },
+
     onImageLoaded (a) {
       this.isSwitching = false
       this.isLoaded = true

@@ -1,7 +1,10 @@
 <template>
   <div class="drawer mb-3 clearfix">
     <!--Filter-->
-    <div v-if="expanded" class="drawer-contents clearfix">
+    <div
+      v-if="expanded"
+      class="drawer-contents clearfix"
+    >
       <div class="left-panel">
         <b-form class="filter-form">
 
@@ -28,12 +31,18 @@
             description="Location"
             v-if="hasExtraBasedirs"
           >
-            <b-select id="filter-basedirs" variant="secondary" v-model="showBasedirs" :options="basedirsAsOptions" @change="changeFilter($event, 'basedir')">
+            <b-select
+              id="filter-basedirs"
+              variant="secondary"
+              v-model="showBasedirs"
+              :options="basedirsAsOptions"
+              @change="changeFilter($event, 'basedir')"
+            >
               <template slot="first">
                 <option :value="null" disabled>Show projects from...</option>
                 <option value="all">All known locations</option>
               </template>
-              </b-select>
+            </b-select>
           </b-form-group>
 
           <b-form-group
@@ -42,11 +51,31 @@
             label-for="filter-stacks"
             description="Used Stacks"
           >
-            <b-select id="filter-stacks" variant="secondary" v-model="showStacks" @change="changeFilter($event, 'stacks')">
-              <option :value="null" disabled>Filter by stacks...</option>
-              <option value="all">Any stack</option>
+            <b-select
+              id="filter-stacks"
+              variant="secondary"
+              v-model="showStacks"
+              @change="changeFilter($event, 'stacks')"
+            >
+              <option
+                :value="null"
+                disabled
+              >
+                Filter by stacks...
+              </option>
+              <option
+                value="all"
+              >
+                Any stack
+              </option>
               <optgroup label="Specific Stacks">
-                <option v-for="item in stacksAsOptions" :key="item.value" :value="item.value">{{item.text.toUpperCase()}}</option>
+                <option
+                  v-for="item in stacksAsOptions"
+                  :key="item.value"
+                  :value="item.value"
+                >
+                  {{item.text.toUpperCase()}}
+                </option>
               </optgroup>
               <option value="none">No stacks assigned</option>
             </b-select>
@@ -58,11 +87,27 @@
             label-for="filter-programs"
             description="Used Programs"
           >
-            <b-select id="filter-programs" variant="secondary" v-model="showPrograms" @change="changeFilter($event, 'programs')">
-              <option :value="null" disabled>Filter by programs...</option>
+            <b-select
+              id="filter-programs"
+              variant="secondary"
+              v-model="showPrograms"
+              @change="changeFilter($event, 'programs')"
+            >
+              <option
+                :value="null"
+                disabled
+              >
+                Filter by programs...
+              </option>
               <option value="all">Any program</option>
               <optgroup label="Specific Program">
-                <option v-for="item in programsAsOptions" :key="item.value" :value="item.value">{{item.text.toUpperCase()}}</option>
+                <option
+                  v-for="item in programsAsOptions"
+                  :key="item.value"
+                  :value="item.value"
+                >
+                  {{item.text.toUpperCase()}}
+                </option>
               </optgroup>
               <option value="none">No programs assigned</option>
             </b-select>
@@ -139,10 +184,12 @@
       <div class="label small"><span>Viewing Options&nbsp;
         <font-awesome-icon
           v-if="expanded"
+          key="mode-icon"
           :icon="['fa', 'chevron-up']"
         />
         <font-awesome-icon
           v-else
+          key="mode-icon"
           :icon="['fa', 'chevron-down']"
         />
         </span>
@@ -165,9 +212,30 @@ import { mapGetters, mapActions } from 'vuex'
 
 export default {
   name: 'ProjectsDrawer',
-  props: {},
+  data () {
+    return {
+      expanded: false,
+
+      showStates: ['running', 'stopped', 'candidates'],
+      showBasedirs: 'all',
+      showStacks: 'all',
+      showPrograms: 'all',
+
+      sortBy: 'project-title',
+      sortAscending: true,
+      viewMode: 'cards'
+    }
+  },
   computed: {
-    ...mapGetters([ 'basedirBy', 'stackBy', 'basedirsAsOptions', 'stacksAsOptions', 'programsAsOptions', 'hasExtraBasedirs' ]),
+    ...mapGetters([
+      'basedirBy',
+      'stackBy',
+      'basedirsAsOptions',
+      'stacksAsOptions',
+      'programsAsOptions',
+      'hasExtraBasedirs'
+    ]),
+
     labelStates () {
       const states = this.showStates
       const running = (states.indexOf('running') !== -1) ? 'Running projects' : ''
@@ -184,6 +252,7 @@ export default {
         ? projects + ((candidates && (running || stopped)) ? '' : ' (no candidates)')
         : (candidates ? 'Project candidates' : '')
     },
+
     statesVariant () {
       const states = this.showStates
       const running = (states.indexOf('running') !== -1) ? 'Running projects' : ''
@@ -193,10 +262,12 @@ export default {
         ? 'secondary'
         : 'warning'
     },
+
     labelBasedirs () {
       const basedir = (this.showBasedirs !== 'all') ? this.basedirBy('id', this.showBasedirs) : null
       return 'From ' + (basedir ? basedir.attributes.basedir : 'all known locations')
     },
+
     labelStacks () {
       let label
       if (this.showStacks === 'none') {
@@ -207,6 +278,7 @@ export default {
       }
       return label
     },
+
     labelPrograms () {
       let label
       if (this.showPrograms === 'none') {
@@ -217,22 +289,14 @@ export default {
       }
       return label
     },
+
     labelSorting () {
       return 'Sorted by ' + this.sortBy.replace('-', ' ') + (this.sortAscending ? '' : ' (reverse)')
     }
   },
-  data () {
-    return {
-      expanded: false,
-
-      showStates: ['running', 'stopped', 'candidates'],
-      showBasedirs: 'all',
-      showStacks: 'all',
-      showPrograms: 'all',
-
-      sortBy: 'project-title',
-      sortAscending: true,
-      viewMode: 'cards'
+  watch: {
+    showStates: function (val, oldVal) {
+      this.setProjectsFilter({ field: 'states', values: this.showStates })
     }
   },
   methods: {
@@ -242,6 +306,7 @@ export default {
     ...mapActions({
       setProjectsFilter: 'projects/setProjectsFilter'
     }),
+
     toggleState (value, attribute) {
       const states = this.showStates
       const running = states.indexOf('running') !== -1
@@ -260,13 +325,9 @@ export default {
         this.showStates = ['candidates']
       }
     },
+
     changeFilter (values, field) {
       this.setProjectsFilter({ field, values })
-    }
-  },
-  watch: {
-    showStates: function (val, oldVal) {
-      this.setProjectsFilter({ field: 'states', values: this.showStates })
     }
   }
 }

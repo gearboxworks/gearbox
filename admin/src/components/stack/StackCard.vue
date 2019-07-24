@@ -7,22 +7,36 @@
       v-b-tooltip.hover
     >
       <font-awesome-icon
-      :icon="['fa', 'layer-group']"
-      style="color:silver;"
+        :icon="['fa', 'layer-group']"
+        style="color:silver;"
       />&nbsp;
       {{stackId.replace('gearbox.works/', '')}}
     </h2>
 
-    <stack-toolbar v-if="!isCollapsed" :project="project" :projectIndex="projectIndex" :stackId="stackId" @show-alert="showAlert"></stack-toolbar>
+    <stack-toolbar
+      v-if="!isCollapsed"
+      :project="project"
+      :projectIndex="projectIndex"
+      :stackId="stackId"
+      @show-alert="showAlert"
+    />
 
     <div class="stack-content">
-      <ul class="service-list" v-if="!isCollapsible || !isCollapsed">
+      <ul class="service-list"
+          v-if="!isCollapsible || !isCollapsed"
+      >
         <li
             v-for="(item, itemIndex) in stackItems"
             :key="id + item.gearspec.attributes.role"
             class="service-item"
         >
-          <stack-gear :project="project" :stackItem="item" :projectIndex="projectIndex" :stackIndex="stackIndex" :itemIndex="itemIndex"></stack-gear>
+          <stack-gear
+            :project="project"
+            :stackItem="item"
+            :projectIndex="projectIndex"
+            :stackIndex="stackIndex"
+            :itemIndex="itemIndex"
+          />
         </li>
       </ul>
       <b-alert
@@ -32,19 +46,25 @@
         :variant="alertVariant"
         @dismissed="alertShow=false"
         fade
-      >{{alertContent}}</b-alert>
+      >
+        {{alertContent}}
+      </b-alert>
     </div>
   </div>
 </template>
 
 <script>
 
+import { mapGetters } from 'vuex'
 import StackToolbar from './StackToolbar.vue'
 import StackGear from './StackGear.vue'
-import { mapGetters } from 'vuex'
 
 export default {
   name: 'StackCard',
+  components: {
+    StackToolbar,
+    StackGear
+  },
   props: {
     'project': {
       type: Object,
@@ -87,12 +107,12 @@ export default {
       isCollapsed: this.startCollapsed
     }
   },
-  components: {
-    StackToolbar,
-    StackGear
-  },
   computed: {
-    ...mapGetters(['serviceBy', 'gearspecBy']),
+    ...mapGetters([
+      'serviceBy',
+      'gearspecBy'
+    ]),
+
     projectBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
     }
@@ -101,10 +121,12 @@ export default {
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     onTitleClicked () {
       this.isCollapsed = !this.isCollapsed
       // this.showAlert('Clicked ' + this.stackId.replace('gearbox.works/', ''))
     },
+
     showAlert (alert) {
       if (typeof alert === 'string') {
         this.alertContent = alert
@@ -160,6 +182,7 @@ export default {
     color: #989898;
     margin-left: 5px;
   }
+
   .stack-card.is-collapsible .stack-title {
     cursor: pointer;
     margin-bottom: 0;
@@ -177,6 +200,7 @@ export default {
   .stack-card.is-collapsible.is-collapsed .stack-title {
     color: #17a2b8;
   }
+
   .stack-card.is-collapsible:not(.is-collapsed) .stack-title:hover {
     color: #17a2b8;
   }

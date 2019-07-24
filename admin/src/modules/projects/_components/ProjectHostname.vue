@@ -78,6 +78,11 @@ export default {
       return basedir ? basedir.attributes.basedir : ''
     }
   },
+  watch: {
+    hostname: function (val, oldVal) {
+      this.isModified = !!val && val !== this.project.id
+    }
+  },
   methods: {
     ...mapActions({ updateProjectHostname: 'projects/updateHostname' }),
     escAttr (value) {
@@ -122,11 +127,6 @@ export default {
         this.isModified = false
         this.isUpdating = false
       })
-    }
-  },
-  watch: {
-    hostname: function (val, oldVal) {
-      this.isModified = !!val && val !== this.project.id
     }
   }
 }

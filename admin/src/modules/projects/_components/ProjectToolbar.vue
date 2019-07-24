@@ -9,11 +9,15 @@
          @click.prevent="$emit('run-stop')"
          class="toolbar-link toolbar-link--state"
       >
-        <font-awesome-icon v-if="isSwitching"
+        <font-awesome-icon
+          v-if="isSwitching"
+          key="status-icon"
           :icon="['fa', 'circle-notch']"
           spin
         />
-        <font-awesome-icon v-else
+        <font-awesome-icon
+          v-else
+          key="status-icon"
           :icon="['fa', isRunning ? 'stop': 'play']"
         />
       </a>
@@ -50,9 +54,11 @@ export default {
     projectBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
     },
+
     isRunning () {
       return this.project.attributes.enabled
     },
+
     isSwitching () {
       return this.isUpdating
     }

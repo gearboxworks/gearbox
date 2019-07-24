@@ -3,7 +3,11 @@
     <h1>Preferences</h1>
     <h2>Project Directories</h2>
 
-    <div class="basedirs-wrap" v-if="!isLoading">
+    <div
+      v-if="!isLoading"
+      key="basedirs-content"
+      class="basedirs-wrap"
+    >
       <basedir-row-edit
         v-for="(basedir,index) in basedirs"
         :key="basedir.id"
@@ -12,8 +16,10 @@
         :is-deletable="basedir.id !== 'default'"
       />
     </div>
-    <div class="basedirs-loading"
-         v-else
+    <div
+        v-else
+        key="basedirs-content"
+        class="basedirs-loading"
     >
       <font-awesome-icon
         icon="circle-notch"
@@ -33,6 +39,10 @@ import BasedirRowAdd from '../components/basedir/BasedirRowAdd'
 
 export default {
   name: 'Preferences',
+  components: {
+    BasedirRowEdit,
+    BasedirRowAdd
+  },
   data () {
     return {
       isLoading: true,
@@ -41,20 +51,20 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ 'basedirs': 'basedirs/all' })
-  },
-  methods: {
-    ...mapActions({ 'doLoadBasedirs': 'basedirs/loadAll' })
-  },
-  components: {
-    BasedirRowEdit,
-    BasedirRowAdd
+    ...mapGetters({
+      'basedirs': 'basedirs/all'
+    })
   },
   mounted () {
     this.doLoadBasedirs()
       .then(() => {
         this.isLoading = false
       })
+  },
+  methods: {
+    ...mapActions({
+      'doLoadBasedirs': 'basedirs/loadAll'
+    })
   }
 }
 </script>

@@ -1,10 +1,19 @@
 <template>
   <div
     :class="{'project-stack-list': true, 'start-collapsed': startCollapsed, 'is-loading': isLoading}"
-    :id="`${projectBase}stack`" role="tablist"
+    :id="`${projectBase}stack`"
+    role="tablist"
   >
-    <font-awesome-icon v-if="isLoading" icon="circle-notch" spin title="Loading project details..."/>
-    <div v-else class="project-stack-list-wrap">
+    <font-awesome-icon
+      v-if="isLoading"
+      icon="circle-notch"
+      spin
+      title="Loading project details..."
+    />
+    <div
+      v-else
+      class="project-stack-list-wrap"
+    >
       <stack-card
         v-for="(stackItems, stackId, stackIndex) in groupedStackItems"
         :key="stackId"
@@ -14,21 +23,21 @@
         :project="project"
         :projectIndex="projectIndex"
         :start-collapsed="startCollapsed || (!startCollapsed && Object.entries(groupedStackItems).length > 1)"
-      >
-      </stack-card>
+      />
     </div>
   </div>
 </template>
 
 <script>
 
-import StackCard from '../../../components/stack/StackCard.vue'
-// import StackCardSelect from './StackCardSelect'
-
 import { mapGetters } from 'vuex'
+import StackCard from '../../../components/stack/StackCard.vue'
 
 export default {
   name: 'StackCardList',
+  components: {
+    StackCard
+  },
   props: {
     'project': {
       type: Object,
@@ -49,18 +58,16 @@ export default {
       id: this.project.id
     }
   },
-  components: {
-    StackCard
-    // StackCardSelect
-  },
   computed: {
     ...mapGetters(['serviceBy', 'gearspecBy']),
     projectBase () {
       return 'gb-' + this.escAttr(this.id) + '-'
     },
+
     isLoading () {
       return typeof this.project.attributes.stack === 'undefined'
     },
+
     groupedStackItems () {
       /**
        * returns project's services grouped by stack (indexed by stack_id)

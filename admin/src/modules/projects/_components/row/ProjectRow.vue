@@ -1,24 +1,48 @@
 <template>
   <tr class="row--project">
     <td class="td--state">
-      <project-toolbar :project="project" :projectIndex="projectIndex" @run-stop="onRunStop" :is-updating="isUpdating"></project-toolbar>
+      <project-toolbar
+        :project="project"
+        :projectIndex="projectIndex"
+        @run-stop="onRunStop"
+        :is-updating="isUpdating"
+      />
     </td>
 
     <td class="td--hostname">
-      <project-hostname :project="project" :projectIndex="projectIndex" :is-multimodal="false" @show-alert="showAlert"></project-hostname>
+      <project-hostname
+        :project="project"
+        :projectIndex="projectIndex"
+        :is-multimodal="false"
+        @show-alert="showAlert"
+      />
     </td>
 
     <td class="td--location">
-      <project-location :project="project" :projectIndex="projectIndex" :is-multimodal="false"></project-location>
+      <project-location
+        :project="project"
+        :projectIndex="projectIndex"
+        :is-multimodal="false"
+      />
     </td>
 
     <td class="td--stack">
-      <project-stack-list :project="project" :projectIndex="projectIndex" :start-collapsed="true"></project-stack-list>
-      <project-stack-add :project="project" :projectIndex="projectIndex"></project-stack-add>
+      <project-stack-list
+        :project="project"
+        :projectIndex="projectIndex"
+        :start-collapsed="true"
+      />
+      <project-stack-add
+        :project="project"
+        :projectIndex="projectIndex"
+      />
     </td>
 
     <td class="td--notes">
-      <project-note :project="project" :projectIndex="projectIndex"></project-note>
+      <project-note
+        :project="project"
+        :projectIndex="projectIndex"
+      />
     </td>
 
   </tr>
@@ -37,6 +61,14 @@ import ProjectStackList from '../ProjectStackList'
 
 export default {
   name: 'ProjectRow',
+  components: {
+    ProjectHostname,
+    ProjectToolbar,
+    ProjectLocation,
+    ProjectNote,
+    ProjectStackAdd,
+    ProjectStackList
+  },
   props: {
     project: {
       type: Object,
@@ -57,14 +89,6 @@ export default {
       alertVariant: 'warning',
       isUpdating: false
     }
-  },
-  components: {
-    ProjectHostname,
-    ProjectToolbar,
-    ProjectLocation,
-    ProjectNote,
-    ProjectStackAdd,
-    ProjectStackList
   },
   computed: {
     projectBase () {
