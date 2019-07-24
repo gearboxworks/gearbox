@@ -112,6 +112,14 @@ const mutations = {
   SET_PROJECTS_FILTER (state, payload) {
     const { field, values } = payload
     Vue.set(state.showProjectsHaving, field, values)
+  },
+
+  SET_PROJECTS_FILTER_SORT_BY (state, sortBy) {
+    state.sortBy = sortBy
+  },
+
+  SET_PROJECTS_FILTER_SORT_ORDER (state, isAscending) {
+    state.sortOrder = isAscending
   }
 }
 

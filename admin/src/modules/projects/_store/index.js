@@ -9,7 +9,9 @@ const state = {
     'basedir': 'all',
     'stacks': 'all',
     'programs': 'all'
-  }
+  },
+  sortBy: 'project_title',
+  sortOrder: true
 }
 
 export default {

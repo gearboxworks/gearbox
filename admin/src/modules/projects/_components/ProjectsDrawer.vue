@@ -123,7 +123,12 @@
             label-for="sort-by"
             description="Sort by"
           >
-            <b-select id="sort-by" variant="secondary" v-model="sortBy">
+            <b-select
+              id="sort-by"
+              variant="secondary"
+              v-model="sortBy"
+              @change = changeSortBy($event)
+            >
               <option :value="null" disabled>Sort by...</option>
               <option value="access-date" disabled>Access date</option>
               <option value="creation-date" disabled>Creation date</option>
@@ -140,7 +145,7 @@
                href="#"
                title="Sort Order"
                class="view-mode view-mode--order"
-               @click.prevent="sortAscending = !sortAscending"
+               @click.prevent="toggleSortingOrder"
             >
               <font-awesome-icon
                 :icon="['fa', sortAscending ? 'sort-alpha-down': 'sort-alpha-up']"
@@ -208,7 +213,7 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from 'vuex'
 
 export default {
   name: 'ProjectsDrawer',
@@ -307,6 +312,11 @@ export default {
       setProjectsFilter: 'projects/setProjectsFilter'
     }),
 
+    ...mapMutations({
+      setProjectsFilterSortBy: 'projects/SET_PROJECTS_FILTER_SORT_BY',
+      setProjectsFilterSortOrder: 'projects/SET_PROJECTS_FILTER_SORT_ORDER'
+    }),
+
     toggleState (value, attribute) {
       const states = this.showStates
       const running = states.indexOf('running') !== -1
@@ -324,6 +334,15 @@ export default {
       } else if ((attribute === 'stopped') && !running && stopped && !candidates) {
         this.showStates = ['candidates']
       }
+    },
+
+    changeSortBy (value) {
+      this.setProjectsFilterSortBy(value)
+    },
+
+    toggleSortingOrder () {
+      this.sortAscending = !this.sortAscending
+      this.setProjectsFilterSortOrder(this.sortAscending)
     },
 
     changeFilter (values, field) {

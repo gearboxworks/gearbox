@@ -26,6 +26,8 @@ const getters = {
 
   filteredProjects: (state, getters) => {
     let projects = state.records
+    const sortAscending = !!state.sortOrder
+    // const sortBy = state.sortBy
     for (const field in state.showProjectsHaving) {
       const values = state.showProjectsHaving[field]
       if (values === 'all') {
@@ -50,7 +52,7 @@ const getters = {
       }
       projects = (projects.filter(p => getters.filterProjectsBy(field, values).includes(p)))
     }
-    return projects.concat().sort((a, b) => a.id > b.id ? 1 : (a.id === b.id) ? 0 : -1)
+    return projects.concat().sort((a, b) => a.id > b.id ? (sortAscending ? 1 : -1) : (a.id === b.id) ? 0 : (sortAscending ? -1 : 1))
   },
 
   projectStackItemIndexBy: (state) => (project, fieldName, fieldValue) => {
