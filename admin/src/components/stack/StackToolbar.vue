@@ -4,7 +4,17 @@
       class="toolbar-item toolbar-item--more"
       :key="projectPrefix + stackId + 'more'"
     >
+      <font-awesome-icon
+        v-if="isDeleting"
+        key="action-menu"
+        spin
+        :icon="['fa', 'circle-notch']"
+        class="spinner"
+      />
       <b-dropdown
+        class="dropdown--more"
+        v-else
+        key="action-menu"
         variant="link"
         no-caret
         title="More stack actions"
@@ -129,7 +139,8 @@ export default {
   },
   data () {
     return {
-      isWordPress: this.stackId.indexOf('/wordpress') !== -1
+      isWordPress: this.stackId.indexOf('/wordpress') !== -1,
+      isDeleting: false
     }
   },
   computed: {
@@ -154,6 +165,7 @@ export default {
       if (this.project.attributes.enabled) {
         this.$emit('show-alert', 'Cannot remove stack while the project is running!')
       } else {
+        this.isDeleting = true
         this.removeProjectStack({ project: this.project, stackId: this.stackId })
       }
     }
@@ -162,6 +174,18 @@ export default {
 </script>
 
 <style scoped>
+  .spinner {
+    margin-right: 4px;
+    margin-top: 6px;
+  }
+
+  .dropdown--more >>> .btn {
+    padding: 0;
+  }
+
+  .dropdown--more >>> .btn > span {
+    padding: 5px 8px 5px 5px;
+  }
   .toolbar-list {
     list-style: none;
     display: inline-block;
@@ -279,9 +303,5 @@ export default {
   }
   .icons-leave-active:nth-child(5) {
     animation-delay: 100ms;
-  }
-
-  .dropdown-toggle-no-caret > span {
-    padding: 5px;
   }
 </style>
