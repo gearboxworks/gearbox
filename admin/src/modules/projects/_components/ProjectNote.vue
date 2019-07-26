@@ -1,24 +1,28 @@
 <template>
   <div
     :class="{'clearfix': true, 'input-group--note': true, 'is-collapsed': isCollapsed, 'is-expanded': !isCollapsed, 'is-modified': isModified, 'is-updating': isUpdating, 'is-empty': !notes, 'is-editing': isEditing}"
+    :id="`$(projectPrefix)panel-notes`"
     role="tabpanel"
   >
 
     <b-form-textarea
+      v-if="!isCollapsed && isEditing"
       :ref="`${projectPrefix}note`"
       v-model="notes"
       placeholder="Add note..."
       class="notes-input"
       rows="7"
-      v-if="!isCollapsed && isEditing"
       :readonly="isUpdating"
       autocomplete="off"
       autofocus
       @keyup.esc="isCollapsed = true"
+      role="tab"
+      aria-controls="$(projectPrefix)panel-notes`"
     />
 
-    <div class="notes-wrapper"
-         v-if="!isCollapsed && !isEditing && notes && !isModified"
+    <div
+      v-if="!isCollapsed && !isEditing && notes"
+      class="notes-wrapper"
     >
       <VueMarkdown>{{notes}}</VueMarkdown>
     </div>
@@ -27,7 +31,7 @@
       :id="`${projectPrefix}button`"
       :variant="isCollapsed ? (notes ? 'outline-warning': 'outline-info') : (isEditing ? 'outline-info': 'outline-warning')"
       :class="{'btn--submit': true, 'btn--add': isCollapsed}"
-      @click.prevent="onButtonClicked"
+      @click.prevent="onSwitchMode"
       :disabled="isUpdating"
     >
       <font-awesome-icon
@@ -41,19 +45,48 @@
       :target="`${projectPrefix}button`"
       placement="top"
     >
-      {{isCollapsed ? ( notes ? 'View notes' : 'Add notes' ) : 'Cancel changes!'}}
+      {{isCollapsed ? ( notes ? 'View notes' : 'Add notes' ) : ((isEditing && isModified) ? 'Cancel changes!' : 'Hide notes')}}
     </b-tooltip>
 
     <b-button
-      :id="`${projectPrefix}button-edit`"
-      v-show="!isCollapsed"
-      :variant="isEditing ? 'outline-info': 'outline-warning'"
-      :class="{'btn--edit': true}"
-      @click.prevent="onButtonEditClicked"
+      :id="`${projectPrefix}notes-delete`"
+      v-show="!isCollapsed && isEditing && (project.attributes.notes || deletedNotes || isRestoring)"
+      variant="outline-warning"
+      :class="{'btn--delete': true}"
+      @click.prevent="onDelete"
       :disabled="isUpdating"
     >
       <font-awesome-icon
-        v-if="isUpdating"
+        v-if="isDeleting || isRestoring"
+        key="trash-icon"
+        icon="circle-notch"
+        spin
+      />
+      <font-awesome-icon
+        v-else
+        key="trash-icon"
+        :icon="['fa', deletedNotes ? 'trash-restore-alt': 'trash-alt' ]"
+      />
+    </b-button>
+
+    <b-tooltip
+      triggers="hover"
+      :target="`${projectPrefix}notes-delete`"
+      placement="top"
+    >
+      {{isDeleting ? 'Deleting...' : (isRestoring ? 'Restoring...' : (deletedNotes ? 'Restore notes' : 'Delete notes'))}}
+    </b-tooltip>
+
+    <b-button
+      :id="`${projectPrefix}notes-edit`"
+      v-show="!isCollapsed"
+      :variant="isEditing ? 'outline-info': 'outline-warning'"
+      :class="{'btn--edit': true}"
+      @click.prevent="onEdit"
+      :disabled="isUpdating"
+    >
+      <font-awesome-icon
+        v-if="isUpdating && notes && !isRestoring && !isDeleting"
         key="status-icon"
         icon="circle-notch"
         spin
@@ -65,7 +98,11 @@
       />
     </b-button>
 
-    <b-tooltip triggers="hover" :target="`${projectPrefix}button-edit`" placement="top">
+    <b-tooltip
+      :target="`${projectPrefix}notes-edit`"
+      triggers="hover"
+      placement="top"
+    >
       {{isEditing ? ( isModified ? (isUpdating ? 'Updating...' : 'Save changes') : 'Make some changes first' ) : 'Edit notes'}}
     </b-tooltip>
   </div>
@@ -89,29 +126,38 @@ export default {
       isCollapsed: true,
       isModified: false,
       isUpdating: false,
-      isEditing: false
+      isEditing: false,
+      isRestoring: false,
+      isDeleting: false,
+      deletedNotes: ''
     }
   },
   computed: {},
   watch: {
     notes: function (val, oldVal) {
-      this.isModified = !!val
+      this.isModified = val !== this.project.attributes.notes
     }
   },
   methods: {
-    ...mapActions({ updateProjectNotes: 'projects/updateNotes' }),
+    ...mapActions({
+      updateProjectNotes: 'projects/updateNotes'
+    }),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
-    onButtonClicked () {
+    onSwitchMode () {
       if (this.isCollapsed) {
         this.isCollapsed = false
         this.isEditing = !this.notes
       } else {
-        this.isCollapsed = true
+        if (this.isModified) {
+          this.notes = this.project.attributes.notes
+        } else {
+          this.isCollapsed = true
+        }
       }
     },
-    onButtonEditClicked () {
+    onEdit () {
       if (this.isEditing && !this.isModified) {
         return
       }
@@ -124,6 +170,22 @@ export default {
         this.maybeSubmit()
       }
     },
+
+    onDelete () {
+      if (this.isEditing) {
+        if (this.deletedNotes) {
+          this.notes = this.deletedNotes
+          this.deletedNotes = ''
+          this.isRestoring = true
+        } else {
+          this.deletedNotes = this.notes
+          this.notes = ''
+          this.isDeleting = true
+        }
+        this.maybeSubmit()
+      }
+    },
+
     maybeSubmit () {
       this.isUpdating = true
       this.updateProjectNotes(
@@ -132,9 +194,13 @@ export default {
           notes: this.notes
         }
       ).then(() => {
-        this.isCollapsed = true
+        if (!this.isDeleting && !this.isRestoring) {
+          this.isCollapsed = true
+        }
         this.isModified = false
         this.isUpdating = false
+        this.isDeleting = false
+        this.isRestoring = false
       })
     }
   }
@@ -216,6 +282,14 @@ export default {
   .btn--add {
     position: relative;
     top: -10px;
+  }
+
+  .btn--delete {
+    position: absolute;
+    transition: opacity 400ms ease-in;
+    top: 50%;
+    right: -1px;
+    transform: translateY(-50%);
   }
 
   .btn--add svg {

@@ -1,8 +1,16 @@
 <template>
   <div class="drawer mb-3">
-    <div class="drawer-handle" @click="toggleDrawer">
+    <div
+      class="drawer-handle"
+      @click="toggleDrawer"
+      role="tab"
+      aria-controls="drawer-contents-id"
+    >
       <div class="label small" >
-        <span tabindex="0" @keydown.enter="toggleDrawer">
+        <span
+          tabindex="0"
+          @keydown.enter="toggleDrawer"
+        >
           Viewing Options&nbsp;
           <font-awesome-icon
             v-if="expanded"
@@ -29,6 +37,7 @@
     <div
       v-if="expanded"
       class="drawer-contents clearfix"
+      id="drawer-contents-id"
       role="tabpanel"
       :aria-expanded="expanded"
     >
@@ -105,7 +114,7 @@
                   {{item.text.toUpperCase()}}
                 </option>
               </optgroup>
-              <option value="none">No stacks assigned</option>
+              <!--option value="none">No stacks assigned</option-->
             </b-select>
           </b-form-group>
 
@@ -137,7 +146,7 @@
                   {{item.text.toUpperCase()}}
                 </option>
               </optgroup>
-              <option value="none">No programs assigned</option>
+              <!--option value="none">No programs assigned</option-->
             </b-select>
           </b-form-group>
         </b-form>

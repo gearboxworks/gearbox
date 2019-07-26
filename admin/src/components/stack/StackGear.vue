@@ -16,7 +16,9 @@
       :icon="['fa', 'expand']"
     />
 
-    <h6 class="gear-role">{{gearspec.attributes.role}}</h6>
+    <h6 class="gear-role">
+      {{gearspec.attributes.role}}
+    </h6>
 
     <b-tooltip
       triggers="hover"

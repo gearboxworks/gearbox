@@ -36,7 +36,9 @@
       <a class="no" @click.stop="notfound[currentValue]=0" title="Try a different dir">No</a>
     </div>
 
-    <div class="invalid-feedback d-block">{{errors['add'] || '&nbsp;'}}</div>
+    <div class="invalid-feedback d-block">
+      {{errors['add'] || '&nbsp;'}}
+    </div>
   </b-form-row>
 
 </template>
@@ -68,21 +70,13 @@ export default {
   computed: {
     ...mapGetters([
       'basedirBy'
-    ]),
-
-    ctrlBase () {
-      return 'gb-' + this.escAttr(this.id) + '-'
-    }
+    ])
   },
   methods: {
     ...mapActions({
-      'doCreateBasedir': 'basedirs/create',
-      'getDirectory': 'getDirectory'
+      doCreateBasedir: 'basedirs/create',
+      getDirectory: 'getDirectory'
     }),
-
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
 
     showAlert (alert) {
       if (typeof alert === 'string') {

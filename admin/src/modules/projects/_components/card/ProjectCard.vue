@@ -140,6 +140,8 @@ export default {
     transition: box-shadow 400ms;
   }
 
+  .card--project:active,
+  .card--project:focus,
   .card--project:hover {
     box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
   }

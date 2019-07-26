@@ -5,8 +5,8 @@
 
     <b-input-group
       :class="{'input-group--basedir-edit': true}"
-      role="tabpanel">
-
+      role="tabpanel"
+    >
       <b-form-input
         v-model="currentValue"
         @keyup="touch"
@@ -16,7 +16,7 @@
         type="text"
         required
         placeholder="Path"
-        tabindex="tabOffset"
+        tabindex="0"
       />
       <b-input-group-append
         v-if="isModified"
@@ -28,7 +28,7 @@
           @click.prevent="onUpdateBasedir"
           class="btn--update"
           title="Update directory reference"
-          :tabindex="tabOffset+1"
+          :tabindex="0"
         >
           <font-awesome-icon
             v-if="isUpdating"
@@ -78,7 +78,7 @@
       :disabled="!isDeletable"
       :title="isDeletable ? 'Delete this directory': 'Cannot delete the default directory' "
       class="btn--delete"
-      :tabindex="tabOffset+2"
+      :tabindex="0"
     >
       <font-awesome-icon
         v-if="isDeleting"
@@ -100,7 +100,12 @@
       <a class="no" @click.stop="notfound[currentValue]=0" title="Try a different dir">No</a>
     </div>
 
-    <div v-if="errors" class="invalid-feedback d-block">{{errors}}</div>
+    <div
+      v-if="errors"
+      class="invalid-feedback d-block"
+    >
+      {{errors}}
+    </div>
   </b-form-row>
 
 </template>
@@ -119,10 +124,6 @@ export default {
       type: Boolean,
       required: true,
       default: true
-    },
-    tabOffset: {
-      type: Number,
-      required: true
     }
   },
   data () {
@@ -145,10 +146,6 @@ export default {
       'basedirBy'
     ]),
 
-    ctrlBase () {
-      return 'gb-' + this.escAttr(this.id) + '-'
-    },
-
     isValid () {
       return (this.errors === '') ? null : false
     }
@@ -159,10 +156,6 @@ export default {
       'doUpdateBasedir': 'basedirs/update',
       'doDeleteBasedir': 'basedirs/delete'
     }),
-
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
 
     showAlert (alert) {
       if (typeof alert === 'string') {
@@ -251,12 +244,6 @@ export default {
         })
     },
 
-    onCopyToClipboard (e) {
-      /**
-       * @see https://github.com/Inndy/vue-clipboard2
-       */
-      // console.log('Copied', e.text)
-    },
     onOpenDirectory () {
       // TODO call API method to open directory in file manager
       console.log('TODO: call API method to open directory in file manager')

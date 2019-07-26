@@ -18,6 +18,7 @@ import {
   faFolder,
   faFolderOpen,
   faTrashAlt,
+  faTrashRestoreAlt,
   faCheckCircle,
   faPlus,
   faColumns,
@@ -51,6 +52,7 @@ library.add(faDatabase)
 library.add(faFolder)
 library.add(faFolderOpen)
 library.add(faTrashAlt)
+library.add(faTrashRestoreAlt)
 library.add(faCheckCircle)
 library.add(faPlus)
 library.add(faColumns)

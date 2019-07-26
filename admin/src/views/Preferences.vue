@@ -1,5 +1,6 @@
 <template>
   <b-form :class="{'form--preferences': true, 'is-loading': isLoading}">
+
     <h1>Preferences</h1>
     <h2>Project Directories</h2>
 
@@ -9,10 +10,9 @@
       class="basedirs-wrap"
     >
       <basedir-row-edit
-        v-for="(basedir,index) in basedirs"
+        v-for="(basedir) in basedirs"
         :key="basedir.id"
         :basedir="basedir"
-        :tab-offset="index"
         :is-deletable="basedir.id !== 'default'"
       />
     </div>
