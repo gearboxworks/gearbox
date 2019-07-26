@@ -2,7 +2,7 @@
   <div class="toolbar-list">
     <div
       class="toolbar-item toolbar-item--more"
-      :key="projectBase+stackId+'more'"
+      :key="projectPrefix + stackId + 'more'"
     >
       <b-dropdown
         variant="link"
@@ -11,8 +11,10 @@
         v-b-tooltip.hover
       >
         <template slot="button-content">
-          <font-awesome-icon :icon="['fa', 'ellipsis-v']" />
-          <span class="sr-only">More actions</span>
+          <span tabindex="0">
+            <font-awesome-icon :icon="['fa', 'ellipsis-v']" />
+            <span class="sr-only">More actions</span>
+          </span>
         </template>
         <b-dropdown-item @click.prevent="onRemoveProjectStack">Remove stack</b-dropdown-item>
       </b-dropdown>
@@ -26,7 +28,7 @@
       <li
         v-if="isRunning"
         :class="['toolbar-item', 'toolbar-item--frontend']"
-        :key="projectBase+stackId+'frontend'"
+        :key="projectPrefix + stackId + 'frontend'"
       >
         <a target="_blank"
            :href="`//${hostname}/`"
@@ -49,11 +51,11 @@
       <li
         v-if="isRunning"
         :class="['toolbar-item', 'toolbar-item--dashboard']"
-        :key="projectBase+stackId+'dashboard'"
+        :key="projectPrefix + stackId + 'dashboard'"
       >
         <a target="_blank"
            :href="`//${hostname}/wp-admin/`"
-           :title="'Open Dashboard'+ (isRunning ? '' : ' (not running)')"
+           :title="'Open Dashboard' + (isRunning ? '' : ' (not running)')"
            v-b-tooltip.hover
            class="toolbar-link"
         >
@@ -72,11 +74,11 @@
       <li
         v-if="isRunning"
         :class="['toolbar-item', 'toolbar-item--adminer']"
-        :key="projectBase+stackId+'adminer'"
+        :key="projectPrefix + stackId + 'adminer'"
       >
         <a target="_blank"
            :href="`//${hostname}/wp-admin/`"
-           :title="'Open Adminer'+ (isRunning ? '' : ' (not running)')"
+           :title="'Open Adminer' + (isRunning ? '' : ' (not running)')"
            v-b-tooltip.hover
            class="toolbar-link"
         >
@@ -95,11 +97,11 @@
       <li
         v-if="isRunning"
         :class="['toolbar-item', 'toolbar-item--frontend']"
-        :key="projectBase+stackId+'mailhog'"
+        :key="projectPrefix + stackId + 'mailhog'"
       >
         <a target="_blank"
            :href="`//${hostname}:4003`"
-           :title="'Open Mailhog'+ (isRunning ? '' : ' (not running)')"
+           :title="'Open Mailhog' + (isRunning ? '' : ' (not running)')"
            v-b-tooltip.hover
            class="toolbar-link"
         >
@@ -118,15 +120,8 @@ import { mapActions } from 'vuex'
 
 export default {
   name: 'StackToolbar',
+  inject: ['project', 'projectPrefix'],
   props: {
-    'project': {
-      type: Object,
-      required: true
-    },
-    'projectIndex': {
-      type: Number,
-      required: true
-    },
     'stackId': {
       type: String,
       required: true
@@ -138,10 +133,6 @@ export default {
     }
   },
   computed: {
-    projectBase () {
-      return 'gb-' + this.escAttr(this.project.id) + '-'
-    },
-
     hostname () {
       return this.project.attributes.hostname
     },
@@ -288,5 +279,9 @@ export default {
   }
   .icons-leave-active:nth-child(5) {
     animation-delay: 100ms;
+  }
+
+  .dropdown-toggle-no-caret > span {
+    padding: 5px;
   }
 </style>

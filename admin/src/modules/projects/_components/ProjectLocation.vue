@@ -1,12 +1,12 @@
 <template>
   <b-input-group
-    :id="`${projectBase}location`"
+    :id="`${projectPrefix}location`"
     :class="{'input-group--location': true, 'is-collapsed': isCollapsed, 'is-multimodal': isMultimodal}"
     role="tabpanel"
   >
     <b-form-input
       readonly
-      :ref="`${projectBase}location`"
+      :ref="`${projectPrefix}location`"
       :value="resolveDir(currentBasedir, path)"
       class="location-input"
       v-show="!isCollapsed"
@@ -48,15 +48,8 @@ import { mapGetters } from 'vuex'
 
 export default {
   name: 'ProjectLocation',
+  inject: ['project', 'projectPrefix'],
   props: {
-    project: {
-      type: Object,
-      required: true
-    },
-    projectIndex: {
-      type: Number,
-      required: true
-    },
     isMultimodal: {
       type: Boolean,
       required: false,
@@ -72,9 +65,6 @@ export default {
   },
   computed: {
     ...mapGetters({ basedirBy: 'basedirBy' }),
-    projectBase () {
-      return 'gb-' + this.escAttr(this.id) + '-'
-    },
     currentBasedir () {
       const basedir = this.basedirBy('id', this.basedir)
       return basedir ? basedir.attributes.basedir : ''
@@ -91,7 +81,7 @@ export default {
       if (this.isMultimodal && this.isCollapsed) {
         this.isCollapsed = false
         this.$nextTick(() => {
-          const el = this.$refs[`${this.projectBase}location`].$el
+          const el = this.$refs[`${this.projectPrefix}location`].$el
           el.focus()
           el.setSelectionRange(0, 9999)
         })
@@ -109,7 +99,7 @@ export default {
       /**
        * @see https://github.com/Inndy/vue-clipboard2
        */
-      this.$copyText(this.$refs[`${this.projectBase}location`].$el.value).then((e) => console.log('Copied:', e.text))
+      this.$copyText(this.$refs[`${this.projectPrefix}location`].$el.value).then((e) => console.log('Copied:', e.text))
 
       if (this.isMultimodal) {
         this.$nextTick(() => {

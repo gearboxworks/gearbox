@@ -1,9 +1,36 @@
 <template>
-  <div class="drawer mb-3 clearfix">
+  <div class="drawer mb-3">
+    <div class="drawer-handle" @click="toggleDrawer">
+      <div class="label small" >
+        <span tabindex="0" @keydown.enter="toggleDrawer">
+          Viewing Options&nbsp;
+          <font-awesome-icon
+            v-if="expanded"
+            key="mode-icon"
+            :icon="['fa', 'chevron-up']"
+          />
+          <font-awesome-icon
+            v-else
+            key="mode-icon"
+            :icon="['fa', 'chevron-down']"
+          />
+        </span>
+      </div>
+
+      <div class="current-filter">
+        <b-badge title="Filter by state" :variant="statesVariant">{{labelStates}}</b-badge>
+        <b-badge title="Filter by location" :variant="(showBasedirs == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{labelBasedirs}}</b-badge>
+        <b-badge title="Filter by used stack" :variant="(showStacks == 'all') ? 'secondary' : 'warning'">{{labelStacks}}</b-badge>
+        <b-badge title="Filter by used program" :variant="(showPrograms == 'all') ? 'secondary' : 'warning'">{{labelPrograms}}</b-badge>
+        <b-badge title="Sorting order">{{labelSorting}}</b-badge>
+      </div>
+    </div>
     <!--Filter-->
     <div
       v-if="expanded"
       class="drawer-contents clearfix"
+      role="tabpanel"
+      :aria-expanded="expanded"
     >
       <div class="left-panel">
         <b-form class="filter-form">
@@ -21,7 +48,7 @@
             <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggleState($event, 'running')">Running</b-form-checkbox>
             <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggleState($event, 'stopped')">Stopped</b-form-checkbox>
             <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggleState($event, 'candidates')">Candidates</b-form-checkbox>
-            <small tabindex="-1" class="form-text text-muted">Project State</small>
+            <small class="form-text text-muted">Project State</small>
           </b-form-checkbox-group>
 
           <b-form-group
@@ -37,6 +64,7 @@
               v-model="showBasedirs"
               :options="basedirsAsOptions"
               @change="changeFilter($event, 'basedir')"
+              tabindex="4"
             >
               <template slot="first">
                 <option :value="null" disabled>Show projects from...</option>
@@ -185,29 +213,6 @@
         </b-form>
       </div>
     </div>
-    <div class="drawer-handle" @click="expanded=!expanded">
-      <div class="label small"><span>Viewing Options&nbsp;
-        <font-awesome-icon
-          v-if="expanded"
-          key="mode-icon"
-          :icon="['fa', 'chevron-up']"
-        />
-        <font-awesome-icon
-          v-else
-          key="mode-icon"
-          :icon="['fa', 'chevron-down']"
-        />
-        </span>
-      </div>
-
-      <div class="current-filter">
-        <b-badge title="Filter by state" :variant="statesVariant">{{labelStates}}</b-badge>
-        <b-badge title="Filter by location" :variant="(showBasedirs == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{labelBasedirs}}</b-badge>
-        <b-badge title="Filter by used stack" :variant="(showStacks == 'all') ? 'secondary' : 'warning'">{{labelStacks}}</b-badge>
-        <b-badge title="Filter by used program" :variant="(showPrograms == 'all') ? 'secondary' : 'warning'">{{labelPrograms}}</b-badge>
-        <b-badge title="Sorting order">{{labelSorting}}</b-badge>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -317,6 +322,17 @@ export default {
       setProjectsFilterSortOrder: 'projects/SET_PROJECTS_FILTER_SORT_ORDER'
     }),
 
+    toggleDrawer () {
+      this.expanded = !this.expanded
+      // if (this.expanded) {
+      //   console.log('focus', this.$refs['state-filter'])
+      //   this.$refs['state-filter'].$el.focus()
+      //   // this.$nextTick(() => {
+      //   //   this.$refs['state-filter'].$el.focus()
+      //   // })
+      // }
+    },
+
     toggleState (value, attribute) {
       const states = this.showStates
       const running = states.indexOf('running') !== -1
@@ -355,6 +371,12 @@ export default {
 <style scoped>
 .drawer {
   margin-bottom: 2rem;
+  display: grid;
+  /*grid-template-columns: auto;*/
+  /*grid-template-rows: auto;*/
+  grid-template-areas:
+    "content-area"
+    "handle-area";
 }
 
 .drawer a {
@@ -371,11 +393,16 @@ export default {
   padding-top: 22px;
   padding-bottom: 0;
   border-bottom: 1px solid silver;
+  clear: both;
+  width: 100%;
+  grid-area: content-area;
 }
 
 .drawer-handle {
   clear: both;
+  width: 100%;
   padding: 0 0 0 1rem;
+  grid-area: handle-area;
 }
 
 .drawer-handle .current-filter {

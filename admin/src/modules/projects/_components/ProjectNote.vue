@@ -5,7 +5,7 @@
   >
 
     <b-form-textarea
-      :ref="`${projectBase}note`"
+      :ref="`${projectPrefix}note`"
       v-model="notes"
       placeholder="Add note..."
       class="notes-input"
@@ -24,7 +24,7 @@
     </div>
 
     <b-button
-      :id="`${projectBase}button`"
+      :id="`${projectPrefix}button`"
       :variant="isCollapsed ? (notes ? 'outline-warning': 'outline-info') : (isEditing ? 'outline-info': 'outline-warning')"
       :class="{'btn--submit': true, 'btn--add': isCollapsed}"
       @click.prevent="onButtonClicked"
@@ -38,14 +38,14 @@
 
     <b-tooltip
       triggers="hover"
-      :target="`${projectBase}button`"
+      :target="`${projectPrefix}button`"
       placement="top"
     >
       {{isCollapsed ? ( notes ? 'View notes' : 'Add notes' ) : 'Cancel changes!'}}
     </b-tooltip>
 
     <b-button
-      :id="`${projectBase}button-edit`"
+      :id="`${projectPrefix}button-edit`"
       v-show="!isCollapsed"
       :variant="isEditing ? 'outline-info': 'outline-warning'"
       :class="{'btn--edit': true}"
@@ -65,7 +65,7 @@
       />
     </b-button>
 
-    <b-tooltip triggers="hover" :target="`${projectBase}button-edit`" placement="top">
+    <b-tooltip triggers="hover" :target="`${projectPrefix}button-edit`" placement="top">
       {{isEditing ? ( isModified ? (isUpdating ? 'Updating...' : 'Save changes') : 'Make some changes first' ) : 'Edit notes'}}
     </b-tooltip>
   </div>
@@ -80,16 +80,8 @@ export default {
   components: {
     VueMarkdown
   },
-  props: {
-    project: {
-      type: Object,
-      required: true
-    },
-    projectIndex: {
-      type: Number,
-      required: true
-    }
-  },
+  inject: ['project', 'projectPrefix'],
+  props: {},
   data () {
     return {
       id: this.project.id,
@@ -100,11 +92,7 @@ export default {
       isEditing: false
     }
   },
-  computed: {
-    projectBase () {
-      return 'gb-' + this.escAttr(this.id) + '-'
-    }
-  },
+  computed: {},
   watch: {
     notes: function (val, oldVal) {
       this.isModified = !!val
@@ -129,8 +117,8 @@ export default {
       }
 
       if (!this.isEditing) {
-        // console.log(`${this.projectBase}note-input`, this.$refs[`${this.projectBase}note-input`])
-        // this.$refs[`${this.projectBase}note-input`].focus()
+        // console.log(`${this.projectPrefix}note-input`, this.$refs[`${this.projectPrefix}note-input`])
+        // this.$refs[`${this.projectPrefix}note-input`].focus()
         this.isEditing = true
       } else if (this.isModified) {
         this.maybeSubmit()

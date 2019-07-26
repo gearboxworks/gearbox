@@ -30,15 +30,8 @@
 
 export default {
   name: 'ProjectToolbar',
+  inject: ['project', 'projectPrefix'],
   props: {
-    'project': {
-      type: Object,
-      required: true
-    },
-    'projectIndex': {
-      type: Number,
-      required: true
-    },
     'isUpdating': {
       type: Boolean,
       required: true
@@ -51,10 +44,6 @@ export default {
     }
   },
   computed: {
-    projectBase () {
-      return 'gb-' + this.escAttr(this.id) + '-'
-    },
-
     isRunning () {
       return this.project.attributes.enabled
     },

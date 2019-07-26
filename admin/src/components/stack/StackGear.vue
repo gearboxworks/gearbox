@@ -1,14 +1,14 @@
 <template>
   <div
     :id="gearControlId"
-    :tabindex="projectIndex*100+stackIndex*10+itemIndex+1"
+    tabindex="0"
     class="project-gear"
   >
 
     <img
       v-if="service"
       :src="require('../../assets/'+service.attributes.program+'.svg')"
-      :class="{'service-program': true, 'is-loaded': isLoaded, 'is-switching': isSwitching, 'is-switching-same': isSwitchingSame, 'is-switching-same-again': isSwitchingSameAgain }"
+      :class="{'service-program': true, 'is-loaded': isLoaded, 'is-switching': isSwitching, 'is-switching-same': isSwitchingSame, 'is-switching-same-again': isSwitchingSameAgain}"
       @load="onImageLoaded"
     />
     <font-awesome-icon
@@ -25,87 +25,34 @@
       :title="programTooltip"
     />
 
-    <b-popover
-      :target="gearControlId"
-      :container="`${projectBase}stack`"
-      :ref="`${gearControlId}-popover`"
-      triggers="focus"
-      placement="bottom"
-    >
-      <template slot="title">
-        <b-button @click="closePopover" class="close" aria-label="Close">
-          <span class="d-inline-block" aria-hidden="true">&times;</span>
-        </b-button>
-        Change service
-      </template>
-
-      <b-form-group>
-        <label :for="`${gearControlId}-input`">{{gearspec.attributes.role}}:</label>
-
-<!--        <cool-select-->
-<!--          value="Option2"-->
-<!--          :items="[{'text':'Option1'}, {'text':'Option2'}]"-->
-<!--        />-->
-
-        <b-form-select
-          :ref="`${gearControlId}-select`"
-          :value="preselectClosestGearServiceId"
-          :tabindex="projectIndex*100+stackIndex*10+itemIndex+9"
-          @change="onChangeService($event)"
-        >
-          <option v-if="!defaultService" value="">Do not run this service</option>
-          <option disabled :value="null">Select service...</option>
-          <optgroup
-            v-for="(services, groupLabel) in servicesGroupedByRole"
-            :label="groupLabel"
-            :key="groupLabel"
-          >
-            <option
-              v-for="serviceId in services"
-              :value="serviceId"
-              :key="serviceId"
-              :disabled="project.attributes.enabled"
-            >
-              {{serviceId.replace('gearboxworks/','')}}
-            </option>
-          </optgroup>
-        </b-form-select>
-        <b-alert :show="(defaultService || !!stackItem.serviceId) && !stackItem.service" variant="warning">Could not find the requested version (v.{{stackItem.serviceId.split(':')[1]}}), will use the closest match (v.{{preselectClosestGearServiceId.split(':')[1]}}) instead.</b-alert>
-        <b-alert :show="project.attributes.enabled">Note, you cannot change this service while the project is running!</b-alert>
-      </b-form-group>
-    </b-popover>
+   <stack-gear-popover
+     :gearControlId = "gearControlId"
+     :stackItem = "stackItem"
+     :gearspec = "gearspec"
+     :service = "service"
+     :stack = "stack"
+     :defaultService = defaultService
+     :closestGearServiceId = closestGearServiceId
+   />
   </div>
 </template>
 
 <script>
 
 import { mapGetters, mapActions } from 'vuex'
+import StackGearPopover from './StackGearPopover'
 // import { CoolSelect } from 'vue-cool-select'
 
 export default {
   name: 'StackGear',
   components: {
+    StackGearPopover
     // CoolSelect
   },
+  inject: ['project', 'projectPrefix'],
   props: {
-    'project': {
-      type: Object,
-      required: true
-    },
     'stackItem': {
       type: Object,
-      required: true
-    },
-    'projectIndex': {
-      type: Number,
-      required: true
-    },
-    'stackIndex': {
-      type: Number,
-      required: true
-    },
-    'itemIndex': {
-      type: Number,
       required: true
     }
   },
@@ -119,48 +66,31 @@ export default {
   },
   computed: {
     ...mapGetters([
+      'stackBy',
       'serviceBy',
       'gearspecBy',
-      'stackBy',
       'stackDefaultServiceByRole',
       'stackServicesByRole',
       'preselectServiceId'
     ]),
 
-    projectBase () {
-      return 'gb-' + this.escAttr(this.project.id) + '-'
+    gearControlId () {
+      return this.projectPrefix + (this.stack ? this.stack.attributes.stackname + '-' : '') + this.gearspec.attributes.role
     },
 
     gearspec () {
       return this.stackItem.gearspec
     },
 
-    service () {
-      let service = null
-      if (this.stackItem.service) {
-        service = this.stackItem.service
-      } else if (this.stackItem.serviceId) {
-        const closestServiceId = this.preselectClosestGearServiceId
-        if (closestServiceId) {
-          service = this.serviceBy('id', closestServiceId)
-        }
-      }
-      return service
-    },
-
     stack () {
       return this.stackBy('id', this.gearspec.attributes.stack_id)
-    },
-
-    gearControlId () {
-      return this.projectBase + (this.stack ? this.stack.attributes.stackname + '-' : '') + this.gearspec.attributes.role
     },
 
     defaultService () {
       return this.stackDefaultServiceByRole(this.stack, this.stackItem.gearspecId)
     },
 
-    preselectClosestGearServiceId () {
+    closestGearServiceId () {
       /**
        * As an example, for php:7.1.18 it will select php:7.1 or php:7 if exact match is not possible
        */
@@ -171,18 +101,17 @@ export default {
       )
     },
 
-    servicesGroupedByRole () {
-      const services = this.stackServicesByRole(this.stack, this.gearspec.id)
-      // console.log(services)
-      const result = {}
-      for (const index in services) {
-        const base = services[index].split(':')[0].replace('gearboxworks/', '')
-        if (typeof result[base] === 'undefined') {
-          result[base] = {}
+    service () {
+      let service = null
+      if (this.stackItem.service) {
+        service = this.stackItem.service
+      } else if (this.stackItem.serviceId) {
+        const closestServiceId = this.closestGearServiceId
+        if (closestServiceId) {
+          service = this.serviceBy('id', closestServiceId)
         }
-        result[base][index] = services[index]
       }
-      return result
+      return service
     },
 
     programTooltip () {
@@ -211,35 +140,6 @@ export default {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
 
-    onChangeService (selectedServiceId) {
-      const previousId = this.service ? this.service.id : ''
-      const program1 = previousId ? previousId.split('/')[1].split(':')[0] : ''
-      const program2 = selectedServiceId ? selectedServiceId.split('/')[1].split(':')[0] : ''
-
-      if (program1 !== program2) {
-        this.isLoaded = false
-        this.isSwitching = true
-        this.isSwitchingSame = false
-        this.isSwitchingSameAgain = false
-      } else {
-        if (previousId !== selectedServiceId) {
-          if (!this.isSwitchingSame && !this.isSwitchingSameAgain) {
-            this.isSwitchingSame = true
-            this.isSwitchingSameAgain = false
-          } else {
-            this.isSwitchingSame = !this.isSwitchingSame
-            this.isSwitchingSameAgain = !this.isSwitchingSameAgain
-          }
-        }
-      }
-      this.changeProjectService({ project: this.project, gearspecId: this.gearspec.id, serviceId: selectedServiceId })
-      this.closePopover()
-    },
-
-    closePopover () {
-      this.$root.$emit('bv::hide::popover', this.gearControlId)
-    },
-
     onImageLoaded (a) {
       this.isSwitching = false
       this.isLoaded = true
@@ -249,8 +149,23 @@ export default {
 </script>
 
 <style scoped>
+  .project-gear {
+    text-align: center;
+    max-width: 110px;
+    padding: 5px;
+    margin: 5px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: all 400ms;
+  }
+  .project-gear:hover,
+  .project-gear:focus {
+    border: 1px solid #aaa;
+    background-color: #eee;
+  }
   .project-gear{
-    outline: none;
+    /*outline: none;*/
   }
   .gear-role{
     margin-top:5px;
@@ -334,12 +249,6 @@ export default {
     100% {
       transform: scale(0.75);
     }
-  }
-
-  .alert {
-    margin-top: 1rem;
-    margin-bottom: 0;
-    padding: 0.5rem;
   }
 
 </style>

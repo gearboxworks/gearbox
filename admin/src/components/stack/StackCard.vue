@@ -1,8 +1,14 @@
 <template>
-  <div :class="{'stack-card': true, 'is-collapsible': isCollapsible, 'is-collapsed': isCollapsed}">
+  <div
+    :class="{'stack-card': true, 'is-collapsible': isCollapsible, 'is-collapsed': isCollapsed}"
+    role="tab"
+    :aria-expanded="!isCollapsed"
+  >
     <h2
       class="stack-title"
       @click="onTitleClicked"
+      @keydown.enter="onTitleClicked"
+      tabindex="0"
       :title="isCollapsed ? 'Show services' : 'Hide services'"
       v-b-tooltip.hover
     >
@@ -15,28 +21,21 @@
 
     <stack-toolbar
       v-if="!isCollapsed"
-      :project="project"
-      :projectIndex="projectIndex"
       :stackId="stackId"
       @show-alert="showAlert"
     />
 
     <div class="stack-content">
-      <ul class="service-list"
+      <ul
           v-if="!isCollapsible || !isCollapsed"
+          class="service-list"
       >
         <li
-            v-for="(item, itemIndex) in stackItems"
+            v-for="item in stackItems"
             :key="id + item.gearspec.attributes.role"
             class="service-item"
         >
-          <stack-gear
-            :project="project"
-            :stackItem="item"
-            :projectIndex="projectIndex"
-            :stackIndex="stackIndex"
-            :itemIndex="itemIndex"
-          />
+          <stack-gear :stackItem="item" />
         </li>
       </ul>
       <b-alert
@@ -65,21 +64,10 @@ export default {
     StackToolbar,
     StackGear
   },
+  inject: ['project', 'projectPrefix'],
   props: {
-    'project': {
-      type: Object,
-      required: true
-    },
-    'projectIndex': {
-      type: Number,
-      required: true
-    },
     'stackId': {
       type: String,
-      required: true
-    },
-    'stackIndex': {
-      type: Number,
       required: true
     },
     'stackItems': {
@@ -111,11 +99,7 @@ export default {
     ...mapGetters([
       'serviceBy',
       'gearspecBy'
-    ]),
-
-    projectBase () {
-      return 'gb-' + this.escAttr(this.id) + '-'
-    }
+    ])
   },
   methods: {
     escAttr (value) {
@@ -230,18 +214,6 @@ export default {
   .service-item {
     display: inline-block;
     list-style: none;
-    text-align: center;
-    max-width: 110px;
-    padding: 5px;
-    margin: 5px;
-    cursor: pointer;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    transition: all 400ms;
-  }
-  .service-item:hover {
-    border: 1px solid #aaa;
-    background-color: #eee;
   }
 
   .alert {

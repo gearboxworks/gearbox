@@ -1,6 +1,6 @@
 <template>
   <b-input-group
-    :id="`${projectBase}stack`"
+    :id="`${projectPrefix}stack`"
     :class="{'input-group--stack': true, 'is-collapsed': isCollapsed, 'is-modified': isModified, 'is-updating': isUpdating}"
     role="tabpanel"
   >
@@ -11,7 +11,7 @@
       :required="true"
       @change="isModified=true"
       v-show="!isCollapsed"
-      :ref="`${projectBase}-select`"
+      :ref="`${projectPrefix}-select`"
       autofocus
     >
       <option value="" disabled>
@@ -57,16 +57,8 @@ import { mapGetters, mapActions } from 'vuex'
 
 export default {
   name: 'ProjectStackAdd',
-  props: {
-    project: {
-      type: Object,
-      required: true
-    },
-    projectIndex: {
-      type: Number,
-      required: true
-    }
-  },
+  inject: ['project', 'projectPrefix'],
+  props: {},
   data () {
     return {
       id: this.project.id,
@@ -89,10 +81,6 @@ export default {
       stackServicesByRole: 'stackServicesByRole',
       preselectServiceId: 'preselectServiceId'
     }),
-
-    projectBase () {
-      return 'gb-' + this.escAttr(this.id) + '-'
-    },
 
     projectGearsGroupedByStack () {
       var result = {}
@@ -208,7 +196,7 @@ export default {
       if (this.isCollapsed) {
         this.isCollapsed = false
         this.$nextTick(() => {
-          this.$refs[`${this.projectBase}-select`].$el.focus()
+          this.$refs[`${this.projectPrefix}-select`].$el.focus()
         })
       } else {
         if (this.isModified) {

@@ -1,11 +1,10 @@
 <template>
   <b-input-group
-    :id="`${projectBase}hostname-group`"
+    :id="`${projectPrefix}hostname-group`"
     :class="{'input-group--hostname': true, 'is-editing': isEditing, 'is-multimodal': isMultimodal, 'is-modified': isModified, 'is-updating': isUpdating}"
     role="tabpanel"
   >
     <b-form-input
-      :id="`hostname-input-${projectIndex}`"
       class="hostname-input"
       type="text"
       v-model="hostname"
@@ -44,15 +43,8 @@ import { mapGetters, mapActions } from 'vuex'
 
 export default {
   name: 'ProjectLocation',
+  inject: ['project', 'projectPrefix'],
   props: {
-    project: {
-      type: Object,
-      required: true
-    },
-    projectIndex: {
-      type: Number,
-      required: true
-    },
     isMultimodal: {
       type: Boolean,
       required: false,
@@ -70,9 +62,6 @@ export default {
   },
   computed: {
     ...mapGetters({ basedirBy: 'basedirBy' }),
-    projectBase () {
-      return 'gb-' + this.escAttr(this.id) + '-'
-    },
     currentBasedir () {
       const basedir = this.basedirBy('id', this.basedir)
       return basedir ? basedir.attributes.basedir : ''

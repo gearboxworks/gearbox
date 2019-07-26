@@ -12,7 +12,7 @@
         @keyup="touch('add')"
         @change="touch('add')"
         :state="inputState('add')"
-        :tabindex="tabOffset"
+        tabindex="0"
       />
       <b-input-group-append>
         <b-button
@@ -22,7 +22,7 @@
           :disabled="!touched['add']"
           class="btn--add"
           :title="currentValue ? 'Add directory': 'First, input some directory!'"
-          :tabindex="tabOffset+1"
+          tabindex="0"
         >
           <font-awesome-icon :icon="['fa', 'plus']" />
         </b-button>

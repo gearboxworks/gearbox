@@ -4,15 +4,11 @@
   >
     <div class="clearfix">
       <project-hostname
-        :project="project"
-        :projectIndex="projectIndex"
         :is-multimodal="true"
         @show-alert="showAlert"
       />
 
       <project-toolbar
-        :project="project"
-        :projectIndex="projectIndex"
         @run-stop="onRunStop"
         :isUpdating="isUpdating"
       />
@@ -30,26 +26,13 @@
 
     <div class="clearfix" slot="footer">
 
-      <project-stack-list
-        :project="project"
-        :projectIndex="projectIndex"
-      />
+      <project-stack-list />
 
-      <project-stack-add
-        :project="project"
-        :projectIndex="projectIndex"
-        @maybe-hide-alert="maybeHideAlert"
-      />
+      <project-stack-add @maybe-hide-alert="maybeHideAlert" />
 
-      <project-location
-        :project="project"
-        :projectIndex="projectIndex"
-      />
+      <project-location />
 
-      <project-note
-        :project="project"
-        :projectIndex="projectIndex"
-      />
+      <project-note />
 
     </div>
 
@@ -100,10 +83,13 @@ export default {
       isUpdating: false
     }
   },
+  provide () {
+    return {
+      project: this.project,
+      projectPrefix: 'gb-' + this.escAttr(this.id) + '-'
+    }
+  },
   computed: {
-    projectBase () {
-      return 'gb-' + this.escAttr(this.id) + '-'
-    },
     isRunning () {
       return this.project.attributes.enabled
     }

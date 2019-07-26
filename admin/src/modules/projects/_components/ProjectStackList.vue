@@ -1,7 +1,7 @@
 <template>
   <div
     :class="{'project-stack-list': true, 'start-collapsed': startCollapsed, 'is-loading': isLoading}"
-    :id="`${projectBase}stack`"
+    :id="`${projectPrefix}stack`"
     role="tablist"
   >
     <font-awesome-icon
@@ -20,8 +20,6 @@
         :stackId="stackId"
         :stackIndex="stackIndex"
         :stackItems="stackItems"
-        :project="project"
-        :projectIndex="projectIndex"
         :start-collapsed="startCollapsed || (!startCollapsed && Object.entries(groupedStackItems).length > 1)"
       />
     </div>
@@ -38,15 +36,8 @@ export default {
   components: {
     StackCard
   },
+  inject: ['project', 'projectPrefix'],
   props: {
-    'project': {
-      type: Object,
-      required: true
-    },
-    'projectIndex': {
-      type: Number,
-      required: true
-    },
     'startCollapsed': {
       type: Boolean,
       required: false,
@@ -60,7 +51,7 @@ export default {
   },
   computed: {
     ...mapGetters(['serviceBy', 'gearspecBy']),
-    projectBase () {
+    projectPrefix () {
       return 'gb-' + this.escAttr(this.id) + '-'
     },
 

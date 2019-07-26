@@ -1,9 +1,7 @@
 <template>
-  <tr class="row--project">
+  <tr class="row--project" role="row">
     <td class="td--state">
       <project-toolbar
-        :project="project"
-        :projectIndex="projectIndex"
         @run-stop="onRunStop"
         :is-updating="isUpdating"
       />
@@ -11,38 +9,22 @@
 
     <td class="td--hostname">
       <project-hostname
-        :project="project"
-        :projectIndex="projectIndex"
         :is-multimodal="false"
         @show-alert="showAlert"
       />
     </td>
 
     <td class="td--location">
-      <project-location
-        :project="project"
-        :projectIndex="projectIndex"
-        :is-multimodal="false"
-      />
+      <project-location :is-multimodal="false" />
     </td>
 
     <td class="td--stack">
-      <project-stack-list
-        :project="project"
-        :projectIndex="projectIndex"
-        :start-collapsed="true"
-      />
-      <project-stack-add
-        :project="project"
-        :projectIndex="projectIndex"
-      />
+      <project-stack-list :start-collapsed="true" />
+      <project-stack-add />
     </td>
 
     <td class="td--notes">
-      <project-note
-        :project="project"
-        :projectIndex="projectIndex"
-      />
+      <project-note />
     </td>
 
   </tr>
@@ -73,10 +55,6 @@ export default {
     project: {
       type: Object,
       required: true
-    },
-    projectIndex: {
-      type: Number,
-      required: true
     }
   },
   data () {
@@ -90,10 +68,13 @@ export default {
       isUpdating: false
     }
   },
+  provide () {
+    return {
+      project: this.project,
+      projectPrefix: 'gb-' + this.escAttr(this.id) + '-'
+    }
+  },
   computed: {
-    projectBase () {
-      return 'gb-' + this.escAttr(this.id) + '-'
-    },
     isRunning () {
       return this.project.attributes.enabled
     }
