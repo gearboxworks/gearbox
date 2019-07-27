@@ -10,7 +10,7 @@
 
       <project-toolbar
         @run-stop="onRunStop"
-        :isUpdating="isUpdating"
+        :is-updating="isUpdating"
       />
     </div>
 
@@ -26,9 +26,15 @@
 
     <div class="clearfix" slot="footer">
 
-      <project-stack-list />
+      <project-stack-list
+        :expanded-stack-ids="expandedStackIds"
+        @expand-collapse="onExpandCollapseStack"
+      />
 
-      <project-stack-add @maybe-hide-alert="maybeHideAlert" />
+      <project-stack-add
+        @maybe-hide-alert="maybeHideAlert"
+        @added-stack="onAddedStack"
+      />
 
       <project-location />
 
@@ -41,13 +47,14 @@
 </template>
 
 <script>
+import Vue from 'vue'
 import { createNamespacedHelpers } from 'vuex'
-import ProjectToolbar from '../ProjectToolbar'
-import ProjectHostname from '../ProjectHostname'
-import ProjectLocation from '../ProjectLocation'
-import ProjectNote from '../ProjectNote'
-import ProjectStackAdd from '../ProjectStackAdd'
-import ProjectStackList from '../ProjectStackList'
+import ProjectToolbar from './shared/ProjectToolbar'
+import ProjectHostname from './shared/ProjectHostname'
+import ProjectLocation from './shared/ProjectLocation'
+import ProjectNote from './shared/ProjectNote'
+import ProjectStackAdd from './shared/ProjectStackAdd'
+import ProjectStackList from './shared/ProjectStackList'
 
 const { mapActions } = createNamespacedHelpers('projects')
 
@@ -71,6 +78,7 @@ export default {
       required: true
     }
   },
+
   data () {
     return {
       id: this.project.id,
@@ -80,9 +88,11 @@ export default {
       alertContent: 'content',
       alertDismissible: true,
       alertVariant: 'warning',
-      isUpdating: false
+      isUpdating: false,
+      expandedStackIds: {}
     }
   },
+
   provide () {
     return {
       project: this.project,
@@ -95,10 +105,15 @@ export default {
     }
   },
   methods: {
-    ...mapActions({ updateProjectState: 'updateState' }),
+
+    ...mapActions({
+      updateProjectState: 'updateState'
+    }),
+
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     showAlert (alert) {
       if (typeof alert === 'string') {
         this.alertContent = alert
@@ -109,15 +124,18 @@ export default {
       }
       this.alertShow = true
     },
+
     hideAlert () {
       this.alertContent = ''
       this.alertShow = false
     },
+
     maybeHideAlert (alert) {
       if (this.alertContent === alert) {
         this.hideAlert()
       }
     },
+
     onRunStop () {
       if (this.project.attributes.stack && this.project.attributes.stack.length > 0) {
         this.isUpdating = true
@@ -129,7 +147,39 @@ export default {
       } else {
         this.showAlert('Please add some stacks first!')
       }
+    },
+
+    onAddedStack (stackId) {
+      const cleanStackId = stackId.replace('(removed)', '')
+      const newObject = { [cleanStackId]: 1, [cleanStackId + '(removed)']: 1 }
+
+      for (const key in this.expandedStackIds) {
+        // const val = this.expandedStackIds[key]
+        if ((key !== stackId && key !== cleanStackId)) {
+          newObject[key] = -1
+        }
+      }
+      Vue.set(this, 'expandedStackIds', newObject)
+    },
+
+    onExpandCollapseStack (stackId, isExpanded) {
+      console.log('card:onExpandCollapseStack', stackId, isExpanded)
+      Vue.set(this.expandedStackIds, stackId, isExpanded ? -1 : 1)
     }
+
+  },
+  mounted () {
+    this.$store.subscribe((mutation, state) => {
+      switch (mutation.type) {
+        case 'projects/REMOVE_PROJECT_STACK':
+          const { stackId, project } = mutation.payload
+          if (project.id === this.project.id) {
+            Vue.set(this.expandedStackIds, stackId, 0)
+            Vue.set(this.expandedStackIds, stackId + '(removed)', 0)
+          }
+          break
+      }
+    })
   }
 }
 </script>
@@ -256,13 +306,8 @@ export default {
     margin-right: 0;
     float:right;
   }
-
-</style>
-
-<style>
-.card-footer .stack-card.is-collapsible:not(.is-collapsed) {
-  width: 100%;
-  margin-right: 0;
-}
-
+  .card-footer >>> .stack-card.is-collapsible.is-expanded {
+    width: 100%;
+    margin-right: 0;
+  }
 </style>

@@ -189,6 +189,7 @@ export default {
           this.selectedStack = ''
           this.isModified = false
           this.$emit('maybe-hide-alert', 'Please add some stacks first!')
+          this.$emit('added-stack', stackId)
         })
     },
 

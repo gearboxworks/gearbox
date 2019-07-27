@@ -1,15 +1,15 @@
 <template>
   <div
-    :class="{'stack-card': true, 'is-collapsible': isCollapsible, 'is-collapsed': isCollapsed}"
+    :class="{'stack-card': true, 'is-collapsible': isCollapsible, 'is-expanded': isExpanded}"
     role="tab"
-    :aria-expanded="!isCollapsed"
+    :aria-expanded="isExpanded"
   >
     <h2
       class="stack-title"
-      @click="onTitleClicked"
-      @keydown.enter="onTitleClicked"
+      @click="onExpandCollapse"
+      @keydown.enter="onExpandCollapse"
       tabindex="0"
-      :title="isCollapsed ? 'Show services' : 'Hide services'"
+      :title="isExpanded ? 'Hide services': 'Show services'"
       v-b-tooltip.hover
     >
       <font-awesome-icon
@@ -20,14 +20,14 @@
     </h2>
 
     <stack-toolbar
-      v-if="!isCollapsed"
+      v-if="isExpanded"
       :stackId="stackId"
       @show-alert="showAlert"
     />
 
     <div class="stack-content">
       <ul
-          v-if="!isCollapsible || !isCollapsed"
+          v-if="!isCollapsible || isExpanded"
           class="service-list"
       >
         <li
@@ -64,25 +64,28 @@ export default {
     StackToolbar,
     StackGear
   },
-  inject: ['project', 'projectPrefix'],
+  inject: [
+    'project',
+    'projectPrefix'
+  ],
   props: {
-    'stackId': {
+    stackId: {
       type: String,
       required: true
     },
-    'stackItems': {
+    stackItems: {
       type: Array,
       required: true
     },
-    'isCollapsible': {
+    isCollapsible: {
       type: Boolean,
       default: true,
       required: false
     },
-    'startCollapsed': {
+    isExpanded: {
       type: Boolean,
       required: false,
-      default: true
+      default: false
     }
   },
   data () {
@@ -91,8 +94,7 @@ export default {
       alertShow: false,
       alertContent: 'content',
       alertDismissible: true,
-      alertVariant: 'info',
-      isCollapsed: this.startCollapsed
+      alertVariant: 'info'
     }
   },
   computed: {
@@ -106,11 +108,6 @@ export default {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
 
-    onTitleClicked () {
-      this.isCollapsed = !this.isCollapsed
-      // this.showAlert('Clicked ' + this.stackId.replace('gearbox.works/', ''))
-    },
-
     showAlert (alert) {
       if (typeof alert === 'string') {
         this.alertContent = alert
@@ -120,21 +117,18 @@ export default {
         this.alertContent = alert.content || this.alertContent
       }
       this.alertShow = true
+    },
+
+    onExpandCollapse () {
+      this.$emit('expand-collapse', this.stackId, this.isExpanded)
     }
+
   }
-  // ,
-  // watch: {
-  //   startCollapsed: function (val, oldVal) {
-  //     if (!val) {
-  //       this.isCollapsed = false
-  //     }
-  //   }
-  // }
 }
 </script>
 
 <style scoped>
-  .stack-card:not(.is-collapsed){
+  .stack-card.is-expanded {
     min-width: 310px;
   }
 
@@ -149,12 +143,12 @@ export default {
     background-color :#eaeaea;
   }
 
-  .stack-card.is-collapsible.is-collapsed {
+  .stack-card.is-collapsible:not(.is-expanded) {
     padding-bottom: 2px;
     color: #17a2b8;
   }
 
-  .stack-card.is-collapsible.is-collapsed:hover {
+  .stack-card.is-collapsible:not(.is-expanded):hover {
     background-color: #17a2b8;
     color: white;
   }
@@ -177,15 +171,15 @@ export default {
     left: -3px;
   }
 
-  .stack-card.is-collapsible.is-collapsed:hover .stack-title{
+  .stack-card.is-collapsible:not(.is-expanded):hover .stack-title{
     color: white;
   }
 
-  .stack-card.is-collapsible.is-collapsed .stack-title {
+  .stack-card.is-collapsible:not(.is-expanded) .stack-title {
     color: #17a2b8;
   }
 
-  .stack-card.is-collapsible:not(.is-collapsed) .stack-title:hover {
+  .stack-card.is-collapsible.is-expanded .stack-title:hover {
     color: #17a2b8;
   }
 

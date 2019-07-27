@@ -64,7 +64,9 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ basedirBy: 'basedirBy' }),
+    ...mapGetters({
+      basedirBy: 'basedirBy'
+    }),
     currentBasedir () {
       const basedir = this.basedirBy('id', this.basedir)
       return basedir ? basedir.attributes.basedir : ''

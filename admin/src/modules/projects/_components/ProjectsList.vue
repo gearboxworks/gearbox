@@ -38,8 +38,8 @@
 </template>
 
 <script>
-import ProjectCard from './card/ProjectCard'
-import ProjectRow from './row/ProjectRow'
+import ProjectCard from './ProjectCard'
+import ProjectRow from './ProjectRow'
 
 export default {
   name: 'ProjectsList',

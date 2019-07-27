@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="{'project-stack-list': true, 'start-collapsed': startCollapsed, 'is-loading': isLoading}"
+    :class="{'project-stack-list': true, 'start-expanded': startExpanded, 'is-loading': isLoading}"
     :id="`${projectPrefix}stack`"
     role="tablist"
   >
@@ -15,45 +15,53 @@
       class="project-stack-list-wrap"
     >
       <stack-card
-        v-for="(stackItems, stackId, stackIndex) in groupedStackItems"
+        v-for="(stackItems, stackId) in groupedStackItems"
         :key="stackId"
         :stackId="stackId"
-        :stackIndex="stackIndex"
         :stackItems="stackItems"
-        :start-collapsed="startCollapsed || (!startCollapsed && Object.entries(groupedStackItems).length > 1)"
+        :is-expanded="(expandedStackIds[stackId] && expandedStackIds[stackId] > 0) || ((!expandedStackIds[stackId] || expandedStackIds[stackId] === 0) && Object.entries(groupedStackItems).length === 1)"
+        @expand-collapse="onExpandCollapseStack"
       />
     </div>
   </div>
 </template>
 
 <script>
-
+// || (!stackToExpand && ( startExpanded || (startExpanded && Object.entries(groupedStackItems).length > 1)))
 import { mapGetters } from 'vuex'
-import StackCard from '../../../components/stack/StackCard.vue'
+import StackCard from '../../../../components/stack/StackCard.vue'
 
 export default {
   name: 'StackCardList',
   components: {
     StackCard
   },
-  inject: ['project', 'projectPrefix'],
+  inject: [
+    'project',
+    'projectPrefix'
+  ],
   props: {
-    'startCollapsed': {
+    startExpanded: {
       type: Boolean,
       required: false,
       default: false
+    },
+    expandedStackIds: {
+      type: Object,
+      required: true
     }
   },
   data () {
     return {
-      id: this.project.id
+      id: this.project.id,
+      singularCollapsedStackId: ''
     }
   },
   computed: {
-    ...mapGetters(['serviceBy', 'gearspecBy']),
-    projectPrefix () {
-      return 'gb-' + this.escAttr(this.id) + '-'
-    },
+    ...mapGetters([
+      'serviceBy',
+      'gearspecBy'
+    ]),
 
     isLoading () {
       return typeof this.project.attributes.stack === 'undefined'
@@ -61,7 +69,7 @@ export default {
 
     groupedStackItems () {
       /**
-       * returns project's services grouped by stack (indexed by stack_id)
+       * returns project's services grouped by stack (i.e. indexed by stack_id)
        */
       var result = {}
       const stackItems = this.project.attributes.stack || []
@@ -111,6 +119,10 @@ export default {
   methods: {
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
+    },
+    onExpandCollapseStack (stackId, isExpanded) {
+      console.log('list:onExpandCollapseStack', stackId, isExpanded)
+      this.$emit('expand-collapse', stackId, isExpanded)
     }
   }
 }

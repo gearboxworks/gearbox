@@ -19,7 +19,7 @@
     </td>
 
     <td class="td--stack">
-      <project-stack-list :start-collapsed="true" />
+      <project-stack-list :start-expanded="false" />
       <project-stack-add />
     </td>
 
@@ -34,12 +34,12 @@
 <script>
 import { mapActions } from 'vuex'
 
-import ProjectHostname from '../ProjectHostname'
-import ProjectToolbar from '../ProjectToolbar'
-import ProjectLocation from '../ProjectLocation'
-import ProjectNote from '../ProjectNote'
-import ProjectStackAdd from '../ProjectStackAdd'
-import ProjectStackList from '../ProjectStackList'
+import ProjectHostname from './shared/ProjectHostname'
+import ProjectToolbar from './shared/ProjectToolbar'
+import ProjectLocation from './shared/ProjectLocation'
+import ProjectNote from './shared/ProjectNote'
+import ProjectStackAdd from './shared/ProjectStackAdd'
+import ProjectStackList from './shared/ProjectStackList'
 
 export default {
   name: 'ProjectRow',

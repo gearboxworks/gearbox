@@ -61,7 +61,9 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ basedirBy: 'basedirBy' }),
+    ...mapGetters({
+      basedirBy: 'basedirBy'
+    }),
     currentBasedir () {
       const basedir = this.basedirBy('id', this.basedir)
       return basedir ? basedir.attributes.basedir : ''
@@ -73,7 +75,9 @@ export default {
     }
   },
   methods: {
-    ...mapActions({ updateProjectHostname: 'projects/updateHostname' }),
+    ...mapActions({
+      updateProjectHostname: 'projects/updateHostname'
+    }),
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
