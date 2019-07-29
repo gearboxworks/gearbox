@@ -24,6 +24,9 @@
 <script>
 import { mapGetters } from 'vuex'
 import store from './_store'
+// import { Getters } from './_store/private-types'
+// import ProjectTypes from './_store/types'
+import { ProjectGetters, ProjectActions } from './_store/public-types'
 import ProjectsDrawer from './_components/ProjectsDrawer'
 import ProjectsList from './_components/ProjectsList'
 
@@ -40,7 +43,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      'projects': 'projects/filteredProjects'
+      'projects': ProjectGetters.FILTERED_PROJECTS
     })
   },
   created () {
@@ -67,9 +70,9 @@ export default {
       // const gearspecs = this.$store.getters['gearspecs/all']
     })
 
-    this.$store.dispatch('projects/loadAllHeaders').then(() => {
+    this.$store.dispatch(ProjectActions.LOAD_ALL_HEADERS).then(() => {
       // console.log('after loadAllHeaders', this.$store.state.projects.records)
-      this.$store.dispatch('projects/loadDetailsForAll').then((result) => {
+      this.$store.dispatch(ProjectActions.LOAD_DETAILS_FOR_ALL).then((result) => {
         // console.log('all details loaded', result)
       })
     })

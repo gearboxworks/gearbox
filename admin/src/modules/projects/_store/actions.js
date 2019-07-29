@@ -1,25 +1,26 @@
 import api from '../_api'
+import { Getters, Actions, Mutations } from './private-types'
 
 const FORCED_DELAY = 2000
 
 const actions = {
 
-  loadAllHeaders ({ commit }, payload) {
+  [Actions.LOAD_ALL_HEADERS] ({ commit }, payload) {
     return api.fetchAllHeaders()
       .then((projects) => {
-        commit('SET_RECORDS', projects)
+        commit(Mutations.SET_RECORDS, projects)
       }).catch((error) => {
         // eslint-disable-next-line
         console.error(error)
       })
   },
 
-  loadDetails ({ commit }, project) {
+  [Actions.LOAD_DETAILS] ({ commit }, project) {
     return new Promise((resolve, reject) => {
       return api.fetchDetails(project.id)
         .then((projectWithDetails) => {
           if (project.id === projectWithDetails.id) {
-            commit('SET_PROJECT_STACK', { project, stack: projectWithDetails.attributes.stack })
+            commit(Mutations.SET_STACK, { project, stack: projectWithDetails.attributes.stack })
             resolve(project)
           } else {
             reject(new Error(`Unexpected mismatch in project id: ${project.id} vs ${projectWithDetails.id}!`))
@@ -29,19 +30,19 @@ const actions = {
     })
   },
 
-  loadDetailsForAll ({ state, dispatch }) {
+  [Actions.LOAD_DETAILS_FOR_ALL] ({ state, dispatch }) {
     /**
      * Note we convert rejection to a resolved error object to get Promise.all to return ALL projects even if some of them cannot be fetched
      * @see https://stackoverflow.com/questions/31424561/wait-until-all-es6-promises-complete-even-rejected-promises#answer-36115549
      */
-    const promises = state.records.map((project, idx) => dispatch('loadDetails', project).catch(e => e))
+    const promises = state.records.map((project, idx) => dispatch(Actions.LOAD_DETAILS, project).catch(e => e))
     /**
      * wait for all
      */
     return Promise.all(promises)
   },
 
-  updateDetails ({ commit }, payload) {
+  [Actions.UPDATE_DETAILS] ({ commit }, payload) {
     const { projectId, data } = payload
 
     return new Promise((resolve) => {
@@ -51,14 +52,14 @@ const actions = {
          * on success, commit the new project to the projects store before resolving
          */
           if (project) {
-            commit('UPDATE_PROJECT_DETAILS', payload)
+            commit(Mutations.UPDATE_DETAILS, payload)
           }
           resolve(project)
         })
     })
   },
 
-  addStack ({ commit, getters, rootGetters }, payload) {
+  [Actions.ADD_STACK] ({ commit, getters, rootGetters }, payload) {
     console.log('TODO: call API method to add project stack')
 
     return new Promise((resolve, reject) => {
@@ -67,46 +68,52 @@ const actions = {
         const actualStackId = stackId.replace('(removed)', '')
         const stack = rootGetters.stackBy('id', actualStackId)
 
-        commit('ADD_PROJECT_STACK', { ...payload, actualStackId, stack, preselectServiceId: rootGetters.preselectServiceId })
+        commit(Mutations.ADD_STACK, {
+          ...payload,
+          actualStackId,
+          stack,
+          preselectServiceId: rootGetters.preselectServiceId
+        })
+
         resolve()
       }, FORCED_DELAY)
     })
   },
 
-  removeStack ({ commit, getters }, payload) {
+  [Actions.REMOVE_STACK] ({ commit, getters }, payload) {
     console.log('TODO: call API method to remove project stack')
 
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        commit('REMOVE_PROJECT_STACK', payload)
+        commit(Mutations.REMOVE_STACK, payload)
         resolve()
       }, FORCED_DELAY)
     })
   },
 
-  updateNotes ({ commit, getters }, payload) {
+  [Actions.UPDATE_NOTES] ({ commit, getters }, payload) {
     console.log('TODO: call API method to update project notes')
 
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        commit('UPDATE_PROJECT_NOTES', payload)
+        commit(Mutations.UPDATE_NOTES, payload)
         resolve()
       }, FORCED_DELAY)
     })
   },
 
-  updateHostname ({ commit }, payload) {
+  [Actions.UPDATE_HOSTNAME]  ({ commit }, payload) {
     console.log('TODO: call API method to update project hostname')
 
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        commit('UPDATE_PROJECT_HOSTNAME', payload)
+        commit(Mutations.UPDATE_HOSTNAME, payload)
         resolve()
       }, FORCED_DELAY)
     })
   },
 
-  updateState ({ commit, getters }, payload) {
+  [Actions.UPDATE_STATE] ({ commit, getters }, payload) {
     /**
      * TODO: call the API and commit when it returns
      */
@@ -114,27 +121,32 @@ const actions = {
 
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        commit('UPDATE_PROJECT_STATE', payload)
+        commit(Mutations.UPDATE_STATE, payload)
         resolve()
       }, FORCED_DELAY)
     })
   },
 
-  changeService ({ commit, getters }, payload) {
+  [Actions.CHANGE_GEAR] ({ commit, getters }, payload) {
     /**
      * TODO: call the API and commit when it returns
      * TODO: remove delay
      */
 
     const { project, gearspecId } = payload
-    const memberIndex = getters.projectStackItemIndexBy(project, 'gearspec_id', gearspecId)
+    const memberIndex = getters[Getters.PROJECT_STACK_ITEM_INDEX_BY](project, 'gearspec_id', gearspecId)
 
-    setTimeout(() => commit('CHANGE_PROJECT_SERVICE', { ...payload, memberIndex }), FORCED_DELAY)
-    // commit('CHANGE_PROJECT_SERVICE', payload)
+    return new Promise((resolve, reject) => {
+      setTimeout(
+        () => {
+          commit(Mutations.CHANGE_GEAR, { ...payload, memberIndex })
+          resolve()
+        }, 100)
+    })
   },
 
-  setProjectsFilter ({ commit }, payload) {
-    commit('SET_PROJECTS_FILTER', payload)
+  [Actions.SET_LIST_FILTER] ({ commit }, payload) {
+    commit(Mutations.SET_LIST_FILTER, payload)
   }
 }
 

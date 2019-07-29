@@ -1,15 +1,16 @@
 import Vue from 'vue'
+import { Mutations } from './private-types'
 
 const mutations = {
 
-  SET_RECORDS (state, projects) {
+  [Mutations.SET_RECORDS] (state, projects) {
     if (!projects || projects.length === 0) {
       console.warn('Most likely `projects` arg should not be empty!')
     }
     Vue.set(state, 'records', projects)
   },
 
-  SET_PROJECT_STACK (state, payload) {
+  [Mutations.SET_STACK] (state, payload) {
     const { project, stack } = payload
     if (!stack) {
       console.warn('Most likely `stack` arg should not be empty!')
@@ -19,28 +20,28 @@ const mutations = {
     }
   },
 
-  UPDATE_PROJECT_HOSTNAME (state, payload) {
+  [Mutations.UPDATE_HOSTNAME] (state, payload) {
     const { project, hostname } = payload
     if (project && hostname) {
       Vue.set(project.attributes, 'hostname', hostname)
     }
   },
 
-  UPDATE_PROJECT_STATE (state, payload) {
+  [Mutations.UPDATE_STATE] (state, payload) {
     const { project, isEnabled } = payload
     if (project) {
       project.attributes.enabled = !!isEnabled
     }
   },
 
-  UPDATE_PROJECT_NOTES (state, payload) {
+  [Mutations.UPDATE_NOTES] (state, payload) {
     const { project, notes } = payload
     if (project) {
       project.attributes.notes = notes
     }
   },
 
-  ADD_PROJECT_STACK (state, payload) {
+  [Mutations.ADD_STACK] (state, payload) {
     const { stackId, actualStackId, project, stack, preselectServiceId } = payload
 
     if (project && stack && stack.attributes.members.length) {
@@ -73,7 +74,7 @@ const mutations = {
     }
   },
 
-  REMOVE_PROJECT_STACK (state, payload) {
+  [Mutations.REMOVE_STACK] (state, payload) {
     const { project, stackId } = payload
     const shortStackName = stackId.split('/')[1]
 
@@ -98,7 +99,7 @@ const mutations = {
     }
   },
 
-  CHANGE_PROJECT_SERVICE (state, payload) {
+  [Mutations.CHANGE_GEAR] (state, payload) {
     const { project, serviceId, memberIndex } = payload
 
     if (project && memberIndex >= 0) {
@@ -109,16 +110,16 @@ const mutations = {
     }
   },
 
-  SET_PROJECTS_FILTER (state, payload) {
+  [Mutations.SET_LIST_FILTER] (state, payload) {
     const { field, values } = payload
     Vue.set(state.showProjectsHaving, field, values)
   },
 
-  SET_PROJECTS_FILTER_SORT_BY (state, sortBy) {
+  [Mutations.SET_LIST_FILTER_SORT_BY] (state, sortBy) {
     state.sortBy = sortBy
   },
 
-  SET_PROJECTS_FILTER_SORT_ORDER (state, isAscending) {
+  [Mutations.SET_LIST_FILTER_SORT_ORDER] (state, isAscending) {
     state.sortOrder = isAscending
   }
 }

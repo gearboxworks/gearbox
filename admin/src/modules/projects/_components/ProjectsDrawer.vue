@@ -227,7 +227,8 @@
 
 <script>
 
-import { mapGetters, mapActions, mapMutations } from 'vuex'
+import { mapGetters } from 'vuex'
+import { ProjectActions, ProjectMutations } from '../_store/public-types'
 
 export default {
   name: 'ProjectsDrawer',
@@ -315,21 +316,10 @@ export default {
   },
   watch: {
     showStates: function (val, oldVal) {
-      this.setProjectsFilter({ field: 'states', values: this.showStates })
+      this.$store.dispatch(ProjectActions.SET_LIST_FILTER, { field: 'states', values: this.showStates })
     }
   },
   methods: {
-    // escAttr (value) {
-    //   return value.replace(/\//g, '-').replace(/\./g, '-')
-    // }
-    ...mapActions({
-      setProjectsFilter: 'projects/setProjectsFilter'
-    }),
-
-    ...mapMutations({
-      setProjectsFilterSortBy: 'projects/SET_PROJECTS_FILTER_SORT_BY',
-      setProjectsFilterSortOrder: 'projects/SET_PROJECTS_FILTER_SORT_ORDER'
-    }),
 
     toggleDrawer () {
       this.expanded = !this.expanded
@@ -362,16 +352,22 @@ export default {
     },
 
     changeSortBy (value) {
-      this.setProjectsFilterSortBy(value)
+      this.$store.commit(ProjectMutations.SET_LIST_FILTER_SORT_BY, value)
     },
 
     toggleSortingOrder () {
       this.sortAscending = !this.sortAscending
-      this.setProjectsFilterSortOrder(this.sortAscending)
+      this.$store.commit(ProjectMutations.SET_LIST_FILTER_SORT_ORDER, this.sortAscending)
     },
 
     changeFilter (values, field) {
-      this.setProjectsFilter({ field, values })
+      this.$store.dispatch(
+        ProjectActions.SET_LIST_FILTER,
+        {
+          field,
+          values
+        }
+      )
     }
   }
 }

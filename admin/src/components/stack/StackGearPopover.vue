@@ -25,7 +25,7 @@
         :ref="`${gearControlId}-select`"
         :value="closestGearServiceId"
         tabindex="0"
-        @change="onChangeService($event)"
+        @change="onChangeProjectGear($event)"
       >
         <option v-if="!defaultService" value="">Do not run this service</option>
         <option disabled :value="null">Select service...</option>
@@ -51,11 +51,15 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
+import { ProjectActions } from '../../modules/projects/_store/public-types'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'StackGearPopover',
-  inject: ['project', 'projectPrefix'],
+  inject: [
+    'project',
+    'projectPrefix'
+  ],
   props: {
     gearControlId: {
       type: String,
@@ -123,15 +127,12 @@ export default {
     }
   },
   methods: {
-    ...mapActions({
-      changeProjectService: 'projects/changeService'
-    }),
 
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
 
-    onChangeService (selectedServiceId) {
+    async onChangeProjectGear (selectedServiceId) {
       const previousId = this.service ? this.service.id : ''
       const program1 = previousId ? previousId.split('/')[1].split(':')[0] : ''
       const program2 = selectedServiceId ? selectedServiceId.split('/')[1].split(':')[0] : ''
@@ -152,7 +153,18 @@ export default {
           }
         }
       }
-      this.changeProjectService({ project: this.project, gearspecId: this.gearspec.id, serviceId: selectedServiceId })
+      try {
+        await this.$store.dispatch(
+          ProjectActions.CHANGE_GEAR,
+          {
+            project: this.project,
+            gearspecId: this.gearspec.id,
+            serviceId: selectedServiceId
+          }
+        )
+      } catch (e) {
+        console.error(e.message)
+      }
       this.closePopover()
     },
 

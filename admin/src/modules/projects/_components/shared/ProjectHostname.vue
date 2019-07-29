@@ -22,7 +22,7 @@
         v-b-tooltip.hover
         class="btn--submit"
         :disabled="(!isMultimodal && !isModified) || isUpdating"
-        @click.prevent="onButtonClicked"
+        @click.prevent="onSubmitOrCancel"
       >
         <font-awesome-icon
           v-if="isUpdating"
@@ -39,11 +39,15 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
+import { ProjectActions } from '../../_store/public-types'
 
 export default {
   name: 'ProjectLocation',
-  inject: ['project', 'projectPrefix'],
+  inject: [
+    'project',
+    'projectPrefix'
+  ],
   props: {
     isMultimodal: {
       type: Boolean,
@@ -64,6 +68,7 @@ export default {
     ...mapGetters({
       basedirBy: 'basedirBy'
     }),
+
     currentBasedir () {
       const basedir = this.basedirBy('id', this.basedir)
       return basedir ? basedir.attributes.basedir : ''
@@ -75,15 +80,15 @@ export default {
     }
   },
   methods: {
-    ...mapActions({
-      updateProjectHostname: 'projects/updateHostname'
-    }),
+
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     resolveDir (dir, path) {
       return dir + ((dir.indexOf('/') !== -1) ? '/' : '\\') + path
     },
+
     onInputClicked () {
       if (!this.isEditing) {
         if (this.project.attributes.enabled) {
@@ -93,7 +98,8 @@ export default {
         }
       }
     },
-    onButtonClicked () {
+
+    onSubmitOrCancel () {
       if (this.isModified) {
         // TODO make an API call to change project hostname
         console.log('TODO call the API to change project hostname')
@@ -102,24 +108,27 @@ export default {
         this.isEditing = false
       }
     },
-    maybeSubmit (value) {
-      this.isUpdating = true
-      /**
-       * TODO: deal with timestamp
-       * TODO: check validity
-       */
-      this.updateProjectHostname(
-        {
-          project: this.project,
-          hostname: value
-        }
-      ).then(() => {
+
+    async maybeSubmit (value) {
+      try {
+        this.isUpdating = true
+
+        await this.$store.dispatch(
+          ProjectActions.UPDATE_HOSTNAME,
+          {
+            project: this.project,
+            hostname: value
+          }
+        )
+
         if (this.isMultimodal) {
           this.isEditing = false
         }
         this.isModified = false
         this.isUpdating = false
-      })
+      } catch (e) {
+        console.error(e.message)
+      }
     }
   }
 }

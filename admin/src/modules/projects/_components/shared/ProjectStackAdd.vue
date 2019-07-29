@@ -32,7 +32,7 @@
         v-b-tooltip.hover
         :disabled="isUpdating"
         :class="{'btn--submit': true, 'btn--add': isCollapsed}"
-        @click.prevent="onButtonClicked"
+        @click.prevent="onAddProjectStack"
       >
         <font-awesome-icon
           v-if="isUpdating"
@@ -53,11 +53,15 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
+import { ProjectActions } from '../../_store/public-types'
 
 export default {
   name: 'ProjectStackAdd',
-  inject: ['project', 'projectPrefix'],
+  inject: [
+    'project',
+    'projectPrefix'
+  ],
   props: {},
   data () {
     return {
@@ -157,9 +161,6 @@ export default {
     // }
   },
   methods: {
-    ...mapActions({
-      addProjectStack: 'projects/addStack'
-    }),
 
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
@@ -177,23 +178,33 @@ export default {
       )
     },
 
-    maybeAddProjectStack (stackId) {
+    async maybeAddProjectStack (stackId) {
       if (!stackId) {
         return
       }
-      this.isUpdating = true
-      this.addProjectStack({ project: this.project, stackId })
-        .then(() => {
-          this.isUpdating = false
-          this.isCollapsed = true
-          this.selectedStack = ''
-          this.isModified = false
-          this.$emit('maybe-hide-alert', 'Please add some stacks first!')
-          this.$emit('added-stack', stackId)
-        })
+
+      try {
+        this.isUpdating = true
+        await this.$store.dispatch(
+          ProjectActions.ADD_STACK,
+          {
+            project: this.project, stackId
+          }
+        )
+
+        this.isUpdating = false
+        this.isCollapsed = true
+        this.selectedStack = ''
+        this.isModified = false
+
+        this.$emit('maybe-hide-alert', 'Please add some stacks first!')
+        this.$emit('added-stack', stackId)
+      } catch (e) {
+        console.error(e.message)
+      }
     },
 
-    onButtonClicked () {
+    onAddProjectStack () {
       if (this.isCollapsed) {
         this.isCollapsed = false
         this.$nextTick(() => {

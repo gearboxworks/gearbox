@@ -1,11 +1,13 @@
+import { Getters } from './private-types'
+
 const getters = {
-  projectBy: (state) => (fieldName, fieldValue) => {
+  [Getters.PROJECT_BY]: (state) => (fieldName, fieldValue) => {
     return (fieldName === 'id')
       ? state.records.find(p => p.id === fieldValue)
       : state.records.find(p => p.attributes[fieldName] === fieldValue)
   },
 
-  filterProjectsBy: (state) => (fieldName, allowedValues) => {
+  [Getters.FILTER_PROJECTS_BY]: (state) => (fieldName, allowedValues) => {
     const attrs = ['basedir', 'enabled', 'filepath', 'hostname', 'path', 'project_dir']
     let valuesArray = Array.isArray(allowedValues) ? allowedValues : [allowedValues]
     // 'notes' and 'stack' are not included on purpose because simple comparison does not work on them
@@ -24,7 +26,7 @@ const getters = {
     return projects
   },
 
-  filteredProjects: (state, getters) => {
+  [Getters.FILTERED_PROJECTS]: (state, getters) => {
     let projects = state.records
     const sortAscending = !!state.sortOrder
     // const sortBy = state.sortBy
@@ -38,10 +40,10 @@ const getters = {
           continue
         } else {
           if (values.indexOf('running') > -1) {
-            projects = projects.filter(p => getters.filterProjectsBy('enabled', true).includes(p))
+            projects = projects.filter(p => getters[Getters.FILTER_PROJECTS_BY]('enabled', true).includes(p))
           }
           if (values.indexOf('stopped') > -1) {
-            projects = projects.filter(p => getters.filterProjectsBy('enabled', false).includes(p))
+            projects = projects.filter(p => getters[Getters.FILTER_PROJECTS_BY]('enabled', false).includes(p))
           }
           // TODO merge candidates into projects array
           // if (values.indexOf('candidates') > -1) {
@@ -50,12 +52,12 @@ const getters = {
         }
         continue
       }
-      projects = (projects.filter(p => getters.filterProjectsBy(field, values).includes(p)))
+      projects = (projects.filter(p => getters[Getters.FILTER_PROJECTS_BY](field, values).includes(p)))
     }
     return projects.concat().sort((a, b) => a.id > b.id ? (sortAscending ? 1 : -1) : (a.id === b.id) ? 0 : (sortAscending ? -1 : 1))
   },
 
-  projectStackItemIndexBy: (state) => (project, fieldName, fieldValue) => {
+  [Getters.PROJECT_STACK_ITEM_INDEX_BY]: (state) => (project, fieldName, fieldValue) => {
     let memberIndex = -1
     project.attributes.stack.find((m, idx) => {
       /**

@@ -126,11 +126,14 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import { ProjectActions } from '../../modules/projects/_store/public-types'
 
 export default {
   name: 'StackToolbar',
-  inject: ['project', 'projectPrefix'],
+  inject: [
+    'project',
+    'projectPrefix'
+  ],
   props: {
     'stackId': {
       type: String,
@@ -153,20 +156,27 @@ export default {
     }
   },
   methods: {
-    ...mapActions({
-      removeProjectStack: 'projects/removeStack'
-    }),
 
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
 
-    onRemoveProjectStack (stackId) {
+    async onRemoveProjectStack (stackId) {
       if (this.project.attributes.enabled) {
         this.$emit('show-alert', 'Cannot remove stack while the project is running!')
       } else {
         this.isDeleting = true
-        this.removeProjectStack({ project: this.project, stackId: this.stackId })
+        try {
+          await this.$store.dispatch(
+            ProjectActions.REMOVE_STACK,
+            {
+              project: this.project,
+              stackId: this.stackId
+            }
+          )
+        } catch (e) {
+          console.error(e.message)
+        }
       }
     }
   }

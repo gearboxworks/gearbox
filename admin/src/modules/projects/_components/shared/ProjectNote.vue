@@ -109,7 +109,7 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import { ProjectActions } from '../../_store/public-types'
 import VueMarkdown from 'vue-markdown'
 
 export default {
@@ -117,7 +117,10 @@ export default {
   components: {
     VueMarkdown
   },
-  inject: ['project', 'projectPrefix'],
+  inject: [
+    'project',
+    'projectPrefix'
+  ],
   props: {},
   data () {
     return {
@@ -139,12 +142,11 @@ export default {
     }
   },
   methods: {
-    ...mapActions({
-      updateProjectNotes: 'projects/updateNotes'
-    }),
+
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     onSwitchMode () {
       if (this.isCollapsed) {
         this.isCollapsed = false
@@ -157,6 +159,7 @@ export default {
         }
       }
     },
+
     onEdit () {
       if (this.isEditing && !this.isModified) {
         return
@@ -186,22 +189,29 @@ export default {
       }
     },
 
-    maybeSubmit () {
-      this.isUpdating = true
-      this.updateProjectNotes(
-        {
-          project: this.project,
-          notes: this.notes
-        }
-      ).then(() => {
+    async maybeSubmit () {
+      try {
+        this.isUpdating = true
+
+        await this.$store.dispatch(
+          ProjectActions.UPDATE_NOTES,
+          {
+            project: this.project,
+            notes: this.notes
+          }
+        )
+
         if (!this.isDeleting && !this.isRestoring) {
           this.isCollapsed = true
         }
+
         this.isModified = false
         this.isUpdating = false
         this.isDeleting = false
         this.isRestoring = false
-      })
+      } catch (e) {
+        console.error(e.message)
+      }
     }
   }
 }

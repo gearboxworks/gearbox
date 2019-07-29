@@ -6,7 +6,7 @@
          href="#"
          :title="isSwitching ? 'Switching state...': (isRunning ? 'Stop all services' : 'Run all services')"
          v-b-tooltip.hover
-         @click.prevent="$emit('run-stop')"
+         @click.prevent="$emit('run-stop-project')"
          class="toolbar-link toolbar-link--state"
       >
         <font-awesome-icon
@@ -30,7 +30,10 @@
 
 export default {
   name: 'ProjectToolbar',
-  inject: ['project', 'projectPrefix'],
+  inject: [
+    'project',
+    'projectPrefix'
+  ],
   props: {
     'isUpdating': {
       type: Boolean,

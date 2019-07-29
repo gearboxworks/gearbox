@@ -48,7 +48,10 @@ import { mapGetters } from 'vuex'
 
 export default {
   name: 'ProjectLocation',
-  inject: ['project', 'projectPrefix'],
+  inject: [
+    'project',
+    'projectPrefix'
+  ],
   props: {
     isMultimodal: {
       type: Boolean,
@@ -67,6 +70,7 @@ export default {
     ...mapGetters({
       basedirBy: 'basedirBy'
     }),
+
     currentBasedir () {
       const basedir = this.basedirBy('id', this.basedir)
       return basedir ? basedir.attributes.basedir : ''
@@ -76,9 +80,11 @@ export default {
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     resolveDir (dir, path) {
       return dir + ((dir.indexOf('/') !== -1) ? '/' : '\\') + path
     },
+
     onButtonClicked () {
       if (this.isMultimodal && this.isCollapsed) {
         this.isCollapsed = false
@@ -97,6 +103,7 @@ export default {
         }
       }
     },
+
     onCopyToClipboard () {
       /**
        * @see https://github.com/Inndy/vue-clipboard2

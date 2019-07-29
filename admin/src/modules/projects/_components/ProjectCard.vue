@@ -9,7 +9,7 @@
       />
 
       <project-toolbar
-        @run-stop="onRunStop"
+        @run-stop-project="onRunStop"
         :is-updating="isUpdating"
       />
     </div>
@@ -28,7 +28,7 @@
 
       <project-stack-list
         :expanded-stack-ids="expandedStackIds"
-        @expand-collapse="onExpandCollapseStack"
+        @expand-collapse-stack="onExpandCollapseStack"
       />
 
       <project-stack-add
@@ -41,22 +41,20 @@
       <project-note />
 
     </div>
-
   </b-card>
 
 </template>
 
 <script>
 import Vue from 'vue'
-import { createNamespacedHelpers } from 'vuex'
+import { ProjectActions, ProjectMutations } from '../_store/public-types'
+
 import ProjectToolbar from './shared/ProjectToolbar'
 import ProjectHostname from './shared/ProjectHostname'
 import ProjectLocation from './shared/ProjectLocation'
 import ProjectNote from './shared/ProjectNote'
 import ProjectStackAdd from './shared/ProjectStackAdd'
 import ProjectStackList from './shared/ProjectStackList'
-
-const { mapActions } = createNamespacedHelpers('projects')
 
 export default {
   name: 'ProjectCard',
@@ -102,13 +100,12 @@ export default {
   computed: {
     isRunning () {
       return this.project.attributes.enabled
+    },
+    theTypes () {
+      return ProjectActions
     }
   },
   methods: {
-
-    ...mapActions({
-      updateProjectState: 'updateState'
-    }),
 
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
@@ -136,14 +133,22 @@ export default {
       }
     },
 
-    onRunStop () {
+    async onRunStop () {
       if (this.project.attributes.stack && this.project.attributes.stack.length > 0) {
         this.isUpdating = true
-        this.updateProjectState({ project: this.project, isEnabled: !this.isRunning })
-          .then((status) => {
-            this.isUpdating = false
-            this.hideAlert()
-          })
+        try {
+          await this.$store.dispatch(
+            ProjectActions.UPDATE_STATE,
+            {
+              project: this.project,
+              isEnabled: !this.isRunning
+            }
+          )
+          this.isUpdating = false
+          this.hideAlert()
+        } catch (e) {
+          console.error(e.message)
+        }
       } else {
         this.showAlert('Please add some stacks first!')
       }
@@ -163,7 +168,6 @@ export default {
     },
 
     onExpandCollapseStack (stackId, isExpanded) {
-      console.log('card:onExpandCollapseStack', stackId, isExpanded)
       Vue.set(this.expandedStackIds, stackId, isExpanded ? -1 : 1)
     }
 
@@ -171,7 +175,7 @@ export default {
   mounted () {
     this.$store.subscribe((mutation, state) => {
       switch (mutation.type) {
-        case 'projects/REMOVE_PROJECT_STACK':
+        case ProjectMutations.REMOVE_PROJECT_STACK:
           const { stackId, project } = mutation.payload
           if (project.id === this.project.id) {
             Vue.set(this.expandedStackIds, stackId, 0)

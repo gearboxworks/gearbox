@@ -2,7 +2,7 @@
   <tr class="row--project" role="row">
     <td class="td--state">
       <project-toolbar
-        @run-stop="onRunStop"
+        @run-stop-project="onRunStop"
         :is-updating="isUpdating"
       />
     </td>
@@ -19,8 +19,14 @@
     </td>
 
     <td class="td--stack">
-      <project-stack-list :start-expanded="false" />
-      <project-stack-add />
+      <project-stack-list
+        :start-expanded="false"
+        :expanded-stack-ids="expandedStackIds"
+        @expand-collapse-stack="onExpandCollapseStack"
+      />
+      <project-stack-add
+        @added-stack="onAddedStack"
+      />
     </td>
 
     <td class="td--notes">
@@ -32,7 +38,8 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import Vue from 'vue'
+import { ProjectActions } from '../_store/public-types'
 
 import ProjectHostname from './shared/ProjectHostname'
 import ProjectToolbar from './shared/ProjectToolbar'
@@ -65,7 +72,8 @@ export default {
       alertContent: 'content',
       alertDismissible: true,
       alertVariant: 'warning',
-      isUpdating: false
+      isUpdating: false,
+      expandedStackIds: {}
     }
   },
   provide () {
@@ -80,13 +88,11 @@ export default {
     }
   },
   methods: {
-    ...mapActions({
-      updateProjectState: 'projects/updateState',
-      updateProjectDetails: 'projects/updateDetails'
-    }),
+
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     showAlert (alert) {
       if (typeof alert === 'string') {
         this.alertContent = alert
@@ -97,22 +103,27 @@ export default {
       }
       this.alertShow = true
     },
-    maybeSubmit (ev) {
-      this.updateProjectDetails({ projectId: this.id, attributes: this.$data })
-        .then(() => {
-          // this.$router.push('/project/' + this.hostname)
-        })
+
+    async maybeSubmit (ev) {
+      await this.$store.dispatch(ProjectActions.UPDATE_DETAILS, { projectId: this.id, attributes: this.$data })
     },
-    onRunStop () {
+
+    async onRunStop () {
       if (this.project.attributes.stack && this.project.attributes.stack.length > 0) {
         this.isUpdating = true
-        this.updateProjectState({ 'project': this.project, 'isEnabled': !this.isRunning })
-          .then((status) => {
-            this.isUpdating = false
-          })
+        try {
+          await this.$store.dispatch(ProjectActions.UPDATE_STATE, { 'project': this.project, 'isEnabled': !this.isRunning })
+          this.isUpdating = false
+        } catch (e) {
+          console.error(e.message)
+        }
       } else {
         this.showAlert('Please add some stacks first!')
       }
+    },
+
+    onExpandCollapseStack (stackId, isExpanded) {
+      Vue.set(this.expandedStackIds, stackId, isExpanded ? -1 : 1)
     }
   }
 }

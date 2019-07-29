@@ -120,9 +120,9 @@ export default {
     escAttr (value) {
       return value.replace(/\//g, '-').replace(/\./g, '-')
     },
+
     onExpandCollapseStack (stackId, isExpanded) {
-      console.log('list:onExpandCollapseStack', stackId, isExpanded)
-      this.$emit('expand-collapse', stackId, isExpanded)
+      this.$emit('expand-collapse-stack', stackId, isExpanded)
     }
   }
 }
