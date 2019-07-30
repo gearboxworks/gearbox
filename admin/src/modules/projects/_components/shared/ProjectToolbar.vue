@@ -55,11 +55,7 @@ export default {
       return this.isUpdating
     }
   },
-  methods: {
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
-    }
-  }
+  methods: {}
 }
 </script>
 

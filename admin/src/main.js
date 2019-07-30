@@ -5,10 +5,14 @@ import store from './store'
 
 import './plugins/bootstrap'
 import './plugins/fontawesome'
+
+import HelpersPlugin from './plugins/helpers'
+
 // import VueSelect from 'vue-cool-select'
 import VueClipboard from 'vue-clipboard2'
 
 Vue.use(VueClipboard)
+Vue.use(HelpersPlugin)
 
 Vue.config.productionTip = false
 

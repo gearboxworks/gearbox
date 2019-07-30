@@ -128,10 +128,6 @@ export default {
   },
   methods: {
 
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
-
     async onChangeProjectGear (selectedServiceId) {
       const previousId = this.service ? this.service.id : ''
       const program1 = previousId ? previousId.split('/')[1].split(':')[0] : ''

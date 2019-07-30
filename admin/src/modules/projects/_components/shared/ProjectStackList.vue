@@ -117,10 +117,6 @@ export default {
     }
   },
   methods: {
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
-
     onExpandCollapseStack (stackId, isExpanded) {
       this.$emit('expand-collapse-stack', stackId, isExpanded)
     }

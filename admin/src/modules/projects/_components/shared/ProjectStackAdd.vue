@@ -162,10 +162,6 @@ export default {
   },
   methods: {
 
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
-
     preselectClosestGearServiceId (stack, gearspecId, requestedServiceId) {
       const defaultService = this.stackDefaultServiceByRole(stack, gearspecId)
       /**

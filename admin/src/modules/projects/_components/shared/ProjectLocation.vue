@@ -77,9 +77,6 @@ export default {
     }
   },
   methods: {
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
 
     resolveDir (dir, path) {
       return dir + ((dir.indexOf('/') !== -1) ? '/' : '\\') + path

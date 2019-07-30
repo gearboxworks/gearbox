@@ -94,7 +94,7 @@ export default {
   provide () {
     return {
       project: this.project,
-      projectPrefix: 'gb-' + this.escAttr(this.id) + '-'
+      projectPrefix: 'gb-' + this.$escapeIDAttr(this.id) + '-'
     }
   },
   computed: {
@@ -106,10 +106,6 @@ export default {
     }
   },
   methods: {
-
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
 
     showAlert (alert) {
       if (typeof alert === 'string') {

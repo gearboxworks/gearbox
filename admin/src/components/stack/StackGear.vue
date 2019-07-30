@@ -41,7 +41,7 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
 import StackGearPopover from './StackGearPopover'
 // import { CoolSelect } from 'vue-cool-select'
 
@@ -51,7 +51,10 @@ export default {
     StackGearPopover
     // CoolSelect
   },
-  inject: ['project', 'projectPrefix'],
+  inject: [
+    'project',
+    'projectPrefix'
+  ],
   props: {
     'stackItem': {
       type: Object,
@@ -77,7 +80,7 @@ export default {
     ]),
 
     gearControlId () {
-      return this.projectPrefix + (this.stack ? this.stack.attributes.stackname + '-' : '') + this.gearspec.attributes.role
+      return this.projectPrefix + this.$escapeIDAttr((this.stack ? this.stack.attributes.stackname + '-' : '') + this.gearspec.attributes.role)
     },
 
     gearspec () {
@@ -134,14 +137,6 @@ export default {
     }
   },
   methods: {
-    ...mapActions({
-      changeProjectService: 'projects/changeService'
-    }),
-
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
-
     onImageLoaded (a) {
       this.isSwitching = false
       this.isLoaded = true

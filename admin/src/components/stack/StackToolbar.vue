@@ -157,10 +157,6 @@ export default {
   },
   methods: {
 
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
-
     async onRemoveProjectStack (stackId) {
       if (this.project.attributes.enabled) {
         this.$emit('show-alert', 'Cannot remove stack while the project is running!')

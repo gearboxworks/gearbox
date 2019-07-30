@@ -143,10 +143,6 @@ export default {
   },
   methods: {
 
-    escAttr (value) {
-      return value.replace(/\//g, '-').replace(/\./g, '-')
-    },
-
     onSwitchMode () {
       if (this.isCollapsed) {
         this.isCollapsed = false
