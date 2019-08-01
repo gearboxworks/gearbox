@@ -23,7 +23,7 @@
 
       <b-form-select
         :ref="`${gearControlId}-select`"
-        :value="closestGearServiceId"
+        :value="compatibleServiceId"
         tabindex="0"
         @change="onChangeProjectGear($event)"
       >
@@ -44,15 +44,17 @@
           </option>
         </optgroup>
       </b-form-select>
-      <b-alert :show="(defaultService || !!stackItem.serviceId) && !stackItem.service" variant="warning">Could not find the requested version (v.{{stackItem.serviceId.split(':')[1]}}), will use the closest match (v.{{closestGearServiceId.split(':')[1]}}) instead.</b-alert>
+      <b-alert :show="(defaultService || !!stackItem.serviceId) && !stackItem.service" variant="warning">Could not find the requested version (v.{{stackItem.serviceId.split(':')[1]}}), will use the closest match (v.{{compatibleServiceId.split(':')[1]}}) instead.</b-alert>
       <b-alert :show="project.attributes.enabled">Note, you cannot change this service while the project is running!</b-alert>
     </b-form-group>
   </b-popover>
 </template>
 
 <script>
-import { ProjectActions } from '../../modules/projects/_store/public-types'
-import { mapGetters } from 'vuex'
+import StackMethodTypes from '../../stacks/_store/public-types'
+import ProjectMethodTypes from '../../projects/_store/public-types'
+const { GetterTypes: StackGetters } = StackMethodTypes
+const { ActionTypes: ProjectActions } = ProjectMethodTypes
 
 export default {
   name: 'StackGearPopover',
@@ -85,26 +87,28 @@ export default {
       type: String,
       require: true
     },
-    closestGearServiceId: {
+    compatibleServiceId: {
       type: String,
       require: true
     }
   },
   computed: {
-    ...mapGetters([
-      'stackServicesByRole'
-    ]),
 
     servicesGroupedByRole () {
-      const services = this.stackServicesByRole(this.stack, this.gearspec.id)
+      const services = this.$store.getters[StackGetters.GEARSPEC_SERVICES](
+        this.stack,
+        this.gearspec.id
+      )
       // console.log(services)
       const result = {}
-      for (const index in services) {
-        const base = services[index].split(':')[0].replace('gearboxworks/', '')
-        if (typeof result[base] === 'undefined') {
-          result[base] = {}
+      if (Array.isArray(services)) {
+        for (const index in services) {
+          const base = services[index].split(':')[0].replace('gearboxworks/', '')
+          if (typeof result[base] === 'undefined') {
+            result[base] = {}
+          }
+          result[base][index] = services[index]
         }
-        result[base][index] = services[index]
       }
       return result
     },

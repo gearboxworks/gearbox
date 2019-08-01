@@ -47,7 +47,6 @@
 
 <script>
 import Vue from 'vue'
-import { ProjectActions, ProjectMutations } from '../_store/public-types'
 
 import ProjectToolbar from './shared/ProjectToolbar'
 import ProjectHostname from './shared/ProjectHostname'
@@ -55,6 +54,9 @@ import ProjectLocation from './shared/ProjectLocation'
 import ProjectNote from './shared/ProjectNote'
 import ProjectStackAdd from './shared/ProjectStackAdd'
 import ProjectStackList from './shared/ProjectStackList'
+
+import StoreMethodTypes from '../_store/public-types'
+const { ActionTypes: ProjectActions, MutationTypes: ProjectMutations } = StoreMethodTypes
 
 export default {
   name: 'ProjectCard',
@@ -79,8 +81,6 @@ export default {
 
   data () {
     return {
-      id: this.project.id,
-      ...this.project.attributes,
       showingDetails: false,
       alertShow: false,
       alertContent: 'content',
@@ -94,7 +94,7 @@ export default {
   provide () {
     return {
       project: this.project,
-      projectPrefix: 'gb-' + this.$escapeIDAttr(this.id) + '-'
+      projectPrefix: 'gb-' + this.$_escapeIDAttr(this.project.id) + '-'
     }
   },
   computed: {

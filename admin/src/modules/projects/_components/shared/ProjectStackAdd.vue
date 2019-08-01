@@ -7,7 +7,7 @@
     <b-form-select
       class="select-stack"
       v-model="selectedStack"
-      :disabled="!hasStacksNotInProject || isUpdating"
+      :disabled="!hasUnusedStacks || isUpdating"
       :required="true"
       @change="isModified=true"
       v-show="!isCollapsed"
@@ -15,10 +15,10 @@
       autofocus
     >
       <option value="" disabled>
-        {{hasStacksNotInProject ? 'Add stack...' : 'All stacks already added'}}
+        {{hasUnusedStacks ? 'Add stack...' : 'All stacks already added'}}
       </option>
       <option
-        v-for="(item,stackId) in stacksNotInProject"
+        v-for="(item,stackId) in unusedStacks"
         :key="stackId"
         :value="stackId"
       >
@@ -53,8 +53,8 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import { ProjectActions } from '../../_store/public-types'
+import StoreMethodTypes from '../../_store/public-types'
+const { GetterTypes: ProjectGetters, ActionTypes: ProjectActions } = StoreMethodTypes
 
 export default {
   name: 'ProjectStackAdd',
@@ -66,7 +66,6 @@ export default {
   data () {
     return {
       id: this.project.id,
-      // ...this.project.attributes,
       selectedStack: '',
       isCollapsed: true,
       isModified: false,
@@ -74,105 +73,12 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({
-      serviceBy: 'serviceBy',
-      gearspecBy: 'gearspecBy',
-      stackBy: 'stackBy',
-      allGearspecs: 'gearspecs/all',
-      allStacks: 'stacks/all',
-      hasExtraBasedirs: 'hasExtraBasedirs',
-      stackDefaultServiceByRole: 'stackDefaultServiceByRole',
-      stackServicesByRole: 'stackServicesByRole',
-      preselectServiceId: 'preselectServiceId'
-    }),
 
-    projectGearsGroupedByStack () {
-      var result = {}
-      if (this.project.attributes.stack) {
-        this.project.attributes.stack.forEach((stackMember, idx) => {
-          // if (stackMember.isRemoved) {
-          //   return
-          // }
-          const gearspec = this.gearspecBy('id', stackMember.gearspec_id)
+    unusedStacks () { return this.$store.getters[ProjectGetters.UNUSED_STACKS](this.project) },
+    hasUnusedStacks () { return Object.entries(this.unusedStacks).length > 0 }
 
-          const stack = this.stackBy('id', gearspec.attributes.stack_id)
-          const serviceId = this.preselectClosestGearServiceId(stack, gearspec.id, stackMember.service_id)
-          const service = serviceId ? this.serviceBy('id', serviceId) : null
-
-          if (gearspec && service) {
-            // console.log(result, gearspec.attributes.stack_id, gearspec.attributes.role)
-            if (typeof result[gearspec.attributes.stack_id] === 'undefined') {
-              result[gearspec.attributes.stack_id] = {
-                isRemoved: stackMember.isRemoved || false
-              }
-            }
-            result[gearspec.attributes.stack_id][gearspec.attributes.role] = service
-          }
-        })
-      }
-      return result
-    },
-
-    stacksNotInProject () {
-      const result = {}
-
-      const projectStack = this.projectGearsGroupedByStack
-
-      for (const idx in this.allStacks) {
-        const stack = this.allStacks[idx]
-        if (typeof projectStack[stack.id] === 'undefined') {
-          result[stack.id] = { stack, isRemoved: false }
-        } else if (projectStack[stack.id].isRemoved) {
-          // TODO if the services in the removed stack are exactly the same as in the default version of it, show only one option!
-          result[stack.id] = { stack, isRemoved: false, isDefault: true }
-          result[stack.id + '(removed)'] = { stack, isRemoved: true }
-        }
-      }
-
-      return result
-    },
-
-    hasStacksNotInProject () {
-      return Object.entries(this.stacksNotInProject).length > 0
-    }
-    //
-    // servicesInProject () {
-    //   const result = {}
-    //   for (let idx = 0; idx > this.stack.length; idx++) {
-    //     if (this.stack[idx].isRemoved) {
-    //       continue
-    //     }
-    //     const s = this.serviceBy('id', this.stack[idx].service_id)
-    //     if (s) {
-    //       result[this.stack[idx].service_id] = s
-    //     }
-    //   }
-    //   return result
-    // },
-    // gearsInProject () {
-    //   const result = {}
-    //   for (let idx = 0; idx > this.stack.length; idx++) {
-    //     const g = this.gearspecBy('id', this.stack[idx].gearspec_id)
-    //     if (g) {
-    //       result[this.stack[idx].gearspec_id] = g
-    //     }
-    //   }
-    //   return result
-    // }
   },
   methods: {
-
-    preselectClosestGearServiceId (stack, gearspecId, requestedServiceId) {
-      const defaultService = this.stackDefaultServiceByRole(stack, gearspecId)
-      /**
-       * As an example, for php:7.1.18 it will select php:7.1 or php:7 if exact match is not possible
-       */
-      return this.preselectServiceId(
-        this.stackServicesByRole(stack, gearspecId),
-        defaultService,
-        requestedServiceId
-      )
-    },
 
     async maybeAddProjectStack (stackId) {
       if (!stackId) {
@@ -184,7 +90,8 @@ export default {
         await this.$store.dispatch(
           ProjectActions.ADD_STACK,
           {
-            project: this.project, stackId
+            project: this.project,
+            stackId
           }
         )
 

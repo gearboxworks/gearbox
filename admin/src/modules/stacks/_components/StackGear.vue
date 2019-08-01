@@ -7,7 +7,7 @@
 
     <img
       v-if="service"
-      :src="require('../../assets/'+service.attributes.program+'.svg')"
+      :src="require('../_assets/'+service.attributes.program+'.svg')"
       :class="{'service-program': true, 'is-loaded': isLoaded, 'is-switching': isSwitching, 'is-switching-same': isSwitchingSame, 'is-switching-same-again': isSwitchingSameAgain}"
       @load="onImageLoaded"
     />
@@ -23,27 +23,30 @@
     <b-tooltip
       triggers="hover"
       :target="gearControlId"
-      :key="gearControlId+'-'+(service?service.id:'unselected')"
+      :key="gearControlId + '-' + (service ? service.id : 'unselected')"
       :title="programTooltip"
     />
 
    <stack-gear-popover
+     :key = "gearControlId"
      :gearControlId = "gearControlId"
      :stackItem = "stackItem"
      :gearspec = "gearspec"
      :service = "service"
      :stack = "stack"
      :defaultService = defaultService
-     :closestGearServiceId = closestGearServiceId
+     :compatibleServiceId = compatibleServiceId
    />
   </div>
 </template>
 
 <script>
-
-import { mapGetters } from 'vuex'
 import StackGearPopover from './StackGearPopover'
-// import { CoolSelect } from 'vue-cool-select'
+
+import StackMethodTypes from '../_store/public-types'
+import ServiceMethodTypes from '../../services/_store/public-types'
+const { GetterTypes: StackGetters } = StackMethodTypes
+const { GetterTypes: ServiceGetters } = ServiceMethodTypes
 
 export default {
   name: 'StackGear',
@@ -70,38 +73,35 @@ export default {
     }
   },
   computed: {
-    ...mapGetters([
-      'stackBy',
-      'serviceBy',
-      'gearspecBy',
-      'stackDefaultServiceByRole',
-      'stackServicesByRole',
-      'preselectServiceId'
-    ]),
-
     gearControlId () {
-      return this.projectPrefix + this.$escapeIDAttr((this.stack ? this.stack.attributes.stackname + '-' : '') + this.gearspec.attributes.role)
+      return this.projectPrefix + this.$_escapeIDAttr((this.stack ? this.stack.attributes.stackname + '-' : '') + this.gearspec.attributes.role)
     },
 
     gearspec () {
+      if (!this.stackItem.gearspec) {
+        throw new Error('Gearspec object is expected to be resolved by now!')
+      }
       return this.stackItem.gearspec
     },
 
     stack () {
-      return this.stackBy('id', this.gearspec.attributes.stack_id)
+      return this.$store.getters[StackGetters.FIND_BY](
+        'id',
+        this.gearspec.attributes.stack_id
+      )
     },
 
     defaultService () {
-      return this.stackDefaultServiceByRole(this.stack, this.stackItem.gearspecId)
+      return this.$store.getters[StackGetters.DEFAULT_SERVICE_FOR_GEARSPEC](
+        this.stack,
+        this.stackItem.gearspecId
+      )
     },
 
-    closestGearServiceId () {
-      /**
-       * As an example, for php:7.1.18 it will select php:7.1 or php:7 if exact match is not possible
-       */
-      return this.preselectServiceId(
-        this.stackServicesByRole(this.stack, this.stackItem.gearspecId),
-        this.defaultService,
+    compatibleServiceId () {
+      return this.$store.getters[StackGetters.FIND_COMPATIBLE_SERVICE](
+        this.stack,
+        this.stackItem.gearspecId,
         this.stackItem.serviceId
       )
     },
@@ -111,9 +111,12 @@ export default {
       if (this.stackItem.service) {
         service = this.stackItem.service
       } else if (this.stackItem.serviceId) {
-        const closestServiceId = this.closestGearServiceId
-        if (closestServiceId) {
-          service = this.serviceBy('id', closestServiceId)
+        const compatibleServiceId = this.compatibleServiceId
+        if (compatibleServiceId) {
+          service = this.$store.getters[ServiceGetters.FIND_BY](
+            'id',
+            compatibleServiceId
+          )
         }
       }
       return service
@@ -137,7 +140,7 @@ export default {
     }
   },
   methods: {
-    onImageLoaded (a) {
+    onImageLoaded () {
       this.isSwitching = false
       this.isLoaded = true
     }

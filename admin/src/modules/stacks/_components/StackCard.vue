@@ -54,7 +54,6 @@
 
 <script>
 
-import { mapGetters } from 'vuex'
 import StackToolbar from './StackToolbar.vue'
 import StackGear from './StackGear.vue'
 
@@ -97,12 +96,7 @@ export default {
       alertVariant: 'info'
     }
   },
-  computed: {
-    ...mapGetters([
-      'serviceBy',
-      'gearspecBy'
-    ])
-  },
+  computed: {},
   methods: {
 
     showAlert (alert) {

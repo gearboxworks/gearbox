@@ -126,7 +126,8 @@
 </template>
 
 <script>
-import { ProjectActions } from '../../modules/projects/_store/public-types'
+import StoreMethodTypes from '../../projects/_store/public-types'
+const { ActionTypes: ProjectActions } = StoreMethodTypes
 
 export default {
   name: 'StackToolbar',

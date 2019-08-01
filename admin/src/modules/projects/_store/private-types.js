@@ -1,45 +1,36 @@
-export const Getters = {
-  PROJECT_BY: 'PROJECT_BY',
-  FILTER_PROJECTS_BY: 'FILTER_PROJECTS_BY',
-  FILTERED_PROJECTS: 'FILTERED_PROJECTS',
-  PROJECT_STACK_ITEM_INDEX_BY: ' PROJECT_STACK_ITEM_INDEX_BY'
+import BaseTypes from '../../_base/_store/private-types'
+import moduleConfig from '../config'
+
+export const ExtraGetters = {
+  PROJECT_STACK_ITEM_INDEX_BY: 'PROJECT_STACK_ITEM_INDEX_BY',
+  SERVICES_GROUPED_BY_GEARSPEC_ROLE: 'SERVICES_GROUPED_BY_GEARSPEC_ROLE',
+  GEARS_GROUPED_BY_STACK: 'GEARS_GROUPED_BY_STACK',
+  UNUSED_STACKS: 'UNUSED_STACKS'
 }
 
-export const Actions = {
-  LOAD_ALL_HEADERS: 'LOAD_ALL_HEADERS',
-  LOAD_DETAILS: 'LOAD_DETAILS',
-  LOAD_DETAILS_FOR_ALL: 'LOAD_DETAILS_FOR_ALL',
-  UPDATE_DETAILS: 'UPDATE_DETAILS',
+export const ExtraActions = {
+  LOAD_ALL_DETAILS: 'LOAD_ALL_DETAILS',
   ADD_STACK: 'ADD_STACK',
   REMOVE_STACK: 'REMOVE_STACK',
   UPDATE_NOTES: 'UPDATE_NOTES',
   UPDATE_HOSTNAME: 'UPDATE_HOSTNAME',
   UPDATE_STATE: 'UPDATE_STATE',
-  CHANGE_GEAR: 'CHANGE_GEAR',
-  SET_LIST_FILTER: 'SET_LIST_FILTER'
+  CHANGE_GEAR: 'CHANGE_GEAR'
 }
 
-export const Mutations = {
-  SET_RECORDS: 'SET_RECORDS',
+export const ExtraMutations = {
   SET_STACK: 'SET_STACK',
   UPDATE_HOSTNAME: 'UPDATE_HOSTNAME',
   UPDATE_STATE: 'UPDATE_STATE',
   UPDATE_NOTES: 'UPDATE_NOTES',
   ADD_STACK: 'ADD_STACK',
   REMOVE_STACK: 'REMOVE_STACK',
-  CHANGE_GEAR: 'CHANGE_GEAR',
-  SET_LIST_FILTER: 'SET_LIST_FILTER',
-  SET_LIST_FILTER_SORT_BY: 'SET_LIST_FILTER_SORT_BY',
-  SET_LIST_FILTER_SORT_ORDER: 'SET_LIST_FILTER_SORT_ORDER'
+  CHANGE_GEAR: 'CHANGE_GEAR'
 }
 
-/**
- * @type {{Mutations: {UPDATE_STATE: string, REMOVE_STACK: string, SET_LIST_FILTER: string, ADD_STACK: string, UPDATE_NOTES: string, CHANGE_SERVICE: string, SET_STACK: string, SET_LIST_FILTER_SORT_ORDER: string, SET_LIST_FILTER_SORT_BY: string, SET_RECORDS: string, UPDATE_HOSTNAME: string}, Getters: {PROJECT_BY: string, FILTERED_PROJECTS: string, FILTER_PROJECTS_BY: string, PROJECT_STACK_ITEM_INDEX_BY: string}, Actions: {UPDATE_STATE: string, REMOVE_STACK: string, SET_LIST_FILTER: string, ADD_STACK: string, UPDATE_NOTES: string, CHANGE_SERVICE: string, UPDATE_DETAILS: string, UPDATE_HOSTNAME: string, LOAD_DETAILS: string, LOAD_ALL_HEADERS: string, LOAD_DETAILS_FOR_ALL: string}}}
- */
-const PrivateTypes = {
-  Getters,
-  Actions,
-  Mutations
+export default {
+  Namespace: moduleConfig.namespace,
+  GetterTypes: { ...BaseTypes.GetterTypes, ...ExtraGetters },
+  ActionTypes: { ...BaseTypes.ActionTypes, ...ExtraActions },
+  MutationTypes: { ...BaseTypes.MutationTypes, ...ExtraMutations }
 }
-
-export default PrivateTypes

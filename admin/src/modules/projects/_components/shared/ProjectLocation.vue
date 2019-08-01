@@ -7,7 +7,7 @@
     <b-form-input
       readonly
       :ref="`${projectPrefix}location`"
-      :value="resolveDir(currentBasedir, path)"
+      :value="location"
       class="location-input"
       v-show="!isCollapsed"
       autocomplete="off"
@@ -33,7 +33,7 @@
         v-b-tooltip.hover
         href="#"
         class="btn--open-dir"
-        @click="onButtonClicked"
+        @click="onViewLocation"
       >
         <font-awesome-icon
           :icon="['fa', isCollapsed ? 'folder': 'folder-open']"
@@ -44,7 +44,8 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import BasedirMethodTypes from '../../../basedirs/_store/public-types'
+const { GetterTypes: BasedirGetters } = BasedirMethodTypes
 
 export default {
   name: 'ProjectLocation',
@@ -61,28 +62,20 @@ export default {
   },
   data () {
     return {
-      id: this.project.id,
-      ...this.project.attributes,
       isCollapsed: this.isMultimodal
     }
   },
   computed: {
-    ...mapGetters({
-      basedirBy: 'basedirBy'
-    }),
-
-    currentBasedir () {
-      const basedir = this.basedirBy('id', this.basedir)
-      return basedir ? basedir.attributes.basedir : ''
+    location () {
+      const { basedir: basedirId, path } = this.project.attributes
+      const basedir = this.$store.getters[BasedirGetters.FIND_BY]('id', basedirId)
+      const dir = basedir ? basedir.attributes.basedir : ''
+      return dir + ((dir.indexOf('/') !== -1) ? '/' : '\\') + path
     }
   },
   methods: {
 
-    resolveDir (dir, path) {
-      return dir + ((dir.indexOf('/') !== -1) ? '/' : '\\') + path
-    },
-
-    onButtonClicked () {
+    onViewLocation () {
       if (this.isMultimodal && this.isCollapsed) {
         this.isCollapsed = false
         this.$nextTick(() => {

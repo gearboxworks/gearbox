@@ -109,8 +109,10 @@
 </template>
 
 <script>
-import { ProjectActions } from '../../_store/public-types'
 import VueMarkdown from 'vue-markdown'
+
+import StoreMethodTypes from '../../_store/public-types'
+const { ActionTypes: ProjectActions } = StoreMethodTypes
 
 export default {
   name: 'ProjectNote',

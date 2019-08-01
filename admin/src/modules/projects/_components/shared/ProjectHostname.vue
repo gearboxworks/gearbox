@@ -39,8 +39,9 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import { ProjectActions } from '../../_store/public-types'
+
+import ProjectMethodTypes from '../../_store/public-types'
+const { ActionTypes: ProjectActions } = ProjectMethodTypes
 
 export default {
   name: 'ProjectLocation',
@@ -64,26 +65,13 @@ export default {
       isUpdating: false
     }
   },
-  computed: {
-    ...mapGetters({
-      basedirBy: 'basedirBy'
-    }),
-
-    currentBasedir () {
-      const basedir = this.basedirBy('id', this.basedir)
-      return basedir ? basedir.attributes.basedir : ''
-    }
-  },
+  computed: {},
   watch: {
     hostname: function (val, oldVal) {
       this.isModified = !!val && val !== this.project.id
     }
   },
   methods: {
-
-    resolveDir (dir, path) {
-      return dir + ((dir.indexOf('/') !== -1) ? '/' : '\\') + path
-    },
 
     onInputClicked () {
       if (!this.isEditing) {
@@ -109,8 +97,7 @@ export default {
       try {
         this.isUpdating = true
 
-        await this.$store.dispatch(
-          ProjectActions.UPDATE_HOSTNAME,
+        await this.$store.dispatch(ProjectActions.UPDATE_HOSTNAME,
           {
             project: this.project,
             hostname: value

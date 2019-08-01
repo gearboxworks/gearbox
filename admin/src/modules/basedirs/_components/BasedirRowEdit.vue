@@ -95,7 +95,7 @@
 
     <div v-if="!errors" :class="{confirmation: true, visible: notfound[currentValue]}">
       This dir does not exist. Would you like to create it?
-      <a class="yes" @click.stop="updateDir(currentValue)" title="Create directory">Yes</a>
+      <a class="yes" @click.stop="updateBasedir(currentValue)" title="Create directory">Yes</a>
       |
       <a class="no" @click.stop="notfound[currentValue]=0" title="Try a different dir">No</a>
     </div>
@@ -111,7 +111,8 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import StoreMethodTypes from '../_store/public-types'
+const { ActionTypes: BasedirActions } = StoreMethodTypes
 
 export default {
   name: 'BasedirRowEdit',
@@ -128,7 +129,6 @@ export default {
   },
   data () {
     return {
-      id: this.basedir.id,
       currentValue: this.basedir.attributes.basedir,
       errors: '',
       notfound: {},
@@ -142,21 +142,11 @@ export default {
     }
   },
   computed: {
-    ...mapGetters([
-      'basedirBy'
-    ]),
-
     isValid () {
       return (this.errors === '') ? null : false
     }
   },
   methods: {
-    ...mapActions({
-      'getDirectory': 'getDirectory',
-      'doUpdateBasedir': 'basedirs/update',
-      'doDeleteBasedir': 'basedirs/delete'
-    }),
-
     showAlert (alert) {
       if (typeof alert === 'string') {
         this.alertContent = alert
@@ -175,78 +165,85 @@ export default {
       this.errors = ''
     },
 
-    onUpdateBasedir () {
+    async onUpdateBasedir () {
       const basedir = this.currentValue
 
-      if (!this.id || !basedir) {
+      if (!this.basedir.id || !basedir) {
         return
       }
 
-      this.getDirectory({ 'dir': basedir })
-        .then(r => r ? r.data : null)
-        .then(response => {
-          this.updateDir(basedir)
-        })
-        .catch(e => {
+      try {
+        const statusCode = await this.$store.dispatch(BasedirActions.CHECK_DIRECTORY, basedir)
+        if (statusCode > 200) {
+          this.$set(this.notfound, basedir, 1)
+        } else {
+          this.$delete(this.notfound, basedir)
+          this.updateBasedir(basedir)
+        }
+      } catch (e) {
+        console.log(e)
         /**
          * TODO deal with a code which indicates that the dir is invalid! Maybe 409?
          */
-          if (e.response.status === 404) {
-            this.$set(this.notfound, basedir, 1)
-          } else {
-            this.$delete(this.notfound, basedir)
-          }
-        })
+      }
     },
 
-    updateDir (basedir) {
+    async updateBasedir (basedir) {
       if (!this.isModified) {
         return
       }
       const recordData = {
-        id: this.id,
+        id: this.basedir.id,
         type: 'basedirs',
         attributes: {
           basedir,
-          nickname: this.id
+          nickname: this.basedir.id
         }
       }
-      this.isUpdating = true
-      this.doUpdateBasedir(recordData).then((res) => {
-        this.errors = ''
+      try {
+        this.isUpdating = true
+
+        await this.$store.dispatch(BasedirActions.UPDATE, { record: this.basedir, recordData })
+
+        // this.errors = ''
         this.isModified = false
         this.isUpdating = false
         this.$delete(this.notfound, this.currentValue)
         // this.currentValue = ''
         // console.log('success', res)
-      }).catch(res => {
+      } catch (res) {
         this.isUpdating = false
         // console.log(res)
-        this.$nextTick(function () {
-          this.errors = res.data.errors[0].title || res.statusText
-        })
-        console.log('fail', res.response)
-      })
+        // this.errors = res.data.errors[0].title || res.statusText
+        console.error('fail', res)
+      }
     },
 
-    onDeleteBasedir () {
-      this.isDeleting = true
-      this.doDeleteBasedir({ id: this.id })
-        .then((res) => {
-          this.errors = ''
-          this.isModified = false
-          this.isDeleting = false
-        })
-        .catch((res) => {
-          this.errors = res
-          this.isDeleting = false
-          // this.isModified = false
-        })
+    async onDeleteBasedir () {
+      try {
+        this.isDeleting = true
+
+        await this.$store.dispatch(BasedirActions.DELETE, this.basedir.id)
+
+        this.errors = ''
+        this.isModified = false
+        this.isDeleting = false
+      } catch (res) {
+        this.errors = res
+        this.isDeleting = false
+        // this.isModified = false
+      }
+    },
+
+    onCopyToClipboard (e) {
+      /**
+       * TODO: Show something to the user to indicate that it was copied successfully
+       */
+      console.log('Copied to clipboard:', e.text)
     },
 
     onOpenDirectory () {
-      // TODO call API method to open directory in file manager
-      console.log('TODO: call API method to open directory in file manager')
+      this.$store.dispatch(BasedirActions.OPEN_DIRECTORY, this.currentValue)
     }
   }
 }

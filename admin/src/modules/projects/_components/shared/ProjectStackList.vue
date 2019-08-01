@@ -15,11 +15,11 @@
       class="project-stack-list-wrap"
     >
       <stack-card
-        v-for="(stackItems, stackId) in groupedStackItems"
+        v-for="(stackItems, stackId) in projectStacks"
         :key="stackId"
         :stackId="stackId"
         :stackItems="stackItems"
-        :is-expanded="(expandedStackIds[stackId] && expandedStackIds[stackId] > 0) || ((!expandedStackIds[stackId] || expandedStackIds[stackId] === 0) && Object.entries(groupedStackItems).length === 1)"
+        :is-expanded="isExpanded(stackId)"
         @expand-collapse="onExpandCollapseStack"
       />
     </div>
@@ -27,9 +27,11 @@
 </template>
 
 <script>
-// || (!stackToExpand && ( startExpanded || (startExpanded && Object.entries(groupedStackItems).length > 1)))
-import { mapGetters } from 'vuex'
-import StackCard from '../../../../components/stack/StackCard.vue'
+
+import StackCard from '../../../stacks/_components/StackCard.vue'
+
+import StoreMethodTypes from '../../_store/public-types'
+const { GetterTypes: ProjectGetters } = StoreMethodTypes
 
 export default {
   name: 'StackCardList',
@@ -52,71 +54,30 @@ export default {
     }
   },
   data () {
-    return {
-      id: this.project.id,
-      singularCollapsedStackId: ''
-    }
+    return {}
   },
   computed: {
-    ...mapGetters([
-      'serviceBy',
-      'gearspecBy'
-    ]),
+
+    projectStacks () {
+      const stacks = this.$store.getters[ProjectGetters.GEARS_GROUPED_BY_STACK](this.project)
+      return stacks
+    },
+
+    countProjectStacks () {
+      return Object.entries(this.projectStacks).length
+    },
 
     isLoading () {
       return typeof this.project.attributes.stack === 'undefined'
-    },
-
-    groupedStackItems () {
-      /**
-       * returns project's services grouped by stack (i.e. indexed by stack_id)
-       */
-      var result = {}
-      const stackItems = this.project.attributes.stack || []
-      stackItems.forEach(stackItem => {
-        if (stackItem.isRemoved) {
-          return
-        }
-        const gearspec = this.gearspecBy('id', stackItem.gearspec_id)
-        if (gearspec) {
-          if (typeof result[gearspec.attributes.stack_id] === 'undefined') {
-            result[gearspec.attributes.stack_id] = []
-          }
-          const service = stackItem.service_id ? this.serviceBy('id', stackItem.service_id) : null
-          /**
-           * note, when there is no exact match, service will be null,
-           * but we will try to find a good-enough match further down the road;
-           * that's why we need to pass over the original serviceId
-           */
-          result[gearspec.attributes.stack_id].push({
-            gearspecId: stackItem.gearspec_id,
-            gearspec,
-            serviceId: stackItem.service_id,
-            service
-          })
-        }
-      })
-      // console.log(result)
-
-      /**
-       * sort gears by gear role
-       */
-      Object.keys(result).forEach((stackId) => {
-        result[stackId] = result[stackId].sort((a, b) => a.gearspec.attributes.role > b.gearspec.attributes.role ? 1 : (a.gearspec.attributes.role === b.gearspec.attributes.role) ? 0 : -1)
-      })
-
-      // console.log('groupedStackItems', result)
-      /**
-       * sort stacks by stack id
-       */
-      return Object.keys(result).sort().reduce((r, key) => {
-        // eslint-disable-next-line no-param-reassign
-        r[key] = result[key]
-        return r
-      }, {})
     }
   },
   methods: {
+    isExpanded (stackId) {
+      const expanded = this.expandedStackIds
+      return (expanded[stackId] && expanded[stackId] > 0) ||
+        ((!expanded[stackId] || expanded[stackId] === 0) && this.countProjectStacks === 1)
+    },
+
     onExpandCollapseStack (stackId, isExpanded) {
       this.$emit('expand-collapse-stack', stackId, isExpanded)
     }

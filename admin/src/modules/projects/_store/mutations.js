@@ -1,14 +1,14 @@
 import Vue from 'vue'
-import { Mutations } from './private-types'
+import BaseMutations from '../../_base/_store/mutations'
+// import { UNSUPPORTED_MUTATION } from '../../_helpers'
 
-const mutations = {
+import store from '../../../store'
+import ProjectMethodNames from './private-types'
+import StackMethodNames from '../../stacks/_store/public-types'
+const { MutationTypes: Mutations } = ProjectMethodNames
+const { GetterTypes: StackGetters } = StackMethodNames
 
-  [Mutations.SET_RECORDS] (state, projects) {
-    if (!projects || projects.length === 0) {
-      console.warn('Most likely `projects` arg should not be empty!')
-    }
-    Vue.set(state, 'records', projects)
-  },
+const OverrideMutations = {
 
   [Mutations.SET_STACK] (state, payload) {
     const { project, stack } = payload
@@ -42,32 +42,37 @@ const mutations = {
   },
 
   [Mutations.ADD_STACK] (state, payload) {
-    const { stackId, actualStackId, project, stack, preselectServiceId } = payload
+    const { stackId, actualStackId, project, stack } = payload
 
     if (project && stack && stack.attributes.members.length) {
       if (typeof project.attributes.stack === 'undefined') {
         Vue.set(project.attributes, 'stack', [])
       }
-      stack.attributes.members.forEach((el, idx) => {
-        if (el.gearspec_id) {
-          const item = project.attributes.stack.find(
-            it => it.gearspec_id === el.gearspec_id)
-          if (item && stackId !== actualStackId) {
-            // if el.gearspec_id already exists, mark it with isRemoved = false
+      stack.attributes.members.forEach(m => {
+        if (!m.gearspec_id) {
+          return true
+        }
+
+        const item = project.attributes.stack.find(it => it.gearspec_id === m.gearspec_id)
+
+        if (item && stackId !== actualStackId) {
+          // if m.gearspec_id already exists, mark it with isRemoved = false
+          Vue.set(item, 'isRemoved', false)
+        } else {
+          const serviceId = store.getters[StackGetters.FIND_COMPATIBLE_SERVICE](
+            stack,
+            m.gearspec_id,
+            m.default_service
+          )
+          if (item) {
             Vue.set(item, 'isRemoved', false)
+            Vue.set(item, 'service_id', serviceId)
           } else {
-            // reactive!
-            const serviceId = preselectServiceId(el.services, el.default_service)
-            if (item) {
-              Vue.set(item, 'isRemoved', false)
-              Vue.set(item, 'service_id', serviceId)
-            } else {
-              project.attributes.stack.push({
-                service_id: serviceId, // it's ok if serviceId is empty
-                gearspec_id: el.gearspec_id,
-                isRemoved: false
-              })
-            }
+            project.attributes.stack.push({
+              service_id: serviceId, // a falsy serviceId is OK
+              gearspec_id: m.gearspec_id,
+              isRemoved: false
+            })
           }
         }
       })
@@ -89,8 +94,7 @@ const mutations = {
      * @see https://gist.github.com/chad3814/2924672
      */
     for (let i = project.attributes.stack.length - 1; i >= 0; i--) {
-      if (project.attributes.stack[i].gearspec_id.split('/')[1] ===
-        shortStackName) {
+      if (project.attributes.stack[i].gearspec_id.split('/')[1] === shortStackName) {
         Vue.set(project.attributes.stack[i], 'isRemoved', true)
         // state.removedStacks[projectId].push(project.attributes.stack[i])
         // console.log(projectId, stackId, project.attributes.stack[i])
@@ -108,20 +112,7 @@ const mutations = {
        */
       Vue.set(project.attributes.stack[memberIndex], 'service_id', serviceId)
     }
-  },
-
-  [Mutations.SET_LIST_FILTER] (state, payload) {
-    const { field, values } = payload
-    Vue.set(state.showProjectsHaving, field, values)
-  },
-
-  [Mutations.SET_LIST_FILTER_SORT_BY] (state, sortBy) {
-    state.sortBy = sortBy
-  },
-
-  [Mutations.SET_LIST_FILTER_SORT_ORDER] (state, isAscending) {
-    state.sortOrder = isAscending
   }
 }
 
-export default mutations
+export default { ...BaseMutations, ...OverrideMutations }

@@ -1,76 +1,26 @@
 <template>
-  <b-form :class="{'form--preferences': true, 'is-loading': isLoading}">
-
+  <div>
     <h1>Preferences</h1>
-    <h2>Project Directories</h2>
-
-    <div
-      v-if="!isLoading"
-      key="basedirs-content"
-      class="basedirs-wrap"
-    >
-      <basedir-row-edit
-        v-for="(basedir) in basedirs"
-        :key="basedir.id"
-        :basedir="basedir"
-        :is-deletable="basedir.id !== 'default'"
-      />
-    </div>
-    <div
-        v-else
-        key="basedirs-content"
-        class="basedirs-loading"
-    >
-      <font-awesome-icon
-        icon="circle-notch"
-        spin
-      />
-      &nbsp;<span>Loading directories...</span>
-    </div>
-
-    <basedir-row-add :tab-offset="basedirs.length*3" />
-  </b-form>
+    <BasedirsList/>
+  </div>
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
-import BasedirRowEdit from '../components/basedir/BasedirRowEdit'
-import BasedirRowAdd from '../components/basedir/BasedirRowAdd'
+
+import BasedirsList from '../modules/basedirs/_components/BasedirsList'
 
 export default {
   name: 'Preferences',
   components: {
-    BasedirRowEdit,
-    BasedirRowAdd
+    BasedirsList
   },
   data () {
-    return {
-      isLoading: true,
-      errors: {},
-      touched: {}
-    }
+    return {}
   },
-  computed: {
-    ...mapGetters({
-      'basedirs': 'basedirs/all'
-    })
-  },
+  computed: {},
   mounted () {
-    this.doLoadBasedirs()
-      .then(() => {
-        this.isLoading = false
-      })
-  },
-  methods: {
-    ...mapActions({
-      'doLoadBasedirs': 'basedirs/loadAll'
-    })
   }
-}
-</script>
+}</script>
 
 <style scoped>
-  .form--preferences {
-    padding: 1rem;
-  }
 </style>

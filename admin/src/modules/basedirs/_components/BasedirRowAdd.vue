@@ -44,7 +44,9 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+// import { mapGetters, mapActions } from 'vuex'
+import BasedirMethodTypes from '../_store/public-types'
+const { ActionTypes: BasedirActions } = BasedirMethodTypes
 
 export default {
   name: 'BasedirRowEdit',
@@ -67,16 +69,8 @@ export default {
       alertVariant: 'warning'
     }
   },
-  computed: {
-    ...mapGetters([
-      'basedirBy'
-    ])
-  },
+  computed: {},
   methods: {
-    ...mapActions({
-      doCreateBasedir: 'basedirs/create',
-      getDirectory: 'getDirectory'
-    }),
 
     showAlert (alert) {
       if (typeof alert === 'string') {
@@ -105,49 +99,44 @@ export default {
         : (this.errors[basedirId] === 'no error')
     },
 
-    onAddBasedir () {
+    async onAddBasedir () {
       const basedir = this.currentValue
       if (!basedir) {
         return
       }
 
-      this.getDirectory({ 'dir': basedir })
-        .then(r => r ? r.data : null)
-        .then(response => {
+      try {
+        const statusCode = await this.$store.dispatch(BasedirActions.CHECK_DIRECTORY, basedir)
+        if (statusCode >= 400) {
+          /**
+           * TODO deal with a code which indicates that the dir is invalid! Maybe 409?
+           */
+          this.$set(this.notfound, basedir, 1)
+        } else {
           this.createDir(basedir)
-        })
-        .catch(e => {
-        /**
-         * TODO deal with a code which indicates that the dir is invalid! Maybe 409?
-         */
-          if (e.response.status === 404) {
-            this.$set(this.notfound, basedir, 1)
-          } else {
-            this.$delete(this.notfound, basedir)
-          }
-        })
+          this.$delete(this.notfound, basedir)
+        }
+      } catch (e) {
+        console.error('Could not add Basedir', e)
+      }
     },
 
-    createDir (basedir) {
-      const recordData = {
-        'attributes': {
-          basedir
-        }
+    async createDir (basedir) {
+      try {
+        await this.$store.dispatch(
+          BasedirActions.CREATE, {
+            'attributes': { basedir }
+          }
+        )
+        this.$set(this.touched, 'add', true)
+        this.$delete(this.errors, 'add')
+        this.$delete(this.notfound, this.currentValue)
+        this.currentValue = ''
+      } catch (res) {
+        console.log(res)
+        this.$set(this.errors, 'add', res.data.errors[0].title || res.statusText)
+        this.$delete(this.touched, 'add')
       }
-
-      this.doCreateBasedir(recordData)
-        .then((res) => {
-          // console.log(res, this)
-          this.$set(this.touched, 'add', true)
-          this.$delete(this.errors, 'add')
-          this.$delete(this.notfound, this.currentValue)
-          this.currentValue = ''
-        })
-        .catch(res => {
-          // console.log(res, this)
-          this.$set(this.errors, 'add', res.data.errors[0].title || res.statusText)
-          this.$delete(this.touched, 'add')
-        })
     }
   }
 }

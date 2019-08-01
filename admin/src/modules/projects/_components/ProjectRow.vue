@@ -39,7 +39,6 @@
 
 <script>
 import Vue from 'vue'
-import { ProjectActions } from '../_store/public-types'
 
 import ProjectHostname from './shared/ProjectHostname'
 import ProjectToolbar from './shared/ProjectToolbar'
@@ -47,6 +46,9 @@ import ProjectLocation from './shared/ProjectLocation'
 import ProjectNote from './shared/ProjectNote'
 import ProjectStackAdd from './shared/ProjectStackAdd'
 import ProjectStackList from './shared/ProjectStackList'
+
+import StoreMethodTypes from '../_store/public-types'
+const { ActionTypes: ProjectActions } = StoreMethodTypes
 
 export default {
   name: 'ProjectRow',
@@ -79,7 +81,7 @@ export default {
   provide () {
     return {
       project: this.project,
-      projectPrefix: 'gb-' + this.$escapeIDAttr(this.id) + '-'
+      projectPrefix: 'gb-' + this.$_escapeIDAttr(this.id) + '-'
     }
   },
   computed: {

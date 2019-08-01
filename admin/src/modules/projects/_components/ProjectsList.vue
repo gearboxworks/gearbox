@@ -2,38 +2,60 @@
   <div
     class="filtered-projects"
   >
-    <b-card-group
-      v-if="viewMode==='cards'"
-      key="projects-view"
-      columns
-      class="pl-3 pr-3"
+    <div
+      v-if="!isLoading && records.length > 0"
+      content-wrap content-wrap--projects
     >
-      <project-card
-        v-for="(project, projectIndex) in projects"
-        :key="project.id"
-        :project="project"
-        :projectIndex="projectIndex"
-      />
-    </b-card-group>
-    <table
+      <b-card-group
+        v-if="viewMode==='cards'"
+        key="projects-view"
+        columns
+        class="pl-3 pr-3"
+      >
+        <project-card
+          v-for="(project, projectIndex) in records"
+          :key="project.id"
+          :project="project"
+          :projectIndex="projectIndex"
+        />
+      </b-card-group>
+
+      <table
+        v-else
+        key="projects-view"
+        class="projects-table"
+      >
+        <thead>
+        <tr>
+          <th class="th--state">State</th><th class="th--hostname">Project Name</th><th class="th--location">Location</th><th class="th--stack">Stack</th><th class="th--notes">Notes</th>
+        </tr>
+        </thead>
+        <tbody>
+        <project-row
+          v-for="(project, projectIndex) in records"
+          :key="project.id"
+          :project="project"
+          :projectIndex="projectIndex"
+        />
+        </tbody>
+      </table>
+    </div>
+
+    <div
+      v-else-if="isLoading"
+      key="projects-content"
+      class="content-wrap is-loading"
+    >
+      <h5>Loading...</h5>
+    </div>
+
+    <div
       v-else
-      key="projects-view"
-      class="projects-table"
+      key="projects-content"
+      class="content-wrap is-empty"
     >
-      <thead>
-      <tr>
-        <th class="th--state">State</th><th class="th--hostname">Project Name</th><th class="th--location">Location</th><th class="th--stack">Stack</th><th class="th--notes">Notes</th>
-      </tr>
-      </thead>
-      <tbody>
-      <project-row
-        v-for="(project, projectIndex) in projects"
-        :key="project.id"
-        :project="project"
-        :projectIndex="projectIndex"
-      />
-      </tbody>
-    </table>
+      <h5>No records match the current criteria.</h5>
+    </div>
   </div>
 </template>
 
@@ -47,9 +69,18 @@ export default {
     ProjectCard,
     ProjectRow
   },
+  data () {
+    return {
+      isLoading: false
+    }
+  },
   props: {
-    projects: {
+    records: {
       type: Array,
+      required: true
+    },
+    labels: {
+      type: Object,
       required: true
     },
     viewMode: {
@@ -68,6 +99,13 @@ export default {
 </script>
 
 <style scoped>
+
+  .is-empty{
+    margin-left: 1rem;
+    padding-left: 0;
+    padding-right: 1rem;
+  }
+
   .el-icon-caret-right {
     color: red;
   }

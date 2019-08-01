@@ -2,14 +2,14 @@
   <div class="drawer mb-3">
     <div
       class="drawer-handle"
-      @click="toggleDrawer"
+      @click="onToggleDrawer"
       role="tab"
       aria-controls="drawer-contents-id"
     >
       <div class="label small" >
         <span
           tabindex="0"
-          @keydown.enter="toggleDrawer"
+          @keydown.enter="onToggleDrawer"
         >
           Viewing Options&nbsp;
           <font-awesome-icon
@@ -27,7 +27,7 @@
 
       <div class="current-filter">
         <b-badge title="Filter by state" :variant="statesVariant">{{labelStates}}</b-badge>
-        <b-badge title="Filter by location" :variant="(showBasedirs == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBasedirs">{{labelBasedirs}}</b-badge>
+        <b-badge title="Filter by location" :variant="(showBasedirs == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBaseDirs">{{labelBasedirs}}</b-badge>
         <b-badge title="Filter by used stack" :variant="(showStacks == 'all') ? 'secondary' : 'warning'">{{labelStacks}}</b-badge>
         <b-badge title="Filter by used program" :variant="(showPrograms == 'all') ? 'secondary' : 'warning'">{{labelPrograms}}</b-badge>
         <b-badge title="Sorting order">{{labelSorting}}</b-badge>
@@ -54,9 +54,9 @@
             switches
             stack
           >
-            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="toggleState($event, 'running')">Running</b-form-checkbox>
-            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="toggleState($event, 'stopped')">Stopped</b-form-checkbox>
-            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="toggleState($event, 'candidates')">Candidates</b-form-checkbox>
+            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="onToggleState($event, 'running')">Running</b-form-checkbox>
+            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="onToggleState($event, 'stopped')">Stopped</b-form-checkbox>
+            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="onToggleState($event, 'candidates')">Candidates</b-form-checkbox>
             <small class="form-text text-muted">Project State</small>
           </b-form-checkbox-group>
 
@@ -65,14 +65,14 @@
             label=""
             label-for="filter-location"
             description="Location"
-            v-if="hasExtraBasedirs"
+            v-if="hasExtraBaseDirs"
           >
             <b-select
               id="filter-basedirs"
               variant="secondary"
               v-model="showBasedirs"
               :options="basedirsAsOptions"
-              @change="changeFilter($event, 'basedir')"
+              @change="onChangeFilter($event, 'basedir')"
               tabindex="4"
             >
               <template slot="first">
@@ -92,7 +92,7 @@
               id="filter-stacks"
               variant="secondary"
               v-model="showStacks"
-              @change="changeFilter($event, 'stacks')"
+              @change="onChangeFilter($event, 'stacks')"
             >
               <option
                 :value="null"
@@ -111,7 +111,7 @@
                   :key="item.value"
                   :value="item.value"
                 >
-                  {{item.text.toUpperCase()}}
+                  {{item.text.replace('gearbox.works/', '').toUpperCase()}}
                 </option>
               </optgroup>
               <!--option value="none">No stacks assigned</option-->
@@ -128,7 +128,7 @@
               id="filter-programs"
               variant="secondary"
               v-model="showPrograms"
-              @change="changeFilter($event, 'programs')"
+              @change="onChangeFilter($event, 'programs')"
             >
               <option
                 :value="null"
@@ -163,8 +163,8 @@
             <b-select
               id="sort-by"
               variant="secondary"
-              v-model="sortBy"
-              @change = changeSortBy($event)
+              v-model="sortByField"
+              @change = onChangeSortByField($event)
             >
               <option :value="null" disabled>Sort by...</option>
               <option value="access-date" disabled>Access date</option>
@@ -182,7 +182,7 @@
                href="#"
                title="Sort Order"
                class="view-mode view-mode--order"
-               @click.prevent="toggleSortingOrder"
+               @click.prevent="onToggleSortingOrder"
             >
               <font-awesome-icon
                 :icon="['fa', sortAscending ? 'sort-alpha-down': 'sort-alpha-up']"
@@ -227,8 +227,18 @@
 
 <script>
 
-import { mapGetters } from 'vuex'
-import { ProjectActions, ProjectMutations } from '../_store/public-types'
+import store from '../../../store'
+import ProjectMethodTypes from '../_store/public-types'
+import StackMethodTypes from '../../stacks/_store/public-types'
+import ServiceMethodTypes from '../../services/_store/public-types'
+import BasedirMethodTypes from '../../basedirs/_store/public-types'
+
+const { ActionTypes: ProjectActions } = ProjectMethodTypes
+const { GetterTypes: BasedirGetters } = BasedirMethodTypes
+const { GetterTypes: StackGetters } = StackMethodTypes
+const { GetterTypes: ServiceGetters } = ServiceMethodTypes
+
+console.log(store)
 
 export default {
   name: 'ProjectsDrawer',
@@ -241,20 +251,20 @@ export default {
       showStacks: 'all',
       showPrograms: 'all',
 
-      sortBy: 'project-title',
+      sortByField: 'project-title',
       sortAscending: true,
       viewMode: 'cards'
     }
   },
   computed: {
-    ...mapGetters([
-      'basedirBy',
-      'stackBy',
-      'basedirsAsOptions',
-      'stacksAsOptions',
-      'programsAsOptions',
-      'hasExtraBasedirs'
-    ]),
+
+    // stack () {
+    //   return this.$store.getters[StackGetters.FIND_BY]('id', this.gearspec.attributes.stack_id)
+    // },
+    stacksAsOptions: store.getters[StackGetters.LIST_OPTIONS],
+    programsAsOptions: store.getters[ServiceGetters.LIST_PROGRAM_OPTIONS],
+    basedirsAsOptions: store.getters[BasedirGetters.LIST_OPTIONS],
+    hasExtraBaseDirs: store.getters[BasedirGetters.HAS_EXTRA_BASEDIRS],
 
     labelStates () {
       const states = this.showStates
@@ -284,7 +294,9 @@ export default {
     },
 
     labelBasedirs () {
-      const basedir = (this.showBasedirs !== 'all') ? this.basedirBy('id', this.showBasedirs) : null
+      const basedir = (this.showBasedirs !== 'all')
+        ? this.$store.getters[BasedirGetters.FIND_BY]('id', this.showBasedirs)
+        : null
       return 'From ' + (basedir ? basedir.attributes.basedir : 'all known locations')
     },
 
@@ -293,7 +305,9 @@ export default {
       if (this.showStacks === 'none') {
         label = 'With no stacks assigned'
       } else {
-        const stack = (this.showStacks !== 'all') ? this.stackBy('id', this.showStacks) : null
+        const stack = (this.showStacks !== 'all')
+          ? this.$store.getters[StackGetters.FIND_BY]('id', this.showStacks)
+          : null
         label = 'Using ' + (stack ? (stack.attributes.stackname.toUpperCase() + ' stack') : 'any stack')
       }
       return label
@@ -311,17 +325,20 @@ export default {
     },
 
     labelSorting () {
-      return 'Sorted by ' + this.sortBy.replace('-', ' ') + (this.sortAscending ? '' : ' (reverse)')
+      return 'Sorted by ' + this.sortByField.replace('-', ' ') + (this.sortAscending ? '' : ' (reverse)')
     }
   },
   watch: {
     showStates: function (val, oldVal) {
-      this.$store.dispatch(ProjectActions.SET_LIST_FILTER, { field: 'states', values: this.showStates })
+      this.$store.dispatch(ProjectActions.SET_LIST_FILTER, {
+        field: 'states',
+        values: this.showStates
+      })
     }
   },
   methods: {
 
-    toggleDrawer () {
+    onToggleDrawer () {
       this.expanded = !this.expanded
       // if (this.expanded) {
       //   console.log('focus', this.$refs['state-filter'])
@@ -332,7 +349,7 @@ export default {
       // }
     },
 
-    toggleState (value, attribute) {
+    onToggleState (value, attribute) {
       const states = this.showStates
       const running = states.indexOf('running') !== -1
       const stopped = states.indexOf('stopped') !== -1
@@ -351,16 +368,22 @@ export default {
       }
     },
 
-    changeSortBy (value) {
-      this.$store.commit(ProjectMutations.SET_LIST_FILTER_SORT_BY, value)
+    onChangeSortByField (value) {
+      this.$store.commit(
+        ProjectActions.SET_LIST_FILTER_SORT_BY,
+        value
+      )
     },
 
-    toggleSortingOrder () {
+    onToggleSortingOrder () {
       this.sortAscending = !this.sortAscending
-      this.$store.commit(ProjectMutations.SET_LIST_FILTER_SORT_ORDER, this.sortAscending)
+      this.$store.dispatch(
+        ProjectActions.SET_LIST_FILTER_SORT_ASC,
+        this.sortAscending
+      )
     },
 
-    changeFilter (values, field) {
+    onChangeFilter (values, field) {
       this.$store.dispatch(
         ProjectActions.SET_LIST_FILTER,
         {
