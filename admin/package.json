@@ -22,7 +22,6 @@
     "to": "^0.2.9",
     "update": "^0.7.4",
     "vue": "^2.6.10",
-    "vue-axios": "^2.1.4",
     "vue-clipboard2": "^0.3.0",
     "vue-cool-select": "^2.10.2",
     "vue-markdown": "^2.2.4",

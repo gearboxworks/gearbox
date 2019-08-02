@@ -32,7 +32,7 @@
       >
         <li
             v-for="item in stackItems"
-            :key="id + item.gearspec.attributes.role"
+            :key="item.gearspecId"
             class="service-item"
         >
           <stack-gear :stackItem="item" />
@@ -63,10 +63,7 @@ export default {
     StackToolbar,
     StackGear
   },
-  inject: [
-    'project',
-    'projectPrefix'
-  ],
+  inject: [],
   props: {
     stackId: {
       type: String,
@@ -89,7 +86,6 @@ export default {
   },
   data () {
     return {
-      id: this.project.id,
       alertShow: false,
       alertContent: 'content',
       alertDismissible: true,

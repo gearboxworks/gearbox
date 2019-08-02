@@ -12,6 +12,7 @@
       @load="onImageLoaded"
     />
     <font-awesome-icon
+      class="service-program is-unassigned"
       v-else
       :icon="['fa', 'expand']"
     />
@@ -164,9 +165,7 @@ export default {
     border: 1px solid #aaa;
     background-color: #eee;
   }
-  .project-gear{
-    /*outline: none;*/
-  }
+  .project-gear{}
   .gear-role{
     margin-top:5px;
     margin-bottom: 0;
@@ -176,7 +175,12 @@ export default {
     height: 64px;
     width: 64px;
   }
-  .service-program.is-loaded {
+  .service-program.is-unassigned {
+    width: 32px;
+    height: 50px;
+    color: var(--gray);
+  }
+/*  .service-program.is-loaded {
     animation-duration: 0.5s;
     animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
     animation-delay: 0s;
@@ -250,5 +254,5 @@ export default {
       transform: scale(0.75);
     }
   }
-
+*/
 </style>
