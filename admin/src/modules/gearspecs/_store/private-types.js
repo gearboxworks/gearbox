@@ -4,16 +4,15 @@ import moduleConfig from '../config'
  * Note, you should avoid overriding method names that already exist in BaseTypes
  */
 const ExtraGetters = {
-  DEMO_GETTER: 'DEMO_GETTER'
+  FIND_COMPATIBLE_SERVICE: 'FIND_COMPATIBLE_SERVICE',
+  DEFAULT_GEARSPEC_SERVICE: 'DEFAULT_GEARSPEC_SERVICE',
+  GEARSPEC_SERVICES: 'GEARSPEC_SERVICES',
+  GEARSPEC_SERVICE_VERSIONS_GROUPED_BY_PROGRAM: 'GEARSPEC_SERVICE_VERSIONS_GROUPED_BY_PROGRAM'
 }
 
-const ExtraActions = {
-  DEMO_ACTION: 'DEMO_ACTION'
-}
+const ExtraActions = {}
 
-const ExtraMutations = {
-  DEMO_MUTATION: 'DEMO_MUTATION'
-}
+const ExtraMutations = {}
 
 export default {
   Namespace: moduleConfig.namespace,

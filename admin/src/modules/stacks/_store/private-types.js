@@ -4,9 +4,6 @@ import moduleConfig from '../config'
  * Note, you should avoid overriding method names that already exist in BaseTypes
  */
 const ExtraGetters = {
-  FIND_COMPATIBLE_SERVICE: 'FIND_COMPATIBLE_SERVICE',
-  DEFAULT_SERVICE_FOR_GEARSPEC: 'DEFAULT_SERVICE_FOR_GEARSPEC',
-  GEARSPEC_SERVICES: 'GEARSPEC_SERVICES'
 }
 
 const ExtraActions = {}

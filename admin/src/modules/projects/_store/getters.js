@@ -1,7 +1,12 @@
 import BaseGetters from '../../_base/_store/getters'
 
 import ProjectMethodNames from './private-types'
+import GearspecMethodNames from '../../gearspecs/_store/public-types'
+import ServiceMethodNames from '../../services/_store/public-types'
+
 const { GetterTypes: Getters } = ProjectMethodNames
+const { GetterTypes: GearspecGetters } = GearspecMethodNames
+const { GetterTypes: ServiceGetters } = ServiceMethodNames
 
 const OverrideGetters = {
 
@@ -80,13 +85,13 @@ const OverrideGetters = {
       if (stackItem.isRemoved) {
         return
       }
-      const gearspec = rootGetters['gearspecs/FIND_BY']('id', stackItem.gearspec_id)
+      const gearspec = rootGetters[GearspecGetters.FIND_BY]('id', stackItem.gearspec_id)
 
       if (gearspec) {
         if (typeof result[gearspec.attributes.stack_id] === 'undefined') {
           result[gearspec.attributes.stack_id] = []
         }
-        const service = stackItem.service_id ? rootGetters['services/FIND_BY']('id', stackItem.service_id) : null
+        const service = stackItem.service_id ? rootGetters[ServiceGetters.FIND_BY]('id', stackItem.service_id) : null
         /**
          * note, when there is no exact match, service will be null,
          * but we will try to find a good-enough match further down the road;
@@ -125,11 +130,9 @@ const OverrideGetters = {
         // if (stackMember.isRemoved) {
         //   return
         // }
-        const gearspec = rootGetters['gearspecs/FIND_BY']('id', stackMember.gearspec_id)
-
-        const stack = rootGetters['stacks/FIND_BY']('id', gearspec.attributes.stack_id)
-        const serviceId = rootGetters['stacks/FIND_COMPATIBLE_SERVICE'](stack, gearspec.id, stackMember.service_id)
-        const service = serviceId ? rootGetters['services/FIND_BY']('id', serviceId) : null
+        const gearspec = rootGetters[GearspecGetters.FIND_BY]('id', stackMember.gearspec_id)
+        const serviceId = rootGetters[GearspecGetters.FIND_COMPATIBLE_SERVICE](gearspec, stackMember.service_id)
+        const service = serviceId ? rootGetters[ServiceGetters.FIND_BY]('id', serviceId) : null
 
         if (gearspec && service) {
           // console.log(result, gearspec.attributes.stack_id, gearspec.attributes.role)

@@ -6,7 +6,7 @@
   >
     <b-form-select
       class="select-stack"
-      v-model="selectedStack"
+      v-model="selectedStackId"
       :disabled="!hasUnusedStacks || isUpdating"
       :required="true"
       @change="isModified=true"
@@ -53,8 +53,8 @@
 </template>
 
 <script>
-import StoreMethodTypes from '../../_store/public-types'
-const { GetterTypes: ProjectGetters, ActionTypes: ProjectActions } = StoreMethodTypes
+import ProjectMethodTypes from '../../_store/public-types'
+const { GetterTypes: ProjectGetters, ActionTypes: ProjectActions } = ProjectMethodTypes
 
 export default {
   name: 'ProjectStackAdd',
@@ -66,7 +66,7 @@ export default {
   data () {
     return {
       id: this.project.id,
-      selectedStack: '',
+      selectedStackId: '',
       isCollapsed: true,
       isModified: false,
       isUpdating: false
@@ -97,7 +97,7 @@ export default {
 
         this.isUpdating = false
         this.isCollapsed = true
-        this.selectedStack = ''
+        this.selectedStackId = ''
         this.isModified = false
 
         this.$emit('maybe-hide-alert', 'Please add some stacks first!')
@@ -115,7 +115,7 @@ export default {
         })
       } else {
         if (this.isModified) {
-          this.maybeAddProjectStack(this.selectedStack)
+          this.maybeAddProjectStack(this.selectedStackId)
         } else {
           this.isCollapsed = true
         }

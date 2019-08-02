@@ -30,13 +30,14 @@
 
    <stack-gear-popover
      :key = "gearControlId"
+     :role = "gearspec.attributes.role"
      :gearControlId = "gearControlId"
-     :stackItem = "stackItem"
-     :gearspec = "gearspec"
-     :service = "service"
-     :stack = "stack"
-     :defaultService = defaultService
-     :compatibleServiceId = compatibleServiceId
+     :serviceVersions = "serviceVersionsGroupedByProgram"
+     :defaultService = "defaultService"
+     :compatibleServiceId = "compatibleServiceId"
+     :versionMismatchMessage = "versionMismatchMessage"
+     @change-gear="onChangeProjectGear"
+     @close-popover="closePopover"
    />
   </div>
 </template>
@@ -45,9 +46,13 @@
 import StackGearPopover from './StackGearPopover'
 
 import StackMethodTypes from '../_store/public-types'
+import GearspecMethodNames from '../../gearspecs/_store/public-types'
 import ServiceMethodTypes from '../../services/_store/public-types'
+import ProjectMethodTypes from '../../projects/_store/public-types'
 const { GetterTypes: StackGetters } = StackMethodTypes
 const { GetterTypes: ServiceGetters } = ServiceMethodTypes
+const { GetterTypes: GearspecGetters } = GearspecMethodNames
+const { ActionTypes: ProjectActions } = ProjectMethodTypes
 
 export default {
   name: 'StackGear',
@@ -85,6 +90,21 @@ export default {
       return this.stackItem.gearspec
     },
 
+    serviceVersionsGroupedByProgram () {
+      return this.$store.getters[GearspecGetters.GEARSPEC_SERVICE_VERSIONS_GROUPED_BY_PROGRAM](this.gearspec)
+    },
+
+    versionMismatchMessage () {
+      let message = ''
+      console.log()
+      if ((this.defaultService || !!this.stackItem.serviceId) && !this.stackItem.service) {
+        const requested = this.stackItem.serviceId.split(':')[1]
+        const compatible = this.compatibleServiceId.split(':')[1]
+        message = `Could not find the requested version (v.${requested}), will use the closest match (v.${compatible}) instead.`
+      }
+      return message
+    },
+
     stack () {
       return this.$store.getters[StackGetters.FIND_BY](
         'id',
@@ -93,16 +113,14 @@ export default {
     },
 
     defaultService () {
-      return this.$store.getters[StackGetters.DEFAULT_SERVICE_FOR_GEARSPEC](
-        this.stack,
-        this.stackItem.gearspecId
+      return this.$store.getters[GearspecGetters.DEFAULT_GEARSPEC_SERVICE](
+        this.stackItem.gearspec
       )
     },
 
     compatibleServiceId () {
-      return this.$store.getters[StackGetters.FIND_COMPATIBLE_SERVICE](
-        this.stack,
-        this.stackItem.gearspecId,
+      return this.$store.getters[GearspecGetters.FIND_COMPATIBLE_SERVICE](
+        this.stackItem.gearspec,
         this.stackItem.serviceId
       )
     },
@@ -131,6 +149,9 @@ export default {
       let version = attributes ? attributes.version : ''
 
       if (serviceId && (!attributes || (this.service && this.service.id !== serviceId))) {
+        /**
+         * TODO move this logic to a global helper function
+         */
         program = serviceId.split('/')[1].split(':')[0]
         version = serviceId.split('/')[1].split(':')[1]
       }
@@ -139,11 +160,55 @@ export default {
         ? (program + ' ' + version)
         : 'Service not selected'
     }
+
   },
   methods: {
     onImageLoaded () {
       this.isSwitching = false
       this.isLoaded = true
+    },
+
+    async onChangeProjectGear (selectedServiceId) {
+      const previousId = this.service ? this.service.id : ''
+      /**
+       * TODO move this logic to a global helper function
+       */
+      const program1 = previousId ? previousId.split('/')[1].split(':')[0] : ''
+      const program2 = selectedServiceId ? selectedServiceId.split('/')[1].split(':')[0] : ''
+
+      if (program1 !== program2) {
+        this.isLoaded = false
+        this.isSwitching = true
+        this.isSwitchingSame = false
+        this.isSwitchingSameAgain = false
+      } else {
+        if (previousId !== selectedServiceId) {
+          if (!this.isSwitchingSame && !this.isSwitchingSameAgain) {
+            this.isSwitchingSame = true
+            this.isSwitchingSameAgain = false
+          } else {
+            this.isSwitchingSame = !this.isSwitchingSame
+            this.isSwitchingSameAgain = !this.isSwitchingSameAgain
+          }
+        }
+      }
+      try {
+        await this.$store.dispatch(
+          ProjectActions.CHANGE_GEAR,
+          {
+            project: this.project,
+            gearspecId: this.gearspec.id,
+            serviceId: selectedServiceId
+          }
+        )
+      } catch (e) {
+        console.error(e.message)
+      }
+      this.closePopover()
+    },
+
+    closePopover () {
+      this.$root.$emit('bv::hide::popover', this.gearControlId)
     }
   }
 }

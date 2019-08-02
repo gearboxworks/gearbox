@@ -2,8 +2,8 @@ import BaseActions from '../../_base/_store/actions'
 import { UNSUPPORTED_ACTION } from '../../_helpers'
 import api from '../_api'
 
-import StoreMethodTypes from './private-types'
-const { ActionTypes: Actions } = StoreMethodTypes
+import StackMethodTypes from './private-types'
+const { ActionTypes: Actions } = StackMethodTypes
 
 const OverrideActions = {
   // [Actions.LOAD_ALL]: ({ commit }, payload) => UNSUPPORTED_ACTION(),

@@ -2,7 +2,7 @@
   <div class="toolbar-list">
     <div
       class="toolbar-item toolbar-item--more"
-      :key="projectPrefix + stackId + 'more'"
+      :key="projectPrefix + stackId + '-more'"
     >
       <font-awesome-icon
         v-if="isDeleting"
@@ -38,7 +38,7 @@
       <li
         v-if="isRunning"
         :class="['toolbar-item', 'toolbar-item--frontend']"
-        :key="projectPrefix + stackId + 'frontend'"
+        :key="projectPrefix + stackId + '-frontend'"
       >
         <a target="_blank"
            :href="`//${hostname}/`"
@@ -61,7 +61,7 @@
       <li
         v-if="isRunning"
         :class="['toolbar-item', 'toolbar-item--dashboard']"
-        :key="projectPrefix + stackId + 'dashboard'"
+        :key="projectPrefix + stackId + '-dashboard'"
       >
         <a target="_blank"
            :href="`//${hostname}/wp-admin/`"
@@ -84,7 +84,7 @@
       <li
         v-if="isRunning"
         :class="['toolbar-item', 'toolbar-item--adminer']"
-        :key="projectPrefix + stackId + 'adminer'"
+        :key="projectPrefix + stackId + '-adminer'"
       >
         <a target="_blank"
            :href="`//${hostname}/wp-admin/`"
@@ -107,7 +107,7 @@
       <li
         v-if="isRunning"
         :class="['toolbar-item', 'toolbar-item--frontend']"
-        :key="projectPrefix + stackId + 'mailhog'"
+        :key="projectPrefix + stackId + '-mailhog'"
       >
         <a target="_blank"
            :href="`//${hostname}:4003`"

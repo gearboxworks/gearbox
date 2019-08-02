@@ -4,9 +4,9 @@ import BaseMutations from '../../_base/_store/mutations'
 
 import store from '../../../store'
 import ProjectMethodNames from './private-types'
-import StackMethodNames from '../../stacks/_store/public-types'
+import GearspecMethodNames from '../../gearspecs/_store/public-types'
 const { MutationTypes: Mutations } = ProjectMethodNames
-const { GetterTypes: StackGetters } = StackMethodNames
+const { GetterTypes: GearspecGetters } = GearspecMethodNames
 
 const OverrideMutations = {
 
@@ -59,8 +59,7 @@ const OverrideMutations = {
           // if m.gearspec_id already exists, mark it with isRemoved = false
           Vue.set(item, 'isRemoved', false)
         } else {
-          const serviceId = store.getters[StackGetters.FIND_COMPATIBLE_SERVICE](
-            stack,
+          const serviceId = store.getters[GearspecGetters.FIND_COMPATIBLE_SERVICE](
             m.gearspec_id,
             m.default_service
           )
