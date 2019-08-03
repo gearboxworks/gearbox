@@ -40,8 +40,7 @@
 
 <script>
 
-import ProjectMethodTypes from '../../_store/public-types'
-const { ActionTypes: ProjectActions } = ProjectMethodTypes
+import { ProjectActions } from '../../_store/method-names'
 
 export default {
   name: 'ProjectLocation',

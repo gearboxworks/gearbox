@@ -55,8 +55,7 @@ import ProjectNote from './shared/ProjectNote'
 import ProjectStackAdd from './shared/ProjectStackAdd'
 import ProjectStackList from './shared/ProjectStackList'
 
-import StoreMethodTypes from '../_store/public-types'
-const { ActionTypes: ProjectActions, MutationTypes: ProjectMutations } = StoreMethodTypes
+import { ProjectActions, ProjectMutations } from '../_store/method-names'
 
 export default {
   name: 'ProjectCard',

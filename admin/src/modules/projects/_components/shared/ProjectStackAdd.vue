@@ -53,8 +53,7 @@
 </template>
 
 <script>
-import ProjectMethodTypes from '../../_store/public-types'
-const { GetterTypes: ProjectGetters, ActionTypes: ProjectActions } = ProjectMethodTypes
+import { ProjectGetters, ProjectActions } from '../../_store/method-names'
 
 export default {
   name: 'ProjectStackAdd',

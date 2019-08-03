@@ -111,8 +111,7 @@
 <script>
 import VueMarkdown from 'vue-markdown'
 
-import StoreMethodTypes from '../../_store/public-types'
-const { ActionTypes: ProjectActions } = StoreMethodTypes
+import { ProjectActions } from '../../_store/method-names'
 
 export default {
   name: 'ProjectNote',

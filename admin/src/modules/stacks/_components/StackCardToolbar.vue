@@ -126,11 +126,10 @@
 </template>
 
 <script>
-import StoreMethodTypes from '../../projects/_store/public-types'
-const { ActionTypes: ProjectActions } = StoreMethodTypes
+import { ProjectActions } from '../../projects/_store/method-names'
 
 export default {
-  name: 'StackToolbar',
+  name: 'StackCardToolbar',
   inject: [
     'project',
     'projectPrefix'

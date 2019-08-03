@@ -1,16 +1,16 @@
-import BaseGetters from '../../_base/_store/getters'
+import NamespacedBaseGetters from '../../_base/_store/getters'
+import moduleConfig from '../config'
 
-import ProjectMethodNames from './private-types'
-import GearspecMethodNames from '../../gearspecs/_store/public-types'
-import ServiceMethodNames from '../../services/_store/public-types'
+import { ProjectGetters as Getters } from './method-names'
+import { GearspecGetters } from '../../gearspecs/_store/method-names'
+import { ServiceGetters } from '../../services/_store/method-names'
 
-const { GetterTypes: Getters } = ProjectMethodNames
-const { GetterTypes: GearspecGetters } = GearspecMethodNames
-const { GetterTypes: ServiceGetters } = ServiceMethodNames
+const BaseGetters = NamespacedBaseGetters(moduleConfig.namespace)
 
-const OverrideGetters = {
+export default {
+  ...BaseGetters,
 
-  [Getters.LIST_FILTERED_BY]: (state) => (fieldName, allowedValues) => {
+  [Getters.LIST_FILTERED_BY]: (state, getters, rootState, rootGetters) => (fieldName, allowedValues) => {
     const valuesArray = Array.isArray(allowedValues) ? allowedValues : [allowedValues]
     // 'notes' and 'stack' are not included on purpose because simple comparison does not work on them
     let projects = []
@@ -20,13 +20,13 @@ const OverrideGetters = {
     } else if (fieldName === 'programs') {
       projects = state.records.filter(p => p.attributes.stack.some(s => valuesArray.some(val => s.service_id.split('/')[1].split(':')[0] === val)))
     } else {
-      projects = BaseGetters[Getters.LIST_FILTERED_BY](state)(fieldName, allowedValues)
+      projects = BaseGetters[Getters.LIST_FILTERED_BY.replace(moduleConfig.namespace)](state, getters, rootState, rootGetters)(fieldName, allowedValues)
     }
 
     return projects
   },
 
-  [Getters.LIST_FILTERED]: (state, getters) => () => {
+  [Getters.LIST_FILTERED]: (state, getters, rootState, rootGetters) => () => {
     let list = state.records
     const sortAscending = !!state.sorting.ascending
     // const sortBy = state.sortBy
@@ -59,7 +59,7 @@ const OverrideGetters = {
     return list.concat().sort((a, b) => a.id > b.id ? (sortAscending ? 1 : -1) : (a.id === b.id) ? 0 : (sortAscending ? -1 : 1))
   },
 
-  [Getters.PROJECT_STACK_ITEM_INDEX_BY]: (state, getters) => (project, fieldName, fieldValue) => {
+  [Getters.PROJECT_STACK_ITEM_INDEX_BY]: (state, getters, rootState, rootGetters) => (project, fieldName, fieldValue) => {
     let memberIndex = -1
     project.attributes.stack.find((m, idx) => {
       /**
@@ -166,5 +166,3 @@ const OverrideGetters = {
     return result
   }
 }
-
-export default { ...BaseGetters, ...OverrideGetters }

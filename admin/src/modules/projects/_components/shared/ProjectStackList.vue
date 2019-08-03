@@ -29,9 +29,7 @@
 <script>
 
 import StackCard from '../../../stacks/_components/StackCard.vue'
-
-import StoreMethodTypes from '../../_store/public-types'
-const { GetterTypes: ProjectGetters } = StoreMethodTypes
+import { ProjectGetters } from '../../_store/method-names'
 
 export default {
   name: 'StackCardList',

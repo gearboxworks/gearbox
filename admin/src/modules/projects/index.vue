@@ -23,8 +23,7 @@ import moduleConfig from './config'
 import ProjectsDrawer from './_components/ProjectsDrawer'
 import ProjectsList from './_components/ProjectsList'
 
-import StoreMethodTypes from './_store/public-types'
-const { GetterTypes: ProjectGetters } = StoreMethodTypes
+import { ProjectGetters } from './_store/method-names'
 
 export default {
   name: moduleConfig.moduleName,

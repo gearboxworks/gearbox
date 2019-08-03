@@ -45,8 +45,7 @@
 
 <script>
 // import { mapGetters, mapActions } from 'vuex'
-import BasedirMethodTypes from '../_store/public-types'
-const { ActionTypes: BasedirActions } = BasedirMethodTypes
+import { BasedirActions } from '../_store/method-names'
 
 export default {
   name: 'BasedirRowEdit',

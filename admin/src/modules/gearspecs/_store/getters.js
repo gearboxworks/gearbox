@@ -1,39 +1,26 @@
-import BaseGetters from '../../_base/_store/getters'
-import { UNSUPPORTED_GETTER } from '../../_helpers'
+import NamespacedBaseGetters from '../../_base/_store/getters'
+import moduleConfig from '../config'
 
-import GearspecMethodTypes from './private-types'
-import StackMethodTypes from '../../stacks/_store/public-types'
-const { GetterTypes: Getters } = GearspecMethodTypes
-const { GetterTypes: StackGetters } = StackMethodTypes
+import { GearspecGetters as Getters } from './method-names'
+import { StackGetters } from '../../stacks/_store/method-names'
 
-const OverrideGetters = {
+export default {
+  ...NamespacedBaseGetters(moduleConfig.namespace),
 
-  // [Getters.FIND_BY]: (state) => (fieldName, fieldValue) => {
-  //   /**
-  //    * manipulate arguments
-  //    */
-  //   const results = BaseGetters[Getters.FIND_BY](state)(fieldName, fieldValue)
-  //   /**
-  //    * manipulate results
-  //    */
-  //   return results
-  // },
-
-  // [Getters.DEMO_GETTER]: (state) => {
-  //   return 'This is the result from DEMO_GETTER.'
-  // },
-
-  // [Getters.LIST_FILTERED_BY]: (state) => (state) => (fieldName, allowedValues) => UNSUPPORTED_GETTER(),
-  // [Getters.LIST_FILTERED]: (state, getters) => UNSUPPORTED_GETTER(),
-
-  [Getters.LIST_OPTIONS]: (state, getters, rootState, rootGetters) => () => BaseGetters[Getters.LIST_OPTIONS](state, getters, rootState, rootGetters)('role'),
-
-  [Getters.GEARSPEC_SERVICES]: (state, getters, rootState, rootGetters) => (gearspecOrGearspecId) => {
+  [Getters.STACK]: (state, getters, rootState, rootGetters) => (gearspecOrGearspecId) => {
     const gearspec = (typeof gearspecOrGearspecId === 'string')
-      ? getters[Getters.FIND_BY]('id', gearspecOrGearspecId)
+      ? rootGetters[Getters.FIND_BY]('id', gearspecOrGearspecId)
       : gearspecOrGearspecId
 
-    const stack = rootGetters[StackGetters.FIND_BY]('id', gearspec.attributes.stack_id)
+    return rootGetters[StackGetters.FIND_BY]('id', gearspec.attributes.stack_id)
+  },
+
+  [Getters.SERVICES]: (state, getters, rootState, rootGetters) => (gearspecOrGearspecId) => {
+    const gearspec = (typeof gearspecOrGearspecId === 'string')
+      ? rootGetters[Getters.FIND_BY]('id', gearspecOrGearspecId)
+      : gearspecOrGearspecId
+
+    const stack = rootGetters[Getters.STACK](gearspec)
 
     let services = []
     stack.attributes.members.find((m, idx) => {
@@ -46,12 +33,12 @@ const OverrideGetters = {
     return services
   },
 
-  [Getters.DEFAULT_GEARSPEC_SERVICE]: (state, getters, rootState, rootGetters) => (gearspecOrGearspecId) => {
+  [Getters.DEFAULT_SERVICE]: (state, getters, rootState, rootGetters) => (gearspecOrGearspecId) => {
     const gearspec = (typeof gearspecOrGearspecId === 'string')
-      ? getters[Getters.FIND_BY]('id', gearspecOrGearspecId)
+      ? rootGetters[Getters.FIND_BY]('id', gearspecOrGearspecId)
       : gearspecOrGearspecId
 
-    const stack = rootGetters[StackGetters.FIND_BY]('id', gearspec.attributes.stack_id)
+    const stack = rootGetters[Getters.STACK](gearspec)
 
     let defaultService = ''
 
@@ -71,12 +58,8 @@ const OverrideGetters = {
    * As an example, for php:7.1.18 it will select php:7.1 or php:7 if exact match is not possible
    */
   [Getters.FIND_COMPATIBLE_SERVICE]: (state, getters, rootState, rootGetters) => (gearspecOrGearspecId, requestedServiceId) => {
-    const gearspec = (typeof gearspecOrGearspecId === 'string')
-      ? getters[Getters.FIND_BY]('id', gearspecOrGearspecId)
-      : gearspecOrGearspecId
-
-    const serviceIds = getters[Getters.GEARSPEC_SERVICES](gearspec)
-    const defaultServiceId = requestedServiceId || getters[Getters.DEFAULT_GEARSPEC_SERVICE](gearspec)
+    const serviceIds = rootGetters[Getters.SERVICES](gearspecOrGearspecId)
+    const defaultServiceId = requestedServiceId || rootGetters[Getters.DEFAULT_SERVICE](gearspecOrGearspecId)
 
     /**
      * Resolve default option:
@@ -122,12 +105,12 @@ const OverrideGetters = {
     return selectedService
   },
 
-  [Getters.GEARSPEC_SERVICE_VERSIONS_GROUPED_BY_PROGRAM]: (state, getters, rootState, rootGetters) => (gearspecOrGearspecId) => {
+  [Getters.SERVICE_VERSIONS_GROUPED_BY_PROGRAM]: (state, getters, rootState, rootGetters) => (gearspecOrGearspecId) => {
     const gearspec = (typeof gearspecOrGearspecId === 'string')
-      ? getters[Getters.FIND_BY]('id', gearspecOrGearspecId)
+      ? rootGetters[Getters.FIND_BY]('id', gearspecOrGearspecId)
       : gearspecOrGearspecId
 
-    const services = getters[Getters.GEARSPEC_SERVICES](gearspec)
+    const services = rootGetters[Getters.SERVICES](gearspec)
     const result = {}
     services.forEach(serviceId => {
       /**
@@ -142,7 +125,4 @@ const OverrideGetters = {
     })
     return result
   }
-
 }
-
-export default { ...BaseGetters, ...OverrideGetters }

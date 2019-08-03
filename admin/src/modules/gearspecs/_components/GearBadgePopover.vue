@@ -37,31 +37,27 @@
             v-for="(serviceVersion, serviceId) in serviceVersions"
             :value="serviceId"
             :key="serviceId"
-            :disabled="project.attributes.enabled"
+            :disabled="isProjectEnabled"
           >
             {{serviceVersion}}
           </option>
         </optgroup>
       </b-form-select>
       <b-alert :show="versionMismatchMessage" variant="warning">{{versionMismatchMessage}}</b-alert>
-      <b-alert :show="project.attributes.enabled">Note, you cannot change this service while the project is running!</b-alert>
+      <b-alert :show="isProjectEnabled">Note, you cannot change this service while the project is running!</b-alert>
     </b-form-group>
   </b-popover>
 </template>
 
 <script>
 export default {
-  name: 'StackGearPopover',
-  inject: [
-    'project',
-    'projectPrefix'
-  ],
+  name: 'GearBadgePopover',
   props: {
-    gearControlId: {
-      type: String,
+    isProjectEnabled: {
+      type: Boolean,
       require: true
     },
-    versionMismatchMessage: {
+    gearControlId: {
       type: String,
       require: true
     },
@@ -78,6 +74,10 @@ export default {
       require: true
     },
     compatibleServiceId: {
+      type: String,
+      require: true
+    },
+    versionMismatchMessage: {
       type: String,
       require: true
     }

@@ -111,8 +111,7 @@
 </template>
 
 <script>
-import StoreMethodTypes from '../_store/public-types'
-const { ActionTypes: BasedirActions } = StoreMethodTypes
+import { BasedirActions } from '../_store/method-names'
 
 export default {
   name: 'BasedirRowEdit',

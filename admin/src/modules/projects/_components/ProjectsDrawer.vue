@@ -227,18 +227,10 @@
 
 <script>
 
-import store from '../../../store'
-import ProjectMethodTypes from '../_store/public-types'
-import StackMethodTypes from '../../stacks/_store/public-types'
-import ServiceMethodTypes from '../../services/_store/public-types'
-import BasedirMethodTypes from '../../basedirs/_store/public-types'
-
-const { ActionTypes: ProjectActions } = ProjectMethodTypes
-const { GetterTypes: BasedirGetters } = BasedirMethodTypes
-const { GetterTypes: StackGetters } = StackMethodTypes
-const { GetterTypes: ServiceGetters } = ServiceMethodTypes
-
-console.log(store)
+import { ProjectActions } from '../_store/method-names'
+import { BasedirGetters } from '../../basedirs/_store/method-names'
+import { StackGetters } from '../../stacks/_store/method-names'
+import { ServiceGetters } from '../../services/_store/method-names'
 
 export default {
   name: 'ProjectsDrawer',
@@ -261,10 +253,21 @@ export default {
     // stack () {
     //   return this.$store.getters[StackGetters.FIND_BY]('id', this.gearspec.attributes.stack_id)
     // },
-    stacksAsOptions: store.getters[StackGetters.LIST_OPTIONS],
-    programsAsOptions: store.getters[ServiceGetters.LIST_PROGRAM_OPTIONS],
-    basedirsAsOptions: store.getters[BasedirGetters.LIST_OPTIONS],
-    hasExtraBaseDirs: store.getters[BasedirGetters.HAS_EXTRA_BASEDIRS],
+    stacksAsOptions () {
+      return this.$store.getters[StackGetters.LIST_OPTIONS]('stackname')
+    },
+
+    programsAsOptions () {
+      return this.$store.getters[ServiceGetters.LIST_PROGRAM_OPTIONS]()
+    },
+
+    basedirsAsOptions () {
+      return this.$store.getters[BasedirGetters.LIST_OPTIONS]('basedir')
+    },
+
+    hasExtraBaseDirs () {
+      return this.$store.getters[BasedirGetters.HAS_EXTRA_BASEDIRS]()
+    },
 
     labelStates () {
       const states = this.showStates

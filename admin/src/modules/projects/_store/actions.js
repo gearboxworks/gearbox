@@ -1,13 +1,13 @@
+import NamespacedBaseActions from '../../_base/_store/actions'
+import moduleConfig from '../config'
 import api from '../_api'
 import { FORCED_DELAY } from '../../_helpers'
-import BaseActions from '../../_base/_store/actions'
 
-import ProjectMethodNames from './private-types'
-import StackMethodNames from '../../stacks/_store/public-types'
-const { GetterTypes: Getters, ActionTypes: Actions, MutationTypes: Mutations } = ProjectMethodNames
-const { GetterTypes: StackGetters } = StackMethodNames
+import { ProjectGetters as Getters, ProjectActions as Actions, ProjectMutations as Mutations } from './method-names'
+import { StackGetters } from '../../stacks/_store/method-names'
 
-const OverrideActions = {
+export default {
+  ...NamespacedBaseActions(api, moduleConfig.namespace),
 
   [Actions.LOAD_ONE] ({ commit }, project) {
     return api.fetchOne(project.id)
@@ -121,5 +121,3 @@ const OverrideActions = {
     })
   }
 }
-
-export default { ...BaseActions(api), ...OverrideActions }

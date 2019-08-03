@@ -19,7 +19,7 @@
       {{stackId.replace('gearbox.works/', '')}}
     </h2>
 
-    <stack-toolbar
+    <stack-card-toolbar
       v-if="isExpanded"
       :stackId="stackId"
       @show-alert="showAlert"
@@ -35,7 +35,7 @@
             :key="item.gearspecId"
             class="service-item"
         >
-          <stack-gear :stackItem="item" />
+          <gear-badge :stackItem="item" />
         </li>
       </ul>
       <b-alert
@@ -54,14 +54,14 @@
 
 <script>
 
-import StackToolbar from './StackToolbar.vue'
-import StackGear from './StackGear.vue'
+import StackCardToolbar from './StackCardToolbar.vue'
+import GearBadge from '../../gearspecs/_components/GearBadge.vue'
 
 export default {
   name: 'StackCard',
   components: {
-    StackToolbar,
-    StackGear
+    StackCardToolbar,
+    GearBadge
   },
   inject: [],
   props: {

@@ -28,17 +28,11 @@
 <script>
 import TheTopBar from './components/TheTopBar'
 
-import BasedirMethodTypes from './modules/basedirs/_store/public-types'
-import GearspecMethodTypes from './modules/gearspecs/_store/public-types'
-import StackMethodTypes from './modules/stacks/_store/public-types'
-import ServiceMethodTypes from './modules/services/_store/public-types'
-import ProjectMethodTypes from './modules/projects/_store/public-types'
-
-const { ActionTypes: BasedirActions } = BasedirMethodTypes
-const { ActionTypes: GearspecActions } = GearspecMethodTypes
-const { ActionTypes: StackActions } = StackMethodTypes
-const { ActionTypes: ServiceActions } = ServiceMethodTypes
-const { ActionTypes: ProjectActions } = ProjectMethodTypes
+import { BasedirActions } from './modules/basedirs/_store/method-names'
+import { GearspecActions } from './modules/gearspecs/_store/method-names'
+import { StackActions } from './modules/stacks/_store/method-names'
+import { ServiceActions } from './modules/services/_store/method-names'
+import { ProjectActions } from './modules/projects/_store/method-names'
 
 export default {
   name: 'App',
@@ -63,15 +57,6 @@ export default {
   },
 
   mounted () {
-    // console.log(
-    //   BasedirActions.LOAD_ALL,
-    //   StackActions.LOAD_ALL,
-    //   ServiceActions.LOAD_ALL,
-    //   GearspecActions.LOAD_ALL,
-    //   ProjectActions.LOAD_ALL,
-    //   ProjectActions.LOAD_ALL_DETAILS
-    // )
-
     this.$store.dispatch(BasedirActions.LOAD_ALL)
     this.$store.dispatch(StackActions.LOAD_ALL)
     this.$store.dispatch(ServiceActions.LOAD_ALL)

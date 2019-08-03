@@ -1,11 +1,12 @@
-import BaseActions from '../../_base/_store/actions'
-import { UNSUPPORTED_ACTION, FORCED_DELAY } from '../../_helpers'
+import NamespacedBaseActions from '../../_base/_store/actions'
+import { FORCED_DELAY } from '../../_helpers'
+import moduleConfig from '../config'
 import api from '../_api'
 
-import StoreMethodTypes from './private-types'
-const { ActionTypes: Actions, MutationTypes: Mutations } = StoreMethodTypes
+import { DemoActions as Actions, DemoMutations as Mutations } from './method-names'
 
-const OverrideActions = {
+export default {
+  ...NamespacedBaseActions(api, moduleConfig.namespace),
 
   [Actions.DEMO_ACTION]: ({ commit }, payload) => {
     console.warn('Called DEMO_ACTION. Returning a promise to call SOME_MUTATION in ' + FORCED_DELAY + 'ms with this payload:', payload)
@@ -15,14 +16,5 @@ const OverrideActions = {
         resolve()
       }, FORCED_DELAY)
     })
-  },
-
-  [Actions.LOAD_ALL]: ({ commit }, payload) => UNSUPPORTED_ACTION(),
-  [Actions.LOAD_ONE]: ({ commit }, payload) => UNSUPPORTED_ACTION(),
-  [Actions.CREATE]: ({ commit }, payload) => UNSUPPORTED_ACTION(),
-  [Actions.UPDATE]: ({ commit }, payload) => UNSUPPORTED_ACTION(),
-  [Actions.DELETE]: ({ commit }, payload) => UNSUPPORTED_ACTION()
-
+  }
 }
-
-export default { ...BaseActions(api), ...OverrideActions }

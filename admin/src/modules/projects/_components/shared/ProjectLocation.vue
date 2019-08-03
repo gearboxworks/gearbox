@@ -44,8 +44,7 @@
 </template>
 
 <script>
-import BasedirMethodTypes from '../../../basedirs/_store/public-types'
-const { GetterTypes: BasedirGetters } = BasedirMethodTypes
+import { BasedirGetters } from '../../../basedirs/_store/method-names'
 
 export default {
   name: 'ProjectLocation',

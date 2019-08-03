@@ -1,16 +1,8 @@
-import BaseActions from '../../_base/_store/actions'
-import { UNSUPPORTED_ACTION } from '../../_helpers'
+import NamespacedBaseActions from '../../_base/_store/actions'
+import moduleConfig from '../config'
 import api from '../_api'
+// import { GearspecActions as Actions } from './method-names'
 
-import StoreMethodTypes from './private-types'
-const { ActionTypes: Actions } = StoreMethodTypes
-
-const OverrideActions = {
-  // [Actions.LOAD_ALL]: ({ commit }, payload) => UNSUPPORTED_ACTION(),
-  [Actions.LOAD_ONE]: ({ commit }, payload) => UNSUPPORTED_ACTION(),
-  [Actions.CREATE]: ({ commit }, payload) => UNSUPPORTED_ACTION(),
-  [Actions.UPDATE]: ({ commit }, payload) => UNSUPPORTED_ACTION(),
-  [Actions.DELETE]: ({ commit }, payload) => UNSUPPORTED_ACTION()
+export default {
+  ...NamespacedBaseActions(api, moduleConfig.namespace)
 }
-
-export default { ...BaseActions(api), ...OverrideActions }

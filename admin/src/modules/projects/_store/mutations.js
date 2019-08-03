@@ -1,14 +1,14 @@
 import Vue from 'vue'
-import BaseMutations from '../../_base/_store/mutations'
-// import { UNSUPPORTED_MUTATION } from '../../_helpers'
+import NamespacedBaseMutations from '../../_base/_store/mutations'
+import moduleConfig from '../config'
+import api from '../_api'
 
 import store from '../../../store'
-import ProjectMethodNames from './private-types'
-import GearspecMethodNames from '../../gearspecs/_store/public-types'
-const { MutationTypes: Mutations } = ProjectMethodNames
-const { GetterTypes: GearspecGetters } = GearspecMethodNames
+import { ProjectMutations as Mutations } from './method-names'
+import { GearspecGetters } from '../../gearspecs/_store/method-names'
 
-const OverrideMutations = {
+export default {
+  ...NamespacedBaseMutations(api, moduleConfig.namespace),
 
   [Mutations.SET_STACK] (state, payload) {
     const { project, stack } = payload
@@ -113,5 +113,3 @@ const OverrideMutations = {
     }
   }
 }
-
-export default { ...BaseMutations, ...OverrideMutations }

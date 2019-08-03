@@ -21,11 +21,11 @@ export default new Vuex.Store({
     }
   },
   modules: {
-    basedirs,
-    gearspecs,
-    projects,
-    services,
-    stacks
+    basedirs: (basedirs),
+    gearspecs: (gearspecs),
+    projects: (projects),
+    services: (services),
+    stacks: (stacks)
   },
   getters: {},
   actions: {},

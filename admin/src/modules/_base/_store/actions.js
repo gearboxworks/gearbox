@@ -1,7 +1,10 @@
-import StoreMethodTypes from './private-types'
-const { ActionTypes: Actions, MutationTypes: Mutations } = StoreMethodTypes
+import { BaseActions, BaseMutations } from './method-names'
+import { namespaceValues } from '../../_helpers'
 
-function actions (api) {
+export function NamespacedBaseActions (api, namespace) {
+  const Actions = namespaceValues(BaseActions, namespace)
+  const Mutations = namespaceValues(BaseMutations, namespace)
+
   return {
     [Actions.LOAD_ALL] ({ commit }) {
       return api.fetchAll()
@@ -26,8 +29,6 @@ function actions (api) {
     },
 
     [Actions.CREATE] ({ commit }, recordData) {
-      console.log('Base Actions.CREATE', recordData)
-
       return api.create(recordData)
         .then(record => {
           if (record) {
@@ -40,8 +41,6 @@ function actions (api) {
 
     [Actions.UPDATE] ({ commit }, payload) {
       const { record, recordData } = payload
-
-      console.log('Base Actions.UPDATE', record, recordData)
 
       return api.update(record, recordData)
         .then(result => {
@@ -86,4 +85,4 @@ function actions (api) {
   }
 }
 
-export default actions
+export default NamespacedBaseActions

@@ -1,20 +1,10 @@
-import BaseGetters from '../../_base/_store/getters'
-// import { UNSUPPORTED_GETTER } from '../../_helpers'
-import StoreMethodTypes from './private-types'
-const { GetterTypes: Getters } = StoreMethodTypes
+import NamespacedBaseGetters from '../../_base/_store/getters'
+import moduleConfig from '../config'
 
-const OverrideGetters = {
+import { BasedirGetters as Getters } from './method-names'
 
-  // [Getters.DEMO_GETTER]: (state) => {
-  //   return 'This is the result from DEMO_GETTER.'
-  // },
-  //
-  // [Getters.LIST_FILTERED_BY]: (state) => (state) => (fieldName, allowedValues, allowedFields) => UNSUPPORTED_GETTER(),
-  // [Getters.LIST_FILTERED]: (state, getters) => UNSUPPORTED_GETTER(),
+export default {
+  ...NamespacedBaseGetters(moduleConfig.namespace),
 
-  [Getters.HAS_EXTRA_BASEDIRS]: (state, getters, rootState, rootGetters) => () => state.records.length > 1,
-
-  [Getters.LIST_OPTIONS]: (state, getters, rootState, rootGetters) => () => BaseGetters[Getters.LIST_OPTIONS](state, getters, rootState, rootGetters)('basedir')
+  [Getters.HAS_EXTRA_BASEDIRS]: (state, getters, rootState, rootGetters) => () => state.records.length > 1
 }
-
-export default { ...BaseGetters, ...OverrideGetters }
