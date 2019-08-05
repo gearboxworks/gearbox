@@ -49,6 +49,8 @@ import ProjectStackList from './shared/ProjectStackList'
 
 import { ProjectActions } from '../_store/method-names'
 
+import { escapeIDAttr } from '../../_helpers'
+
 export default {
   name: 'ProjectRow',
   components: {
@@ -80,7 +82,7 @@ export default {
   provide () {
     return {
       project: this.project,
-      projectPrefix: 'gb-' + this.$_escapeIDAttr(this.id) + '-'
+      projectPrefix: 'gb-' + escapeIDAttr(this.id) + '-'
     }
   },
   computed: {

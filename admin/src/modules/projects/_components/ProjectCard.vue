@@ -57,6 +57,8 @@ import ProjectStackList from './shared/ProjectStackList'
 
 import { ProjectActions, ProjectMutations } from '../_store/method-names'
 
+import { escapeIDAttr } from '../../_helpers'
+
 export default {
   name: 'ProjectCard',
   components: {
@@ -93,7 +95,7 @@ export default {
   provide () {
     return {
       project: this.project,
-      projectPrefix: 'gb-' + this.$_escapeIDAttr(this.project.id) + '-'
+      projectPrefix: 'gb-' + escapeIDAttr(this.project.id) + '-'
     }
   },
   computed: {

@@ -64,3 +64,27 @@ export function namespaceValues (constants, namespace) {
   }
   return result
 }
+
+export function escapeIDAttr (value) {
+  return value.replace(/\//g, '-').replace(/\./g, '-')
+}
+
+export function programFromServiceId (serviceId) {
+  return serviceId ? serviceId.split('/')[1].split(':')[0] : ''
+}
+
+export function programAndVersionFromServiceId (serviceId) {
+  return serviceId ? serviceId.split('/')[1] : ''
+}
+
+export function versionFromServiceId (serviceId) {
+  return serviceId ? serviceId.split(':')[1] : ''
+}
+
+export function stackNameFromStackId (stackId) {
+  return stackId.split('/')[1]
+}
+
+export function stackNameFromGearspecId (gearspecId) {
+  return gearspecId.split('/')[1]
+}

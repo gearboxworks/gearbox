@@ -38,6 +38,8 @@ import { StackGetters } from '../../stacks/_store/method-names'
 import { ServiceGetters } from '../../services/_store/method-names'
 import { ProjectActions } from '../../projects/_store/method-names'
 
+import { escapeIDAttr, versionFromServiceId, programFromServiceId } from '../../_helpers'
+
 export default {
   name: 'GearBadge',
   components: {
@@ -64,7 +66,7 @@ export default {
   },
   computed: {
     gearControlId () {
-      return this.projectPrefix + this.$_escapeIDAttr((this.stack ? this.stack.attributes.stackname + '-' : '') + this.role)
+      return this.projectPrefix + escapeIDAttr((this.stack ? this.stack.attributes.stackname + '-' : '') + this.role)
     },
 
     changingStatus () {
@@ -92,16 +94,12 @@ export default {
     },
 
     versionMismatchMessage () {
-      let message = ''
       if ((this.defaultService || !!this.stackItem.serviceId) && !this.stackItem.service) {
-        /**
-         * TODO: move this parsing logic to a helper function
-         */
-        const requested = this.stackItem.serviceId.split(':')[1]
-        const compatible = this.compatibleServiceId.split(':')[1]
-        message = `Could not find the requested version (v.${requested}), will use the closest match (v.${compatible}) instead.`
+        const requestedVersion = versionFromServiceId(this.stackItem.serviceId)
+        const compatibleVersion = versionFromServiceId(this.compatibleServiceId)
+        return `Could not find the requested version (v.${requestedVersion}), will use the closest match (v.${compatibleVersion}) instead.`
       }
-      return message
+      return ''
     },
 
     stack () {
@@ -147,20 +145,17 @@ export default {
     },
 
     async onChangeProjectGear (selectedServiceId) {
-      const previousId = this.service ? this.service.id : ''
-      /**
-       * TODO move this logic to a global helper function
-       */
-      const program1 = previousId ? previousId.split('/')[1].split(':')[0] : ''
-      const program2 = selectedServiceId ? selectedServiceId.split('/')[1].split(':')[0] : ''
+      const previousServiceId = this.service ? this.service.id : ''
+      const oldProgram = programFromServiceId(previousServiceId)
+      const newProgram = programFromServiceId(selectedServiceId)
 
-      if (program1 !== program2) {
+      if (oldProgram !== newProgram) {
         this.isLoaded = false
         this.isSwitching = true
         this.isSwitchingSame = false
         this.isSwitchingSameAgain = false
       } else {
-        if (previousId !== selectedServiceId) {
+        if (previousServiceId !== selectedServiceId) {
           if (!this.isSwitchingSame && !this.isSwitchingSameAgain) {
             this.isSwitchingSame = true
             this.isSwitchingSameAgain = false
@@ -171,6 +166,9 @@ export default {
         }
       }
       try {
+        /**
+         * TODO emit event and let Project module do the actual changing
+         */
         await this.$store.dispatch(
           ProjectActions.CHANGE_GEAR,
           {

@@ -26,6 +26,8 @@
 </template>
 
 <script>
+import { versionFromServiceId, programFromServiceId } from '../../_helpers'
+
 export default {
   name: 'ServiceIcon',
   props: {
@@ -63,11 +65,8 @@ export default {
       let version = attributes ? attributes.version : ''
 
       if (serviceId && (!attributes || (this.service && this.service.id !== serviceId))) {
-        /**
-         * TODO move this logic to a helper function
-         */
-        program = serviceId.split('/')[1].split(':')[0]
-        version = serviceId.split('/')[1].split(':')[1]
+        program = programFromServiceId(serviceId)
+        version = versionFromServiceId(serviceId)
       }
 
       return (program && version)

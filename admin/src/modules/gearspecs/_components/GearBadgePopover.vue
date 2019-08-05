@@ -43,7 +43,7 @@
           </option>
         </optgroup>
       </b-form-select>
-      <b-alert :show="versionMismatchMessage" variant="warning">{{versionMismatchMessage}}</b-alert>
+      <b-alert :show="!!versionMismatchMessage" variant="warning">{{versionMismatchMessage}}</b-alert>
       <b-alert :show="isProjectEnabled">Note, you cannot change this service while the project is running!</b-alert>
     </b-form-group>
   </b-popover>

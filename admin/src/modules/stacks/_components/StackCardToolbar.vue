@@ -142,6 +142,9 @@ export default {
   },
   data () {
     return {
+      /**
+       * TODO extract WordPress-specific code
+       */
       isWordPress: this.stackId.indexOf('/wordpress') !== -1,
       isDeleting: false
     }
@@ -163,6 +166,9 @@ export default {
       } else {
         this.isDeleting = true
         try {
+          /**
+           * TODO: $emit event and let Projects module deal with it?
+           */
           await this.$store.dispatch(
             ProjectActions.REMOVE_STACK,
             {

@@ -5,6 +5,8 @@ import { ProjectGetters as Getters } from './method-names'
 import { GearspecGetters } from '../../gearspecs/_store/method-names'
 import { ServiceGetters } from '../../services/_store/method-names'
 
+import { programFromServiceId } from '../../_helpers'
+
 const BaseGetters = NamespacedBaseGetters(moduleConfig.namespace)
 
 export default {
@@ -18,7 +20,7 @@ export default {
     if (fieldName === 'stacks') {
       projects = state.records.filter(p => p.attributes.stack.some(s => valuesArray.some(val => s.gearspec_id.indexOf(val) > -1)))
     } else if (fieldName === 'programs') {
-      projects = state.records.filter(p => p.attributes.stack.some(s => valuesArray.some(val => s.service_id.split('/')[1].split(':')[0] === val)))
+      projects = state.records.filter(p => p.attributes.stack.some(s => valuesArray.some(val => programFromServiceId(s.service_id) === val)))
     } else {
       projects = BaseGetters[Getters.LIST_FILTERED_BY.replace(moduleConfig.namespace)](state, getters, rootState, rootGetters)(fieldName, allowedValues)
     }

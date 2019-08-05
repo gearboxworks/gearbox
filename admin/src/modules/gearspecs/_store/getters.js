@@ -4,6 +4,8 @@ import moduleConfig from '../config'
 import { GearspecGetters as Getters } from './method-names'
 import { StackGetters } from '../../stacks/_store/method-names'
 
+import { programFromServiceId, programAndVersionFromServiceId } from '../../_helpers'
+
 export default {
   ...NamespacedBaseGetters(moduleConfig.namespace),
 
@@ -116,12 +118,13 @@ export default {
       /**
        * TODO move this parsing logic to a global helper function
        */
-      const programName = serviceId.split(':')[0].replace('gearboxworks/', '')
+      const programName = programFromServiceId(serviceId)
+
       if (typeof result[programName] === 'undefined') {
         result[programName] = {}
       }
-      const serviceNameAndVersion = serviceId.replace('gearboxworks/', '')
-      result[programName][serviceId] = serviceNameAndVersion
+
+      result[programName][serviceId] = programAndVersionFromServiceId(serviceId)
     })
     return result
   }

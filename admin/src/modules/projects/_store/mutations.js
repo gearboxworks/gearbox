@@ -7,6 +7,8 @@ import store from '../../../store'
 import { ProjectMutations as Mutations } from './method-names'
 import { GearspecGetters } from '../../gearspecs/_store/method-names'
 
+import { stackNameFromGearspecId, stackNameFromStackId } from '../../_helpers'
+
 export default {
   ...NamespacedBaseMutations(api, moduleConfig.namespace),
 
@@ -80,7 +82,7 @@ export default {
 
   [Mutations.REMOVE_STACK] (state, payload) {
     const { project, stackId } = payload
-    const shortStackName = stackId.split('/')[1]
+    const shortStackName = stackNameFromStackId(stackId)
 
     // if (typeof state.removedStacks[projectId] === 'undefined') {
     //   Vue.set(state.removedStacks, projectId, [])
@@ -93,7 +95,7 @@ export default {
      * @see https://gist.github.com/chad3814/2924672
      */
     for (let i = project.attributes.stack.length - 1; i >= 0; i--) {
-      if (project.attributes.stack[i].gearspec_id.split('/')[1] === shortStackName) {
+      if (stackNameFromGearspecId(project.attributes.stack[i].gearspec_id) === shortStackName) {
         Vue.set(project.attributes.stack[i], 'isRemoved', true)
         // state.removedStacks[projectId].push(project.attributes.stack[i])
         // console.log(projectId, stackId, project.attributes.stack[i])
