@@ -1,6 +1,6 @@
 import BaseMethodsFactory from '../../_base/_api'
 import moduleConfig from '../config'
-import HTTP from '../../../http-common'
+import HTTP from '../../_helpers/http-common'
 
 const ExtraMethods = {
   checkDirectory (dir) {

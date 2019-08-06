@@ -3,19 +3,12 @@
   <div id="app">
 
     <b-alert
-      :show="isConnectionProblem"
-      variant="warning"
-    >
-      <h4>Connection Problem</h4>
-      <p>It seems that Gearbox Server is not running. Remaining connection attempts: {{remainingRetries}}</p>
-    </b-alert>
-    <b-alert
-      v-if="isUnrecoverableConnectionProblem"
-      show
+      :show="!!networkError"
+      class="network-error"
       variant="danger"
     >
       <h4>Connection Problem</h4>
-      <p>Failed to connect to Gearbox Server.</p>
+      <p>It seems that Gearbox Server is not running. <a href="#" class="retry-link" @click="$router.go()">Retry?</a></p>
     </b-alert>
 
     <the-top-bar />
@@ -39,54 +32,63 @@ export default {
   components: {
     TheTopBar
   },
-  computed: {
-    isConnectionProblem () {
-      // console.log('isConnectionProblem', this.$store.state.connectionStatus.networkError, this.$store.state.connectionStatus.remainingRetries)
-      return this.$store.state.connectionStatus.networkError && this.$store.state.connectionStatus.remainingRetries > 0
-    },
-
-    remainingRetries () {
-      return this.$store.state.connectionStatus.remainingRetries
-    },
-
-    isUnrecoverableConnectionProblem () {
-      return this.$store.state.connectionStatus.networkError
-        ? (this.$store.state.connectionStatus.remainingRetries === 0)
-        : ''
+  data () {
+    return {
+      networkError: null
     }
   },
-
+  methods: {
+    setError (e) {
+      if (e.message === 'Network Error') {
+        this.networkError = e
+      }
+    },
+    clearError () {
+      this.networkError = null
+    }
+  },
   mounted () {
-    this.$store.dispatch(BasedirActions.LOAD_ALL)
-    this.$store.dispatch(StackActions.LOAD_ALL)
-    this.$store.dispatch(ServiceActions.LOAD_ALL)
-    this.$store.dispatch(GearspecActions.LOAD_ALL)
-
-    this.$store.dispatch(ProjectActions.LOAD_ALL).then(() => {
-      return this.$store.dispatch(ProjectActions.LOAD_ALL_DETAILS)
-    })
+    this.$store.dispatch(BasedirActions.LOAD_ALL).catch(e => this.setError(e))
+    this.$store.dispatch(StackActions.LOAD_ALL).catch(e => this.setError(e))
+    this.$store.dispatch(ServiceActions.LOAD_ALL).catch(e => this.setError(e))
+    this.$store.dispatch(GearspecActions.LOAD_ALL).catch(e => this.setError(e))
+    this.$store.dispatch(ProjectActions.LOAD_ALL)
+      .then(() => {
+        return this.$store.dispatch(ProjectActions.LOAD_ALL_DETAILS)
+      })
+      .then(r => this.clearError)
+      .catch(e => this.setError(e))
   }
 }
 </script>
 
+<style scoped>
+  .el-header, .el-footer {
+    background-color: #B3C0D1;
+    color: #333;
+    line-height: 60px;
+  }
+  .network-error .retry-link {
+    color: darkorchid;
+    font-weight: bold;
+  }
+  .network-error {
+    margin-bottom: 0;
+  }
+  .network-error p {
+    margin-bottom: 4px;
+  }
+</style>
 <style>
 body{
   margin: 0;
 }
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: left;
   color: #2c3e50;
   margin: 0;
-}
-.el-header, .el-footer {
-  background-color: #B3C0D1;
-  color: #333;
-  line-height: 60px;
-}
-.el-aside {
-  color: #333;
 }
 </style>

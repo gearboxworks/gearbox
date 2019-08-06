@@ -1,45 +1,29 @@
-import HTTP from '../../../http-common'
+import HTTP from '../../_helpers/http-common'
 
 export default {
 
-  fetchAll: (endpoint) => HTTP.get(
-    endpoint,
-    {
-      crossDomain: true
-      // raxConfig: {
-      //   // You can detect when a retry is happening, and figure out how many
-      //   // retry attempts have been made
-      //   onRetryAttempt: (err) => {
-      //     const cfg = raxConfig(err)
-      //     commit('SET_NETWORK_ERROR', err.message)
-      //     commit('SET_REMAINING_RETRIES', cfg.retry - cfg.currentRetryAttempt)
-      //   }
-      // }
-    }
-  ).then(response => {
-    if (response.data && response.data.data) {
-      return (response.data.data)
-    } else {
-      throw new Error('Cannot fetch all records')
-    }
-  }),
+  fetchAll: (endpoint) => HTTP.get(endpoint)
+    .then(
+      response => {
+        if (response.data && response.data.data) {
+          return (response.data.data)
+        } else {
+          throw new Error('Cannot fetch all records')
+        }
+      }
+    ),
 
-  fetchOne: (endpoint, id) => HTTP.get(
-    endpoint + '/' + id,
-    {
-      crossDomain: true
-    }
-  ).then(response => {
-    if (response.data && response.data.data) {
-      return (response.data.data)
-    } else {
-      throw new Error('Could not fetch details for ' + id)
-    }
-  }),
+  fetchOne: (endpoint, id) => HTTP.get(endpoint + '/' + id)
+    .then(response => {
+      if (response.data && response.data.data) {
+        return (response.data.data)
+      } else {
+        throw new Error('Could not fetch details for ' + id)
+      }
+    }),
 
   create: (endpoint, recordData) => {
-    console.log('create', endpoint, recordData)
-
+    // console.log('create', endpoint, recordData)
     return HTTP({
       method: 'post',
       url: endpoint + '/new',
@@ -54,7 +38,7 @@ export default {
   },
 
   update: (endpoint, record, recordData) => {
-    console.log('update', endpoint, record, recordData)
+    // console.log('update', endpoint, record, recordData)
     return HTTP({
       method: 'patch',
       url: endpoint + '/' + record.id,

@@ -94,4 +94,8 @@ export default {
 </script>
 
 <style scoped>
+  .content-wrap {
+    margin-left: 1rem;
+    font-size: 150%;
+  }
 </style>

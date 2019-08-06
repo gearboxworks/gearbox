@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from 'axios/index'
 // import { attach as raxAttach, getConfig as raxConfig } from 'retry-axios'
 
 const HTTP = axios.create({
