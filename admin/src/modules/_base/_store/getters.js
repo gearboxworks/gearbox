@@ -21,22 +21,13 @@ export function NamespacedBaseGetters (namespace) {
       if (fieldName === 'id') {
         list = state.records.filter(p => valuesArray.indexOf(p.id) !== -1)
       } else if (fieldName) {
-        list = state.records.filter(
-          p => valuesArray.indexOf(p.attributes[fieldName]) !== -1)
+        list = state.records.filter(p => valuesArray.indexOf(p.attributes[fieldName]) !== -1)
       } else {
         /**
          * return unfiltered
          */
         return state.records
       }
-      // Project specific:
-      //
-      // else if (fieldName === 'stacks') {
-      //   list = state.records.filter(p => p.attributes.stack.some(s => valuesArray.some(val => s.gearspec_id.indexOf(val) > -1)))
-      // } else if (fieldName === 'programs') {
-      //   list = state.records.filter(p => p.attributes.stack.some(s => valuesArray.some(val => s.service_id.split('/')[1].split(':')[0] === val)))
-      // }
-
       return list
     },
 
@@ -49,8 +40,7 @@ export function NamespacedBaseGetters (namespace) {
         if (values === 'all') {
           continue
         }
-        list = (list.filter(
-          p => getters[Getters.LIST_FILTERED_BY](field, values).includes(p)))
+        list = (list.filter(p => getters[Getters.LIST_FILTERED_BY](field, values).includes(p)))
       }
       /**
        * TODO implement sorting by attributes

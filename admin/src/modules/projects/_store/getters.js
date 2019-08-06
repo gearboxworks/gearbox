@@ -22,7 +22,7 @@ export default {
     } else if (fieldName === 'programs') {
       projects = state.records.filter(p => p.attributes.stack.some(s => valuesArray.some(val => programFromServiceId(s.service_id) === val)))
     } else {
-      projects = BaseGetters[Getters.LIST_FILTERED_BY.replace(moduleConfig.namespace)](state, getters, rootState, rootGetters)(fieldName, allowedValues)
+      projects = BaseGetters[Getters.LIST_FILTERED_BY](state, getters, rootState, rootGetters)(fieldName, allowedValues)
     }
 
     return projects
@@ -30,6 +30,11 @@ export default {
 
   [Getters.LIST_FILTERED]: (state, getters, rootState, rootGetters) => () => {
     let list = state.records
+
+    if (list.length === 0) {
+      return list
+    }
+
     const sortAscending = !!state.sorting.ascending
     // const sortBy = state.sortBy
     for (const field in state.filter) {
@@ -44,11 +49,17 @@ export default {
         if (values.length === 3) {
           continue
         } else {
-          if (values.indexOf('running') > -1) {
+          if (values.indexOf('running') > -1 && values.indexOf('stopped') > -1) {
+            list = list.filter(p => getters[Getters.LIST_FILTERED_BY]('enabled', [ true, false ]).includes(p))
+          } else if (values.indexOf('running') > -1) {
             list = list.filter(p => getters[Getters.LIST_FILTERED_BY]('enabled', true).includes(p))
-          }
-          if (values.indexOf('stopped') > -1) {
+          } else if (values.indexOf('stopped') > -1) {
             list = list.filter(p => getters[Getters.LIST_FILTERED_BY]('enabled', false).includes(p))
+          } else if (values.indexOf('candidates') > -1) {
+            /**
+             * TODO: verify this works candidates
+             */
+            list = list.filter(p => getters[Getters.LIST_FILTERED_BY]('candidate', true).includes(p))
           }
         }
         continue
