@@ -232,21 +232,24 @@ import { BasedirGetters } from '../../basedirs/_store/method-names'
 import { StackGetters } from '../../stacks/_store/method-names'
 import { ServiceGetters } from '../../services/_store/method-names'
 
+import { getCookie, setCookie } from '../../_helpers'
+
+const COOKIE = 'Gearbox-view-settings'
+const dataDefaults = {
+  expanded: false,
+  showStates: ['running', 'stopped', 'candidates'],
+  showBasedirs: 'all',
+  showStacks: 'all',
+  showPrograms: 'all',
+  sortByField: 'project-title',
+  sortAscending: true,
+  viewMode: 'cards'
+}
+
 export default {
   name: 'ProjectsDrawer',
   data () {
-    return {
-      expanded: false,
-
-      showStates: ['running', 'stopped', 'candidates'],
-      showBasedirs: 'all',
-      showStacks: 'all',
-      showPrograms: 'all',
-
-      sortByField: 'project-title',
-      sortAscending: true,
-      viewMode: 'cards'
-    }
+    return dataDefaults
   },
   computed: {
 
@@ -350,6 +353,7 @@ export default {
       //   //   this.$refs['state-filter'].$el.focus()
       //   // })
       // }
+      this.updateCookie()
     },
 
     onToggleState (value, attribute) {
@@ -369,13 +373,15 @@ export default {
       } else if ((attribute === 'stopped') && !running && stopped && !candidates) {
         this.showStates = ['candidates']
       }
+      this.updateCookie()
     },
 
     onChangeSortByField (value) {
-      this.$store.commit(
+      this.$store.dispatch(
         ProjectActions.SET_LIST_FILTER_SORT_BY,
         value
       )
+      this.updateCookie()
     },
 
     onToggleSortingOrder () {
@@ -384,6 +390,7 @@ export default {
         ProjectActions.SET_LIST_FILTER_SORT_ASC,
         this.sortAscending
       )
+      this.updateCookie()
     },
 
     onChangeFilter (values, field) {
@@ -394,8 +401,24 @@ export default {
           values
         }
       )
+      this.updateCookie()
+    },
+
+    updateCookie () {
+      setCookie(COOKIE, this.$data)
+    }
+  },
+  created () {
+    const values = getCookie(COOKIE)
+    if (values && Object.entries(values).length) {
+      Object.entries(values).forEach(([key, val]) => {
+        if (typeof this.$data[key] !== 'undefined') {
+          this.$data[key] = val
+        }
+      })
     }
   }
+
 }
 </script>
 

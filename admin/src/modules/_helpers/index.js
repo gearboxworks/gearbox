@@ -53,3 +53,32 @@ export function stackNameFromStackId (stackId) {
 export function stackNameFromGearspecId (gearspecId) {
   return gearspecId.split('/')[1]
 }
+
+export function setCookie (name, value) {
+  const d = new Date()
+  d.setTime(d.getTime() + (3 * 24 * 60 * 60 * 1000)) // 3 days
+  const expires = 'expires=' + d.toUTCString()
+
+  let cleaned = value
+  if (typeof value === 'object' || Array.isArray(value)) {
+    cleaned = JSON.stringify({ ...value })
+  }
+
+  document.cookie = name + '=' + cleaned + ';' + expires + ';path=/'
+}
+
+export function getCookie (name) {
+  let value = '; ' + document.cookie
+  const parts = value.split('; ' + name + '=')
+  if (parts.length === 2) {
+    value = parts.pop().split(';').shift()
+  }
+  if (value) {
+    try {
+      return JSON.parse(value)
+    } catch (e) {
+      return value
+    }
+  }
+  return null
+}
