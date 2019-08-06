@@ -195,6 +195,7 @@ export default {
   .service-item {
     display: inline-block;
     list-style: none;
+    position:relative;
   }
 
   .alert {

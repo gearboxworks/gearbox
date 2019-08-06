@@ -16,64 +16,29 @@
       {{role}}
     </h6>
 
-    <b-tooltip
-      triggers="hover"
-      :target="gearControlId"
-      :key="gearControlId + '-' + (service ? service.id : 'unselected')"
-      :title="programTooltip"
-    />
   </div>
 </template>
 
 <script>
-import { versionFromServiceId, programFromServiceId } from '../../_helpers'
 
 export default {
   name: 'ServiceIcon',
   props: {
-    /**
-     * Note, serviceId might be different from service.id!
-     */
-    'serviceId': {
-      type: String,
-      required: true
-    },
-    'service': {
+    service: {
       type: Object,
       required: true
     },
-    'gearControlId': {
+    role: {
       type: String,
       required: true
     },
-    'role': {
-      type: String,
-      required: true
-    },
-    'changingStatus': {
+    changingStatus: {
       type: Object,
       required: true
     }
   },
 
-  computed: {
-    programTooltip () {
-      const serviceId = this.serviceId
-      const attributes = (serviceId && this.service) ? this.service.attributes : null
-
-      let program = attributes ? attributes.program : ''
-      let version = attributes ? attributes.version : ''
-
-      if (serviceId && (!attributes || (this.service && this.service.id !== serviceId))) {
-        program = programFromServiceId(serviceId)
-        version = versionFromServiceId(serviceId)
-      }
-
-      return (program && version)
-        ? (program + ' ' + version)
-        : 'Service not selected'
-    }
-  }
+  computed: {}
 }
 </script>
 

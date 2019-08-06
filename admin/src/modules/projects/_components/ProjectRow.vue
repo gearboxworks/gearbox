@@ -103,6 +103,19 @@ export default {
       this.alertShow = true
     },
 
+    onAddedStack (stackId) {
+      const cleanStackId = stackId.replace('(removed)', '')
+      const newObject = { [cleanStackId]: 1, [cleanStackId + '(removed)']: 1 }
+
+      for (const key in this.expandedStackIds) {
+        // const val = this.expandedStackIds[key]
+        if ((key !== stackId && key !== cleanStackId)) {
+          newObject[key] = -1
+        }
+      }
+      Vue.set(this, 'expandedStackIds', newObject)
+    },
+
     async maybeSubmit (ev) {
       await this.$store.dispatch(ProjectActions.UPDATE_DETAILS, { projectId: this.id, attributes: this.$data })
     },

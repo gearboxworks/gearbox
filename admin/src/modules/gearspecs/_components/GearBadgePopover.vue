@@ -1,7 +1,6 @@
 <template>
   <b-popover
     :target="gearControlId"
-    :container="gearControlId"
     :ref="`${gearControlId}-popover`"
     triggers="focus"
     placement="bottom"
@@ -43,7 +42,6 @@
           </option>
         </optgroup>
       </b-form-select>
-      <b-alert :show="!!versionMismatchMessage" variant="warning">{{versionMismatchMessage}}</b-alert>
       <b-alert :show="isProjectEnabled">Note, you cannot change this service while the project is running!</b-alert>
     </b-form-group>
   </b-popover>
@@ -74,10 +72,6 @@ export default {
       require: true
     },
     compatibleServiceId: {
-      type: String,
-      require: true
-    },
-    versionMismatchMessage: {
       type: String,
       require: true
     }

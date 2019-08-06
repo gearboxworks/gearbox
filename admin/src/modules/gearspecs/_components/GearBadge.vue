@@ -6,26 +6,36 @@
   >
 
   <service-icon
-    :gear-control-id = "gearControlId"
-    :service-id="this.stackItem.serviceId"
     :service = "service"
     :role = "role"
     :changingStatus = "changingStatus"
     @image-loaded = "onImageLoaded"
   />
 
-   <gear-badge-popover
-     :is-project-enabled="this.project.attributes.enabled"
-     :key = "gearControlId"
-     :role = "role"
-     :gear-control-id = "gearControlId"
-     :service-versions = "serviceVersionsGroupedByProgram"
-     :default-service = "defaultService"
-     :compatible-service-id = "compatibleServiceId"
-     :version-mismatch-message = "versionMismatchMessage"
-     @change-gear="onChangeProjectGear"
-     @close-popover="closePopover"
-   />
+  <font-awesome-icon
+    v-if="versionMismatchMessage"
+    icon="info-circle"
+    :id="`${gearControlId}-info`"
+  />
+
+  <b-tooltip
+    triggers="hover"
+    :target="`${gearControlId}-info`"
+    :title="versionMismatchMessage"
+    variant="warning"
+  />
+
+  <gear-badge-popover
+    :is-project-enabled="this.project.attributes.enabled"
+    :key = "gearControlId"
+    :role = "role"
+    :gear-control-id = "gearControlId"
+    :service-versions = "serviceVersionsGroupedByProgram"
+    :default-service = "defaultService"
+    :compatible-service-id = "compatibleServiceId"
+    @change-gear="onChangeProjectGear"
+    @close-popover="closePopover"
+  />
   </div>
 </template>
 
@@ -200,11 +210,18 @@ export default {
     border: 1px solid transparent;
     border-radius: 4px;
     transition: all 400ms;
+    /*position: relative;*/
   }
   .project-gear:hover,
   .project-gear:focus {
     border: 1px solid #aaa;
     background-color: #eee;
   }
-  .project-gear{}
+
+  [data-icon="info-circle"]{
+    color: var(--warning);
+    position: absolute;
+    top:10px;
+    right: 10px;
+  }
 </style>
