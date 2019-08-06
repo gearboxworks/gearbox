@@ -30,7 +30,7 @@
     </td>
 
     <td class="td--notes">
-      <project-note />
+      <project-note :is-inline="true" />
     </td>
 
   </tr>
@@ -201,10 +201,10 @@ export default {
   }
 
   .input-group--note:not(.is-collapsed) {
-    position: absolute;
+    /*position: absolute;
     width: 100%;
     top: 11px;
-    left: 0;
+    left: 0;*/
   }
 
   >>> .input-group--note:not(.is-collapsed) .input-group-append {

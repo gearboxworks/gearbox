@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="{'clearfix': true, 'input-group--note': true, 'is-collapsed': isCollapsed, 'is-expanded': !isCollapsed, 'is-modified': isModified, 'is-updating': isUpdating, 'is-empty': !notes, 'is-editing': isEditing}"
+    :class="{'is-inline': isInline, 'input-group--note': true, 'is-collapsed': isCollapsed, 'is-expanded': !isCollapsed, 'is-modified': isModified, 'is-updating': isUpdating, 'is-empty': !notes, 'is-editing': isEditing, 'clearfix': true}"
     :id="`$(projectPrefix)panel-notes`"
     role="tabpanel"
   >
@@ -11,13 +11,13 @@
       v-model="notes"
       placeholder="Add note..."
       class="notes-input"
-      rows="7"
+      :rows="isInline ? 5 : 7"
       :readonly="isUpdating"
       autocomplete="off"
       autofocus
       @keyup.esc="isCollapsed = true"
       role="tab"
-      aria-controls="$(projectPrefix)panel-notes`"
+      aria-controls="`$(projectPrefix)panel-notes`"
     />
 
     <div
@@ -122,10 +122,15 @@ export default {
     'project',
     'projectPrefix'
   ],
-  props: {},
+  props: {
+    isInline: {
+      type: Boolean,
+      required: false,
+      default: false
+    }
+  },
   data () {
     return {
-      id: this.project.id,
       notes: this.project.attributes.notes,
       isCollapsed: true,
       isModified: false,
@@ -222,6 +227,10 @@ export default {
     margin: -45px 0 7px 0;
   }
 
+  .input-group--note.is-inline {
+    margin-top: 0;
+  }
+
   .notes-wrapper {
     display: block;
     min-height: 182px;
@@ -233,7 +242,8 @@ export default {
     border: 1px solid #ffc107;
   }
 
-  .notes-wrapper, textarea {
+  .notes-wrapper,
+  textarea {
     float: left;
     width: calc(100% - 50px);
   }
@@ -317,5 +327,10 @@ export default {
     border-color: transparent;
     border-top-left-radius: 0.25rem;
     border-bottom-left-radius: 0.25rem;
+  }
+
+  .is-collapsed.is-inline .btn--submit {
+    margin-top: 0;
+    top: 0;
   }
 </style>
