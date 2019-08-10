@@ -5,6 +5,7 @@ import store from './store'
 
 import './plugins/bootstrap'
 import './plugins/fontawesome'
+import './plugins/treeselect'
 
 // import VueSelect from 'vue-cool-select'
 import VueClipboard from 'vue-clipboard2'

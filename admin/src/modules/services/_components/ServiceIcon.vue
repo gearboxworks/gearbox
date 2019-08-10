@@ -2,7 +2,7 @@
   <div>
     <img
       v-if="service"
-      :src="require('../_assets/'+service.attributes.program+'.svg')"
+      :src="require('../_assets/' + service.attributes.program + '.svg')"
       :class="{'service-program': true, 'is-loaded': changingStatus.isLoaded, 'is-switching': changingStatus.isSwitching, 'is-switching-same': changingStatus.isSwitchingSame, 'is-switching-same-again': changingStatus.isSwitchingSameAgain}"
       @load="$emit('image-loaded')"
     />

@@ -1,226 +1,153 @@
 <template>
-  <div class="drawer mb-3">
-    <div
-      class="drawer-handle"
-      @click="onToggleDrawer"
-      role="tab"
-      aria-controls="drawer-contents-id"
-    >
-      <div class="label small" >
-        <span
-          tabindex="0"
-          @keydown.enter="onToggleDrawer"
+  <div class="drawer mb-3 clearfix">
+    <h2 class="filter-heading">Projects:</h2>
+    <div class="left-panel">
+      <b-form class="filter-form">
+
+        <b-form-checkbox-group
+          v-model="showStates"
+          class="form-group--states"
+          label=""
+          label-for="filter-state"
+          description="Project State"
+          switches
+          stack
         >
-          Viewing Options&nbsp;
-          <font-awesome-icon
-            v-if="expanded"
-            key="mode-icon"
-            :icon="['fa', 'chevron-up']"
-          />
-          <font-awesome-icon
-            v-else
-            key="mode-icon"
-            :icon="['fa', 'chevron-down']"
-          />
-        </span>
-      </div>
+          <b-form-checkbox value="running" title="Include projects that are currently RUNNING" v-b-tooltip.hover @change="onToggleState($event, 'running')">Running</b-form-checkbox>
+          <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" v-b-tooltip.hover @change="onToggleState($event, 'stopped')">Stopped</b-form-checkbox>
+          <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" v-b-tooltip.hover @change="onToggleState($event, 'candidates')">Candidates</b-form-checkbox>
+        </b-form-checkbox-group>
 
-      <div class="current-filter">
-        <b-badge title="Filter by state" :variant="statesVariant">{{labelStates}}</b-badge>
-        <b-badge title="Filter by location" :variant="(showBasedirs == 'all') ? 'secondary' : 'warning'" v-if="hasExtraBaseDirs">{{labelBasedirs}}</b-badge>
-        <b-badge title="Filter by used stack" :variant="(showStacks == 'all') ? 'secondary' : 'warning'">{{labelStacks}}</b-badge>
-        <b-badge title="Filter by used program" :variant="(showPrograms == 'all') ? 'secondary' : 'warning'">{{labelPrograms}}</b-badge>
-        <b-badge title="Sorting order">{{labelSorting}}</b-badge>
-      </div>
+        <b-form-group
+          v-if="basedirsAsOptions.length > 2"
+          class="form-group--location"
+          label=""
+          label-for="filter-location"
+          description=""
+          title="Filter projects by location"
+          v-b-tooltip.hover
+        >
+          <treeselect
+            v-model="showBasedirs"
+            instanceId="filter-location"
+            class="vue-treeselect--location"
+            :options="basedirsAsOptions"
+            :normalizer="optionNormalizer"
+            placeholder="All locations..."
+            :clearable="false"
+          />
+        </b-form-group>
+
+        <b-form-group
+          class="form-group--stack"
+          name="showStacks"
+          label=""
+          label-for="filter-stack"
+          description=""
+          title="Filter projects by used stack"
+          v-b-tooltip.hover
+        >
+          <treeselect
+            v-model="showStacks"
+            instanceId="filter-stack"
+            class="vue-treeselect--stack"
+            :options="stacksAsOptions"
+            :normalizer="optionNormalizer"
+            placeholder="All stacks"
+            :clearable="false"
+          />
+        </b-form-group>
+
+        <b-form-group
+          class="form-group--program"
+          name="showProgram"
+          label=""
+          label-for="filter-program"
+          description=""
+          title="Filter by used program"
+          v-b-tooltip.hover.top
+        >
+          <treeselect
+            v-model="showPrograms"
+            instanceId="filter-program"
+            class="vue-treeselect--program"
+            :options="programsAsOptions"
+            :normalizer="optionNormalizer"
+            placeholder="All programs"
+            :clearable="false"
+          />
+        </b-form-group>
+      </b-form>
     </div>
-    <!--Filter-->
-    <div
-      v-if="expanded"
-      class="drawer-contents clearfix"
-      id="drawer-contents-id"
-      role="tabpanel"
-      :aria-expanded="expanded"
-    >
-      <div class="left-panel">
-        <b-form class="filter-form">
 
-          <b-form-checkbox-group
-            class="form-group--states"
-            v-model="showStates"
-            name="showStates"
-            label=""
-            label-for="filter-state"
-            description="State"
-            switches
-            stack
-          >
-            <b-form-checkbox value="running" title="Include projects that are currently RUNNING" @change="onToggleState($event, 'running')">Running</b-form-checkbox>
-            <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" @change="onToggleState($event, 'stopped')">Stopped</b-form-checkbox>
-            <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" @change="onToggleState($event, 'candidates')">Candidates</b-form-checkbox>
-            <small class="form-text text-muted">Project State</small>
-          </b-form-checkbox-group>
+    <div class="right-panel">
+      <b-form class="sort-form">
+        <b-form-group
+          id="form-group--sort-by"
+          label=""
+          label-for="sort-by"
+          description=""
+          title="Sort projects by"
+          v-b-tooltip.hover
+        >
+          <treeselect
+            class="vue-treeselect--sort-by"
+            instance-id="sort-by"
+            v-model="sortByField"
+            :options="[{id: 'access_date', label: 'Access Date'}, {id: 'creation_date', label: 'Creation Date'}, {id: 'id', label: 'Project title'}]"
+            :clearable = "false"
+          />
+        </b-form-group>
 
-          <b-form-group
-            class="form-group--location"
-            label=""
-            label-for="filter-location"
-            description="Location"
-            v-if="hasExtraBaseDirs"
+        <b-form-group
+          class="form-group--sort-order"
+          label=""
+          label-for="sort-order-select"
+          description=""
+          :title="`Sort in ${sortAscending ? 'ascending': 'descending'} order`"
+          v-b-tooltip.hover
+        >
+          <a target="_blank"
+             href="#"
+             title="Sort Order"
+             class="view-mode view-mode--order"
+             @click.prevent="onSetSortingOrder"
           >
-            <b-select
-              id="filter-basedirs"
-              variant="secondary"
-              v-model="showBasedirs"
-              :options="basedirsAsOptions"
-              @change="onChangeFilter($event, 'basedir')"
-              tabindex="4"
-            >
-              <template slot="first">
-                <option :value="null" disabled>Show projects from...</option>
-                <option value="all">All known locations</option>
-              </template>
-            </b-select>
-          </b-form-group>
+            <font-awesome-icon
+              :icon="['fa', sortAscending ? 'sort-alpha-down': 'sort-alpha-up']"
+            />
+          </a>
+        </b-form-group>
+      </b-form>
 
-          <b-form-group
-            class="form-group--stacks"
-            label=""
-            label-for="filter-stacks"
-            description="Used Stacks"
+      <b-form class="view-form">
+        <b-form-group
+          class="form-group--view-form"
+        >
+          <a target="_blank"
+             href="#"
+             :title="(viewMode !== 'cards') ? 'Switch to cards view' : 'Cards view'"
+             v-b-tooltip.hover
+             :class="{'view-mode': true, 'view-mode--cards': true, 'is-inactive': (viewMode !== 'cards')}"
+             @click.prevent="onViewModeChange('cards')"
           >
-            <b-select
-              id="filter-stacks"
-              variant="secondary"
-              v-model="showStacks"
-              @change="onChangeFilter($event, 'stacks')"
-            >
-              <option
-                :value="null"
-                disabled
-              >
-                Filter by stacks...
-              </option>
-              <option
-                value="all"
-              >
-                Any stack
-              </option>
-              <optgroup label="Specific Stacks">
-                <option
-                  v-for="item in stacksAsOptions"
-                  :key="item.value"
-                  :value="item.value"
-                >
-                  {{item.text.replace('gearbox.works/', '').toUpperCase()}}
-                </option>
-              </optgroup>
-              <!--option value="none">No stacks assigned</option-->
-            </b-select>
-          </b-form-group>
-
-          <b-form-group
-            class="form-group--programs"
-            label=""
-            label-for="filter-programs"
-            description="Used Programs"
+            <font-awesome-icon
+              :icon="['fa', 'columns']"
+            />
+          </a>
+          <a target="_blank"
+             href="#"
+             :title="(viewMode !== 'table') ? 'Switch to table view' : 'Table view'"
+             v-b-tooltip.hover
+             :class="{'view-mode': true, 'view-mode--table': true, 'is-inactive': (viewMode !== 'table')}"
+             @click.prevent="onViewModeChange('table')"
           >
-            <b-select
-              id="filter-programs"
-              variant="secondary"
-              v-model="showPrograms"
-              @change="onChangeFilter($event, 'programs')"
-            >
-              <option
-                :value="null"
-                disabled
-              >
-                Filter by programs...
-              </option>
-              <option value="all">Any program</option>
-              <optgroup label="Specific Program">
-                <option
-                  v-for="item in programsAsOptions"
-                  :key="item.value"
-                  :value="item.value"
-                >
-                  {{item.text.toUpperCase()}}
-                </option>
-              </optgroup>
-              <!--option value="none">No programs assigned</option-->
-            </b-select>
-          </b-form-group>
-        </b-form>
-      </div>
-
-      <div class="right-panel">
-        <b-form class="sort-form">
-          <b-form-group
-            id="sort-by-group"
-            label=""
-            label-for="sort-by"
-            description="Sort by"
-          >
-            <b-select
-              id="sort-by"
-              variant="secondary"
-              v-model="sortByField"
-              @change = onChangeSortByField($event)
-            >
-              <option :value="null" disabled>Sort by...</option>
-              <option value="access-date" disabled>Access date</option>
-              <option value="creation-date" disabled>Creation date</option>
-              <option value="project-title">Project title</option>
-            </b-select>
-          </b-form-group>
-          <b-form-group
-            id="sort-order-group"
-            label=""
-            label-for="sort-order-select"
-            description="Order"
-          >
-            <a target="_blank"
-               href="#"
-               title="Sort Order"
-               class="view-mode view-mode--order"
-               @click.prevent="onToggleSortingOrder"
-            >
-              <font-awesome-icon
-                :icon="['fa', sortAscending ? 'sort-alpha-down': 'sort-alpha-up']"
-              />
-            </a>
-          </b-form-group>
-        </b-form>
-
-        <b-form class="view-form">
-          <b-form-group
-            id="view-form"
-            label=""
-            label-for="view-select"
-            description="View Mode"
-          >
-            <a target="_blank"
-               href="#"
-               title="Cards View"
-               :class="{'view-mode': true, 'view-mode--cards': true, 'is-inactive': (viewMode != 'cards')}"
-               @click.prevent="viewMode = 'cards'; $emit('switch-view-mode', $event, 'cards')"
-            >
-              <font-awesome-icon
-                :icon="['fa', 'columns']"
-              />
-            </a>
-            <a target="_blank"
-               href="#"
-               title="Table View"
-               :class="{'view-mode': true, 'view-mode--table': true, 'is-inactive': (viewMode != 'table')}"
-               @click.prevent="viewMode = 'table'; $emit('switch-view-mode', $event, 'table')"
-            >
-              <font-awesome-icon
-                :icon="['fa', 'th-list']"
-              />
-            </a>
-          </b-form-group>
-        </b-form>
-      </div>
+            <font-awesome-icon
+              :icon="['fa', 'th-list']"
+            />
+          </a>
+        </b-form-group>
+      </b-form>
     </div>
   </div>
 </template>
@@ -236,15 +163,16 @@ import { getCookie, setCookie } from '../../_helpers'
 
 const COOKIE = 'Gearbox-view-settings'
 const dataDefaults = {
-  expanded: false,
   showStates: ['running', 'stopped', 'candidates'],
   showBasedirs: 'all',
   showStacks: 'all',
   showPrograms: 'all',
-  sortByField: 'project-title',
+  sortByField: 'id',
   sortAscending: true,
   viewMode: 'cards'
 }
+
+let _loadingCookie = false
 
 export default {
   name: 'ProjectsDrawer',
@@ -253,107 +181,69 @@ export default {
   },
   computed: {
 
-    // stack () {
-    //   return this.$store.getters[StackGetters.FIND_BY]('id', this.gearspec.attributes.stack_id)
-    // },
     stacksAsOptions () {
-      return this.$store.getters[StackGetters.LIST_OPTIONS]('stackname')
+      const stacksOptions = this.$store.getters[StackGetters.LIST_OPTIONS]('stackname')
+      stacksOptions.unshift({ value: 'all', text: 'All stacks' })
+      return stacksOptions
     },
 
     programsAsOptions () {
-      return this.$store.getters[ServiceGetters.LIST_PROGRAM_OPTIONS]()
+      const programOptions = this.$store.getters[ServiceGetters.LIST_PROGRAM_OPTIONS]()
+      programOptions.unshift({ value: 'all', text: 'All programs' })
+      return programOptions
     },
 
     basedirsAsOptions () {
-      return this.$store.getters[BasedirGetters.LIST_OPTIONS]('basedir')
+      const basedirOptions = this.$store.getters[BasedirGetters.LIST_OPTIONS]('basedir')
+      basedirOptions.unshift({ value: 'all', text: 'All locations' })
+      return basedirOptions
     },
 
     hasExtraBaseDirs () {
       return this.$store.getters[BasedirGetters.HAS_EXTRA_BASEDIRS]()
-    },
-
-    labelStates () {
-      const states = this.showStates
-      const running = (states.indexOf('running') !== -1) ? 'Running projects' : ''
-      const stopped = states.indexOf('stopped') !== -1 ? 'Stopped projects' : ''
-      const candidates = states.indexOf('candidates') !== -1
-
-      const projects = (running && stopped)
-        ? 'All projects'
-        : (running || stopped)
-          ? running + stopped
-          : ''
-
-      return projects
-        ? projects + ((candidates && (running || stopped)) ? '' : ' (no candidates)')
-        : (candidates ? 'Project candidates' : '')
-    },
-
-    statesVariant () {
-      const states = this.showStates
-      const running = (states.indexOf('running') !== -1) ? 'Running projects' : ''
-      const stopped = states.indexOf('stopped') !== -1 ? 'Stopped projects' : ''
-      const candidates = states.indexOf('candidates') !== -1
-      return (running && stopped && candidates)
-        ? 'secondary'
-        : 'warning'
-    },
-
-    labelBasedirs () {
-      const basedir = (this.showBasedirs !== 'all')
-        ? this.$store.getters[BasedirGetters.FIND_BY]('id', this.showBasedirs)
-        : null
-      return 'From ' + (basedir ? basedir.attributes.basedir : 'all known locations')
-    },
-
-    labelStacks () {
-      let label
-      if (this.showStacks === 'none') {
-        label = 'With no stacks assigned'
-      } else {
-        const stack = (this.showStacks !== 'all')
-          ? this.$store.getters[StackGetters.FIND_BY]('id', this.showStacks)
-          : null
-        label = 'Using ' + (stack ? (stack.attributes.stackname.toUpperCase() + ' stack') : 'any stack')
-      }
-      return label
-    },
-
-    labelPrograms () {
-      let label
-      if (this.showPrograms === 'none') {
-        label = 'With no programs assigned'
-      } else {
-        const program = (this.showPrograms !== 'all') ? this.showPrograms : null
-        label = 'Using ' + (program ? program.toUpperCase() : 'any program')
-      }
-      return label
-    },
-
-    labelSorting () {
-      return 'Sorted by ' + this.sortByField.replace('-', ' ') + (this.sortAscending ? '' : ' (reverse)')
     }
+
   },
   watch: {
     showStates: function (val, oldVal) {
       this.$store.dispatch(ProjectActions.SET_LIST_FILTER, {
         field: 'states',
         values: this.showStates
-      })
+      }).then(() => this.updateCookie())
+    },
+    showBasedirs: function (val, oldVal) {
+      this.$store.dispatch(ProjectActions.SET_LIST_FILTER, {
+        field: 'basedir',
+        values: this.showBasedirs
+      }).then(() => this.updateCookie())
+    },
+    showStacks: function (val, oldVal) {
+      this.$store.dispatch(ProjectActions.SET_LIST_FILTER, {
+        field: 'stacks',
+        values: this.showStacks
+      }).then(() => this.updateCookie())
+    },
+    showPrograms: function (val, oldVal) {
+      this.$store.dispatch(ProjectActions.SET_LIST_FILTER, {
+        field: 'programs',
+        values: this.showPrograms
+      }).then(() => this.updateCookie())
+    },
+    sortByField: function (val, oldVal) {
+      this.$store.dispatch(ProjectActions.SET_LIST_FILTER_SORT_BY, val).then(() => this.updateCookie())
+    },
+    sortAscending: function (val, oldVal) {
+      this.$store.dispatch(ProjectActions.SET_LIST_FILTER_SORT_ASC, val).then(() => this.updateCookie())
     }
   },
   methods: {
 
-    onToggleDrawer () {
-      this.expanded = !this.expanded
-      // if (this.expanded) {
-      //   console.log('focus', this.$refs['state-filter'])
-      //   this.$refs['state-filter'].$el.focus()
-      //   // this.$nextTick(() => {
-      //   //   this.$refs['state-filter'].$el.focus()
-      //   // })
-      // }
-      this.updateCookie()
+    optionNormalizer (option) {
+      return {
+        id: option.value,
+        label: option.text
+        /* children: option.subOptions, */
+      }
     },
 
     onToggleState (value, attribute) {
@@ -373,50 +263,50 @@ export default {
       } else if ((attribute === 'stopped') && !running && stopped && !candidates) {
         this.showStates = ['candidates']
       }
-      this.updateCookie()
     },
 
-    onChangeSortByField (value) {
-      this.$store.dispatch(
-        ProjectActions.SET_LIST_FILTER_SORT_BY,
-        value
-      )
-      this.updateCookie()
-    },
-
-    onToggleSortingOrder () {
+    onSetSortingOrder () {
       this.sortAscending = !this.sortAscending
-      this.$store.dispatch(
-        ProjectActions.SET_LIST_FILTER_SORT_ASC,
-        this.sortAscending
-      )
-      this.updateCookie()
     },
 
-    onChangeFilter (values, field) {
-      this.$store.dispatch(
-        ProjectActions.SET_LIST_FILTER,
-        {
-          field,
-          values
-        }
-      )
-      this.updateCookie()
+    onViewModeChange (mode) {
+      this.viewMode = mode
+      this.$emit('switch-view-mode', mode)
     },
 
     updateCookie () {
-      setCookie(COOKIE, this.$data)
+      // console.log('Update cookie', { ...this.$data })
+      if (!_loadingCookie) {
+        setCookie(COOKIE, this.$data)
+      }
+    },
+
+    loadCookie () {
+      const values = getCookie(COOKIE)
+      const filterFields = ['showStates', 'showBasedirs', 'showPrograms', 'showStacks']
+      _loadingCookie = true
+      if (values && Object.entries(values).length) {
+        Object.entries(values).forEach(([key, val]) => {
+          if (typeof this.$data[key] !== 'undefined') {
+            if (filterFields.includes(key)) {
+              this.$data[key] = val
+            } else if (key === 'sortByField') {
+              this.$data[key] = val
+            } else if (key === 'sortAscending') {
+              this.$data[key] = val
+            } else if (key === 'viewMode') {
+              this.onViewModeChange(val)
+            } else {
+              console.log('A value from cookie will be ignored:', key, val)
+            }
+          }
+        })
+      }
+      _loadingCookie = false
     }
   },
   created () {
-    const values = getCookie(COOKIE)
-    if (values && Object.entries(values).length) {
-      Object.entries(values).forEach(([key, val]) => {
-        if (typeof this.$data[key] !== 'undefined') {
-          this.$data[key] = val
-        }
-      })
-    }
+    this.loadCookie()
   }
 
 }
@@ -424,13 +314,22 @@ export default {
 
 <style scoped>
 .drawer {
-  margin-bottom: 2rem;
-  display: grid;
-  /*grid-template-columns: auto;*/
-  /*grid-template-rows: auto;*/
-  grid-template-areas:
-    "content-area"
-    "handle-area";
+  display: block;
+  width: 100%;
+  clear: both;
+  margin-bottom: 0;
+  padding: 10px 1rem 0 1rem;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #e8e8e8;
+  position: relative;
+}
+.filter-heading {
+  position: absolute;
+  top: 14px;
+  left: 1rem;
+  /* font-weight: bold; */
+  font-size: 20px;
+  color: #7e7e7e;
 }
 
 .drawer a {
@@ -441,87 +340,44 @@ export default {
   color: #2379D3;
 }
 
-.drawer-contents {
-  padding: 1rem;
-  background-color: #eee;
-  padding-top: 22px;
-  padding-bottom: 0;
-  border-bottom: 1px solid silver;
-  clear: both;
-  width: 100%;
-  grid-area: content-area;
+.drawer >>> .text-muted {
+  opacity: 0;
+  transition: all 400ms;
 }
 
-.drawer-handle {
-  clear: both;
-  width: 100%;
-  padding: 0 0 0 1rem;
-  grid-area: handle-area;
+.drawer:hover >>> .text-muted {
+  opacity: 0.7;
 }
 
-.drawer-handle .current-filter {
-  display: inline;
-  position: relative;
-  top: 6px;
-}
-
-.drawer-handle .badge {
-  padding: 4px;
-  margin-right: 8px;
-}
-
-.drawer-handle .label{
-  display: inline-block;
-  float: right;
-  background-color: #1e69b9;
-  color: white;
-  line-height: 0;
-  cursor: pointer;
-  padding: 0 16px 0 0;
-  vertical-align: text-top;
-  height: 30px;
-}
-
-.drawer-handle .label:before {
-  width: 0;
-  content: "";
-  height: 0;
+>>> .form-text {
   margin-top: 0;
-  margin-left: 0;
-  display: inline-block;
-  border-style: solid;
-  border-width: 0 30px 30px 0;
-  border-color: transparent transparent white white;
 }
 
-.drawer-handle .label span{
-  display: inline-block;
-  line-height: normal;
-  position: relative;
-  top: -9px;
-  left: 4px;
-  margin-left: 4px;
-}
-
-.form-group,
-.form-group--states {
-  display: inline-block;
-  margin-right: 2rem;
+.drawer >>> .form-group {
+  margin-bottom: 9px;
 }
 
 .filter-form {
   float: left;
   display: inline-block;
-  margin-top: 10px;
+  margin-top: 0;
 }
 
-.form-group--states{
+.form-group {
+  display: inline-block;
   vertical-align: top;
-  padding-top: 0.5rem;
+  margin-right: 2rem;
+}
+
+.form-group--states {
+  display: inline-block;
+  margin-right: 13px;
+  margin-top: 5px;
 }
 
 .left-panel {
   float: left;
+  margin-left: 99px;
 }
 .right-panel {
   float: right;
@@ -535,8 +391,8 @@ export default {
 
 .view-mode {
   font-size: 200%;
-  position: relative;
-  top: 6px;
+  line-height: 1;
+  display: inline-block;
 }
 
 .view-mode--cards{
@@ -567,14 +423,26 @@ export default {
     float: left;
   }
 }
-</style>
-<style>
-  .drawer .text-muted {
-    opacity: 0;
-    transition: all 400ms;
-  }
 
-  .drawer:hover .text-muted {
-    opacity: 0.7;
-  }
+.vue-treeselect--state,
+.vue-treeselect--location,
+.vue-treeselect--stack,
+.vue-treeselect--program {
+ /* display: inline-block;*/
+}
+
+.vue-treeselect--state,
+.vue-treeselect--location {
+  max-width: 18.5rem;
+}
+
+.vue-treeselect--stack,
+.vue-treeselect--program {
+  max-width: 10rem;
+}
+
+.vue-treeselect--sort-by {
+  max-width: 10rem;
+}
+
 </style>

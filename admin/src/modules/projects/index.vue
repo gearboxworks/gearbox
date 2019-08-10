@@ -45,7 +45,7 @@ export default {
     }
   },
   methods: {
-    switchViewMode ($ev, viewMode) {
+    switchViewMode (viewMode) {
       this.viewMode = viewMode
     }
   }
