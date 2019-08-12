@@ -16,7 +16,7 @@
     <b-input-group-append>
       <b-button
         variant="outline-info"
-        title="Copy to clipboard"
+        :title="$t('projects.fieldLocationCopy')"
         v-b-tooltip.hover
         href="#"
         class="btn--copy-dir"
@@ -29,7 +29,7 @@
       </b-button>
       <b-button
         variant="outline-info"
-        :title="isCollapsed ? 'View project location' : 'Open in file manager'"
+        :title="isCollapsed ? $t('projects.fieldLocationView') : $t('projects.fieldLocationOpen')"
         v-b-tooltip.hover
         href="#"
         class="btn--open-dir"

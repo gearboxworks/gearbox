@@ -6,10 +6,10 @@
     placement="bottom"
   >
     <template slot="title">
-      <b-button @click="$emit('close-popover')" class="close" aria-label="Close">
+      <b-button @click="$emit('close-popover')" class="close" :aria-label="$t('button.close')">
         <span class="d-inline-block" aria-hidden="true">&times;</span>
       </b-button>
-      Change service
+      {{$t('services.change')}}
     </template>
 
     <b-form-group>
@@ -25,8 +25,8 @@
         tabindex="0"
         @change="onChangeProjectGear($event)"
       >
-        <option v-if="!defaultService" value="">Do not run this service</option>
-        <option disabled :value="null">Select service...</option>
+        <option v-if="!defaultService" value="">{{$t('services.doNotRun')}}</option>
+        <option disabled :value="null">{{$t('services.select')}}</option>
         <optgroup
           v-for="(serviceVersions, program) in serviceVersions"
           :label="program"
@@ -42,7 +42,7 @@
           </option>
         </optgroup>
       </b-form-select>
-      <b-alert :show="isProjectEnabled">Note, you cannot change this service while the project is running!</b-alert>
+      <b-alert :show="isProjectEnabled">{{$t('services.readonlyWhileRunning')}}</b-alert>
     </b-form-group>
   </b-popover>
 </template>

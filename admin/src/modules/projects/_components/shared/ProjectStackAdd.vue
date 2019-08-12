@@ -15,7 +15,7 @@
       autofocus
     >
       <option value="" disabled>
-        {{hasUnusedStacks ? 'Add stack...' : 'All stacks already added'}}
+        {{hasUnusedStacks ? $t('projects.fieldStackAdd') : $t('projects.fieldStackAllAdded')}}
       </option>
       <option
         v-for="(item,stackId) in unusedStacks"
@@ -28,7 +28,7 @@
     <b-input-group-append>
       <b-button
         variant="outline-info"
-        :title="isUpdating ? 'Updating...' : (isCollapsed ? 'Add a stack' : (isModified ? 'Add the selected stack': 'Please select some stack first or Click to cancel'))"
+        :title="isUpdating ? $t('process.updating') : (isCollapsed ? $t('projects.fieldStackAddOne') : (isModified ? $t('projects.fieldStackAddSelected'): $t('projects.fieldStackUnmodified')))"
         v-b-tooltip.hover
         :disabled="isUpdating"
         :class="{'btn--submit': true, 'btn--add': isCollapsed}"
@@ -99,7 +99,7 @@ export default {
         this.selectedStackId = ''
         this.isModified = false
 
-        this.$emit('maybe-hide-alert', 'Please add some stacks first!')
+        this.$emit('maybe-hide-alert', this.$t('projects.fieldStackAddSome'))
         this.$emit('added-stack', stackId)
       } catch (e) {
         console.error(e.message)

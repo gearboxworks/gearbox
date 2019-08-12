@@ -18,7 +18,7 @@
     <b-input-group-append v-if="isEditing">
       <b-button
         variant="outline-info"
-        :title="isModified ? 'Submit the new hostname' : (isMultimodal ? 'Cancel': 'No changes to submit')"
+        :title="isModified ? $t('projects.fieldHostnameSubmit') : (isMultimodal ? $t('button.cancel'): $t('projects.fieldHostnameUnmodified'))"
         v-b-tooltip.hover
         class="btn--submit"
         :disabled="(!isMultimodal && !isModified) || isUpdating"
@@ -75,7 +75,7 @@ export default {
     onInputClicked () {
       if (!this.isEditing) {
         if (this.project.attributes.enabled) {
-          this.$emit('show-alert', 'Hostname cannot be changed while the project is running!')
+          this.$emit('show-alert', this.$t('projects.fieldHostnameReadonly'))
         } else if (this.isMultimodal) {
           this.isEditing = true
         }

@@ -17,16 +17,16 @@
         key="action-menu"
         variant="link"
         no-caret
-        title="More stack actions"
+        :title="$t('stacks.moreStackActions')"
         v-b-tooltip.hover
       >
         <template slot="button-content">
           <span tabindex="0">
             <font-awesome-icon :icon="['fa', 'ellipsis-v']" />
-            <span class="sr-only">More actions</span>
+            <span class="sr-only">{{$t('stacks.moreActions')}}</span>
           </span>
         </template>
-        <b-dropdown-item @click.prevent="onRemoveProjectStack">Remove stack</b-dropdown-item>
+        <b-dropdown-item @click.prevent="onRemoveProjectStack">{{$t('stacks.remove')}}</b-dropdown-item>
       </b-dropdown>
     </div>
 
@@ -42,7 +42,7 @@
       >
         <a target="_blank"
            :href="`//${hostname}/`"
-           :title="'Open Frontend'+ (isRunning ? '' : ' (not running)')"
+           :title="$t('services.open', [$t('services.frontend'), (isRunning ? '' : (' '+$t('services.notRunning')))])"
            v-b-tooltip.hover
            class="toolbar-link"
         >
@@ -65,7 +65,7 @@
       >
         <a target="_blank"
            :href="`//${hostname}/wp-admin/`"
-           :title="'Open Dashboard' + (isRunning ? '' : ' (not running)')"
+           :title="$t('services.open', [$t('services.dashboard'), (isRunning ? '' : (' '+$t('services.notRunning')))])"
            v-b-tooltip.hover
            class="toolbar-link"
         >
@@ -88,7 +88,7 @@
       >
         <a target="_blank"
            :href="`//${hostname}/wp-admin/`"
-           :title="'Open Adminer' + (isRunning ? '' : ' (not running)')"
+           :title="$t('services.open', [ 'Adminer', (isRunning ? '' : (' '+$t('services.notRunning')))])"
            v-b-tooltip.hover
            class="toolbar-link"
         >
@@ -111,7 +111,7 @@
       >
         <a target="_blank"
            :href="`//${hostname}:4003`"
-           :title="'Open Mailhog' + (isRunning ? '' : ' (not running)')"
+           :title="$t('services.open', [ 'Mailhog', (isRunning ? '' : (' '+$t('services.notRunning')))])"
            v-b-tooltip.hover
            class="toolbar-link"
         >
@@ -162,7 +162,7 @@ export default {
 
     async onRemoveProjectStack (stackId) {
       if (this.project.attributes.enabled) {
-        this.$emit('show-alert', 'Cannot remove stack while the project is running!')
+        this.$emit('show-alert', this.$t('stack.readonlyWhileRunning'))
       } else {
         this.isDeleting = true
         try {

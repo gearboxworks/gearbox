@@ -107,7 +107,7 @@ export default {
       if ((this.defaultService || !!this.stackItem.serviceId) && !this.stackItem.service) {
         const requestedVersion = versionFromServiceId(this.stackItem.serviceId)
         const compatibleVersion = versionFromServiceId(this.compatibleServiceId)
-        return `Could not find the requested version (v.${requestedVersion}), will use the closest match (v.${compatibleVersion}) instead.`
+        return this.$t('gearspecs.versionMismatch', [requestedVersion, compatibleVersion])
       }
       return ''
     },

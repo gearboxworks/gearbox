@@ -9,7 +9,7 @@
       v-if="!isCollapsed && isEditing"
       :ref="`${projectPrefix}note`"
       v-model="notes"
-      placeholder="Add note..."
+      :placeholder="$t('projects.fieldNotesAdd')"
       class="notes-input"
       :rows="isInline ? 5 : 7"
       :readonly="isUpdating"
@@ -45,7 +45,7 @@
       :target="`${projectPrefix}button`"
       placement="top"
     >
-      {{isCollapsed ? ( notes ? 'View notes' : 'Add notes' ) : ((isEditing && isModified) ? 'Cancel changes!' : 'Hide notes')}}
+      {{isCollapsed ? ( notes ? $t('projects.fieldNotesView'): $t('projects.fieldNotesAdd') ) : ((isEditing && isModified) ? $t('projects.fieldNotesCancel') : $t('projects.fieldNotesHide'))}}
     </b-tooltip>
 
     <b-button
@@ -74,7 +74,7 @@
       :target="`${projectPrefix}notes-delete`"
       placement="top"
     >
-      {{isDeleting ? 'Deleting...' : (isRestoring ? 'Restoring...' : (deletedNotes ? 'Restore notes' : 'Delete notes'))}}
+      {{isDeleting ? $t('process.deleting') : (isRestoring ? $t('process.restoring') : (deletedNotes ? $t('projects.fieldNotesRestore') : $t('projects.fieldNotesDelete')))}}
     </b-tooltip>
 
     <b-button
@@ -103,7 +103,7 @@
       triggers="hover"
       placement="top"
     >
-      {{isEditing ? ( isModified ? (isUpdating ? 'Updating...' : 'Save changes') : 'Make some changes first' ) : 'Edit notes'}}
+      {{isEditing ? ( isModified ? (isUpdating ? $t('process.updating') : $t('button.saveChanges')) : $t('button.makeChanges') ) : $t('projects.fieldNotesEdit')}}
     </b-tooltip>
   </div>
 </template>

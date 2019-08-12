@@ -27,7 +27,7 @@
       >
         <thead>
         <tr>
-          <th class="th--state">State</th><th class="th--hostname">Project Name</th><th class="th--location">Location</th><th class="th--stack">Stack</th><th class="th--notes">Notes</th>
+          <th class="th--state">{{$t('projects.fieldState')}}</th><th class="th--hostname">{{$t('projects.fieldHostname')}}</th><th class="th--location">{{$t('projects.fieldLocation')}}</th><th class="th--stack">{{$t('projects.fieldStack')}}</th><th class="th--notes">{{$t('projects.fieldNotes')}}</th>
         </tr>
         </thead>
         <tbody>
@@ -54,7 +54,7 @@
       key="projects-content"
       class="content-wrap is-empty"
     >
-      <h5>No records match the current criteria.</h5>
+      <h5>{{$t('projects.noResults')}}</h5>
     </div>
   </div>
 </template>

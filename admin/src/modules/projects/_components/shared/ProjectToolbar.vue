@@ -4,7 +4,7 @@
     <li class="toolbar-item">
       <a target="_blank"
          href="#"
-         :title="isSwitching ? 'Switching state...': (isRunning ? 'Stop all services' : 'Run all services')"
+         :title="isSwitching ? $t('projects.fieldStateSwitching'): (isRunning ? $t('projects.fieldStateStop') : $t('projects.fieldStateRun'))"
          v-b-tooltip.hover
          @click.prevent="$emit('run-stop-project')"
          class="toolbar-link toolbar-link--state"

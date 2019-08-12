@@ -30,7 +30,7 @@
     </td>
 
     <td class="td--notes">
-      <project-note :is-inline="true" />
+      <project-note is-inline />
     </td>
 
   </tr>

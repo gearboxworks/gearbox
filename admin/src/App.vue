@@ -7,8 +7,8 @@
       class="network-error"
       variant="danger"
     >
-      <h4>Connection Problem</h4>
-      <p>It seems that Gearbox Server is not running. <a href="#" class="retry-link" @click="$router.go()">Retry?</a></p>
+      <h4>{{$t('message.noConnectionTitle')}}</h4>
+      <p>{{$t('message.noConnectionDesc')}} <a href="#" class="retry-link" @click="$router.go()">{{$t('message.noConnectionRetry')}}</a></p>
     </b-alert>
 
     <the-top-bar />

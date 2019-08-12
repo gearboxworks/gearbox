@@ -1,4 +1,9 @@
 import Vue from 'vue'
+import VueClipboard from 'vue-clipboard2'
+
+// import VueI18n from 'vue-i18n'
+import i18n from './i18n'
+
 import App from './App.vue'
 import router from './router'
 import store from './store'
@@ -6,9 +11,6 @@ import store from './store'
 import './plugins/bootstrap'
 import './plugins/fontawesome'
 import './plugins/treeselect'
-
-// import VueSelect from 'vue-cool-select'
-import VueClipboard from 'vue-clipboard2'
 
 Vue.use(VueClipboard)
 
@@ -19,7 +21,10 @@ Vue.config.productionTip = false
 // })
 
 new Vue({
+  i18n,
   router,
   store,
   render: h => h(App)
 }).$mount('#app')
+
+// Vue.use(VueI18n)

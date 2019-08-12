@@ -1,6 +1,6 @@
 <template>
   <div class="drawer mb-3 clearfix">
-    <h2 class="filter-heading">Projects:</h2>
+    <h2 class="filter-heading">{{$t('projects.filterHeading')}}</h2>
     <div class="left-panel">
       <b-form class="filter-form">
 
@@ -9,13 +9,13 @@
           class="form-group--states"
           label=""
           label-for="filter-state"
-          description="Project State"
+          description=""
           switches
           stack
         >
-          <b-form-checkbox value="running" title="Include projects that are currently RUNNING" v-b-tooltip.hover @change="onToggleState($event, 'running')">Running</b-form-checkbox>
-          <b-form-checkbox value="stopped" title="Include projects that are currently STOPPED" v-b-tooltip.hover @change="onToggleState($event, 'stopped')">Stopped</b-form-checkbox>
-          <b-form-checkbox value="candidates" title="Include projects that are yet to be imported" v-b-tooltip.hover @change="onToggleState($event, 'candidates')">Candidates</b-form-checkbox>
+          <b-form-checkbox value="running" :title="$t('projects.filterRunningTitle')" v-b-tooltip.hover @change="onToggleState($event, 'running')">{{$t('projects.filterRunning')}}</b-form-checkbox>
+          <b-form-checkbox value="stopped" :title="$t('projects.filterStoppedTitle')" v-b-tooltip.hover @change="onToggleState($event, 'stopped')">{{$t('projects.filterStopped')}}</b-form-checkbox>
+          <b-form-checkbox value="candidates" :title="$t('projects.filterCandidatesTitle')" v-b-tooltip.hover @change="onToggleState($event, 'candidates')">{{$t('projects.filterCandidates')}}</b-form-checkbox>
         </b-form-checkbox-group>
 
         <b-form-group
@@ -24,7 +24,7 @@
           label=""
           label-for="filter-location"
           description=""
-          title="Filter projects by location"
+          :title="$t('projects.filterByLocation')"
           v-b-tooltip.hover
         >
           <treeselect
@@ -33,7 +33,7 @@
             class="vue-treeselect--location"
             :options="basedirsAsOptions"
             :normalizer="optionNormalizer"
-            placeholder="All locations..."
+            :placeholder="$t('projects.filterAllLocations')"
             :clearable="false"
           />
         </b-form-group>
@@ -44,7 +44,7 @@
           label=""
           label-for="filter-stack"
           description=""
-          title="Filter projects by used stack"
+          :title="$t('projects.filterByStack')"
           v-b-tooltip.hover
         >
           <treeselect
@@ -53,7 +53,7 @@
             class="vue-treeselect--stack"
             :options="stacksAsOptions"
             :normalizer="optionNormalizer"
-            placeholder="All stacks"
+            :placeholder="$t('projects.filterAllStacks')"
             :clearable="false"
           />
         </b-form-group>
@@ -64,7 +64,7 @@
           label=""
           label-for="filter-program"
           description=""
-          title="Filter by used program"
+          :title="$t('projects.filterByProgram')"
           v-b-tooltip.hover.top
         >
           <treeselect
@@ -73,7 +73,7 @@
             class="vue-treeselect--program"
             :options="programsAsOptions"
             :normalizer="optionNormalizer"
-            placeholder="All programs"
+            :placeholder="$t('projects.filterAllPrograms')"
             :clearable="false"
           />
         </b-form-group>
@@ -87,14 +87,14 @@
           label=""
           label-for="sort-by"
           description=""
-          title="Sort projects by"
+          :title="$t('projects.sortBy')"
           v-b-tooltip.hover
         >
           <treeselect
             class="vue-treeselect--sort-by"
             instance-id="sort-by"
             v-model="sortByField"
-            :options="[{id: 'access_date', label: 'Access Date'}, {id: 'creation_date', label: 'Creation Date'}, {id: 'id', label: 'Project title'}]"
+            :options="[{id: 'access_date', label: $t('projects.sortByAccess')}, {id: 'creation_date', label: $t('projects.sortByCreation')}, {id: 'id', label: $t('projects.sortById')}]"
             :clearable = "false"
           />
         </b-form-group>
@@ -104,12 +104,12 @@
           label=""
           label-for="sort-order-select"
           description=""
-          :title="`Sort in ${sortAscending ? 'ascending': 'descending'} order`"
+          :title="sortAscending ? $t('projects.sortAscending') : $t('projects.sortDescending')"
           v-b-tooltip.hover
         >
           <a target="_blank"
              href="#"
-             title="Sort Order"
+             :title="$t('projects.sortOrder')"
              class="view-mode view-mode--order"
              @click.prevent="onSetSortingOrder"
           >
@@ -126,7 +126,7 @@
         >
           <a target="_blank"
              href="#"
-             :title="(viewMode !== 'cards') ? 'Switch to cards view' : 'Cards view'"
+             :title="(viewMode === 'cards') ? this.$t('projects.viewingCards') : this.$t('projects.viewAsCards')"
              v-b-tooltip.hover
              :class="{'view-mode': true, 'view-mode--cards': true, 'is-inactive': (viewMode !== 'cards')}"
              @click.prevent="onViewModeChange('cards')"
@@ -137,7 +137,7 @@
           </a>
           <a target="_blank"
              href="#"
-             :title="(viewMode !== 'table') ? 'Switch to table view' : 'Table view'"
+             :title="(viewMode === 'table') ? this.$t('projects.viewingTable') : this.$t('projects.viewAsTable')"
              v-b-tooltip.hover
              :class="{'view-mode': true, 'view-mode--table': true, 'is-inactive': (viewMode !== 'table')}"
              @click.prevent="onViewModeChange('table')"
@@ -183,19 +183,19 @@ export default {
 
     stacksAsOptions () {
       const stacksOptions = this.$store.getters[StackGetters.LIST_OPTIONS]('stackname')
-      stacksOptions.unshift({ value: 'all', text: 'All stacks' })
+      stacksOptions.unshift({ value: 'all', text: this.$t('projects.filterAllStacks') })
       return stacksOptions
     },
 
     programsAsOptions () {
       const programOptions = this.$store.getters[ServiceGetters.LIST_PROGRAM_OPTIONS]()
-      programOptions.unshift({ value: 'all', text: 'All programs' })
+      programOptions.unshift({ value: 'all', text: this.$t('projects.filterAllPrograms') })
       return programOptions
     },
 
     basedirsAsOptions () {
       const basedirOptions = this.$store.getters[BasedirGetters.LIST_OPTIONS]('basedir')
-      basedirOptions.unshift({ value: 'all', text: 'All locations' })
+      basedirOptions.unshift({ value: 'all', text: this.$t('projects.filterAllLocations') })
       return basedirOptions
     },
 

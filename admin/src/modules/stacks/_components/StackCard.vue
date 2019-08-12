@@ -9,7 +9,7 @@
       @click="onExpandCollapse"
       @keydown.enter="onExpandCollapse"
       tabindex="0"
-      :title="isExpanded ? 'Hide services': 'Show services'"
+      :title="isExpanded ? $t('stacks.hide'): $t('stacks.show')"
       v-b-tooltip.hover
     >
       <font-awesome-icon

@@ -1,6 +1,6 @@
 <template functional>
   <header>
-    <h1>Welcome to Gearbox</h1>
+    <h1> {{parent.$t('message.welcome')}}</h1>
   </header>
 </template>
 

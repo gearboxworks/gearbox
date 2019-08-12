@@ -8,7 +8,7 @@
       v-if="isLoading"
       icon="circle-notch"
       spin
-      title="Loading project details..."
+      :title="$t('process.loading')"
     />
     <div
       v-else
