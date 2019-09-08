@@ -1,8 +1,10 @@
 package vmbox
 
-import "gearbox/box/external/virtualbox"
+import (
+	"gearbox/box/external/hypervisor"
+)
 
-var _ virtualbox.Disker = (*Disk)(nil)
+var _ hypervisor.Disker = (*Disk)(nil)
 
 type Disks []Disk
 type Disk struct {

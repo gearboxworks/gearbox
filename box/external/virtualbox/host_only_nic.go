@@ -1,6 +1,7 @@
 package virtualbox
 
 import (
+	"gearbox/box/external/hypervisor"
 	"github.com/gearboxworks/go-status/only"
 )
 
@@ -44,7 +45,7 @@ func NewHostOnlyNic(args ...*HostOnlyNicArgs) *HostOnlyNic {
 
 }
 
-func (me *HostOnlyNic) initialize(vm VirtualMachiner) (err error) {
+func (me *HostOnlyNic) initialize(vm hypervisor.VirtualMachiner) (err error) {
 	for range only.Once {
 		var n string
 		n, err = CmdFindHostOnlyNet(vm)

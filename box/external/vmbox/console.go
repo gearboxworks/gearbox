@@ -1,12 +1,12 @@
 package vmbox
 
 import (
-	"gearbox/box/external/virtualbox"
+	"gearbox/box/external/hypervisor"
 	"sync"
 	"time"
 )
 
-var _ virtualbox.Consoler = (*Console)(nil)
+var _ hypervisor.Consoler = (*Console)(nil)
 
 type Console struct {
 	Host      string

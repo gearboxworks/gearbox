@@ -1,4 +1,4 @@
-package virtualbox
+package vbmanage
 
 type KeyValueMap map[string]string
 type KeyValuesMap map[string]KeyValueMap
@@ -9,7 +9,7 @@ type KeyValue struct {
 	Value string
 }
 
-func (kvs *KeyValues) decodeBridgeIfs() (KeyValuesMap, bool) {
+func (kvs *KeyValues) DecodeBridgeIfs() (KeyValuesMap, bool) {
 
 	ok := false
 	kvm := make(KeyValuesMap)
@@ -36,7 +36,7 @@ func (kvs *KeyValues) decodeBridgeIfs() (KeyValuesMap, bool) {
 	return kvm, ok
 }
 
-func (kvs *KeyValues) decodeNics() (KeyValuesMap, bool) {
+func (kvs *KeyValues) DecodeNics() (KeyValuesMap, bool) {
 
 	ok := false
 	kvm := make(KeyValuesMap)

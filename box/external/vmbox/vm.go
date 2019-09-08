@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"gearbox/box/external/hypervisor"
 	"gearbox/box/external/virtualbox"
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/eblog"
@@ -18,7 +19,7 @@ import (
 	"time"
 )
 
-var _ virtualbox.VirtualMachiner = (*Vm)(nil)
+var _ hypervisor.VirtualMachiner = (*Vm)(nil)
 
 type Vm struct {
 	// @TODO Three properties that begin with same prefix is a code smell.
@@ -47,11 +48,11 @@ func (me *Vm) GetRetryDelay() time.Duration {
 	return me.Entry.retryDelay
 }
 
-func (me *Vm) GetReleaser() virtualbox.Releaser {
+func (me *Vm) GetReleaser() hypervisor.Releaser {
 	return me.osRelease
 }
 
-func (me *Vm) GetSsh() virtualbox.SecureSheller {
+func (me *Vm) GetSsh() hypervisor.SecureSheller {
 	ssh := me.Entry.Ssh
 	return &ssh
 }
@@ -64,7 +65,7 @@ func (me *Vm) SetNic(nic *virtualbox.HostOnlyNic) {
 	me.Entry.HostOnlyNic = nic
 }
 
-func (me *Vm) GetConsole() virtualbox.Consoler {
+func (me *Vm) GetConsole() hypervisor.Consoler {
 	c := me.Entry.Console
 	return &c
 }

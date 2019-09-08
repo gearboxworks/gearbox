@@ -2,6 +2,8 @@ package virtualbox
 
 import (
 	"fmt"
+	"gearbox/box/external/hypervisor"
+	"gearbox/box/external/vbmanage"
 	"gearbox/ensure"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/msgs"
@@ -24,28 +26,24 @@ func NewVirtualBox() *VirtualBox {
 	return &vb
 }
 
-var logger Logger
+var logger hypervisor.Logger
 
 func (me *VirtualBox) Reset() {
-	logger = NewCommandLineLog()
+	logger = NewSimpleLog()
 }
 
 // RunVm runs a VBoxManage command.
-func RunVm(vm VirtualMachiner, args ...string) (exitCode string, err error) {
-
-	var vboxManagePath string
+func RunVm(vm hypervisor.VirtualMachiner, args ...string) (exitCode string, err error) {
 
 	for range only.Once {
 
 		path, err := exec.LookPath("VBoxManage")
-		if err == nil {
-			vboxManagePath = path
-		} else {
-			vboxManagePath = VBOXMANAGE
+		if err != nil {
+			path = vbmanage.VBoxManagePath
 		}
 
-		logger.Debug("EXEC[%v]: %v '%v'", vm.GetId(), vboxManagePath, strings.Join(args, ` `))
-		cmd := exec.Command(vboxManagePath, args...)
+		logger.Debug("EXEC[%v]: %v '%v'", vm.GetId(), path, strings.Join(args, ` `))
+		cmd := exec.Command(path, args...)
 		cmd.Stdout = logger.GetStdout()
 		cmd.Stderr = logger.GetStderr()
 		err = cmd.Run()
@@ -76,7 +74,7 @@ func RunVm(vm VirtualMachiner, args ...string) (exitCode string, err error) {
 	return
 }
 
-func CreateVm(vm VirtualMachiner) (states.State, error) {
+func CreateVm(vm hypervisor.VirtualMachiner) (states.State, error) {
 
 	var err error
 	var state states.State
@@ -132,7 +130,7 @@ func CreateVm(vm VirtualMachiner) (states.State, error) {
 	return state, err
 }
 
-func DestroyVm(vm VirtualMachiner) error {
+func DestroyVm(vm hypervisor.VirtualMachiner) error {
 
 	var err error
 
@@ -183,7 +181,7 @@ func DestroyVm(vm VirtualMachiner) error {
 	return err
 }
 
-func StartVm(vm VirtualMachiner, wait bool) (bool, error) {
+func StartVm(vm hypervisor.VirtualMachiner, wait bool) (bool, error) {
 
 	var err error
 	var ok bool
@@ -194,6 +192,7 @@ func StartVm(vm VirtualMachiner, wait bool) (bool, error) {
 			break
 		}
 
+		vbm := vbmanage.NewVbManage(vm)
 		var state states.State
 		state, err = CmdVmInfo(vm)
 		switch state {
@@ -202,8 +201,12 @@ func StartVm(vm VirtualMachiner, wait bool) (bool, error) {
 
 		case states.StateStopped:
 			// stdout, stderr, err := RunVm(vm,"showvminfo", vm, "--machinereadable")
-			_, err = RunVm(vm, "startvm", vm.GetName(), "--type", "headless")
-			if err != nil {
+			cr := vbm.StartVm(&vbmanage.StartVmArgs{
+				Name: vm.GetName(),
+				Type: "headless",
+			})
+			if cr.Error != nil {
+				logger.Debug("VM '%s' failed to start: %s", vm.GetId(), cr.String())
 				break
 			}
 
@@ -233,7 +236,7 @@ func StartVm(vm VirtualMachiner, wait bool) (bool, error) {
 	return ok, err
 }
 
-func StopVm(vm VirtualMachiner, force bool, wait bool) (bool, error) {
+func StopVm(vm hypervisor.VirtualMachiner, force bool, wait bool) (bool, error) {
 
 	var err error
 	var ok bool
@@ -283,7 +286,7 @@ func StopVm(vm VirtualMachiner, force bool, wait bool) (bool, error) {
 	return ok, err
 }
 
-func WaitForVmState(vm VirtualMachiner, want states.State) (bool, error) {
+func WaitForVmState(vm hypervisor.VirtualMachiner, want states.State) (bool, error) {
 
 	var err error
 	var ok bool
@@ -310,7 +313,7 @@ func WaitForVmState(vm VirtualMachiner, want states.State) (bool, error) {
 	return ok, err
 }
 
-func VmStatus(vm VirtualMachiner) (states.State, error) {
+func VmStatus(vm hypervisor.VirtualMachiner) (states.State, error) {
 
 	var err error
 	var state states.State
@@ -329,7 +332,7 @@ func VmStatus(vm VirtualMachiner) (states.State, error) {
 	return state, err
 }
 
-func CmdDestroyVm(vm VirtualMachiner) error {
+func CmdDestroyVm(vm hypervisor.VirtualMachiner) error {
 
 	var err error
 
@@ -358,7 +361,7 @@ func CmdDestroyVm(vm VirtualMachiner) error {
 	return err
 }
 
-func CmdDestroyHostOnlyNet(vm VirtualMachiner) error {
+func CmdDestroyHostOnlyNet(vm hypervisor.VirtualMachiner) error {
 
 	var err error
 
@@ -399,7 +402,7 @@ func CmdDestroyHostOnlyNet(vm VirtualMachiner) error {
 	return err
 }
 
-func CmdModifyVm(vm VirtualMachiner) error {
+func CmdModifyVm(vm hypervisor.VirtualMachiner) error {
 
 	var err error
 
@@ -443,7 +446,7 @@ func CmdModifyVm(vm VirtualMachiner) error {
 	return err
 }
 
-func CmdModifyVmIso(vm VirtualMachiner) error {
+func CmdModifyVmIso(vm hypervisor.VirtualMachiner) error {
 
 	var err error
 
@@ -485,7 +488,7 @@ func CmdModifyVmIso(vm VirtualMachiner) error {
 	return err
 }
 
-func CmdModifyVmStorage(vm VirtualMachiner) error {
+func CmdModifyVmStorage(vm hypervisor.VirtualMachiner) error {
 
 	var err error
 
@@ -568,7 +571,7 @@ func CmdModifyVmStorage(vm VirtualMachiner) error {
 	return err
 }
 
-func CmdModifyVmNetwork(vm VirtualMachiner) error {
+func CmdModifyVmNetwork(vm hypervisor.VirtualMachiner) error {
 
 	var err error
 
@@ -647,7 +650,7 @@ func CmdModifyVmNetwork(vm VirtualMachiner) error {
 	return err
 }
 
-func CmdFindHostOnlyNet(vm VirtualMachiner) (string, error) {
+func CmdFindHostOnlyNet(vm hypervisor.VirtualMachiner) (string, error) {
 
 	var err error
 	var ret string
@@ -658,15 +661,20 @@ func CmdFindHostOnlyNet(vm VirtualMachiner) (string, error) {
 			break
 		}
 
-		_, err = RunVm(vm, "list", "hostonlyifs", "-ls")
-		if err != nil {
+		vbm := vbmanage.NewVbManage(vm)
+		cr := vbm.ManageVm(vbmanage.ListCmd,&vbmanage.Args{
+			HostOnlyIfs: true,
+			Long:        true,
+			Sorted:      true,
+		})
+		if cr.Error != nil {
 			break
 		}
 
-		var nic KeyValueMap
-		dr, ok := decodeResponse(logger.GetStdout(), ':')
+		var nic vbmanage.KeyValueMap
+		dr, ok := cr.DecodeStdout(':')
 		if ok == true {
-			nics, ok := dr.decodeNics()
+			nics, ok := dr.DecodeNics()
 			if ok == false {
 				err = fmt.Errorf("no NICs found for VM '%s", vm.GetName())
 				break
@@ -696,7 +704,7 @@ func CmdFindHostOnlyNet(vm VirtualMachiner) (string, error) {
 	return ret, err
 }
 
-func CmdCreateHostOnlyNet(vm VirtualMachiner) error {
+func CmdCreateHostOnlyNet(vm hypervisor.VirtualMachiner) error {
 
 	var err error
 
@@ -785,7 +793,7 @@ func CmdCreateHostOnlyNet(vm VirtualMachiner) error {
 	return err
 }
 
-func CmdModifyVmBasic(vm VirtualMachiner) error {
+func CmdModifyVmBasic(vm hypervisor.VirtualMachiner) error {
 
 	var err error
 
@@ -878,7 +886,7 @@ func CmdModifyVmBasic(vm VirtualMachiner) error {
 	return err
 }
 
-func CmdCreateVm(vm VirtualMachiner) error {
+func CmdCreateVm(vm hypervisor.VirtualMachiner) error {
 
 	var err error
 
@@ -909,7 +917,7 @@ func CmdCreateVm(vm VirtualMachiner) error {
 	return err
 }
 
-func CmdVmInfo(vm VirtualMachiner) (states.State, error) {
+func CmdVmInfo(vm hypervisor.VirtualMachiner) (states.State, error) {
 
 	var err error
 	var exitCode string

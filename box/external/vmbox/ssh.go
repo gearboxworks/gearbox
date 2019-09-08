@@ -1,8 +1,10 @@
 package vmbox
 
-import "gearbox/box/external/virtualbox"
+import (
+	"gearbox/box/external/hypervisor"
+)
 
-var _ virtualbox.SecureSheller = (*Ssh)(nil)
+var _ hypervisor.SecureSheller = (*Ssh)(nil)
 
 type Ssh struct {
 	Host string

@@ -104,7 +104,7 @@ func isLess(i, j interface{}) bool {
 		return false
 	}
 
-	return iv < jv;
+	return iv < jv
 }
 
 /*

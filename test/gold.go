@@ -39,6 +39,7 @@ func NewGoldFile(fileid string) *GoldFile {
 func (me *GoldFile) DoUpdate() bool {
 	return *updateGold
 }
+
 func (me *GoldFile) DoRunTest() bool {
 	return !*updateGold
 }

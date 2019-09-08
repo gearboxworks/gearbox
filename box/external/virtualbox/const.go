@@ -1,6 +1,7 @@
 package virtualbox
 
 const (
+
 	exitCodeOK        = "0"
 	exitCodeMissingVm = "1"
 	exitCodeCmdError  = "2"

@@ -3,7 +3,7 @@ package vmbox
 import (
 	"errors"
 	"fmt"
-	"gearbox/box/external/virtualbox"
+	"gearbox/box/external/hypervisor"
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
@@ -211,7 +211,7 @@ func (me *Releases) UpdateReleases() error {
 	return err
 }
 
-var _ virtualbox.Releaser = (*Release)(nil)
+var _ hypervisor.Releaser = (*Release)(nil)
 
 type Release struct {
 	Version       Version
