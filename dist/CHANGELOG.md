@@ -1,6 +1,7 @@
 ## Changelog
 
 19c364b (almost?) finalized project api, and work on stack api.
+bb5094e .
 15dab4e A bit more testing.
 a80de3d A little cleanup
 0bf22e7 Ability to change service version and ability to remove project stack
@@ -97,8 +98,8 @@ d09710f Collapse project [location]/[add-note] controls when ESC key is hit; som
 e505fff Commit after merge
 8bb6312 Commit after merge
 b5d8411 Completed UI for adding/removing project stacks
-4a838e5 Completed basic testing for apimodeler
 eca44a4 Completed basic testing for apimodeler
+4a838e5 Completed basic testing for apimodeler
 5287d5e Delete exports
 934e5c4 Deleted cardinality. Seemed like a good idea at the time.
 d59c4c2 Deleted data/stack-member-options.json and added options.json
@@ -188,29 +189,29 @@ cbd9b95 Merge branch '1-lowlevel-vm-control'
 dee22b1 Merge branch '2-VM-Config-Creation'
 02a9879 Merge branch 'jsonapi'
 6b49e48 Merge branch 'master' into 7-Host-Hearbeat-Part2
-4551ec7 Merge branch 'master' of github.com:gearboxworks/gearbox
-e1287be Merge branch 'master' of github.com:gearboxworks/gearbox
 66f5745 Merge branch 'master' of github.com:gearboxworks/gearbox
-e8bb753 Merge branch 'master' of https://github.com/gearboxworks/gearbox
-12cbbf4 Merge branch 'master' of https://github.com/gearboxworks/gearbox
-6f5d6b5 Merge branch 'master' of https://github.com/gearboxworks/gearbox
-14c917f Merge branch 'master' of https://github.com/gearboxworks/gearbox
+e1287be Merge branch 'master' of github.com:gearboxworks/gearbox
+4551ec7 Merge branch 'master' of github.com:gearboxworks/gearbox
 8bbfc2c Merge branch 'master' of https://github.com/gearboxworks/gearbox
-9a678b2 Merge branch 'master' of https://github.com/gearboxworks/gearbox
-4440c72 Merge branch 'master' of https://github.com/gearboxworks/gearbox
 a5f6cca Merge branch 'master' of https://github.com/gearboxworks/gearbox
+4440c72 Merge branch 'master' of https://github.com/gearboxworks/gearbox
+14c917f Merge branch 'master' of https://github.com/gearboxworks/gearbox
+12cbbf4 Merge branch 'master' of https://github.com/gearboxworks/gearbox
+9a678b2 Merge branch 'master' of https://github.com/gearboxworks/gearbox
+6f5d6b5 Merge branch 'master' of https://github.com/gearboxworks/gearbox
+e8bb753 Merge branch 'master' of https://github.com/gearboxworks/gearbox
 2856c8f Merge in old heartbeat.
 939f5cb Merge pull request #13 from gearboxworks/Merge-7-Host-Hearbeat
 c1c9199 Merge pull request #20 from gearboxworks/7-Host-Hearbeat-Part2
-239ee60 Merge remote-tracking branch 'origin/master'
-8e73f1f Merge remote-tracking branch 'origin/master'
 34c06de Merge remote-tracking branch 'origin/master'
-d4db6b6 Merge remote-tracking branch 'origin/master'
-0e7cb5a Merge remote-tracking branch 'origin/master'
-f4f2b9f Merge remote-tracking branch 'origin/master'
 2b55e17 Merge remote-tracking branch 'origin/master'
-3a99094 Merge remote-tracking branch 'origin/master'
+d4db6b6 Merge remote-tracking branch 'origin/master'
 2c70921 Merge remote-tracking branch 'origin/master'
+0e7cb5a Merge remote-tracking branch 'origin/master'
+8e73f1f Merge remote-tracking branch 'origin/master'
+239ee60 Merge remote-tracking branch 'origin/master'
+3a99094 Merge remote-tracking branch 'origin/master'
+f4f2b9f Merge remote-tracking branch 'origin/master'
 eb1e2ee Merge remote-tracking branch 'origin/master'
 864fef7 Merged [Edit Note] and a list of note icons into a single component; now allowing only a single note per project
 b71a3bc Merging all command line option into one command line app.
