@@ -61,9 +61,8 @@ github.com/gearboxworks/go-osbridge v0.0.0-20190605062119-0e1c68c1c70f h1:3kLZyx
 github.com/gearboxworks/go-osbridge v0.0.0-20190605062119-0e1c68c1c70f/go.mod h1:BU1T74QZZ19KsIHnstdN5GuC4TvWiUkNO4qUpkWPRuk=
 github.com/gearboxworks/go-status v0.0.0-20190528175348-42860fb9e78f h1:TP5R7ipjTTpDaCySVdVqAJONPtJZvTrOFCxTKwjL1L4=
 github.com/gearboxworks/go-status v0.0.0-20190528175348-42860fb9e78f/go.mod h1:yePXNHWbtPdshFvB/ve6U8/QTsulhqmAdTBMOF1okIQ=
-github.com/gearboxworks/go-systray v0.0.0-20190626020534-3518af45bf7c h1:7IcFGeQBM5hWJbeVvvngJb1jaZsTRStxnKORPvSp5XU=
 github.com/gearboxworks/go-systray v0.0.0-20190626020534-3518af45bf7c/go.mod h1:ED8nns0+Te+v2IIRxxJ0gOrb7yIksYqDBuTswucRufk=
-github.com/gearboxworks/systray v0.0.0-20190626013144-62522b18bfbe/go.mod h1:dKAEXir7fEuKsQ240LBiLFNx/AqIsbzSM8j+9VTszgk=
+github.com/gearboxworks/go-systray v0.0.0-20190628045254-f866182abfa7/go.mod h1:ED8nns0+Te+v2IIRxxJ0gOrb7yIksYqDBuTswucRufk=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813 h1:Uc+IZ7gYqAf/rSGFplbWBSHaGolEQlNLgMgSE3ccnIQ=
 github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813/go.mod h1:P+oSoE9yhSRvsmYyZsshflcR6ePWYLql6UU1amW13IM=
 github.com/gernest/wow v0.1.0 h1:g9xdwCwP0+xgVYlA2sopI0gZHqXe7HjI/7/LykG4fks=
@@ -74,6 +73,8 @@ github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7 h1:6uJ+sZ/e03gkb
 github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7/go.mod h1:l+xpFBrCtDLpK9qNjxs+cHU6+BAdlBaxHqikB6Lku3A=
 github.com/getlantern/golog v0.0.0-20170508214112-cca714f7feb5 h1:Okd7vkn9CfIgDBj1ST/vtBTCfD/kxIhYD412K+FRKPc=
 github.com/getlantern/golog v0.0.0-20170508214112-cca714f7feb5/go.mod h1:Vwx1Cg64gCdIalad44uvQsKZw6LsVczIKZrUBStEjVw=
+github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7 h1:guBYzEaLz0Vfc/jv0czrr2z7qyzTOGC9hiQ0VC+hKjk=
+github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7/go.mod h1:zx/1xUUeYPy3Pcmet8OSXLbF47l+3y6hIPpyLWoR9oc=
 github.com/getlantern/hex v0.0.0-20190417191902-c6586a6fe0b7 h1:micT5vkcr9tOVk1FiH8SWKID8ultN44Z+yzd2y/Vyb0=
 github.com/getlantern/hex v0.0.0-20190417191902-c6586a6fe0b7/go.mod h1:dD3CgOrwlzca8ed61CsZouQS5h5jIzkK9ZWrTcf0s+o=
 github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55 h1:XYzSdCbkzOC0FDNrgJqGRo8PCMFOBFL9py72DRs7bmc=

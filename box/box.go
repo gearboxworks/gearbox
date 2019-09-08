@@ -17,6 +17,7 @@ import (
 	"github.com/gearboxworks/go-status/is"
 	"github.com/gearboxworks/go-status/only"
 	"github.com/gearboxworks/go-systray"
+	// "github.com/getlantern/systray"
 	"os"
 	"os/signal"
 	"syscall"

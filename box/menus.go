@@ -9,6 +9,7 @@ import (
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"github.com/gearboxworks/go-systray"
+	// "github.com/getlantern/systray"
 	"io/ioutil"
 	"os"
 	"os/exec"

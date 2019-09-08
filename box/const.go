@@ -11,6 +11,7 @@ import (
 
 	//	oss "gearbox/os_support"
 	"github.com/gearboxworks/go-systray"
+	// "github.com/getlantern/systray"
 	"time"
 )
 
