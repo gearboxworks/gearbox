@@ -8,7 +8,7 @@ import (
 	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status/only"
 	"github.com/zserge/lorca"
-	"github.com/zserge/webview"
+//	"github.com/zserge/webview"
 	"io/ioutil"
 	"log"
 	"net"
@@ -137,8 +137,8 @@ func (me *AdminUi) StartLorca() {
 }
 
 func (me *AdminUi) StartWebView() {
-	win := me.Window
-	wv := webview.New(webview.Settings{
+//	win := me.Window
+/*	wv := webview.New(webview.Settings{
 		Title:     win.Title,
 		Height:    win.Height,
 		Width:     win.Width,
@@ -146,7 +146,7 @@ func (me *AdminUi) StartWebView() {
 		Debug:     !win.NoDebug,
 		URL:       me.GetWebRootFileUrl(),
 	})
-	wv.Run()
+	wv.Run()*/
 }
 
 func (me *AdminUi) WriteApiBaseUrls() {
