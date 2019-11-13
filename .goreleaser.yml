@@ -21,9 +21,9 @@ builds:
       - CGO_ENABLED=0
 
     goos:
-#      - windows	# Saru to fix this.
+      - windows	# Saru to fix this.
 #      - darwin
-      - linux		# It's broken, but not critical for now.
+#      - linux		# It's broken, but not critical for now.
 
     goarch:
       - amd64

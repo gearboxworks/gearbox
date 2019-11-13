@@ -23,10 +23,11 @@ require (
 	github.com/gearboxworks/go-jsoncache v1.0.0
 	github.com/gearboxworks/go-osbridge v0.0.0-20190605062119-0e1c68c1c70f
 	github.com/gearboxworks/go-status v0.0.0-20190623205420-467f07bd7e0e
-	github.com/pr0logas/go-systray/tree/compileLinux v0.0.0-20190626020534-3518af45bf7c
+
 	github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813
 	github.com/gernest/wow v0.1.0
 	github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7
+	github.com/getlantern/systray v0.0.0-20191111190243-1a6b33f30317
 	github.com/go-bindata/go-bindata v1.0.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
@@ -37,7 +38,6 @@ require (
 	github.com/intel-go/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
 	github.com/jinzhu/copier v0.0.0-20180308034124-7e38e58719c3
 	github.com/kardianos/service v1.0.0
-	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.2.8
 	github.com/mattn/go-colorable v0.1.0 // indirect
@@ -77,3 +77,4 @@ require (
 	gopkg.in/guregu/null.v2 v2.1.2 // indirect
 )
 
+go 1.13

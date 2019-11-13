@@ -8,32 +8,31 @@ release:
   draft: true
   prerelease: auto
   name_template: '{{ .Tag }}'
-brew:
-  name: Gearbox
+brews:
+- name: Gearbox
   commit_author:
     name: goreleaserbot
     email: goreleaser@carlosbecker.com
-  install: bin.install "gearbox"
+  goarm: "6"
 scoop:
   name: Gearbox
   commit_author:
     name: goreleaserbot
     email: goreleaser@carlosbecker.com
-  url_template: https://github.com/gearboxworks/gearbox/releases/download/{{ .Tag
-    }}/{{ .ArtifactName }}
 builds:
-- id: gearbox
+- id: Gearbox
   goos:
-  - darwin
+  - windows
   goarch:
   - amd64
   goarm:
   - "6"
   targets:
-  - darwin_amd64
+  - windows_amd64
   main: ./app/main.go
   ldflags:
   - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+    -X main.builtBy=goreleaser
   binary: gearbox
   env:
   - CGO_ENABLED=0
@@ -41,7 +40,7 @@ builds:
 archives:
 - id: default
   builds:
-  - gearbox
+  - Gearbox
   name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
     }}v{{ .Arm }}{{ end }}'
   replacements:
@@ -65,11 +64,13 @@ nfpms:
     }}v{{ .Arm }}{{ end }}'
   id: default
   builds:
-  - gearbox
+  - Gearbox
   bindir: /usr/local/bin
-snapcraft:
-  name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+snapcrafts:
+- name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
     }}v{{ .Arm }}{{ end }}'
+  builds:
+  - Gearbox
 snapshot:
   name_template: '{{ .Tag }}'
 checksum:
@@ -82,8 +83,8 @@ changelog:
     - '^test:'
   sort: asc
 dist: dist
-sign:
-  cmd: gpg
+signs:
+- cmd: gpg
   args:
   - --output
   - $signature
@@ -93,10 +94,14 @@ sign:
   artifacts: none
 env_files:
   github_token: ~/.config/goreleaser/github_token
+  gitlab_token: ~/.config/goreleaser/gitlab_token
+  gitea_token: ~/.config/goreleaser/gitea_token
 before:
   hooks:
-  - /tmp/test.sh
-  - go-bindata -o gearbox/dist.go -pkg gearbox dist/... admin/dist/...
+  - go mod download
+  - go-bindata -o gearbox/dist.go -pkg gearbox app/dist/... admin/dist/...
   - echo {{ .Version }} > VERSION
 github_urls:
   download: https://github.com
+gitlab_urls:
+  download: https://gitlab.com
