@@ -6,8 +6,8 @@ env:
 
 before:
   hooks:
-    - /tmp/test.sh
-#    - go mod download
+#   - /tmp/test.sh
+    - go mod download # Download all req modules
     - go-bindata -o gearbox/dist.go -pkg gearbox app/dist/... admin/dist/...
     - echo {{ .Version }} > VERSION
 
@@ -22,8 +22,8 @@ builds:
 
     goos:
 #      - windows	# Saru to fix this.
-      - darwin
-#      - linux		# It's broken, but not critical for now.
+#      - darwin
+      - linux		# It's broken, but not critical for now.
 
     goarch:
       - amd64
