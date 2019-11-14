@@ -22,7 +22,7 @@ builds:
 
     goos:
       - windows	
-#      - darwin
+      - darwin
       - linux
 
     goarch:

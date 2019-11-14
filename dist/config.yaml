@@ -13,6 +13,7 @@ brews:
   commit_author:
     name: goreleaserbot
     email: goreleaser@carlosbecker.com
+  install: bin.install "gearbox"
   goarm: "6"
 scoop:
   name: Gearbox
@@ -23,6 +24,7 @@ builds:
 - id: Gearbox
   goos:
   - windows
+  - darwin
   - linux
   goarch:
   - amd64
@@ -30,6 +32,7 @@ builds:
   - "6"
   targets:
   - windows_amd64
+  - darwin_amd64
   - linux_amd64
   main: ./app/main.go
   ldflags:
