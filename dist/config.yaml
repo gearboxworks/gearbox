@@ -23,19 +23,21 @@ builds:
 - id: Gearbox
   goos:
   - windows
+  - linux
   goarch:
   - amd64
   goarm:
   - "6"
   targets:
   - windows_amd64
+  - linux_amd64
   main: ./app/main.go
   ldflags:
   - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
     -X main.builtBy=goreleaser
   binary: gearbox
   env:
-  - CGO_ENABLED=0
+  - CGO_ENABLED=1
   lang: go
 archives:
 - id: default

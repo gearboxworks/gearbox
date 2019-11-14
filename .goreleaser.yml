@@ -18,12 +18,12 @@ builds:
     binary: gearbox
 
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
 
     goos:
-      - windows	# Saru to fix this.
+      - windows	
 #      - darwin
-#      - linux		# It's broken, but not critical for now.
+      - linux
 
     goarch:
       - amd64
