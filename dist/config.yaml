@@ -23,17 +23,13 @@ scoop:
 builds:
 - id: Gearbox
   goos:
-  - windows
   - darwin
-  - linux
   goarch:
   - amd64
   goarm:
   - "6"
   targets:
-  - windows_amd64
   - darwin_amd64
-  - linux_amd64
   main: ./app/main.go
   ldflags:
   - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
@@ -104,7 +100,6 @@ env_files:
 before:
   hooks:
   - go mod download
-  - go-bindata -o gearbox/dist.go -pkg gearbox app/dist/... admin/dist/...
   - echo {{ .Version }} > VERSION
 github_urls:
   download: https://github.com

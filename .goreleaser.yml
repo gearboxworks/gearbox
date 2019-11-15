@@ -8,7 +8,7 @@ before:
   hooks:
 #   - /tmp/test.sh
     - go mod download # Download all req modules
-    - go-bindata -o gearbox/dist.go -pkg gearbox app/dist/... admin/dist/...
+   # - go-bindata -o gearbox/dist.go -pkg gearbox app/dist/... admin/dist/...
     - echo {{ .Version }} > VERSION
 
 builds:
@@ -21,9 +21,9 @@ builds:
       - CGO_ENABLED=1
 
     goos:
-      - windows	
+   #   - windows	
       - darwin
-      - linux
+   #   - linux
 
     goarch:
       - amd64
