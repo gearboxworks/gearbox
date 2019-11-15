@@ -6,9 +6,9 @@ env:
 
 before:
   hooks:
-#   - /tmp/test.sh
+#   - /tmp/test.sh       # does the tests exist?
     - go mod download # Download all req modules
-   # - go-bindata -o gearbox/dist.go -pkg gearbox app/dist/... admin/dist/...
+    - go-bindata -o gearbox/dist.go -pkg gearbox app/dist/... admin/dist/...
     - echo {{ .Version }} > VERSION
 
 builds:
@@ -21,9 +21,9 @@ builds:
       - CGO_ENABLED=1
 
     goos:
-   #   - windows	
-      - darwin
-   #   - linux
+      - windows	         # compiles fine on linux (Ubuntu 18.04)
+      - linux            # compiles fine on linux (Ubuntu 18.04)
+#     - darwin           # unable to compile on linux, multilib crosscompiler needed from macOS SDK.
 
     goarch:
       - amd64
