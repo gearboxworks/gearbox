@@ -4,3 +4,4 @@
 /bin
 /test/user-home/.gearbox/cache/
 /.gearbox
+/vendor
