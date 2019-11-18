@@ -20,13 +20,12 @@ type VirtualBox struct {
 
 func NewVirtualBox() *VirtualBox {
 	vb := VirtualBox{}
-	vb.Reset()
 	return &vb
 }
 
 var logger Logger
 
-func (me *VirtualBox) Reset() {
+func init() {
 	logger = NewCommandLineLog()
 }
 
