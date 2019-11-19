@@ -22,15 +22,15 @@ var _ util.FilepathHelpUrlGetter = (*JsonFile)(nil)
 type HostnameAliases []types.Hostname
 
 type JsonFile struct {
-	JsonMeta   JsonMeta            `json:"gearbox"`
-	Hostname   types.Hostname      `json:"hostname"`
-	Aliases    HostnameAliases     `json:"aliases"`
-	ServiceBag gears.ServiceBag    `json:"stack"`
-	Stack      service.ServicerMap `json:"-"`
-	Filepath   types.Filepath      `json:"-"`
+	JsonMeta   JsonMeta               `json:"gearbox"`
+	Hostname   types.Hostname         `json:"hostname"`
+	Aliases    HostnameAliases        `json:"aliases"`
+	ServiceBag gears.ServiceBag       `json:"stack"`
+	Stack      service.ServicerMap    `json:"-"`
+	Filepath   types.AbsoluteFilepath `json:"-"`
 }
 
-func NewJsonFile(filepath types.Filepath) *JsonFile {
+func NewJsonFile(filepath types.AbsoluteFilepath) *JsonFile {
 	return &JsonFile{
 		Filepath: filepath,
 		Stack:    make(service.ServicerMap, 0),
@@ -80,7 +80,7 @@ func (me *JsonFile) Write() (sts status.Status) {
 			})
 			break
 		}
-		fp = types.Filepath(strings.Replace(string(fp), ".json", "2.json", -1))
+		fp = types.AbsoluteFilepath(strings.Replace(string(fp), ".json", "2.json", -1))
 		err = ioutil.WriteFile(string(fp), b, os.ModePerm)
 		if err != nil {
 			sts = status.Wrap(err, &status.Args{
@@ -100,7 +100,7 @@ type JsonMeta struct {
 	Readme      []string `json:"readme"`
 }
 
-func (me *JsonFile) GetFilepath() types.Filepath {
+func (me *JsonFile) GetFilepath() types.AbsoluteFilepath {
 	return me.Filepath
 }
 func (me *JsonFile) GetHelpUrl() string {
@@ -199,11 +199,11 @@ func (me *JsonFile) FixupStackItem(item interface{}, role gearspec.Identifier) (
 }
 
 type JsonMetaLoader struct {
-	JsonMeta JsonMeta       `json:"gearbox"`
-	Filepath types.Filepath `json:"-"`
+	JsonMeta JsonMeta               `json:"gearbox"`
+	Filepath types.AbsoluteFilepath `json:"-"`
 }
 
-func NewJsonMetaLoader(filepath types.Filepath) *JsonMetaLoader {
+func NewJsonMetaLoader(filepath types.AbsoluteFilepath) *JsonMetaLoader {
 	return &JsonMetaLoader{
 		Filepath: filepath,
 	}
@@ -245,7 +245,7 @@ func (me *JsonMetaLoader) UnmarshalMeta(j []byte) (sts status.Status) {
 	return sts
 }
 
-func (me *JsonMetaLoader) GetFilepath() types.Filepath {
+func (me *JsonMetaLoader) GetFilepath() types.AbsoluteFilepath {
 	return me.Filepath
 }
 func (me *JsonMetaLoader) GetHelpUrl() string {

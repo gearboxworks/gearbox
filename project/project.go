@@ -20,9 +20,9 @@ type Projects []*Project
 type Project struct {
 	loaded bool
 	*config.Project
-	Filepath types.Filepath      `json:"filepath"`
-	Aliases  HostnameAliases     `json:"aliases"`
-	Stack    service.ServicerMap `json:"stack"`
+	Filepath types.AbsoluteFilepath `json:"filepath"`
+	Aliases  HostnameAliases        `json:"aliases"`
+	Stack    service.ServicerMap    `json:"stack"`
 }
 
 func NewProject(cp *config.Project) (p *Project) {
@@ -57,7 +57,7 @@ func (me Map) ProjectExists(hostname types.Hostname) (ok bool) {
 	return ok
 }
 
-func (me *Project) Renew(path types.Path) (sts status.Status) {
+func (me *Project) Renew(path types.RelativePath) (sts status.Status) {
 	for range only.Once {
 		me.Path = path
 		if me.Hostname == "" {
@@ -115,7 +115,7 @@ func (me *Project) Disable() (sts status.Status) {
 
 func (me *Project) Load() (sts status.Status) {
 	for range only.Once {
-		var fp types.Filepath
+		var fp types.AbsoluteFilepath
 		fp, sts = me.GetFilepath()
 		if is.Error(sts) {
 			break
@@ -149,8 +149,8 @@ func (me *Project) GetServicerMap() (simap service.ServicerMap) {
 	return me.Stack
 }
 
-func (me *Project) GetFilepath() (fp types.Filepath, sts status.Status) {
-	var bd types.Dir
+func (me *Project) GetFilepath() (fp types.AbsoluteFilepath, sts status.Status) {
+	var bd types.AbsoluteDir
 	for range only.Once {
 		if me.Filepath != "" {
 			break
@@ -159,7 +159,7 @@ func (me *Project) GetFilepath() (fp types.Filepath, sts status.Status) {
 		if is.Error(sts) {
 			break
 		}
-		me.Filepath = types.Filepath(filepath.FromSlash(fmt.Sprintf("%s/%s/%s",
+		me.Filepath = types.AbsoluteFilepath(filepath.FromSlash(fmt.Sprintf("%s/%s/%s",
 			bd,
 			me.Path,
 			jsonfile.BaseFilename,
@@ -168,7 +168,7 @@ func (me *Project) GetFilepath() (fp types.Filepath, sts status.Status) {
 	return me.Filepath, sts
 }
 
-func (me *Project) GetProjectDir() (dir types.Dir) {
+func (me *Project) GetProjectDir() (dir types.AbsoluteDir) {
 	for range only.Once {
 		if me.Filepath != "" {
 			dir = util.FileDir(me.Filepath)

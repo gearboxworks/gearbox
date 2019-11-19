@@ -27,28 +27,28 @@ type Configer interface {
 	AddProject(*Project) Status
 	Bytes() []byte
 	DeleteProject(types.Hostname) Status
-	ExpandBasedirPath(types.Nickname, types.Path) (types.Dir, Status)
+	ExpandBasedirPath(types.Nickname, types.RelativePath) (types.AbsoluteDir, Status)
 	FindProject(types.Hostname) (*Project, Status)
 	FindBasedir(types.Nickname) (*Basedir, Status)
 	GetBasedirMap() BasedirMap
 	GetNicknameMap() NicknameMap
 	GetBasedirNicknames() types.Nicknames
-	GetBoxBasedir(types.Nickname) types.Dir
+	GetBoxBasedir(types.Nickname) types.AbsoluteDir
 	GetCandidates() Candidates
-	GetDir() types.Dir
-	GetFilepath() types.Filepath
+	GetDir() types.AbsoluteDir
+	GetFilepath() types.AbsoluteFilepath
 	GetHelpUrl() string
-	GetBasedir(types.Nickname) (types.Dir, Status)
-	GetBasedirs() types.Dirs
+	GetBasedir(types.Nickname) (types.AbsoluteDir, Status)
+	GetBasedirs() types.AbsoluteDirs
 	GetProjectMap() (ProjectMap, Status)
 	Initialize() (sts Status)
 	Load() Status
 	LoadProjects() Status
 	LoadProjectsAndWrite() Status
-	MakeUniqueBasedirNickname(types.Dir) types.Nickname
-	MaybeMakeDir(types.Dir, os.FileMode) Status
+	MakeUniqueBasedirNickname(types.AbsoluteDir) types.Nickname
+	MaybeMakeDir(types.AbsoluteDir, os.FileMode) Status
 	NicknameExists(types.Nickname) bool
-	BasedirExists(types.Dir) bool
+	BasedirExists(types.AbsoluteDir) bool
 	Unmarshal(j []byte) Status
 	UpdateBasedir(*Basedir) Status
 	UpdateProject(*Project) Status
@@ -58,15 +58,15 @@ type Configer interface {
 var ProjectRootAddCmd *cobra.Command
 
 type Config struct {
-	About         string     `json:"about"`
-	LearnMore     string     `json:"learn_more"`
-	OsBridge      OsBridger  `json:"-"`
-	SchemaVersion string     `json:"schema_version"`
-	BasedirMap    BasedirMap `json:"basedirs"`
-	ProjectMap    ProjectMap `json:"projects"`
-	Candidates    Candidates `json:"-"`
-	BoxBasedir    types.Dir  `json:"-"`
-	Boxname       string     `json:"-"`
+	About         string            `json:"about"`
+	LearnMore     string            `json:"learn_more"`
+	OsBridge      OsBridger         `json:"-"`
+	SchemaVersion string            `json:"schema_version"`
+	BasedirMap    BasedirMap        `json:"basedirs"`
+	ProjectMap    ProjectMap        `json:"projects"`
+	Candidates    Candidates        `json:"-"`
+	BoxBasedir    types.AbsoluteDir `json:"-"`
+	Boxname       string            `json:"-"`
 }
 
 func UnmarshalConfig(b []byte) Configer {
@@ -101,7 +101,7 @@ func init() {
 	sanitizer = regexp.MustCompile("[^a-z0-9 ]+")
 }
 
-func (me *Config) MakeUniqueBasedirNickname(dir types.Dir) (nn types.Nickname) {
+func (me *Config) MakeUniqueBasedirNickname(dir types.AbsoluteDir) (nn types.Nickname) {
 	try := strings.ToLower(filepath.Base(string(dir)))
 	try = sanitizer.ReplaceAllString(try, "")
 	try = strings.Replace(try, " ", "-", -1)
@@ -199,8 +199,8 @@ func (me *Config) GetCandidates() Candidates {
 	return me.Candidates
 }
 
-func (me *Config) GetBoxBasedir(nickname types.Nickname) types.Dir {
-	return types.Dir(
+func (me *Config) GetBoxBasedir(nickname types.Nickname) types.AbsoluteDir {
+	return types.AbsoluteDir(
 		strings.Replace(
 			BoxBasedirTemplate,
 			NicknameTemplateVar,
@@ -220,7 +220,7 @@ func (me *Config) GetBasedirNicknames() (nns types.Nicknames) {
 	return nns
 }
 
-func (me *Config) GetBasedir(nickname types.Nickname) (basedir types.Dir, sts Status) {
+func (me *Config) GetBasedir(nickname types.Nickname) (basedir types.AbsoluteDir, sts Status) {
 	bd, ok := me.BasedirMap[nickname]
 	if ok {
 		basedir = bd.Basedir
@@ -256,8 +256,8 @@ func (me *Config) GetBasedirMap() BasedirMap {
 	return me.BasedirMap
 }
 
-func (me *Config) GetBasedirs() types.Dirs {
-	bds := make(types.Dirs, len(me.BasedirMap))
+func (me *Config) GetBasedirs() types.AbsoluteDirs {
+	bds := make(types.AbsoluteDirs, len(me.BasedirMap))
 	for _, bd := range me.BasedirMap {
 		bds = append(bds, bd.Basedir)
 	}
@@ -269,13 +269,13 @@ func (me *Config) Bytes() []byte {
 	return b
 }
 
-func (me *Config) GetDir() types.Dir {
+func (me *Config) GetDir() types.AbsoluteDir {
 	return me.OsBridge.GetUserConfigDir()
 }
 
-func (me *Config) GetFilepath() types.Filepath {
+func (me *Config) GetFilepath() types.AbsoluteFilepath {
 	fp := filepath.FromSlash(fmt.Sprintf("%s/config.json", me.OsBridge.GetUserConfigDir()))
-	return types.Filepath(fp)
+	return types.AbsoluteFilepath(fp)
 }
 
 func (me *Config) WriteFile() (sts Status) {
@@ -305,7 +305,7 @@ func (me *Config) WriteFile() (sts Status) {
 	return sts
 }
 
-func (me *Config) MaybeMakeDir(dir types.Dir, mode os.FileMode) (sts Status) {
+func (me *Config) MaybeMakeDir(dir types.AbsoluteDir, mode os.FileMode) (sts Status) {
 	for range only.Once {
 		err := util.MaybeMakeDir(dir, mode)
 		if err == nil {
@@ -430,7 +430,7 @@ func (me *Config) LoadProjects() (sts Status) {
 				c := NewCandidate(&CandidateArgs{
 					Config:  me,
 					Basedir: bdnn,
-					Path:    types.Path(file.Name()),
+					Path:    types.RelativePath(file.Name()),
 				})
 				if !c.IsProject() {
 					me.Candidates = append(me.Candidates, c)
@@ -470,7 +470,7 @@ func (me *Config) LoadProjects() (sts Status) {
 	return sts
 }
 
-func (me *Config) ExpandBasedirPath(nickname types.Nickname, path types.Path) (fp types.Dir, sts Status) {
+func (me *Config) ExpandBasedirPath(nickname types.Nickname, path types.RelativePath) (fp types.AbsoluteDir, sts Status) {
 	for range only.Once {
 		sts = ValidateBasedirNickname(nickname, &ValidateArgs{
 			MustNotBeEmpty: true,
@@ -483,7 +483,7 @@ func (me *Config) ExpandBasedirPath(nickname types.Nickname, path types.Path) (f
 		if is.Error(sts) {
 			break
 		}
-		fp = types.Dir(filepath.FromSlash(fmt.Sprintf("%s/%s", bd, path)))
+		fp = types.AbsoluteDir(filepath.FromSlash(fmt.Sprintf("%s/%s", bd, path)))
 	}
 	return fp, sts
 }
@@ -555,6 +555,6 @@ func (me *Config) DeleteBasedir(nickname types.Nickname) (sts Status) {
 func (me *Config) NicknameExists(nickname types.Nickname) bool {
 	return me.BasedirMap.NicknameExists(nickname)
 }
-func (me *Config) BasedirExists(basedir types.Dir) bool {
+func (me *Config) BasedirExists(basedir types.AbsoluteDir) bool {
 	return me.BasedirMap.BasedirExists(basedir)
 }

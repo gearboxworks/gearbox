@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/messages"
 	"github.com/gearboxworks/go-status/only"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 )
+
 
 func ReadJsonConfig(f string) (*ServiceConfig, error) {
 
@@ -20,7 +21,7 @@ func ReadJsonConfig(f string) (*ServiceConfig, error) {
 
 	for range only.Once {
 		if f == "" {
-			err = msgs.MakeError(entity.DaemonEntityName, "Daemon service JSON file not defined")
+			err = messages.ProduceError(entity.DaemonEntityName, "Daemon service JSON file not defined")
 			break
 		}
 
@@ -37,7 +38,7 @@ func ReadJsonConfig(f string) (*ServiceConfig, error) {
 		}
 	}
 
-	if eblog.LogIfError(err) {
+	if eblog.LogIfError(eblog.SkipNilCheck, err) {
 		// Save last state.
 		// me.State.Error = err
 	}
@@ -45,25 +46,26 @@ func ReadJsonConfig(f string) (*ServiceConfig, error) {
 	return &c, err
 }
 
+
 func (me *Daemon) ParsePaths(sc ServiceConfig, i string) string {
 
-	if me.BaseDirs == nil {
+	if me.OsPaths == nil {
 		return i
 	}
 
-	strReplace := map[string]string{
-		"{{.LocalDir}}":              me.BaseDirs.LocalDir,
-		"{{.UserHomeDir}}":           me.BaseDirs.GetUserHomeDir(),
-		"{{.AdminRootDir}}":          me.BaseDirs.GetAdminRootDir(),
-		"{{.CacheDir}}":              me.BaseDirs.GetCacheDir(),
-		"{{.ProjectBaseDir}}":        me.BaseDirs.GetProjectDir(),
-		"{{.UserConfigDir}}":         me.BaseDirs.GetUserConfigDir(),
-		"{{.EventBrokerDir}}":        me.BaseDirs.EventBrokerDir,
-		"{{.EventBrokerWorkingDir}}": me.BaseDirs.EventBrokerWorkingDir,
-		"{{.EventBrokerLogDir}}":     me.BaseDirs.EventBrokerLogDir,
-		"{{.EventBrokerEtcDir}}":     me.BaseDirs.EventBrokerEtcDir,
-		"{{.Port}}":                  sc.autoPort, // sc.UrlPtr.Port(),
-		"{{.Host}}":                  sc.autoHost, // sc.UrlPtr.Hostname(),
+	strReplace := map[string]string {
+		"{{.LocalDir}}":              me.OsPaths.LocalDir.String(),
+		"{{.UserHomeDir}}":           me.OsPaths.UserHomeDir.String(),
+		"{{.AdminRootDir}}":          me.OsPaths.AdminRootDir.String(),
+		"{{.CacheDir}}":              me.OsPaths.CacheDir.String(),
+		"{{.ProjectBaseDir}}":        me.OsPaths.ProjectBaseDir.String(),
+		"{{.UserConfigDir}}":         me.OsPaths.UserConfigDir.String(),
+		"{{.EventBrokerDir}}":        me.OsPaths.EventBrokerDir.String(),
+		"{{.EventBrokerWorkingDir}}": me.OsPaths.EventBrokerWorkingDir.String(),
+		"{{.EventBrokerLogDir}}":     me.OsPaths.EventBrokerLogDir.String(),
+		"{{.EventBrokerEtcDir}}":     me.OsPaths.EventBrokerEtcDir.String(),
+		"{{.Port}}":                  sc.autoPort,	// sc.UrlPtr.Port(),
+		"{{.Host}}":                  sc.autoHost,	// sc.UrlPtr.Hostname(),
 		"{{.Platform}}":              runtime.GOOS + "_" + runtime.GOARCH,
 	}
 
@@ -74,11 +76,12 @@ func (me *Daemon) ParsePaths(sc ServiceConfig, i string) string {
 	return i
 }
 
+
 func (me *Daemon) ParseNetwork(sc ServiceConfig, i string) string {
 
-	strReplace := map[string]string{
-		"{{.Port}}": sc.UrlPtr.Port(),
-		"{{.Host}}": sc.UrlPtr.Hostname(),
+	strReplace := map[string]string {
+		"{{.Port}}":	sc.UrlPtr.Port(),
+		"{{.Host}}":	sc.UrlPtr.Hostname(),
 	}
 
 	for k, v := range strReplace {
@@ -87,6 +90,7 @@ func (me *Daemon) ParseNetwork(sc ServiceConfig, i string) string {
 
 	return i
 }
+
 
 func (me *Daemon) CreateDirPaths(file string) error {
 
@@ -109,21 +113,24 @@ func (me *Daemon) CreateDirPaths(file string) error {
 	return err
 }
 
+
 func (c *ServiceConfig) SkipPlatform() (skip bool) {
 
 	// Check platform.
 	myPlatform := runtime.GOOS + "_" + runtime.GOARCH
 
 	switch {
-	case c.RunOnPlatform == "":
-		skip = false
+		case c.RunOnPlatform == "":
+			skip = false
 
-	case c.RunOnPlatform == myPlatform:
-		skip = false
+		case c.RunOnPlatform == myPlatform:
+			skip = false
 
-	default:
-		skip = true
+		default:
+			skip = true
 	}
 
 	return
 }
+
+

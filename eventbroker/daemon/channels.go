@@ -6,7 +6,7 @@ import (
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 )
@@ -14,8 +14,9 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 // Executed from a channel
 
+
 // Non-exposed channel function that responds to an "stop" channel request.
-func stopHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func stopHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *Daemon
@@ -35,7 +36,7 @@ func stopHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType
 			err = me.StopHandler()
 		} else {
 			// Stop of specific entity
-			sc := me.IsExisting(msgs.Address(event.Text))
+			sc := me.IsExisting(messages.MessageAddress(event.Text))
 			if sc != nil {
 				err = sc.Stop()
 			}
@@ -50,13 +51,14 @@ func stopHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return &err
 }
 
+
 // Non-exposed channel function that responds to an "start" channel request.
-func startHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func startHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *Daemon
@@ -76,7 +78,7 @@ func startHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTyp
 			err = me.StartHandler()
 		} else {
 			// Start of specific entity
-			sc := me.IsExisting(msgs.Address(event.Text))
+			sc := me.IsExisting(messages.MessageAddress(event.Text))
 			if sc != nil {
 				err = sc.Start()
 			}
@@ -91,13 +93,14 @@ func startHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTyp
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return &err
 }
 
+
 // Non-exposed channel function that responds to a "status" channel request.
-func statusHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func statusHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *Daemon
@@ -114,7 +117,7 @@ func statusHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTy
 			ret = me.State.GetStatus()
 		} else {
 			// Get status of specific sub
-			sc := me.IsExisting(msgs.Address(event.Text))
+			sc := me.IsExisting(messages.MessageAddress(event.Text))
 			if sc != nil {
 				ret, err = sc.GetStatus()
 			}
@@ -124,13 +127,14 @@ func statusHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTy
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return ret
 }
 
+
 // Non-exposed channel function that responds to a "register" channel request.
-func registerService(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func registerService(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var me *Daemon
 	var sc *Service
@@ -162,13 +166,14 @@ func registerService(event *msgs.Message, i channels.Argument, r channels.Return
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return sc
 }
 
+
 // Non-exposed channel function that responds to an "unregister" channel request.
-func unregisterService(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func unregisterService(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var me *Daemon
 	var err error
@@ -182,26 +187,27 @@ func unregisterService(event *msgs.Message, i channels.Argument, r channels.Retu
 		//fmt.Printf("MESSAGE Rx:\n[%v]\n", event.Text.String())
 
 		// Use message element as the UUID.
-		err = me.UnregisterByEntityId(event.Text.ToAddress())
+		err = me.UnregisterByEntityId(event.Text.ToMessageAddress())
 		if err != nil {
 			break
 		}
 
-		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", event.Text.ToAddress())
+		eblog.Debug(me.EntityId, "unregistered service by channel %s OK", event.Text.ToMessageAddress())
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return &err
 }
 
+
 // Non-exposed channel function that responds to a "get" channel request.
-func getHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *Daemon
-	var ret msgs.SubTopics
+	var ret messages.SubTopics
 
 	for range only.Once {
 		me, err = InterfaceToTypeDaemon(i)
@@ -211,10 +217,10 @@ func getHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType)
 		fmt.Printf("ReturnType: %v\n", r)
 
 		switch event.Text.String() {
-		case "topics":
-			ret = me.channelHandler.GetTopics()
-		case "topics/subs":
-			ret = me.channelHandler.GetTopics()
+			case "topics":
+				ret = me.channelHandler.GetTopics()
+			case "topics/subs":
+				ret = me.channelHandler.GetTopics()
 		}
 
 		fmt.Printf("topics: %v\n", ret)
@@ -223,13 +229,14 @@ func getHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType)
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return &ret
 }
 
+
 // Non-exposed channel function that responds to a "load" channel request.
-func loadConfigHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func loadConfigHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *Daemon
@@ -246,7 +253,8 @@ func loadConfigHandler(event *msgs.Message, i channels.Argument, r channels.Retu
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return &err
 }
+

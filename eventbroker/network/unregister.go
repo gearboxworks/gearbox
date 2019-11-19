@@ -2,16 +2,17 @@ package network
 
 import (
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 )
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
 
 // Unregister a service by method defined by a UUID reference.
-func (me *ZeroConf) UnregisterByEntityId(client msgs.Address) error {
+func (me *ZeroConf) UnregisterByEntityId(client messages.MessageAddress) error {
 
 	var err error
 
@@ -26,12 +27,12 @@ func (me *ZeroConf) UnregisterByEntityId(client msgs.Address) error {
 			break
 		}
 
-		me.services[client].State.SetNewAction(states.ActionStop) // Was states.ActionUnregister
+		me.services[client].State.SetNewAction(states.ActionStop)	// Was states.ActionUnregister
 		me.services[client].channels.PublishState(me.State)
 
 		me.services[client].instance.Shutdown()
 
-		me.services[client].State.SetNewState(states.StateStopped, err) // Was states.StateUnregistered
+		me.services[client].State.SetNewState(states.StateStopped, err)	// Was states.StateUnregistered
 		me.services[client].channels.PublishState(me.services[client].State)
 
 		err = me.DeleteEntity(client)
@@ -45,13 +46,13 @@ func (me *ZeroConf) UnregisterByEntityId(client msgs.Address) error {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
 
 // Unregister a service via a channel defined by a UUID reference.
-func (me *ZeroConf) UnregisterByChannel(caller msgs.Address, u msgs.Address) error {
+func (me *ZeroConf) UnregisterByChannel(caller messages.MessageAddress, u messages.MessageAddress) error {
 
 	var err error
 
@@ -61,8 +62,8 @@ func (me *ZeroConf) UnregisterByChannel(caller msgs.Address, u msgs.Address) err
 			break
 		}
 
-		//unreg := me.EntityId.Construct(me.EntityId, states.ActionUnregister, msg.Text(u.String()))
-		unreg := caller.MakeMessage(me.EntityId, states.ActionUnregister, msgs.Text(u.String()))
+		//unreg := me.EntityId.Construct(me.EntityId, states.ActionUnregister, messages.MessageText(u.String()))
+		unreg := caller.ConstructMessage(me.EntityId, states.ActionUnregister, messages.MessageText(u.String()))
 		err = me.Channels.Publish(unreg)
 		if err != nil {
 			break
@@ -73,7 +74,8 @@ func (me *ZeroConf) UnregisterByChannel(caller msgs.Address, u msgs.Address) err
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
+

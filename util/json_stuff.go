@@ -14,7 +14,7 @@ type FilepathHelpUrlGetter interface {
 }
 
 type FilepathGetter interface {
-	GetFilepath() types.Filepath
+	GetFilepath() types.AbsoluteFilepath
 }
 
 type HelpUrlGetter interface {

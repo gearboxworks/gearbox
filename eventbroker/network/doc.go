@@ -5,7 +5,7 @@
 // It also allows services to be registered and unregistered using a channels interface.
 //
 // This package depends on:
-// msg
+// messages
 // tasks
 // channels
 //

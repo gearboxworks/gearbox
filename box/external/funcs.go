@@ -25,7 +25,7 @@ package external
 //		foo := box.Args{}
 //		err = copier.Copy(&foo, &_args)
 //		if err != nil {
-//			err = msgs.MakeError(me.EntityId,"unable to copy config args")
+//			err = me.EntityId.ProduceError("unable to copy config args")
 //			break
 //		}
 //

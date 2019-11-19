@@ -2,14 +2,16 @@ package mqttClient
 
 import (
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"github.com/gearboxworks/go-status/only"
 )
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a task.
+
 
 // Non-exposed task function - M-DNS initialization.
 func initMqttClient(task *tasks.Task, i ...interface{}) error {
@@ -56,7 +58,7 @@ func initMqttClient(task *tasks.Task, i ...interface{}) error {
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(msgs.SubTopic("get"), getHandler, me, msgs.InterfaceTypeSubTopics)
+			err = me.channelHandler.Subscribe(messages.SubTopic("get"), getHandler, me, messages.InterfaceTypeSubTopics)
 			if err != nil {
 				break
 			}
@@ -67,11 +69,12 @@ func initMqttClient(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err
 }
+
 
 // Non-exposed task function - M-DNS start.
 func startMqttClient(task *tasks.Task, i ...interface{}) error {
@@ -98,11 +101,12 @@ func startMqttClient(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err
 }
+
 
 // Non-exposed task function - M-DNS monitoring.
 func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
@@ -117,11 +121,13 @@ func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
+
 		// First monitor my current state.
 		if me.State.GetCurrent() != states.StateStarted {
-			err = msgs.MakeError(me.EntityId, "task needs restarting")
+			err = me.EntityId.ProduceError("task needs restarting")
 			break
 		}
+
 
 		// Next do something else.
 		for range only.Once {
@@ -161,11 +167,12 @@ func monitorMqttClient(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err
 }
+
 
 // Non-exposed task function - M-DNS stop.
 func stopMqttClient(task *tasks.Task, i ...interface{}) error {
@@ -194,8 +201,9 @@ func stopMqttClient(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(err)
+		eblog.LogIfError(me.EntityId, err)
 	}
 
 	return err
 }
+

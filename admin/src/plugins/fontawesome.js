@@ -18,7 +18,6 @@ import {
   faFolder,
   faFolderOpen,
   faTrashAlt,
-  faTrashRestoreAlt,
   faCheckCircle,
   faPlus,
   faColumns,
@@ -30,10 +29,7 @@ import {
   faClone,
   faTimes,
   faReply,
-  faCircleNotch,
-  faPencilAlt,
-  faInfoCircle,
-  faExclamationCircle
+  faCircleNotch
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
@@ -54,7 +50,6 @@ library.add(faDatabase)
 library.add(faFolder)
 library.add(faFolderOpen)
 library.add(faTrashAlt)
-library.add(faTrashRestoreAlt)
 library.add(faCheckCircle)
 library.add(faPlus)
 library.add(faColumns)
@@ -67,8 +62,5 @@ library.add(faClone)
 library.add(faTimes)
 library.add(faReply)
 library.add(faCircleNotch)
-library.add(faPencilAlt)
-library.add(faInfoCircle)
-library.add(faExclamationCircle)
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)

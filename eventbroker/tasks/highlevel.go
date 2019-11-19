@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+
 func StartTask(initFunc TaskFunc, startFunc TaskFunc, monitorFunc TaskFunc, stopFunc TaskFunc, ref ...interface{}) (*Task, error) {
 
 	var err error
@@ -93,7 +94,7 @@ func StartTask(initFunc TaskFunc, startFunc TaskFunc, monitorFunc TaskFunc, stop
 		task.stopFunc = stopFunc
 	}
 
-	if eblog.LogIfError(err) {
+	if eblog.LogIfError(eblog.SkipNilCheck, err) {
 		// Save last state.
 		// me.State.Error = err
 	}
@@ -101,14 +102,17 @@ func StartTask(initFunc TaskFunc, startFunc TaskFunc, monitorFunc TaskFunc, stop
 	return task, err
 }
 
+
 func ListTasks() (Tasks, error) {
 
 	return tasks, nil
 }
 
+
 func EmptyTask(task *Task, i ...interface{}) error {
 	return nil
 }
+
 
 // Mirrors tasks.stop() with extra enhancements.
 // EG: Wait for the process to actually stop
@@ -120,16 +124,17 @@ func (me *Task) Stop() error {
 
 	me.stop()
 	select {
-	case <-me.StopChan():
-		// task successfully stopped
-	case <-time.After(10 * time.Second):
-		// task didn't stop in time
+		case <-me.StopChan():
+			// task successfully stopped
+		case <-time.After(10 * time.Second):
+			// task didn't stop in time
 	}
 
 	delete(tasks, me.id)
 
 	return me.Err()
 }
+
 
 // Mirrors tasks.StopChan() with extra enhancements.
 // This will wait indefinitely until a task has stopped.
@@ -147,6 +152,7 @@ func (me *Task) WaitUntilStopped() bool {
 	return true
 }
 
+
 // Mirrors tasks.Running().
 func (me *Task) IsRunning() bool {
 
@@ -157,6 +163,7 @@ func (me *Task) IsRunning() bool {
 	return me.Running()
 }
 
+
 func (me *Task) GetRetryLimit() int {
 
 	if me == nil {
@@ -165,6 +172,7 @@ func (me *Task) GetRetryLimit() int {
 
 	return me.retryLimit
 }
+
 
 func (me *Task) SetRetryLimit(v int) error {
 
@@ -177,6 +185,7 @@ func (me *Task) SetRetryLimit(v int) error {
 	return nil
 }
 
+
 func (me *Task) GetRetryCounter() int {
 
 	if me == nil {
@@ -185,6 +194,7 @@ func (me *Task) GetRetryCounter() int {
 
 	return me.retryCounter
 }
+
 
 func (me *Task) SetRetryCounter(v int) error {
 
@@ -197,6 +207,7 @@ func (me *Task) SetRetryCounter(v int) error {
 	return nil
 }
 
+
 func (me *Task) GetRetryDelay() time.Duration {
 
 	if me == nil {
@@ -205,6 +216,7 @@ func (me *Task) GetRetryDelay() time.Duration {
 
 	return me.retryDelay
 }
+
 
 func (me *Task) SetRetryDelay(v time.Duration) error {
 
@@ -217,6 +229,7 @@ func (me *Task) SetRetryDelay(v time.Duration) error {
 	return nil
 }
 
+
 func (me *Task) GetState() State {
 
 	if me == nil {
@@ -225,6 +238,7 @@ func (me *Task) GetState() State {
 
 	return me.runState
 }
+
 
 func (me *Task) GetId() Uuid {
 

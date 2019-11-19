@@ -18,7 +18,7 @@ type DirectoryModelMap map[gearspec.Identifier]*DirectoryModel
 type DirectoryModels []*DirectoryModel
 
 type DirectoryModel struct {
-	Directory types.Dir `json:"directory"`
+	Directory types.AbsoluteDir `json:"directory"`
 	Model
 }
 
@@ -31,7 +31,7 @@ func (me *DirectoryModel) GetAttributeMap() (am apiworks.AttributeMap) {
 
 func (me *DirectoryModel) ContainsResource() {}
 
-func NewDirectoryModel(ctx *Context, dir types.Dir) (s *DirectoryModel, sts Status) {
+func NewDirectoryModel(ctx *Context, dir types.AbsoluteDir) (s *DirectoryModel, sts Status) {
 	s = &DirectoryModel{
 		Directory: dir,
 	}
@@ -43,7 +43,7 @@ func (me *DirectoryModel) GetId() ItemId {
 }
 
 func (me *DirectoryModel) SetId(id ItemId) (sts Status) {
-	me.Directory = types.Dir(id)
+	me.Directory = types.AbsoluteDir(id)
 	return sts
 }
 

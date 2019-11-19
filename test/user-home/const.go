@@ -6,12 +6,12 @@ import (
 	"runtime"
 )
 
-var UserHomeDir types.Dir
+var UserHomeDir types.AbsoluteDir
 
 func init() {
 	_, fn, _, ok := runtime.Caller(0)
 	if !ok {
 		panic("unable to access filename from runtime.Caller()")
 	}
-	UserHomeDir = types.Dir(filepath.Dir(fn))
+	UserHomeDir = types.AbsoluteDir(filepath.Dir(fn))
 }
