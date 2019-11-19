@@ -12,15 +12,15 @@ import (
 	"syscall"
 )
 
-func FileExists(file types.Filepath) bool {
-	return EntryExists(types.FileSystemEntry(file))
+func FileExists(file types.AbsoluteFilepath) bool {
+	return EntryExists(types.AbsoluteEntry(file))
 }
-func GetExecutableFilepath() types.Filepath {
+func GetExecutableFilepath() types.AbsoluteFilepath {
 	fp, err := filepath.Abs(os.Args[0])
 	if err != nil {
 		log.Fatal(err)
 	}
-	return types.Filepath(fp)
+	return types.AbsoluteFilepath(fp)
 }
 
 //func GetProjectDir() string {
@@ -31,7 +31,7 @@ func ErrorIsFileDoesNotExist(err error) bool {
 	return ok && pe.Op == "open" && pe.Err == syscall.ENOENT
 }
 
-func ReadBytes(filepath types.Filepath) (b []byte, sts status.Status) {
+func ReadBytes(filepath types.AbsoluteFilepath) (b []byte, sts status.Status) {
 	for range only.Once {
 		var err error
 		b, err = ioutil.ReadFile(string(filepath))

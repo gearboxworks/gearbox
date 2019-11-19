@@ -2,16 +2,17 @@ package daemon
 
 import (
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 )
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
 
 // Unregister a service by method defined by a UUID reference.
-func (me *Daemon) UnregisterByEntityId(client msgs.Address) error {
+func (me *Daemon) UnregisterByEntityId(client messages.MessageAddress) error {
 
 	var err error
 
@@ -21,12 +22,12 @@ func (me *Daemon) UnregisterByEntityId(client msgs.Address) error {
 			break
 		}
 
-		err = client.EnsureNotEmpty()
+		err = client.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		me.daemons[client].State.SetNewAction(states.ActionStop) // Was states.ActionUnregister
+		me.daemons[client].State.SetNewAction(states.ActionStop)	// Was states.ActionUnregister
 		me.daemons[client].channels.PublishState(me.daemons[client].State)
 
 		var state states.State
@@ -36,25 +37,25 @@ func (me *Daemon) UnregisterByEntityId(client msgs.Address) error {
 			continue
 		}
 		switch state {
-		case states.StateUnknown:
-			//
+			case states.StateUnknown:
+				//
 
-		case states.StateStarted:
-			err = me.daemons[client].instance.service.Stop() // Mutex not required
-			if err != nil {
-				break
-			}
+			case states.StateStarted:
+				err = me.daemons[client].instance.service.Stop()	// Mutex not required
+				if err != nil {
+					break
+				}
 
-		case states.StateStopped:
-			//
+			case states.StateStopped:
+				//
 		}
 
-		err = me.daemons[client].instance.service.Uninstall() // Mutex not required
+		err = me.daemons[client].instance.service.Uninstall()	// Mutex not required
 		if err != nil {
 			break
 		}
 
-		me.daemons[client].State.SetNewState(states.StateStopped, err) // Was states.StateUnregistered
+		me.daemons[client].State.SetNewState(states.StateStopped, err)		// Was states.StateUnregistered
 		me.daemons[client].channels.PublishState(me.daemons[client].State)
 
 		err = me.DeleteEntity(client)
@@ -68,13 +69,14 @@ func (me *Daemon) UnregisterByEntityId(client msgs.Address) error {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
 
+
 // Unregister a service via a channel defined by a UUID reference.
-func (me *Daemon) UnregisterByChannel(caller msgs.Address, u msgs.Address) error {
+func (me *Daemon) UnregisterByChannel(caller messages.MessageAddress, u messages.MessageAddress) error {
 
 	var err error
 
@@ -84,8 +86,8 @@ func (me *Daemon) UnregisterByChannel(caller msgs.Address, u msgs.Address) error
 			break
 		}
 
-		//unreg := me.EntityId.Construct(me.EntityId, states.ActionUnregister, msg.Text(u.String()))
-		unreg := caller.MakeMessage(me.EntityId, states.ActionUnregister, msgs.Text(u.String()))
+		//unreg := me.EntityId.Construct(me.EntityId, states.ActionUnregister, messages.MessageText(u.String()))
+		unreg := caller.ConstructMessage(me.EntityId, states.ActionUnregister, messages.MessageText(u.String()))
 		err = me.Channels.Publish(unreg)
 		if err != nil {
 			break
@@ -96,10 +98,11 @@ func (me *Daemon) UnregisterByChannel(caller msgs.Address, u msgs.Address) error
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
+
 
 // Unregister a service by method defined by a *CreateEntry structure.
 func (me *Daemon) UnregisterByFile(f string) (*Service, error) {
@@ -138,10 +141,11 @@ func (me *Daemon) UnregisterByFile(f string) (*Service, error) {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return s, err
 }
+
 
 func (me *Daemon) UnloadServiceFiles() error {
 
@@ -176,3 +180,4 @@ func (me *Daemon) UnloadServiceFiles() error {
 
 	return err
 }
+

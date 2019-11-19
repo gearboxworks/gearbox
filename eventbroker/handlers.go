@@ -6,13 +6,14 @@ import (
 	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"sort"
 	"sync"
 	"time"
 )
+
 
 func (me *EventBroker) StartChannelHandler() error {
 
@@ -49,10 +50,11 @@ func (me *EventBroker) StartChannelHandler() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
+
 
 func (me *EventBroker) StopChannelHandler() error {
 
@@ -72,16 +74,17 @@ func (me *EventBroker) StopChannelHandler() error {
 		eblog.Debug(me.EntityId, "task handler stopped OK")
 	}
 
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 	eblog.LogIfNil(me, err)
 
 	return err
 }
 
+
 // Non-exposed channel function that responds to a "get" channel request.
 // This expects the message text to contain an embedded status request message.
 // Thus exposes entity status' to the outside.
-func getHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func getHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *EventBroker
@@ -95,7 +98,7 @@ func getHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType)
 
 		//fmt.Printf("getHandler: %s\n", event.String())
 
-		var msg *msgs.Message
+		var msg *messages.Message
 		msg, err = event.Text.ToMessage()
 		if err == nil {
 			//fmt.Printf("%d: msg == %s\n", time.Now().Unix(), msg.String())
@@ -105,26 +108,26 @@ func getHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType)
 		}
 
 		switch msg.Topic.SubTopic {
-		case states.ActionStatus:
-			//fmt.Printf("%d: Republish status request message: %s\n", time.Now().Unix(), msg.String())
-			var ir channels.Return
-			ir, err = me.Channels.PublishAndWaitForReturn(*msg, 200)
-			if err == nil {
-				//fmt.Printf("%d: OK - ir == %v\n", time.Now().Unix(), ir)
-			} else {
-				fmt.Printf("getHandler %d: ER - ir == %v /  err == %v\n", time.Now().Unix(), ir, err)
-				break
-			}
+			case states.ActionStatus:
+				//fmt.Printf("%d: Republish status request message: %s\n", time.Now().Unix(), msg.String())
+				var ir channels.Return
+				ir, err = me.Channels.PublishAndWaitForReturn(*msg, 200)
+				if err == nil {
+					//fmt.Printf("%d: OK - ir == %v\n", time.Now().Unix(), ir)
+				} else {
+					fmt.Printf("getHandler %d: ER - ir == %v /  err == %v\n", time.Now().Unix(), ir, err)
+					break
+				}
 
-			ret, err = states.InterfaceToTypeStatus(ir)
-			if err == nil {
-				//fmt.Printf("%d: OK - ret == %s\n", time.Now().Unix(), ret.String())
-			} else {
-				fmt.Printf("getHandler %d: ER - ret == nil / err == %v\n", time.Now().Unix(), err)
-			}
+				ret, err = states.InterfaceToTypeStatus(ir)
+				if err == nil {
+					//fmt.Printf("%d: OK - ret == %s\n", time.Now().Unix(), ret.String())
+				} else {
+					fmt.Printf("getHandler %d: ER - ret == nil / err == %v\n", time.Now().Unix(), err)
+				}
 		}
 
-		//unreg := me.EntityId.MakeMessage(event.Text.ToAddress(), states.ActionUnregister, msg.Text(u.String()))
+		//unreg := me.EntityId.ConstructMessage(event.Text.ToMessageAddress(), states.ActionUnregister, messages.MessageText(u.String()))
 		//err = me.Channels.Publish(unreg)
 		//if err != nil {
 		//	break
@@ -136,19 +139,21 @@ func getHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType)
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return ret
 }
 
+
 // Non-exposed channel function that responds to a "status" channel request.
-func statusHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func statusHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *EventBroker
 	var state *states.Status
 	var sc *Service
 	var ok bool
+
 
 	for range only.Once {
 		me, err = InterfaceToTypeEventBroker(i)
@@ -173,8 +178,9 @@ func statusHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTy
 			break
 		}
 
+
 		// Create callback reference if not already present.
-		sc, ok, err = me.AttachCallback(state.EntityName, nil, nil)
+		sc, ok, err = me.AttachCallback(*state.EntityName, nil, nil)
 		if err != nil {
 			break
 		}
@@ -203,13 +209,14 @@ func statusHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTy
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return state
 }
 
+
 // Non-exposed channel function that responds to a "stop" channel request.
-func stopHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func stopHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *EventBroker
@@ -226,7 +233,7 @@ func stopHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType
 		//t := event.Text.ToMessage()
 		//fmt.Printf("Translate: %v\n", t)
 
-		//unreg := me.EntityId.MakeMessage(event.Text.ToAddress(), states.ActionUnregister, msg.Text(u.String()))
+		//unreg := me.EntityId.ConstructMessage(event.Text.ToMessageAddress(), states.ActionUnregister, messages.MessageText(u.String()))
 		//err = me.Channels.Publish(unreg)
 		//if err != nil {
 		//	break
@@ -238,13 +245,14 @@ func stopHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return ret
 }
 
+
 // Non-exposed channel function that responds to a "start" channel request.
-func startHandler(event *msgs.Message, i channels.Argument, r channels.ReturnType) channels.Return {
+func startHandler(event *messages.Message, i channels.Argument, r channels.ReturnType) channels.Return {
 
 	var err error
 	var me *EventBroker
@@ -263,12 +271,13 @@ func startHandler(event *msgs.Message, i channels.Argument, r channels.ReturnTyp
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return ret
 }
 
-func (me Services) Exists(client msgs.Address) (*Service, error) {
+
+func (me Services) Exists(client messages.MessageAddress) (*Service, error) {
 
 	var err error
 	var ret *Service
@@ -279,7 +288,7 @@ func (me Services) Exists(client msgs.Address) (*Service, error) {
 			break
 		}
 
-		err = client.EnsureNotEmpty()
+		err = client.EnsureNotNil()
 		if err != nil {
 			break
 		}
@@ -299,7 +308,8 @@ func (me Services) Exists(client msgs.Address) (*Service, error) {
 	return ret, err
 }
 
-func (me Services) LookFor(client msgs.Address) (*Service, error) {
+
+func (me Services) LookFor(client messages.MessageAddress) (*Service, error) {
 
 	var err error
 	var ret *Service
@@ -310,22 +320,22 @@ func (me Services) LookFor(client msgs.Address) (*Service, error) {
 			break
 		}
 
-		err = client.EnsureNotEmpty()
+		err = client.EnsureNotNil()
 		if err != nil {
 			break
 		}
 
-		var keys msgs.Address
+		var keys messages.MessageAddress
 		for keys, ret = range me {
 			if keys == client {
 				break
 			}
 
-			if ret.State.EntityId == client {
+			if *ret.State.EntityId == client {
 				break
 			}
 
-			if ret.State.EntityName == client {
+			if *ret.State.EntityName == client {
 				break
 			}
 		}
@@ -336,7 +346,8 @@ func (me Services) LookFor(client msgs.Address) (*Service, error) {
 	return ret, err
 }
 
-func (me *EventBroker) AttachCallback(client msgs.Address, cb Callback, args interface{}) (*Service, bool, error) {
+
+func (me *EventBroker) AttachCallback(client messages.MessageAddress, cb Callback, args interface{}) (*Service, bool, error) {
 
 	var err error
 	var ok bool
@@ -348,7 +359,7 @@ func (me *EventBroker) AttachCallback(client msgs.Address, cb Callback, args int
 			break
 		}
 
-		err = client.EnsureNotEmpty()
+		err = client.EnsureNotNil()
 		if err != nil {
 			break
 		}
@@ -368,11 +379,11 @@ func (me *EventBroker) AttachCallback(client msgs.Address, cb Callback, args int
 		}
 
 		ret = &Service{
-			State:    states.New(client, client, entity.BroadcastEntityName),
+			State: states.New(&client, &client, entity.BroadcastEntityName),
 			Callback: cb,
-			Args:     args,
-			Logs:     make(Logs, 0),
-			mutex:    sync.RWMutex{},
+			Args: args,
+			Logs: make(Logs, 0),
+			mutex: sync.RWMutex{},
 		}
 
 		me.Services[client] = ret
@@ -381,6 +392,7 @@ func (me *EventBroker) AttachCallback(client msgs.Address, cb Callback, args int
 
 	return ret, ok, err
 }
+
 
 func (me Services) PrintStates() error {
 
@@ -401,12 +413,13 @@ func (me Services) PrintStates() error {
 		sort.Strings(keys)
 
 		for i, e := range keys {
-			fmt.Printf("%d %s\n", i, me[msgs.Address(e)].PrintState())
+			fmt.Printf("%d %s\n", i, me[messages.MessageAddress(e)].PrintState())
 		}
 	}
 
 	return err
 }
+
 
 func (me Services) EnsureNotNil() error {
 
@@ -418,6 +431,8 @@ func (me Services) EnsureNotNil() error {
 
 	return err
 }
+
+
 
 func (me *Service) updateState(state states.Status) error {
 
@@ -443,6 +458,7 @@ func (me *Service) updateState(state states.Status) error {
 	return err
 }
 
+
 func (me *Service) IsTheSame(state states.Status) bool {
 
 	var err error
@@ -454,8 +470,8 @@ func (me *Service) IsTheSame(state states.Status) bool {
 			break
 		}
 
-		if state.EntityId == "" {
-			err = errors.New("status.EntityId is empty")
+		if state.EntityId == nil {
+			err = errors.New("status.EntityId is nil")
 			break
 		}
 
@@ -487,6 +503,7 @@ func (me *Service) IsTheSame(state states.Status) bool {
 	return ok
 }
 
+
 func (me *Service) processCallback(state states.Status) error {
 
 	var err error
@@ -502,6 +519,7 @@ func (me *Service) processCallback(state states.Status) error {
 			break
 		}
 
+
 		// Ensure we process in the correct order.
 		me.mutex.Lock()
 		err = me.Callback(me.Args, state)
@@ -510,6 +528,7 @@ func (me *Service) processCallback(state states.Status) error {
 
 	return err
 }
+
 
 func (me *Service) PrintState() string {
 
@@ -530,6 +549,7 @@ func (me *Service) PrintState() string {
 	return ret
 }
 
+
 func (me *Service) EnsureNotNil() error {
 
 	var err error
@@ -540,6 +560,8 @@ func (me *Service) EnsureNotNil() error {
 
 	return err
 }
+
+
 
 func (me Callback) EnsureNotNil() error {
 
@@ -552,7 +574,8 @@ func (me Callback) EnsureNotNil() error {
 	return err
 }
 
-//func (me Services) DeleteState(client msg.SubTopic) error {
+
+//func (me Services) DeleteState(client messages.SubTopic) error {
 //
 //	var err error
 //
@@ -562,7 +585,7 @@ func (me Callback) EnsureNotNil() error {
 //	for range only.Once {
 //		_, ok := me.topics[client] // Managed by Mutex
 //		if !ok {
-//			err = msgs.MakeError(me.EntityId,"service doesn't exist")
+//			err = me.EntityId.ProduceError("service doesn't exist")
 //			break
 //		}
 //
@@ -571,3 +594,4 @@ func (me Callback) EnsureNotNil() error {
 //
 //	return err
 //}
+

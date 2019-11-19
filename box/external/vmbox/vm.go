@@ -2,161 +2,149 @@ package vmbox
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
-	"gearbox/box/external/virtualbox"
-	"gearbox/eventbroker/channels"
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/msgs"
-	"gearbox/eventbroker/osdirs"
+	"gearbox/eventbroker/entity"
+	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 	"net"
 	"regexp"
 	"strings"
-	"sync"
 	"time"
 )
 
-var _ virtualbox.VirtualMachiner = (*Vm)(nil)
 
-type Vm struct {
-	// @TODO Three properties that begin with same prefix is a code smell.
-	//		 Indicates that this should be a delegated to a different type.
-	EntityId        msgs.Address
-	EntityName      msgs.Address
-	EntityParent    msgs.Address
-	State           *states.Status
-	ApiState        *states.Status
-	ChangeRequested bool
-	IsManaged       bool
-	Entry           *ServiceConfig // @TODO Why is a ServiceConfig named "Entry?"
 
-	mutex          sync.RWMutex // Mutex control for this struct.
-	channels       *channels.Channels
-	channelHandler *channels.Subscriber
-	osRelease      *Release
-	osDirs         *osdirs.BaseDirs
-}
+func (me *VmBox) New(c ServiceConfig) (*Vm, error) {
 
-func (me *Vm) GetRetryMax() int {
-	return me.Entry.retryMax
-}
+	var err error
 
-func (me *Vm) GetRetryDelay() time.Duration {
-	return me.Entry.retryDelay
-}
+	sc := Vm{}
 
-func (me *Vm) GetReleaser() virtualbox.Releaser {
-	return me.osRelease
-}
+	for range only.Once {
+		err = me.EnsureNotNil()
+		if err != nil {
+			break
+		}
 
-func (me *Vm) GetSsh() virtualbox.SecureSheller {
-	ssh := me.Entry.Ssh
-	return &ssh
-}
 
-func (me *Vm) GetNic() *virtualbox.HostOnlyNic {
-	return me.Entry.HostOnlyNic
-}
+		sc.Entry = &c
 
-func (me *Vm) SetNic(nic *virtualbox.HostOnlyNic) {
-	me.Entry.HostOnlyNic = nic
-}
 
-func (me *Vm) GetConsole() virtualbox.Consoler {
-	c := me.Entry.Console
-	return &c
-}
+		err = me.OsPaths.EnsureNotNil()
+		if err != nil {
+			break
+		}
+		sc.osPaths = me.OsPaths
+		sc.channels = me.Channels
 
-func (me *Vm) GetNics() virtualbox.KeyValuesMap {
-	return me.Entry.vmNics
-}
 
-func (me *Vm) SetNics(kvm virtualbox.KeyValuesMap) {
-	me.Entry.vmNics = kvm
-}
+		// Check config, set defaults if needed.
+		err = sc.VerifyConfig()
+		if err != nil {
+			break
+		}
 
-func (me *Vm) GetIconFile() string {
-	return me.Entry.IconFile
-}
 
-func (me *Vm) GetId() string {
-	return me.EntityId.String()
-}
+		// Load up config file, if it exists. Supersceding previous config.
+		err = sc.ConfigExists()
+		if err == nil {
+			err = sc.ReadConfig()
+			if err != nil {
+				break
+			}
+		}
 
-func (me *Vm) GetName() string {
-	return me.EntityName.String()
-}
 
-func (me *Vm) GetVmDir() string {
-	return me.Entry.VmDir
-}
+		// Fetch ISO releases.
+		err = me.Releases.UpdateReleases()
+		if err != nil {
+			break
+		}
 
-func (me *Vm) SetInfo(kvm virtualbox.KeyValueMap) {
-	me.Entry.vmInfo = kvm
-}
+		var rel *Release
+		rel, err = me.Releases.SelectRelease(ReleaseSelector{SpecificVersion: sc.Entry.Version})
+		if err != nil {
+			break
+		}
 
-func (me *Vm) GetInfo() virtualbox.KeyValueMap {
-	return me.Entry.vmInfo
-}
+		// Fetch ISO.
+		if !me.Releases.Selected.IsDownloading {
+			err = me.Releases.Selected.GetIso()
+		}
 
-func (me *Vm) GetInfoValue(k string) string {
-	v, _ := me.Entry.vmInfo[k]
-	return v
-}
+		// Update specific version fetched.
+		sc.Entry.Version = string(rel.Version)
 
-/////////////////////////
 
-func (me *Vm) GetIsManaged() bool {
+		sc.EntityId = *messages.GenerateAddress()
+		sc.EntityName = sc.Entry.Name
+		sc.EntityParent = &me.EntityId
+		sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
+		sc.State.SetNewAction(states.ActionStop)
+		a := messages.MessageAddress(entity.ApiEntityName)
+		sc.ApiState = states.New(&sc.EntityId, &a, me.EntityId)
+		sc.ApiState.SetNewAction(states.ActionStop)
+		sc.IsManaged = true
+		sc.osRelease = rel
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
-	return me.IsManaged // Managed by Mutex
-}
 
-func (me *Vm) GetEntityId() (msgs.Address, error) {
+		sc.channels.PublishState(sc.State)
 
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
 
-	err := me.EnsureNotNil()
-	if err != nil {
-		return "", err
+		var state states.State
+		state, err = sc.vbCreate()
+		if err != nil {
+			fmt.Printf("Gearbox: Error creating VM %s with '%v'\n", sc.EntityName, err)
+			break
+		}
+
+		err = sc.WriteConfig()
+		if err != nil {
+			break
+		}
+
+		switch state {
+			case states.StateError:
+				eblog.Debug(me.EntityId, "%v", err)
+
+			case states.StateStopped:
+				err = me.AddEntity(sc.EntityId, &sc)
+				if err != nil {
+					break
+				}
+				sc.State.SetNewAction(states.ActionStop)
+				eblog.Debug(me.EntityId, "VM registered OK")
+
+			case states.StateStarted:
+				// VM already created but started.
+				err = me.AddEntity(sc.EntityId, &sc)
+				if err != nil {
+					break
+				}
+				sc.State.SetNewAction(states.ActionStart)
+
+			case states.StateUnregistered:
+				eblog.Debug(me.EntityId, "VM not created")
+
+
+			case states.StateUnknown:
+				eblog.Debug(me.EntityId, "%v", err)
+		}
+
+
+		sc.State.SetNewState(state, err)
+		sc.channels.PublishState(sc.State)
+		eblog.Debug(me.EntityId, "registered VM OK")
 	}
 
-	return me.EntityId, err // Managed by Mutex
+	eblog.LogIfNil(me, err)
+	eblog.LogIfError(me.EntityId, err)
+
+	return &sc, err
 }
 
-func (me *Vm) GetConfig() (ServiceConfig, error) {
-
-	var sc ServiceConfig
-
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
-
-	err := me.EnsureNotNil()
-	if err != nil {
-		return sc, err
-	}
-
-	return sc, err // Managed by Mutex
-}
-
-func (me *Vm) GetStatus() (*states.Status, error) {
-
-	var sc *states.Status
-
-	me.mutex.RLock()
-	defer me.mutex.RUnlock()
-
-	err := me.EnsureNotNil()
-	if err == nil {
-		sc = me.State // Managed by Mutex
-	}
-
-	return sc, err
-}
 
 func (me *Vm) Start() error {
 
@@ -169,6 +157,7 @@ func (me *Vm) Start() error {
 			break
 		}
 
+
 		// Check for ISO image first.
 		var i int
 		i, err = me.osRelease.IsIsoFilePresent()
@@ -176,13 +165,15 @@ func (me *Vm) Start() error {
 			break
 		}
 
+
 		me.ChangeRequested = true
 		defer func() { me.ChangeRequested = false }()
+
 
 		me.State.SetNewAction(states.ActionStart)
 		me.channels.PublishState(me.State)
 
-		ok, err = virtualbox.StartVm(me, true)
+		ok, err = me.vbStart(true)
 		if !ok {
 			fmt.Printf("Gearbox: failed to start VM\n")
 			break
@@ -191,6 +182,7 @@ func (me *Vm) Start() error {
 		// Publish new state.
 		me.State.SetNewState(states.StateStarted, err)
 		me.channels.PublishState(me.State)
+
 
 		// Now wait for API.
 		me.ApiState.SetNewAction(states.ActionStart)
@@ -206,10 +198,11 @@ func (me *Vm) Start() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
+
 
 func (me *Vm) Stop() error {
 
@@ -230,11 +223,12 @@ func (me *Vm) Stop() error {
 		me.ApiState.SetNewAction(states.ActionStop)
 		me.channels.PublishState(me.ApiState)
 
-		ok, err = virtualbox.StopVm(me, false, true)
+		ok, err = me.vbStop(false, true)
 		if !ok {
-			ok, err = virtualbox.StopVm(me, true, true)
+			ok, err = me.vbStop(true, true)
 			break
 		}
+
 
 		me.State.SetNewState(states.StateStopped, err)
 		me.channels.PublishState(me.State)
@@ -246,10 +240,11 @@ func (me *Vm) Stop() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
+
 
 func (me *Vm) Restart() error {
 
@@ -275,6 +270,7 @@ func (me *Vm) Restart() error {
 	return err
 }
 
+
 func (me *Vm) UpdateRealStatus() error {
 
 	var err error
@@ -287,65 +283,29 @@ func (me *Vm) UpdateRealStatus() error {
 			break
 		}
 
+
 		var v states.State
-		v, err = virtualbox.VmStatus(me)
+		v, err = me.vbStatus()
 		me.State.SetNewState(v, err)
 		me.channels.PublishState(me.State)
+
 
 		var a states.State
 		a, err = me.waitForApiState(DefaultRunWaitTime, false)
 		me.ApiState.SetNewState(a, err)
 		me.channels.PublishState(me.ApiState)
 
+
 		eblog.Debug(me.EntityId, "VM is in state %s, API is in state %s", v, a)
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return err
 }
 
-func (me *Vm) Print() error {
 
-	var err error
-
-	for range only.Once {
-		if me == nil {
-			err = errors.New("software error")
-			break
-		}
-
-		if me.IsManaged == true {
-			fmt.Printf("# Entry(deleted): %v", me.EntityId)
-		} else {
-			fmt.Printf("# Entry: %v", me.EntityId)
-		}
-		//err = me.Entry.Print()
-		//if err != nil {
-		//	break
-		//}
-	}
-
-	return err
-}
-
-func (me *Vm) EnsureNotNil() error {
-	var err error
-
-	switch {
-	case me == nil:
-		err = errors.New("VmBox Service instance is nil")
-	}
-
-	return err
-}
-
-/////////[ VirtualBox specific ]//////////
-
-/////////[ Commands ]//////////
-
-//////////////[ private funcs ]//////////////
 func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.State, error) {
 
 	var err error
@@ -359,26 +319,29 @@ func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.S
 			break
 		}
 
+
 		if me.Entry.Console.Host == "" {
-			err = msgs.MakeError(me.EntityName, "no VM console host defined")
+			err = me.EntityName.ProduceError("no VM console host defined")
 			state = states.StateError
 			break
 		}
 
 		if me.Entry.Console.Port == "" {
-			err = msgs.MakeError(me.EntityName, "no VM console port defined")
+			err = me.EntityName.ProduceError("no VM console port defined")
 			state = states.StateError
 			break
 		}
+
 
 		// Ensure we only have one at a time.
 		me.Entry.Console.mutex.Lock()
 		defer me.Entry.Console.mutex.Unlock()
 
+
 		// Connect to this console
-		conn, err := net.Dial("tcp", me.Entry.Console.Host+":"+me.Entry.Console.Port)
+		conn, err := net.Dial("tcp", me.Entry.Console.Host + ":" + me.Entry.Console.Port)
 		if err != nil {
-			err = msgs.MakeError(me.EntityName, "VM can't connect to console")
+			err = me.EntityName.ProduceError("VM can't connect to console")
 			state = states.StateIdle
 			break
 		}
@@ -396,8 +359,8 @@ func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.S
 		for waitCount := 0; time.Now().Unix() < exitWhen.Unix(); waitCount++ {
 			err = conn.SetDeadline(time.Now().Add(me.Entry.Console.ReadWait))
 			if err != nil {
-				err = msgs.MakeError(me.EntityName, "VM console deadline reached")
-				state = states.StateStopped // states.StateUnknown
+				err = me.EntityName.ProduceError("VM console deadline reached")
+				state = states.StateStopped	// states.StateUnknown
 				break
 			}
 
@@ -406,8 +369,8 @@ func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.S
 			// readBuffer, err := bufio.NewReader(conn).ReadString('\n')
 			// bytesRead := len(readBuffer)
 			if err != nil {
-				err = msgs.MakeError(me.EntityName, "no VM console data")
-				state = states.StateStopped // states.StateUnknown
+				err = me.EntityName.ProduceError("no VM console data")
+				state = states.StateStopped	// states.StateUnknown
 				break
 			}
 
@@ -421,20 +384,21 @@ func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.S
 					state = states.StateStarted
 					break
 
-					//} else {
-					//	if me.State.API.WantState == VmStatePowerOff {
-					//		me.State.API.CurrentState = VmStateStopping
-					//		sts = status.Success("%s API - stopping", global.Brandname)
-					//	} else if me.State.API.WantState == VmStateRunning {
-					//		me.State.API.CurrentState = VmStateStarting
-					//		sts = status.Success("%s API - starting", global.Brandname)
-					//	}
-					//	// Do not break.
+				//} else {
+				//	if me.State.API.WantState == VmStatePowerOff {
+				//		me.State.API.CurrentState = VmStateStopping
+				//		sts = status.Success("%s API - stopping", global.Brandname)
+				//	} else if me.State.API.WantState == VmStateRunning {
+				//		me.State.API.CurrentState = VmStateStarting
+				//		sts = status.Success("%s API - starting", global.Brandname)
+				//	}
+				//	// Do not break.
 				}
 			}
 
 			time.Sleep(me.Entry.Console.WaitDelay)
 		}
+
 
 		//me.State.SetNewState(state, err)
 		//me.channels.PublishState(me.State)
@@ -442,10 +406,11 @@ func (me *Vm) waitForApiState(waitFor time.Duration, showConsole bool) (states.S
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(err)
+	eblog.LogIfError(me.EntityId, err)
 
 	return state, err
 }
+
 
 func (me *Vm) heartbeatOk(b []byte, n int) error {
 
@@ -465,13 +430,14 @@ func (me *Vm) heartbeatOk(b []byte, n int) error {
 		// Expecting "1560783374 Gearbox Heartbeat OK"
 		//fmt.Printf("API[%d]:%v\n", len(apiSplit), apiSplit)
 		switch {
-		case len(apiSplit) < 4:
-			err = msgs.MakeError(me.EntityName, "did not see OK from console - '%s'", string(b[:n]))
+			case len(apiSplit) < 4:
+				err = me.EntityName.ProduceError("did not see OK from console - '%s'", string(b[:n]))
 
-		case apiSplit[3] != "OK":
-			err = msgs.MakeError(me.EntityName, "did not see OK from console - '%s'", string(b[:n]))
+			case apiSplit[3] != "OK":
+				err = me.EntityName.ProduceError("did not see OK from console - '%s'", string(b[:n]))
 		}
 	}
 
 	return err
 }
+

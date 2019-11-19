@@ -13,25 +13,25 @@ import (
 
 type (
 	Status           = status.Status
-	AbsoluteDir      = types.Dir
-	AbsoluteEntry    = types.FileSystemEntry
-	AbsoluteFilepath = types.Filepath
+	AbsoluteDir      = types.AbsoluteDir
+	AbsoluteEntry    = types.AbsoluteEntry
+	AbsoluteFilepath = types.AbsoluteFilepath
 )
 
-func DirExists(dir types.Dir) bool {
-	return EntryExists(types.FileSystemEntry(dir))
+func DirExists(dir types.AbsoluteDir) bool {
+	return EntryExists(types.AbsoluteEntry(dir))
 }
-func MaybeMakeDir(dir types.Dir, perms os.FileMode) (err error) {
+func MaybeMakeDir(dir types.AbsoluteDir, perms os.FileMode) (err error) {
 	if !DirExists(dir) {
 		err = os.MkdirAll(string(dir), perms)
 	}
 	return err
 }
-func FileDir(file types.Filepath) types.Dir {
-	return types.Dir(filepath.Dir(string(file)))
+func FileDir(file types.AbsoluteFilepath) types.AbsoluteDir {
+	return types.AbsoluteDir(filepath.Dir(string(file)))
 }
-func ParentDir(file types.Dir) types.Dir {
-	return types.Dir(filepath.Dir(string(file)))
+func ParentDir(file types.AbsoluteDir) types.AbsoluteDir {
+	return types.AbsoluteDir(filepath.Dir(string(file)))
 }
 
 //func GetExecutableDir() string {
@@ -41,11 +41,11 @@ func ParentDir(file types.Dir) types.Dir {
 //	return util.FileDir(GetExecutableDir())
 //}
 
-func ExtractRelativePath(fulldir types.Filepath, basedir types.Dir) (path types.Path) {
+func ExtractRelativePath(fulldir types.AbsoluteFilepath, basedir types.AbsoluteDir) (path types.RelativePath) {
 	if strings.HasPrefix(string(fulldir), string(basedir)) {
-		path = types.Path(string([]byte(fulldir)[len(basedir):]))
+		path = types.RelativePath(string([]byte(fulldir)[len(basedir):]))
 	} else {
-		path = types.Path(fulldir)
+		path = types.RelativePath(fulldir)
 	}
 	return path
 }
@@ -62,7 +62,7 @@ func MaybeExpandDir(dir AbsoluteDir) (nd AbsoluteDir, sts Status) {
 	return AbsoluteDir(e), sts
 }
 
-func MaybeExpandEntry(entry types.FileSystemEntry) (ne AbsoluteEntry, sts Status) {
+func MaybeExpandEntry(entry types.AbsoluteEntry) (ne AbsoluteEntry, sts Status) {
 	for range only.Once {
 		ne = entry
 		if !strings.HasPrefix(string(entry), "~") {
@@ -76,7 +76,7 @@ func MaybeExpandEntry(entry types.FileSystemEntry) (ne AbsoluteEntry, sts Status
 			)
 			break
 		}
-		ne = types.FileSystemEntry(newentry)
+		ne = types.AbsoluteEntry(newentry)
 	}
 	if is.Success(sts) {
 		sts = status.Success("directory expanded from '%s' to '%s'",

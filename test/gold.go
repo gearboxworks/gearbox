@@ -30,7 +30,7 @@ func NewGoldFile(fileid string) *GoldFile {
 			})
 			break
 		}
-		absdir := util.ParentDir(types.Dir(dir))
+		absdir := util.ParentDir(types.AbsoluteDir(dir))
 		gf.filepath = fmt.Sprintf("%s/%s", absdir, fmt.Sprintf(GoldFilepathTemplate, fileid))
 	}
 	return &gf
@@ -69,7 +69,7 @@ func (me *GoldFile) Write(gold []byte) (sts status.Status) {
 		if !*updateGold {
 			break
 		}
-		dir := util.FileDir(types.Filepath(me.filepath))
+		dir := util.FileDir(types.AbsoluteFilepath(me.filepath))
 		_ = os.MkdirAll(string(dir), os.ModePerm)
 		err := ioutil.WriteFile(me.filepath, gold, os.ModePerm)
 		if err != nil {

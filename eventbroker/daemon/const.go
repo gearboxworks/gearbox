@@ -2,9 +2,9 @@ package daemon
 
 import (
 	"gearbox/eventbroker/channels"
-	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/messages"
 	"gearbox/eventbroker/network"
-	"gearbox/eventbroker/osdirs"
+	"gearbox/eventbroker/ospaths"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"github.com/kardianos/service"
@@ -14,49 +14,52 @@ import (
 	"time"
 )
 
+
 const (
 	// DefaultEntityId = "eventbroker-daemon"
 
-	DefaultJsonDir    = "daemons"
-	defaultWaitTime   = time.Millisecond * 2000
-	defaultDomain     = "local"
-	defaultRetries    = 12
+	DefaultJsonDir  = "daemons"
+    defaultWaitTime = time.Millisecond * 2000
+	defaultDomain   = "local"
+	defaultRetries  = 12
 	DefaultRetryDelay = time.Second * 8
 
-	PublishState     = true
-	DontPublishState = false
+	PublishState    = true
+	DontPublishState    = false
 )
 
-type Daemon struct {
-	EntityId msgs.Address
-	Boxname  string
-	State    *states.Status
-	Task     *tasks.Task
-	Channels *channels.Channels
 
-	mutex          sync.RWMutex // Mutex control for this struct.
+type Daemon struct {
+	EntityId       messages.MessageAddress
+	Boxname        string
+	State          *states.Status
+	Task           *tasks.Task
+	Channels       *channels.Channels
+
+	mutex          sync.RWMutex	// Mutex control for this struct.
 	channelHandler *channels.Subscriber
 	daemons        ServicesMap
-	BaseDirs       *osdirs.BaseDirs
+	OsPaths        *ospaths.BasePaths
 }
 type Args Daemon
 
-type Service struct {
-	EntityId     msgs.Address
-	EntityName   msgs.Address
-	EntityParent *msgs.Address
-	State        *states.Status
-	IsManaged    bool
-	Entry        *ServiceConfig
-	JsonFile     JsonConfig
-	MdnsEntry    *network.ServiceConfig
 
-	mutex          sync.RWMutex // Mutex control for map.
-	channels       *channels.Channels
-	channelHandler *channels.Subscriber
-	instance       programInstance
+type Service struct {
+	EntityId        messages.MessageAddress
+	EntityName      messages.MessageAddress
+	EntityParent    *messages.MessageAddress
+	State           *states.Status
+	IsManaged       bool
+	Entry           *ServiceConfig
+	JsonFile        JsonConfig
+	MdnsEntry       *network.ServiceConfig
+
+	mutex           sync.RWMutex // Mutex control for map.
+	channels        *channels.Channels
+	channelHandler  *channels.Subscriber
+	instance        programInstance
 }
-type ServicesMap map[msgs.Address]*Service
+type ServicesMap  map[messages.MessageAddress]*Service
 
 type JsonConfig struct {
 	Name        string
@@ -76,8 +79,8 @@ type ServiceConfig struct {
 	UrlPtr        *url.URL
 	MdnsType      string
 
-	autoHost string
-	autoPort string
+	autoHost      string
+	autoPort      string
 }
 
 const (
@@ -97,3 +100,4 @@ type programInstance struct {
 type ServiceUrl struct {
 	*url.URL
 }
+

@@ -2,23 +2,24 @@ package channels
 
 import (
 	"errors"
-	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/messages"
 )
+
 
 func (me *Channels) EnsureNotNil() error {
 	var err error
 
 	switch {
-	case me == nil:
-		err = errors.New("Channels instance is nil")
-	case me.instance.emitter == nil:
-		err = msgs.MakeError(me.EntityId, "instance.emitter is nil")
+		case me == nil:
+			err = errors.New("Channels instance is nil")
+		case me.instance.emitter == nil:
+			err = me.EntityId.ProduceError("instance.emitter is nil")
 		//case me.instance.events == nil:
-		//	err = msgs.MakeError(me.EntityId,"instance.events is nil")
+		//	err = me.EntityId.ProduceError("instance.events is nil")
 		//case me.instance.emits == nil:
-		//	err = msgs.MakeError(me.EntityId,"instance.emits is nil")
+		//	err = me.EntityId.ProduceError("instance.emits is nil")
 		//case me.instance.group == nil:
-		//	err = msgs.MakeError(me.EntityId,"instance.group is nil")
+		//	err = me.EntityId.ProduceError("instance.group is nil")
 	}
 
 	return err
@@ -27,32 +28,35 @@ func EnsureNotNil(me *Channels) error {
 	return me.EnsureNotNil()
 }
 
+
 func EnsureArgumentNotNil(me Argument) error {
 
 	var err error
 
 	switch {
-	case me == nil:
-		err = errors.New("channel argument is nil")
+		case me == nil:
+			err = errors.New("channel argument is nil")
 
-	default:
-		// err = errors.New("subscriber not nil")
+		default:
+			// err = errors.New("subscriber not nil")
 	}
 
 	return err
 }
 
-func (me *Channels) EnsureSubscriberNotNil(client msgs.Address) error {
+
+func (me *Channels) EnsureSubscriberNotNil(client messages.MessageAddress) error {
 
 	me.mutex.RLock()
 	defer me.mutex.RUnlock()
 
-	if _, ok := me.subscribers[client]; !ok { // Managed by Mutex
-		return msgs.MakeError(me.EntityId, "subscriber doesn't exist")
+	if _, ok := me.subscribers[client]; !ok {	// Managed by Mutex
+		return me.EntityId.ProduceError("subscriber doesn't exist")
 	} else {
-		return me.subscribers[client].EnsureNotNil() // Managed by Mutex
+		return me.subscribers[client].EnsureNotNil()      // Managed by Mutex
 	}
 }
+
 
 func (me *Subscriber) EnsureNotNil() error {
 
@@ -62,7 +66,7 @@ func (me *Subscriber) EnsureNotNil() error {
 	case me == nil:
 		err = errors.New("subscriber is nil")
 
-	case me.EntityId.EnsureNotEmpty() != nil:
+	case me.EntityId.EnsureNotNil() != nil:
 		err = errors.New("subscriber address is nil")
 	//
 	//case me.Callbacks == nil:
@@ -78,8 +82,9 @@ func (me *Subscriber) EnsureNotNil() error {
 	return err
 }
 
+
 // Old functions. Please keep for reference.
-//func (me *Channels) off(topic msg.Topic, channels ...<-chan emitter.Event)  {
+//func (me *Channels) off(topic messages.MessageTopic, channels ...<-chan emitter.Event)  {
 //	eblog.Debug(me.EntityId, "Off")
 //
 //	me.instance.emitter.Off(topic.String(), channels...)
@@ -88,7 +93,7 @@ func (me *Subscriber) EnsureNotNil() error {
 //}
 //
 //
-//func (me *Channels) on(topic msg.Topic, middleware ...func(emitter *emitter.Event)) <-chan emitter.Event {
+//func (me *Channels) on(topic messages.MessageTopic, middleware ...func(emitter *emitter.Event)) <-chan emitter.Event {
 //	eblog.Debug(me.EntityId, "On")
 //
 //	// me.instance.events = <-me.instance.emitter.On(topic.String(), middleware...)
@@ -98,7 +103,7 @@ func (me *Subscriber) EnsureNotNil() error {
 //}
 //
 //
-//func (me *Channels) once(topic msg.Topic, middleware ...func(emitter *emitter.Event)) <-chan emitter.Event {
+//func (me *Channels) once(topic messages.MessageTopic, middleware ...func(emitter *emitter.Event)) <-chan emitter.Event {
 //	eblog.Debug(me.EntityId, "Once")
 //
 //	// me.instance.events = <-me.instance.emitter.Once(topic.String(), middleware...)
@@ -115,3 +120,4 @@ func (me *Subscriber) EnsureNotNil() error {
 //
 //	return
 //}
+

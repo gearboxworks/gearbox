@@ -8,74 +8,42 @@ import (
 	"gearbox/eventbroker/daemon"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/msgs"
-	"gearbox/eventbroker/osdirs"
+	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/ospaths"
 	"gearbox/eventbroker/states"
 	"gearbox/global"
 	"github.com/gearboxworks/go-osbridge"
 	"github.com/gearboxworks/go-status"
 	"github.com/gearboxworks/go-status/is"
 	"github.com/gearboxworks/go-status/only"
-//	"github.com/gearboxworks/go-systray"
-	"github.com/getlantern/systray"
+	"github.com/gearboxworks/go-systray"
+	// "github.com/getlantern/systray"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
-type Box struct {
-	EntityId    msgs.Address
-	EntityName  msgs.Address
-	Boxname     string
-	Version     Version
-	NfsExports  *unfsd.Unfsd
-	State       *states.Status
-	menu        Menus
-	EventBroker *eventbroker.EventBroker
-	VmBox       *vmbox.VmBox
-
-	// SSH related - Need to fix this. It's used within CreateBox()
-	SshUsername  string
-	SshPassword  string
-	SshPublicKey string
-
-	// State polling delays.
-	NoWait      bool
-	WaitDelay   time.Duration
-	WaitRetries int
-
-	// Console related.
-	ConsoleHost     string
-	ConsolePort     string
-	ConsoleOkString string
-	ConsoleReadWait time.Duration
-	ShowConsole     bool
-
-	baseDir  osdirs.Dir
-	pidFile  string
-	osBridge osbridge.OsBridger
-	osPaths  *osdirs.BaseDirs
-}
-type Args Box
-
-func (me *Args) SetOsBridge(b osbridge.OsBridger) {
-	me.osBridge = b
-}
-
-func New(args ...*Args) (b *Box, sts status.Status) {
+func New(OsBridge osbridge.OsBridger, args ...Args) (*Box, status.Status) {
 
 	var _args Args
-	b = &Box{}
+	var sts status.Status
+	hb := &Box{}
 
 	for range only.Once {
 
 		if len(args) > 0 {
-			_args = *args[0]
+			_args = args[0]
 		}
 
+		//foo := box.Args{}
+		//err := copier.Copy(&foo, &_args)
+		//if err != nil {
+		//	sts = status.Wrap(err).SetMessage("unable to copy Box config")
+		//	break
+		//}
+
 		if _args.EntityId == "" {
-			_args.EntityId = msgs.MakeAddress()
+			_args.EntityId = *messages.GenerateAddress()
 		}
 
 		if _args.EntityName == "" {
@@ -87,26 +55,24 @@ func New(args ...*Args) (b *Box, sts status.Status) {
 		}
 
 		if _args.Version == "" {
-			_args.Version = LatestVersion
+			_args.Version = "latest"
 		}
 
-		_args.osPaths = osdirs.New()
-		_args.baseDir = _args.osPaths.AppendToUserConfigDir(DefaultBaseDir)
-		_args.pidFile = osdirs.AddFilef(_args.baseDir, DefaultPidFile)
+		_args.osBridge = OsBridge
+		_args.osPaths = ospaths.New("")
+		_args.baseDir = _args.osPaths.UserConfigDir.AddToPath(DefaultBaseDir)
+		_args.pidFile = _args.baseDir.AddFileToPath(DefaultPidFile).String()
 
-		_args.State = states.New(
-			_args.EntityId,
-			_args.EntityName,
-			entity.SelfEntityName,
-		)
+		_args.State = states.New(&_args.EntityId, &_args.EntityName, entity.SelfEntityName)
 
-		*b = Box(_args)
+		*hb = Box(_args)
 	}
 
-	return b, sts
+	return hb, sts
 }
 
-func (me *Box) RunAsDaemon() (sts status.Status) {
+
+func (me *Box) BoxDaemon() (sts status.Status) {
 
 	var err error
 
@@ -119,9 +85,7 @@ func (me *Box) RunAsDaemon() (sts status.Status) {
 		if daemon.IsParentInit() {
 			//if !daemon.IsParentInit() {
 			fmt.Printf("Gearbox: Sub-command not available for user.\n")
-			sts = status.Fail().
-				SetMessage("daemon mode cannot be run directly by user.").
-				SetAllHelp("@TODO — Explain how daemon can be run")
+			sts = status.Fail().SetMessage("daemon mode cannot be run by user specifically")
 			break
 		}
 		fmt.Printf("Gearbox: Starting Box daemon.\n")
@@ -185,20 +149,12 @@ func (me *Box) RunAsDaemon() (sts status.Status) {
 			break
 		}
 
-		me.NfsExports, err = unfsd.New(unfsd.Args{
-			Channels: &me.EventBroker.Channels,
-			BaseDirs: me.EventBroker.OsDirs,
-			Boxname:  me.Boxname,
-		})
+		me.NfsExports, err = unfsd.New(unfsd.Args{Channels: &me.EventBroker.Channels, OsPaths: me.EventBroker.OsPaths, Boxname: me.Boxname})
 		if err != nil {
 			break
 		}
 
-		me.VmBox, err = vmbox.New(vmbox.Args{
-			Channels: &me.EventBroker.Channels,
-			OsPaths:  me.EventBroker.OsDirs,
-			Boxname:  me.Boxname,
-		})
+		me.VmBox, err = vmbox.New(vmbox.Args{Channels: &me.EventBroker.Channels, OsPaths: me.EventBroker.OsPaths, Boxname: me.Boxname})
 		if err != nil {
 			break
 		}
@@ -223,6 +179,7 @@ func (me *Box) RunAsDaemon() (sts status.Status) {
 	return sts
 }
 
+
 func (me *Box) StartBox() (sts status.Status) {
 
 	var err error
@@ -234,14 +191,34 @@ func (me *Box) StartBox() (sts status.Status) {
 			break
 		}
 
+		//		if me.DaemonInstance.IsRunning() {
+		//			fmt.Printf("%s Box - Restarting service.\n", global.Brandname)
+		//			sts = me.DaemonInstance.Unload()
+		//			if is.Error(sts) {
+		//				break
+		//			}
+		//		}
+		//
+		//		if me.DaemonInstance.IsLoaded() {
+		//			fmt.Printf("%s Box - Restarting service.\n", global.Brandname)
+		//			sts = me.DaemonInstance.Unload()
+		//			if is.Error(sts) {
+		//				break
+		//			}
+		//		}
+
+		//sts = me.DaemonInstance.Load()
 		fmt.Printf("Gearbox: The alpha release runs Gearbox in the foreground. Please keep this shell open.\n\n")
-		err = me.RunAsDaemon()
+		err = me.BoxDaemon()
 		if err != nil {
 			fmt.Printf("Gearbox: Error %v\n", err)
 			break
 		}
 
 	}
+
+	//eblog.LogIfNil(me, err)
+	//eblog.LogIfError(me.EntityId, err)
 
 	if err != nil {
 		sts = status.Fail().
@@ -252,15 +229,39 @@ func (me *Box) StartBox() (sts status.Status) {
 	return sts
 }
 
+
 func (me *Box) StopBox() (sts status.Status) {
 
-	sts = me.EnsureNotNil()
-	if is.Error(sts) {
-		sts.Log()
+	var err error
+
+	for range only.Once {
+
+		sts = me.EnsureNotNil()
+		if is.Error(sts) {
+			break
+		}
+
+		//sts = me.DaemonInstance.Unload()
+		if err != nil {
+			break
+		}
+		//fmt.Printf("%s\n", sts.Message())
+		// fmt.Printf("%s Box - Started service.\n", global.Brandname)
+
+	}
+
+	//eblog.LogIfNil(me, err)
+	//eblog.LogIfError(me.EntityId, err)
+
+	if err != nil {
+		sts = status.Fail().
+			SetMessage("Box terminated with error").
+			SetData(err)
 	}
 
 	return sts
 }
+
 
 func (me *Box) RestartBox() (sts status.Status) {
 
@@ -276,8 +277,10 @@ func (me *Box) RestartBox() (sts status.Status) {
 			break
 		}
 	}
+
 	return sts
 }
+
 
 func (me *Box) GetState() (sts status.Status) {
 
@@ -297,7 +300,14 @@ func (me *Box) GetState() (sts status.Status) {
 			break
 		}
 
+		//sts = me.DaemonInstance.GetState()
+		if err != nil {
+			break
+		}
 	}
+
+	//eblog.LogIfNil(me, err)
+	//eblog.LogIfError(me.EntityId, err)
 
 	if err != nil {
 		sts = status.Fail().
@@ -307,6 +317,7 @@ func (me *Box) GetState() (sts status.Status) {
 
 	return sts
 }
+
 
 func (me *Box) CreateBox() (sts status.Status) {
 
@@ -319,17 +330,14 @@ func (me *Box) CreateBox() (sts status.Status) {
 	return sts
 }
 
+
 func (me *Box) DestroyBox() (sts status.Status) {
 
 	for range only.Once {
 
 		var err error
 
-		me.VmBox, err = vmbox.New(vmbox.Args{
-			Channels: &me.EventBroker.Channels,
-			OsPaths:  me.EventBroker.OsDirs,
-			Boxname:  me.Boxname,
-		})
+		me.VmBox, err = vmbox.New(vmbox.Args{Channels: &me.EventBroker.Channels, OsPaths: me.EventBroker.OsPaths, Boxname: me.Boxname})
 		if err != nil {
 			break
 		}
