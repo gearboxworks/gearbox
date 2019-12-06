@@ -4,12 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"gearbox/box/external/vmbox"
+	"gearbox/eventbroker/ebutil"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/osdirs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
-	"github.com/gearboxworks/go-systray"
-	// "github.com/getlantern/systray"
+	"github.com/pr0logas/go-systray"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -154,7 +155,7 @@ func (me *Box) UpdateMenus() {
 	//	me.SetStateMenu(k, v)
 	//}
 	//
-	//control := messages.MessageAddresses{"admin", "create", "update", "start", "stop", "ssh"}
+	//control := msg.Addresses{"admin", "create", "update", "start", "stop", "ssh"}
 	//for _, v := range control {
 	//	if me.menu.Exists(v) {
 	//		me.SetControlMenu(v, states.ActionIdle)
@@ -167,7 +168,7 @@ func (me *Box) UpdateMenus() {
 
 }
 
-func (me *Box) SetStateMenu(m messages.MessageAddress, state states.State) {
+func (me *Box) SetStateMenu(m msgs.Address, state states.State) {
 	// This can clearly be refactored a LOT.
 
 	if _, ok := me.menu[m]; !ok {
@@ -198,13 +199,13 @@ func (me *Box) SetStateMenu(m messages.MessageAddress, state states.State) {
 	default:
 		mi.MenuItem.SetIcon(me.getIcon(IconWarning))
 	}
-	mi.MenuItem.SetTitle(mi.PrefixMenu + state.String())
-	mi.MenuItem.SetTooltip(mi.PrefixToolTip + state.String())
+	mi.MenuItem.SetTitle(mi.PrefixMenu + state)
+	mi.MenuItem.SetTooltip(mi.PrefixToolTip + state)
 
 	return
 }
 
-func (me *Box) SetControlMenu(m messages.MessageAddress, state states.State) {
+func (me *Box) SetControlMenu(m msgs.Address, state states.State) {
 	// This can clearly be refactored a LOT.
 
 	if _, ok := me.menu[m]; !ok {
@@ -300,8 +301,8 @@ func (me *Box) SetControlMenu(m messages.MessageAddress, state states.State) {
 		_ = me.menu[menuVmStop].Disable()
 		_ = me.menu[menuVmSsh].Disable()
 	}
-	mi.MenuItem.SetTitle(mi.PrefixMenu + state.String())
-	mi.MenuItem.SetTooltip(mi.PrefixToolTip + state.String())
+	mi.MenuItem.SetTitle(mi.PrefixMenu + state)
+	mi.MenuItem.SetTooltip(mi.PrefixToolTip + state)
 
 	return
 }
@@ -316,7 +317,10 @@ func (me *Box) onReady() {
 			select {
 			case <-me.menu["help"].MenuItem.ClickedCh:
 				fmt.Printf("Menu: Help.\n")
-				me.openAbout()
+				err := me.openAbout()
+				if err != nil {
+					ebutil.LogError(err)
+				}
 
 			case <-me.menu["version"].MenuItem.ClickedCh:
 				fmt.Printf("Menu: Version\n")
@@ -340,11 +344,17 @@ func (me *Box) onReady() {
 
 			case <-me.menu[menuVmAdmin].MenuItem.ClickedCh:
 				fmt.Printf("Menu: Admin console.\n")
-				me.openAdmin()
+				err := me.openAdmin()
+				if err != nil {
+					ebutil.LogError(err)
+				}
 
 			case <-me.menu[menuVmSsh].MenuItem.ClickedCh:
 				fmt.Printf("Menu: SSH\n")
-				me.openTerminal()
+				err := me.openTerminal()
+				if err != nil {
+					ebutil.LogError(err)
+				}
 
 			case <-me.menu[menuVmCreate].MenuItem.ClickedCh:
 				fmt.Printf("Menu: Create VM.\n")
@@ -467,7 +477,7 @@ func (me *Box) getIcon(s string) []byte {
 		return nil
 	}
 
-	fp := me.baseDir.AddFileToPath(s).String()
+	fp := osdirs.AddFilef(me.baseDir, s)
 
 	b, err := ioutil.ReadFile(fp)
 	if err != nil {
@@ -491,7 +501,7 @@ func (me Menus) EnsureNotNil() error {
 	return err
 }
 
-func (me Menus) Exists(item messages.MessageAddress) bool {
+func (me Menus) Exists(item msgs.Address) bool {
 
 	var ret bool
 

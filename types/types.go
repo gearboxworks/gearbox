@@ -7,12 +7,12 @@ type Hostname = string
 
 type Stackname = string
 
-type AbsoluteDirs []AbsoluteDir
+type Dirs []Dir
 
-type RelativePath = string
-type AbsoluteDir = AbsoluteEntry
-type AbsoluteFilepath = AbsoluteEntry
-type AbsoluteEntry = string
+type Path = string
+type Dir = FileSystemEntry
+type Filepath = FileSystemEntry
+type FileSystemEntry = string
 
 type CacheKey string
 
@@ -30,7 +30,7 @@ type Revision = string
 
 type StackRole = string
 
-type Basepath = AbsoluteDir
+type Basepath = Dir
 
 type UrlTemplates []UrlTemplate
 type UrlTemplate = string

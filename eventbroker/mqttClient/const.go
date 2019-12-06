@@ -2,8 +2,8 @@ package mqttClient
 
 import (
 	"gearbox/eventbroker/channels"
-	"gearbox/eventbroker/messages"
-	"gearbox/eventbroker/ospaths"
+	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/osdirs"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -12,24 +12,22 @@ import (
 	"time"
 )
 
-
 const (
 	// DefaultEntityId = "eventbroker-mqttclient"
-	defaultWaitTime = time.Millisecond * 1000
-	defaultDomain   = "local"
-	DefaultRetries  = 12
+	defaultWaitTime   = time.Millisecond * 1000
+	defaultDomain     = "local"
+	DefaultRetries    = 12
 	DefaultRetryDelay = time.Second * 8
-	DefaultServer = "tcp://127.0.0.1:1883"
+	DefaultServer     = "tcp://127.0.0.1:1883"
 )
 
-
 type MqttClient struct {
-	EntityId        messages.MessageAddress
-	Boxname         string
-	State           *states.Status
-	Task            *tasks.Task
-	Channels        *channels.Channels
-	Server          *url.URL
+	EntityId msgs.Address
+	Boxname  string
+	State    *states.Status
+	Task     *tasks.Task
+	Channels *channels.Channels
+	Server   *url.URL
 
 	mutex           sync.RWMutex // Mutex control for map.
 	channelHandler  *channels.Subscriber
@@ -38,7 +36,7 @@ type MqttClient struct {
 	waitTime        time.Duration
 	domain          string
 	services        ServicesMap
-	OsPaths         *ospaths.BasePaths
+	OsPaths         *osdirs.BaseDirs
 }
 type Args MqttClient
 type clientInstance struct {
@@ -48,26 +46,27 @@ type clientInstance struct {
 }
 
 type Service struct {
-	EntityId       messages.MessageAddress
-	EntityName     messages.MessageAddress
-	EntityParent   *messages.MessageAddress
-	State          *states.Status
-	IsManaged      bool
-	Entry          *ServiceConfig
+	EntityId     msgs.Address
+	EntityName   msgs.Address
+	EntityParent *msgs.Address
+	State        *states.Status
+	IsManaged    bool
+	Entry        *ServiceConfig
 
 	mutex          sync.RWMutex // Mutex control for this struct.
 	channels       *channels.Channels
 	channelHandler *channels.Subscriber
 	instance       mqtt.Token
 }
-type ServicesMap map[messages.MessageAddress]*Service
+type ServicesMap map[msgs.Address]*Service
+
 //type ServicesArray []mqtt.Client
 
 type ServiceConfig struct {
-	Name   string	`json:"name"`	// == Service.Entry.Instance
-	Topic  Topic	`json:"topic"`
-	TTL    uint32   `json:"ttl"`	// == Service.Entry.TTL
-	Qos    byte		`json:"qos"`
+	Name  string `json:"name"` // == Service.Entry.Instance
+	Topic Topic  `json:"topic"`
+	TTL   uint32 `json:"ttl"` // == Service.Entry.TTL
+	Qos   byte   `json:"qos"`
 
 	callback mqtt.MessageHandler
 }
@@ -80,7 +79,8 @@ const (
 )
 
 type Topic string
-func (me *Topic) String() (string) {
+
+func (me *Topic) String() string {
 
 	return string(*me)
 }
@@ -89,4 +89,3 @@ func (me *Topic) String() (string) {
 //	Topic    Topic
 //	Function mqtt.MessageHandler
 //}
-

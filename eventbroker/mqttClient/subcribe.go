@@ -2,16 +2,15 @@ package mqttClient
 
 import (
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"github.com/gearboxworks/go-status/only"
 )
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a method.
 
-// Register a service by method defined by a *CreateTopic structure.
+// Register a service by method defined by a *NewTopic structure.
 func (me *MqttClient) Subscribe(ce ServiceConfig) (*Service, error) {
 
 	var err error
@@ -29,10 +28,10 @@ func (me *MqttClient) Subscribe(ce ServiceConfig) (*Service, error) {
 		}
 
 		// Create new client entry.
-		sc.EntityId = *messages.GenerateAddress()
-		sc.EntityName = messages.MessageAddress(ce.Name)
+		sc.EntityId = msgs.MakeAddress()
+		sc.EntityName = msgs.Address(ce.Name)
 		sc.EntityParent = &me.EntityId
-		sc.State = states.New(&sc.EntityId, &sc.EntityName, me.EntityId)
+		sc.State = states.New(sc.EntityId, sc.EntityName, me.EntityId)
 		sc.State.SetNewAction(states.ActionSubscribe)
 		sc.IsManaged = true
 		sc.channels = me.Channels
@@ -44,13 +43,13 @@ func (me *MqttClient) Subscribe(ce ServiceConfig) (*Service, error) {
 
 		if ce.Topic.String() == "" {
 			// Nope, not gonna do it.
-			err = me.EntityId.ProduceError("empty topic")
+			err = msgs.MakeError(me.EntityId, "empty topic")
 			break
 		}
 
 		sc.instance = me.instance.client.Subscribe(ce.Topic.String(), ce.Qos, ce.callback)
 		if sc.instance == nil {
-			err = me.EntityId.ProduceError("unable to subscribe")
+			err = msgs.MakeError(me.EntityId, "unable to subscribe")
 			break
 		}
 
@@ -66,15 +65,14 @@ func (me *MqttClient) Subscribe(ce ServiceConfig) (*Service, error) {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return &sc, err
 }
 
-
-// Subscribe a service via a channel defined by a *CreateTopic structure and
+// Subscribe a service via a channel defined by a *NewTopic structure and
 // returns a *Service structure if successful.
-func (me *MqttClient) SubscribeByChannel(caller messages.MessageAddress, s Topic) (*Service, error) {
+func (me *MqttClient) SubscribeByChannel(caller msgs.Address, s Topic) (*Service, error) {
 
 	var err error
 	var sc *Service
@@ -86,11 +84,11 @@ func (me *MqttClient) SubscribeByChannel(caller messages.MessageAddress, s Topic
 		}
 
 		if s == "" {
-			err = me.EntityId.ProduceError("unable to subscribe")
+			err = msgs.MakeError(me.EntityId, "unable to subscribe")
 			break
 		}
 
-		reg := caller.ConstructMessage(me.EntityId, states.ActionSubscribe, messages.MessageText(s))
+		reg := caller.MakeMessage(me.EntityId, states.ActionSubscribe, msgs.Text(s))
 		err = me.Channels.Publish(reg)
 		if err != nil {
 			break
@@ -101,7 +99,7 @@ func (me *MqttClient) SubscribeByChannel(caller messages.MessageAddress, s Topic
 			break
 		}
 
-		sc, err = InterfaceToTypeService(rs)	// sc = rs.(*Service)
+		sc, err = InterfaceToTypeService(rs) // sc = rs.(*Service)
 		if err != nil {
 			break
 		}
@@ -111,8 +109,7 @@ func (me *MqttClient) SubscribeByChannel(caller messages.MessageAddress, s Topic
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return sc, err
 }
-

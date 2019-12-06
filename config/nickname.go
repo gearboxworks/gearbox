@@ -2,7 +2,7 @@ package config
 
 import "gearbox/types"
 
-type NicknameMap map[types.AbsoluteDir]types.Nickname
+type NicknameMap map[types.Dir]types.Nickname
 
 func (me *Config) GetNicknameMap() (nnm NicknameMap) {
 	bdm := me.GetBasedirMap()

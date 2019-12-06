@@ -22,14 +22,12 @@ scoop:
 builds:
 - id: Gearbox
   goos:
-  - windows
   - linux
   goarch:
   - amd64
   goarm:
   - "6"
   targets:
-  - windows_amd64
   - linux_amd64
   main: ./app/main.go
   ldflags:
@@ -62,8 +60,9 @@ archives:
   - changelog*
   - CHANGELOG*
 nfpms:
-- name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
-    }}v{{ .Arm }}{{ end }}'
+- file_name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if
+    .Arm }}v{{ .Arm }}{{ end }}'
+  package_name: Gearbox
   id: default
   builds:
   - Gearbox

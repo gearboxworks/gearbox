@@ -21,7 +21,7 @@ builds:
       - CGO_ENABLED=1
 
     goos:
-      - windows	# Saru to fix this.
+#      - windows	# Saru to fix this.
 #      - darwin
       - linux		# It's broken, but not critical for now.
 

@@ -4,6 +4,7 @@ import (
 	"gearbox/gearbox"
 	"gearbox/ssh"
 	"github.com/spf13/cobra"
+	"fmt"
 )
 
 var sshCmd = &cobra.Command{
@@ -17,7 +18,7 @@ var sshCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := gearbox.Instance.ConnectSSH(sshArgs)
 		if err != nil {
-			//fmt.Printf("%s", err)
+			fmt.Printf("%s", err)
 		}
 	},
 }

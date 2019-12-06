@@ -1,11 +1,12 @@
 package box
 
 import (
+	"fmt"
+	"gearbox/box/external/vmbox"
+	"gearbox/eventbroker/ebutil"
 	"gearbox/eventbroker/entity"
 	"gearbox/eventbroker/states"
-	"gearbox/box/external/vmbox"
 )
-
 
 func myCallback(i interface{}, state states.Status) error {
 
@@ -17,46 +18,47 @@ func myCallback(i interface{}, state states.Status) error {
 		return err
 	}
 
-	//fmt.Printf("Service %s moved to state '%s'\n", state.EntityName, state.Current)
-	//if (state.Current == states.StateStarted) || (state.Current == states.StateStopped) {
-	//	fmt.Printf("%s service %s %s\n", me.BoxInstance.Boxname, state.EntityName, state.Current)
-	//}
+	switch state.EntityName {
+	case entity.VmEntityName:
+		var s int
+		err = me.VmBox.EnsureNotNil()
+		if err != nil {
+			ebutil.LogError(fmt.Errorf("myCallBack[state=%s] error: %s",
+				entity.VmEntityName,
+				err.Error(),
+			))
+			// @TODO Should this continue on to set state, or set
+			//       a differnt state and break from here?
 
-	name := state.EntityName
-	//fmt.Printf("%s => %s\n", name, state.String())
-	//me.SetStateMenu(*name, state.Current)
-	//me.SetControlMenu(*name, state.Current)
-
-
-	switch *name {
-		case entity.VmEntityName:
-			var s int
-			err = me.VmBox.EnsureNotNil()
-			if err == nil {
-				s, _ = me.VmBox.Releases.Selected.IsIsoFilePresent()
-				if s != vmbox.IsoFileDownloaded {
-					state.Current = states.StateUpdating
-				}
+		} else {
+			s, _ = me.VmBox.Releases.Selected.IsIsoFilePresent()
+			if s != vmbox.IsoFileDownloaded {
+				state.Current = states.StateUpdating
 			}
-			me.SetStateMenu(entity.VmEntityName, state.Current)
-			me.SetControlMenu(entity.VmEntityName, state.Current)
+		}
+		me.SetStateMenu(entity.VmEntityName, state.Current)
+		me.SetControlMenu(entity.VmEntityName, state.Current)
 
-		case entity.ApiEntityName:
-			me.SetStateMenu(entity.ApiEntityName, state.Current)
+	case entity.ApiEntityName:
+		me.SetStateMenu(entity.ApiEntityName, state.Current)
 
-		case entity.UnfsdEntityName:
-			me.SetStateMenu(entity.UnfsdEntityName, state.Current)
-			err = me.NfsExports.ReadExport()
+	case entity.UnfsdEntityName:
+		me.SetStateMenu(entity.UnfsdEntityName, state.Current)
+		err = me.NfsExports.ReadExport()
 
-
-		case menuVmUpdate:
-			if state.Current.String() != "100%" {
-				me.menu[menuVmUpdate].MenuItem.SetTitle(me.menu[menuVmUpdate].PrefixMenu + " - " + state.Current.String())
-				me.menu[menuVmUpdate].MenuItem.SetTooltip(me.menu[menuVmUpdate].PrefixToolTip + " - " + state.Current.String())
-			} else {
-				me.menu[menuVmUpdate].MenuItem.SetTitle(me.menu[menuVmUpdate].PrefixMenu)
-				me.menu[menuVmUpdate].MenuItem.SetTooltip(me.menu[menuVmUpdate].PrefixToolTip)
-			}
+	case menuVmUpdate:
+		m := me.menu[menuVmUpdate]
+		mi := m.MenuItem
+		if state.Current != "100%" {
+			// @TODO Can we set '100%' as a constant named to indicate why it is formatted as it is?
+			mi.SetTitle(fmt.Sprintf("%s-%s", m.PrefixMenu, state.Current))
+			mi.SetTooltip(fmt.Sprintf("%s-%s", m.PrefixToolTip, state.Current))
+		} else {
+			mi.SetTitle(m.PrefixMenu)
+			mi.SetTooltip(m.PrefixToolTip)
+		}
+		m.MenuItem = mi
+		me.menu[menuVmUpdate] = m
 	}
 
 	//fmt.Printf("Service %s moved to state '%s'\n", state.EntityName, state.Current)
@@ -74,10 +76,8 @@ func myCallback(i interface{}, state states.Status) error {
 	//	state.Error,
 	//)
 
-
 	return err
 }
-
 
 //func (me *Box) SetMenuVM(state states.State) {
 //	// This can clearly be refactored a LOT.
@@ -147,4 +147,3 @@ func myCallback(i interface{}, state states.Status) error {
 //
 //	return
 //}
-

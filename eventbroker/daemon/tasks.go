@@ -2,16 +2,14 @@ package daemon
 
 import (
 	"gearbox/eventbroker/eblog"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"github.com/gearboxworks/go-status/only"
 )
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Executed as a task.
-
 
 // Non-exposed task function - M-DNS initialization.
 func initDaemon(task *tasks.Task, i ...interface{}) error {
@@ -58,11 +56,11 @@ func initDaemon(task *tasks.Task, i ...interface{}) error {
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("get"), getHandler, me, messages.InterfaceTypeSubTopics)
+			err = me.channelHandler.Subscribe(msgs.SubTopic("get"), getHandler, me, msgs.InterfaceTypeSubTopics)
 			if err != nil {
 				break
 			}
-			err = me.channelHandler.Subscribe(messages.SubTopic("load"), loadConfigHandler, me, states.InterfaceTypeError)
+			err = me.channelHandler.Subscribe(msgs.SubTopic("load"), loadConfigHandler, me, states.InterfaceTypeError)
 			if err != nil {
 				break
 			}
@@ -73,12 +71,11 @@ func initDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
 }
-
 
 // Non-exposed task function - M-DNS start.
 func startDaemon(task *tasks.Task, i ...interface{}) error {
@@ -105,12 +102,11 @@ func startDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
 }
-
 
 // Non-exposed task function - M-DNS monitoring.
 func monitorDaemon(task *tasks.Task, i ...interface{}) error {
@@ -124,13 +120,11 @@ func monitorDaemon(task *tasks.Task, i ...interface{}) error {
 			break
 		}
 
-
 		// First monitor my current state.
 		if me.State.GetCurrent() != states.StateStarted {
-			err = me.EntityId.ProduceError("task needs restarting")
+			err = msgs.MakeError(me.EntityId, "task needs restarting")
 			break
 		}
-
 
 		// Next do something else.
 		for range only.Once {
@@ -139,26 +133,26 @@ func monitorDaemon(task *tasks.Task, i ...interface{}) error {
 			for _, u := range me.GetManagedEntities() {
 				var state states.Status
 
-				state, err = me.daemons[u].Status(PublishState)	// Managed by Mutex
+				state, err = me.daemons[u].Status(PublishState) // Managed by Mutex
 				if err != nil {
 					continue
 				}
 				switch state.Current {
-					case states.StateUnregistered:
-						err = me.daemons[u].instance.service.Install()	// Mutex not required
-						if err != nil {
-							continue
-						}
+				case states.StateUnregistered:
+					err = me.daemons[u].instance.service.Install() // Mutex not required
+					if err != nil {
+						continue
+					}
 
-					case states.StateUnknown:
-						fallthrough
-					case states.StateStopped:
-						err = me.daemons[u].Start()	// Managed by Mutex
-						if err != nil {
-							continue
-						}
+				case states.StateUnknown:
+					fallthrough
+				case states.StateStopped:
+					err = me.daemons[u].Start() // Managed by Mutex
+					if err != nil {
+						continue
+					}
 
-					case states.StateStarted:
+				case states.StateStarted:
 				}
 				//if (state.Current == states.StateUnknown) || (state.Current == states.StateStopped) {
 				//	err = me.daemons[u].Start()
@@ -175,12 +169,11 @@ func monitorDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
 }
-
 
 // Non-exposed task function - M-DNS stop.
 func stopDaemon(task *tasks.Task, i ...interface{}) error {
@@ -209,9 +202,8 @@ func stopDaemon(task *tasks.Task, i ...interface{}) error {
 		}
 
 		eblog.LogIfNil(me, err)
-		eblog.LogIfError(me.EntityId, err)
+		eblog.LogIfError(err)
 	}
 
 	return err
 }
-

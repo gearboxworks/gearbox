@@ -38,7 +38,7 @@ type Gearboxer interface {
 	//GetProjectFilepath(string, string) (string, status.Status)
 	//GetProjectWithDetails(config.Hostname) (*config.Project, status.Status)
 	//ValidateBasedirNickname(string, *config.ValidateArgs) status.Status
-	AddBasedir(types.AbsoluteDir, ...types.Nickname) status.Status
+	AddBasedir(types.Dir, ...types.Nickname) status.Status
 	AddNamedStack(*gears.NamedStack) status.Status
 	AddProject(*project.Project) status.Status
 	Admin(ViewerType)
@@ -67,18 +67,18 @@ type Gearboxer interface {
 	RequestAvailableContainers(...*dockerhub.ContainerQuery) (dockerhub.ContainerNames, status.Status)
 
 	// VM related.
-	BoxDaemon(box.Args) status.Status
-	StartBox(box.Args) status.Status
-	StopBox(box.Args) status.Status
-	RestartBox(box.Args) status.Status
-	CreateBox(box.Args) status.Status
-	PrintBoxStatus(box.Args) status.Status
+	RunAsDaemon(*box.Args) status.Status
+	StartBox(*box.Args) status.Status
+	StopBox(*box.Args) status.Status
+	RestartBox(*box.Args) status.Status
+	CreateBox(*box.Args) status.Status
+	PrintBoxStatus(*box.Args) status.Status
 	ConnectSSH(ssh.Args) status.Status
 
 	SetConfig(config.Configer)
 	SetApi(api api.Apier)
 	SetRouteName(types.RouteName)
-	UpdateBasedir(types.Nickname, types.AbsoluteDir) status.Status
+	UpdateBasedir(types.Nickname, types.Dir) status.Status
 	UpdateNamedStack(*gears.NamedStack) status.Status
 	UpdateProject(*project.Project) status.Status
 	WriteLog([]byte) (int, error)
@@ -287,7 +287,7 @@ func (me *Gearbox) WriteAssetsToAdminWebRoot() {
 	}
 	for _, afn := range AssetNames() {
 		afn = filepath.FromSlash(afn)
-		err := RestoreAsset(string(hc.GetUserConfigDir()), afn)
+		err := RestoreAsset(hc.GetUserConfigDir(), afn)
 		if err != nil {
 			afn = fmt.Sprintf("'%s/%s'", hc.GetUserConfigDir(), afn)
 			log.Printf("Could not restore asset '%s': %v\n", afn, err.Error())
@@ -307,14 +307,6 @@ func (me *Gearbox) GetProject(hostname types.Hostname) (p *project.Project, sts 
 	return p, sts
 }
 
-//func (me Gearboxer) GetProjects() string {
-//	j, err := json.Marshal(me.GetProjectMap())
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	return string(j)
-//}
-//
 func (me *Gearbox) Admin(viewer ViewerType) {
 	aui := NewAdminUi(me, viewer)
 	aui.Initialize()
@@ -337,7 +329,7 @@ func (me *Gearbox) BasedirExists(nickname types.Nickname) bool {
 	return me.Config.GetBasedirMap().NicknameExists(nickname)
 }
 
-func (me *Gearbox) AddBasedir(basedir types.AbsoluteDir, nickname ...types.Nickname) (sts status.Status) {
+func (me *Gearbox) AddBasedir(basedir types.Dir, nickname ...types.Nickname) (sts status.Status) {
 	var nn types.Nickname
 	if len(nickname) == 0 {
 		nn = ""
@@ -358,7 +350,7 @@ func (me *Gearbox) AddBasedir(basedir types.AbsoluteDir, nickname ...types.Nickn
 	return sts
 }
 
-func (me *Gearbox) UpdateBasedir(nickname types.Nickname, dir types.AbsoluteDir) (sts status.Status) {
+func (me *Gearbox) UpdateBasedir(nickname types.Nickname, dir types.Dir) (sts status.Status) {
 	for range only.Once {
 		sts = me.Config.GetBasedirMap().UpdateBasedir(
 			me.Config,
@@ -403,26 +395,26 @@ func (me *Gearbox) RequestAvailableContainers(query ...*dockerhub.ContainerQuery
 	return names, sts
 }
 
-//func (me *Parent) GetProjectDir(path types.RelativePath, basedir types.Nickname) (bd types.AbsoluteDir, sts status.Status) {
+//func (me *Parent) GetProjectDir(path types.Path, basedir types.Nickname) (bd types.Dir, sts status.Status) {
 //	for range only.Once {
-//		var bd types.AbsoluteDir
+//		var bd types.Dir
 //		bd, sts = me.Config.GetBasedir(basedir)
 //		if status.IsError(sts) {
 //			break
 //		}
-//		bd = types.AbsoluteDir(filepath.FromSlash(fmt.Sprintf("%s/%s", bd, path)))
+//		bd = types.Dir(filepath.FromSlash(fmt.Sprintf("%s/%s", bd, path)))
 //	}
 //	return bd, sts
 //}
 
-//func (me *Parent) GetProjectFilepath(path types.RelativePath, basedir types.Nickname) (pfp types.AbsoluteDir, sts status.Status) {
+//func (me *Parent) GetProjectFilepath(path types.Path, basedir types.Nickname) (pfp types.Dir, sts status.Status) {
 //	for range only.Once {
-//		var pd types.AbsoluteDir
+//		var pd types.Dir
 //		pd, sts = me.GetProjectDir(path, basedir)
 //		if status.IsError(sts) {
 //			break
 //		}
-//		pfp = types.AbsoluteDir(filepath.FromSlash(fmt.Sprintf("%s/%s", pd, jsonfile.BaseFilename)))
+//		pfp = types.Dir(filepath.FromSlash(fmt.Sprintf("%s/%s", pd, jsonfile.BaseFilename)))
 //	}
 //	return pfp, sts
 //}

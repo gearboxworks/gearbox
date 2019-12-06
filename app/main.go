@@ -12,7 +12,7 @@ import (
 	"os"
 )
 
-//go:generate go-bindata -dev -o gearbox/dist.go -pkg gearbox app/dist/... admin/dist/...
+//go:generate go-bindata -dev -o ../gearbox/dist.go -pkg gearbox ../app/dist/... ../admin/dist/...
 
 func main() {
 	gb := gearbox.NewGearbox(&gearbox.Args{

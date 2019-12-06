@@ -10,7 +10,7 @@ package gearbox
 //}
 //
 //
-//func (me *Gearbox) BoxDaemon(args box.Args) (sts status.Status) {
+//func (me *Gearbox) RunAsDaemon(args box.Args) (sts status.Status) {
 //
 //	for range only.Once {
 //		var bx *box.Box
@@ -20,7 +20,7 @@ package gearbox
 //			break
 //		}
 //
-//		sts = bx.BoxDaemon()
+//		sts = bx.RunAsDaemon()
 //		if is.Error(sts) {
 //			break
 //		}

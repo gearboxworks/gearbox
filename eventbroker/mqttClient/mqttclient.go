@@ -3,13 +3,13 @@ package mqttClient
 import (
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
+	"gearbox/eventbroker/msgs"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gearboxworks/go-status/only"
 	"net/url"
 )
-
 
 func (me *MqttClient) New(args ...Args) error {
 
@@ -23,20 +23,19 @@ func (me *MqttClient) New(args ...Args) error {
 		}
 
 		if _args.Channels == nil {
-			err = me.EntityId.ProduceError("channel pointer is nil")
+			err = msgs.MakeError(me.EntityId, "channel pointer is nil")
 			break
 		}
 
 		if _args.OsPaths == nil {
-			err = me.EntityId.ProduceError("ospaths is nil")
+			err = msgs.MakeError(me.EntityId, "ospaths is nil")
 			break
 		}
-
 
 		if _args.EntityId == "" {
 			_args.EntityId = entity.MqttClientEntityName
 		}
-		_args.State = states.New(&_args.EntityId, &_args.EntityId, entity.SelfEntityName)
+		_args.State = states.New(_args.EntityId, _args.EntityId, entity.SelfEntityName)
 
 		if _args.Boxname == "" {
 			_args.Boxname = entity.MqttClientEntityName
@@ -52,7 +51,7 @@ func (me *MqttClient) New(args ...Args) error {
 
 		_args.instance.options = mqtt.NewClientOptions()
 		if _args.instance.options == nil {
-			err = me.EntityId.ProduceError("unable to create options")
+			err = msgs.MakeError(me.EntityId, "unable to create options")
 			break
 		}
 		_args.instance.options.SetClientID(_args.EntityId.String())
@@ -61,7 +60,6 @@ func (me *MqttClient) New(args ...Args) error {
 
 		*me = MqttClient(_args)
 
-
 		me.State.SetWant(states.StateIdle)
 		me.State.SetNewState(states.StateIdle, err)
 		eblog.Debug(me.EntityId, "init complete")
@@ -69,11 +67,10 @@ func (me *MqttClient) New(args ...Args) error {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
 
 // Start the MQTT handler.
 func (me *MqttClient) StartHandler() error {
@@ -103,11 +100,10 @@ func (me *MqttClient) StartHandler() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
 
 // Stop the MQTT handler.
 func (me *MqttClient) StopHandler() error {
@@ -136,11 +132,10 @@ func (me *MqttClient) StopHandler() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
 
 func (me *MqttClient) StopServices() error {
 
@@ -161,8 +156,7 @@ func (me *MqttClient) StopServices() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-

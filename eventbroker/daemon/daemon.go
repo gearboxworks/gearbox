@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"gearbox/eventbroker/eblog"
 	"gearbox/eventbroker/entity"
-	"gearbox/eventbroker/messages"
+	"gearbox/eventbroker/msgs"
+	"gearbox/eventbroker/osdirs"
 	"gearbox/eventbroker/states"
 	"gearbox/eventbroker/tasks"
 	"github.com/gearboxworks/go-status/only"
 	"time"
 )
-
 
 func (me *Daemon) New(args ...Args) error {
 
@@ -24,39 +24,31 @@ func (me *Daemon) New(args ...Args) error {
 		}
 
 		if _args.Channels == nil {
-			err = me.EntityId.ProduceError("channel pointer is nil")
+			err = msgs.MakeError(me.EntityId, "channel pointer is nil")
 			break
 		}
 
-		if _args.OsPaths == nil {
-			err = me.EntityId.ProduceError("ospaths is nil")
+		if _args.BaseDirs == nil {
+			err = msgs.MakeError(me.EntityId, "ospaths is nil")
 			break
 		}
-
 
 		if _args.EntityId == "" {
 			_args.EntityId = entity.DaemonEntityName
 		}
-		_args.State = states.New(&_args.EntityId, &_args.EntityId, entity.SelfEntityName)
+		_args.State = states.New(_args.EntityId, _args.EntityId, entity.SelfEntityName)
 
 		if _args.Boxname == "" {
 			_args.Boxname = entity.DaemonEntityName
 		}
 
-		//if _args.waitTime == 0 {
-		//	_args.waitTime = defaultWaitTime
-		//}
-		//if _args.restartAttempts == 0 {
-		//	_args.restartAttempts = defaultRetries
-		//}
-
-		jdir := _args.OsPaths.EventBrokerEtcDir.AddToPath(DefaultJsonDir)
-		_, err = jdir.CreateIfNotExists()
+		jdir := osdirs.AddPaths(_args.BaseDirs.EventBrokerEtcDir, DefaultJsonDir)
+		_, err = osdirs.CreateIfNotExists(jdir)
 		if err != nil {
 			break
 		}
 
-		_args.daemons = make(ServicesMap)	// Mutex not required
+		_args.daemons = make(ServicesMap) // Mutex not required
 
 		_args.State.SetWant(states.StateIdle)
 		_args.State.SetNewState(states.StateIdle, err)
@@ -67,11 +59,10 @@ func (me *Daemon) New(args ...Args) error {
 
 	me.Channels.PublishState(me.State)
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
 
 // Start the M-DNS network handler.
 func (me *Daemon) StartHandler() error {
@@ -100,11 +91,10 @@ func (me *Daemon) StartHandler() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
 
 // Stop the daemon handler.
 func (me *Daemon) StopHandler() error {
@@ -133,11 +123,10 @@ func (me *Daemon) StopHandler() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
 
 func (me *Daemon) StopServices() error {
 
@@ -149,8 +138,8 @@ func (me *Daemon) StopServices() error {
 			break
 		}
 
-		for _, u := range me.GetManagedEntities() {		// Ignore Mutex
-			err = me.daemons[u].Stop()					// Ignore Mutex
+		for _, u := range me.GetManagedEntities() { // Ignore Mutex
+			err = me.daemons[u].Stop() // Ignore Mutex
 			if err == nil {
 				err = me.DeleteEntity(u)
 			}
@@ -159,11 +148,10 @@ func (me *Daemon) StopServices() error {
 	}
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
 
 // Print all services registered under daemon that I manage.
 func (me *Daemon) PrintServices() error {
@@ -182,12 +170,11 @@ func (me *Daemon) PrintServices() error {
 	return err
 }
 
-
 // Print all services registered under daemon that I manage.
-func (me *Daemon) ListStarted() (messages.MessageAddresses, error) {
+func (me *Daemon) ListStarted() (msgs.Addresses, error) {
 
 	var err error
-	var sc messages.MessageAddresses
+	var sc msgs.Addresses
 
 	for range only.Once {
 		err = me.EnsureNotNil()
@@ -205,7 +192,6 @@ func (me *Daemon) ListStarted() (messages.MessageAddresses, error) {
 
 	return sc, err
 }
-
 
 func (me *Daemon) TestMe() error {
 
@@ -253,8 +239,7 @@ func (me *Daemon) TestMe() error {
 	time.Sleep(time.Hour * 4200)
 
 	eblog.LogIfNil(me, err)
-	eblog.LogIfError(me.EntityId, err)
+	eblog.LogIfError(err)
 
 	return err
 }
-
