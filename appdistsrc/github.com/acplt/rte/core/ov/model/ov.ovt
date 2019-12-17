@@ -1,0 +1,120 @@
+/*
+*   $Id: ov.ovt,v 1.4 2002-01-23 13:44:14 ansgar Exp $
+*
+*   Copyright (C) 1998
+*   Lehrstuhl fuer Prozessleittechnik,
+*   D-52056 Aachen, Germany.
+*   All rights reserved.
+*
+*   Author: Dirk Meyer <dirk@plt.rwth-aachen.de>
+*
+*   This file is part of the ACPLT/OV Package 
+*   
+*   Licensed under the Apache License, Version 2.0 (the "License");
+*   you may not use this file except in compliance with the License.
+*   You may obtain a copy of the License at
+*
+*       http://www.apache.org/licenses/LICENSE-2.0
+*
+*   Unless required by applicable law or agreed to in writing, software
+*   distributed under the License is distributed on an "AS IS" BASIS,
+*   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*   See the License for the specific language governing permissions and
+*   limitations under the License.
+*/
+/*
+*	History:
+*	--------
+*	27-Jun-1998 Dirk Meyer <dirk@plt.rwth-aachen.de>: File created.
+*/
+
+#ifndef OV_OVT_INCLUDED
+#define OV_OVT_INCLUDED
+
+#if OV_SYSTEM_NT
+#include <windows.h>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*
+*	Generic pointer to an ACPLT/OV object
+*/
+typedef struct OV_INST_ov_object* OV_INSTPTR;
+
+/*
+*	Generic pointer to the vtable of an ACPLT/OV object
+*/
+typedef struct OV_VTBL_ov_object* OV_VTBLPTR;
+
+/*
+*	Generic pointer to the link table of an ACPLT/OV object
+*/
+typedef OV_BYTE* OV_ATBLPTR;
+
+/*
+*	Generic pointer to a get function of a variable
+*/
+typedef void* (* OV_FNCPTR_GET)(
+	OV_INSTPTR		pobj,
+	...
+);
+
+/*
+*	Generic pointer to a set function of a variable
+*/
+typedef OV_RESULT (* OV_FNCPTR_SET)(
+	OV_INSTPTR		pobj,
+	const void*		value,
+	...
+);
+
+/*
+*	Pointer to a link function of an association
+*/
+typedef OV_RESULT (* OV_FNCPTR_LINK)(
+	const OV_INSTPTR			pparent,
+	const OV_INSTPTR			pchild,
+	const OV_PLACEMENT_HINT		parenthint,
+	const OV_INSTPTR			prelparent,
+	const OV_PLACEMENT_HINT		childhint,
+	const OV_INSTPTR			prelchild
+);
+
+/*
+*	Pointer to an unlink function of an association
+*/
+typedef void (* OV_FNCPTR_UNLINK)(
+	const OV_INSTPTR			pparent,
+	const OV_INSTPTR			pchild
+);
+
+/*
+*	Pointer to a get access function of an association
+*/
+typedef OV_ACCESS (* OV_FNCPTR_GETACCESS)(
+	const OV_INSTPTR			pparent,
+	const OV_INSTPTR			pchild,
+	const OV_TICKET				*pticket
+);
+
+/*
+*	Handle of a DLL/shared library
+*/
+#if OV_SYSTEM_NT
+typedef HINSTANCE	OV_DLLHANDLE;
+#else
+typedef void*		OV_DLLHANDLE;
+#endif
+
+#ifdef __cplusplus
+}	/* extern "C" */
+#endif
+
+#endif
+/*
+*	End of file
+*/
+

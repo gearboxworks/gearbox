@@ -1,0 +1,61 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/project-aliases",
+      "route": "project-aliases"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/projects/site5.local/aliases"
+   },
+   "data": {
+      "Aliases": [
+         "www.{hostname}"
+      ],
+      "Project": {
+         "hostname": "site5.local",
+         "enabled": false,
+         "basedir": "primary",
+         "notes": "",
+         "path": "site5",
+         "filepath": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site5/gearbox.json",
+         "aliases": [
+            "www.{hostname}"
+         ],
+         "stack": {
+            "wordpress/dbserver": {
+               "service_id": "gearboxworks/mysql",
+               "authority": "gearbox.works",
+               "stack": "wordpress",
+               "orgname": "gearboxworks",
+               "program": "mysql",
+               "version": {}
+            },
+            "wordpress/processvm": {
+               "service_id": "gearboxworks/php:7.2",
+               "authority": "gearbox.works",
+               "stack": "wordpress",
+               "orgname": "gearboxworks",
+               "program": "php",
+               "version": {
+                  "major": "7",
+                  "minor": "2"
+               }
+            },
+            "wordpress/webserver": {
+               "service_id": "gearboxworks/apache",
+               "authority": "gearbox.works",
+               "stack": "wordpress",
+               "orgname": "gearboxworks",
+               "program": "apache",
+               "version": {}
+            }
+         }
+      }
+   }
+}

@@ -1,0 +1,418 @@
+diff --git a/app/macos_main.go b/app/macos_main.go
+deleted file mode 100644
+index 420aec3..0000000
+--- a/app/macos_main.go
++++ /dev/null
+@@ -1,22 +0,0 @@
+-package main
+-
+-import (
+-	"fmt"
+-	"gearbox"
+-	"gearbox/app/cmd"
+-	"gearbox/host"
+-	"os"
+-)
+-
+-//go:generate go-bindata -dev -o assets.go -pkg gearbox admin/dist/...
+-
+-func main() {
+-	gearbox.Instance = gearbox.NewGearbox(&gearbox.GearboxArgs{
+-		HostConnector: &host.MacOsConnector{},
+-	})
+-	gearbox.Instance.Initialize()
+-	if err := cmd.RootCmd.Execute(); err != nil {
+-		fmt.Println(err)
+-		os.Exit(1)
+-	}
+-}
+diff --git a/app/win_main.go b/app/main.go
+similarity index 90%
+rename from app/win_main.go
+rename to app/main.go
+index 3a1b9e6..9dcd2de 100644
+--- a/app/win_main.go
++++ b/app/main.go
+@@ -12,7 +12,7 @@ import (
+ 
+ func main() {
+ 	gearbox.Instance = gearbox.NewGearbox(&gearbox.GearboxArgs{
+-		HostConnector: &host.WinConnector{},
++		HostConnector: host.GetConnector(),
+ 	})
+ 	gearbox.Instance.Initialize()
+ 	if err := cmd.RootCmd.Execute(); err != nil {
+diff --git a/bin/gearbox b/bin/gearbox
+index c2dcbf1..bb7da68 100755
+Binary files a/bin/gearbox and b/bin/gearbox differ
+diff --git a/gearbox.go b/gearbox.go
+index bd80f5a..0fddd70 100644
+--- a/gearbox.go
++++ b/gearbox.go
+@@ -18,6 +18,7 @@ type Gearbox struct {
+ 	Config        *Config
+ 	HostConnector host.Connector
+ 	AdminUpdater  func()
++	Stacks      StackMap
+ }
+ type GearboxArgs Gearbox
+ 
+@@ -33,6 +34,7 @@ func NewGearbox(args *GearboxArgs) *Gearbox {
+ 	gb := Gearbox{
+ 		HostConnector: args.HostConnector,
+ 		Config:        args.Config,
++		StackMap:      GetStackMap(),
+ 	}
+ 	return &gb
+ }
+@@ -68,7 +70,7 @@ func (me *Gearbox) Admin() {
+ 		}
+ 	}()
+ 
+-	api := NewHostApi(me.Config)
++	api := NewHostApi(me)
+ 	apiJson := fmt.Sprintf(`{"host_api":"%s","vm_api":"%s"}`, api.Url(), api.Url())
+ 	apiJsonFile := fmt.Sprintf("%s/api.json", adminRootDir)
+ 	err = ioutil.WriteFile(apiJsonFile, []byte(apiJson), os.ModePerm)
+diff --git a/host.go b/host.go
+index 7427541..b2c4eb8 100644
+--- a/host.go
++++ b/host.go
+@@ -1,24 +1,11 @@
+ package gearbox
+ 
+ import (
+-	"fmt"
+ 	"gearbox/host"
+-	"runtime"
+ )
+ 
+ var Host host.Connector
+ 
+ func init() {
+-	switch runtime.GOOS {
+-	case "darwin":
+-		Host = &host.MacOsConnector{}
+-	case "windows":
+-		Host = &host.WinConnector{}
+-	case "linux":
+-		Host = &host.LinuxConnector{}
+-	default:
+-		msg := "Sadly, Gearbox does not currently run on '%s.'\nIf you would like to offer us support to change that please contact us via https://gearbox.works.\n"
+-		fmt.Printf(msg, runtime.GOOS)
+-	}
+-
++	Host = host.GetConnector()
+ }
+diff --git a/host/host_connector.go b/host/host_connector.go
+index a7639af..97ddf95 100644
+--- a/host/host_connector.go
++++ b/host/host_connector.go
+@@ -1,8 +1,29 @@
+ package host
+ 
++import (
++	"fmt"
++	"runtime"
++)
++
+ type Connector interface {
+ 	GetAdminRootDir() string
+ 	GetUserConfigDir() string
+ 	GetSuggestedProjectRoot() string
+ 	GetUserHomeDir() string
+ }
++
++func GetConnector() Connector {
++	var host Connector
++	switch runtime.GOOS {
++	case "darwin":
++		host = &MacOsConnector{}
++	case "windows":
++		host = &WinConnector{}
++	case "linux":
++		host = &LinuxConnector{}
++	default:
++		msg := "Sadly, Gearbox does not currently run on '%s.'\nIf you would like to offer us support to change that please contact us via https://gearbox.works.\n"
++		fmt.Printf(msg, runtime.GOOS)
++	}
++	return host
++}
+diff --git a/host_api.go b/host_api.go
+index 8fe76c4..d014647 100644
+--- a/host_api.go
++++ b/host_api.go
+@@ -3,6 +3,7 @@ package gearbox
+ import (
+ 	"encoding/json"
+ 	"fmt"
++	"gearbox/only"
+ 	"github.com/labstack/echo"
+ 	"github.com/projectcfg/projectcfg/util"
+ 	"net/http"
+@@ -11,9 +12,10 @@ import (
+ const Port = "9999"
+ 
+ type HostApi struct {
+-	Port   string
+-	Config *Config
+-	Echo   *echo.Echo
++	Port    string
++	Config  *Config
++	Echo    *echo.Echo
++	Gearbox *Gearbox
+ }
+ 
+ type ResponseMeta struct {
+@@ -23,9 +25,15 @@ type ResponseMeta struct {
+ }
+ 
+ type Response struct {
+-	Meta  ResponseMeta      `json:"meta"`
+-	Links map[string]string `json:"links"`
+-	Data  interface{}       `json:"data"`
++	StatusCode int               `json:"status_code"`
++	Meta       ResponseMeta      `json:"meta"`
++	Links      map[string]string `json:"links"`
++	Data       interface{} 		 `json:"data"`
++}
++
++type ApiError struct {
++	StatusCode int   `json:"status_code"`
++	Error      error `json:"error"`
+ }
+ 
+ const ApiResponse = `{
+@@ -42,15 +50,17 @@ const ApiResponse = `{
+ 		"candidate-projects": "/projects/candidates",
+ 		"stacks":             "/stacks",
+ 		"stack":              "/stacks/{stack}",
++		"stack-members":      "/stacks/{stack}/members",
+ 		"services":           "/services/{service_id}"
+ 	}
+ }`
+ 
+-func NewHostApi(conf *Config) *HostApi {
++func NewHostApi(gearbox *Gearbox) *HostApi {
+ 	api := &HostApi{
+-		Port:   Port,
+-		Config: conf,
+-		Echo:   echo.New(),
++		Port:    Port,
++		Config:  gearbox.Config,
++		Echo:    echo.New(),
++		Gearbox: gearbox,
+ 	}
+ 	api.addRoutes()
+ 	return api
+@@ -76,18 +86,46 @@ func (me *HostApi) Stop() {
+ 
+ // @TODO Add ?format=yes to pretty print JSON
+ func (me *HostApi) jsonMarshalHandler(ctx echo.Context, js interface{}) error {
+-	r := &Response{}
+-	err := json.Unmarshal([]byte(ApiResponse), &r)
+-	if err != nil {
+-		panic(err)
++	var err error
++	for range only.Once {
++		ae,ok := js.(*ApiError)
++		if !ok {
++			err = ctx.String(ae.StatusCode, ae.Error.Error())
++			break
++		}
++		r := &Response{}
++		err := json.Unmarshal([]byte(ApiResponse), &r)
++		if err != nil {
++			err = ctx.String(http.StatusInternalServerError, err.Error())
++			break
++		}
++		r.Data = js
++		r.Links["self"] = ctx.Path()
++		j, err := json.MarshalIndent(r, "", "   ")
++		if err != nil {
++			err = ctx.String(http.StatusInternalServerError, err.Error())
++			break
++		}
++		err = ctx.String(http.StatusOK, string(j))
+ 	}
+-	r.Data = js
+-	r.Links["self"] = ctx.Path()
+-	j, err := json.MarshalIndent(r, "", "   ")
+-	if err != nil {
+-		return ctx.String(http.StatusInternalServerError, err.Error())
++	return err
++}
++
++func (me *HostApi) getStackResponse(ctx echo.Context) interface{} {
++	var response interface{}
++	for range only.Once {
++		sn := ctx.Param("stack")
++		var ok bool
++		response, ok = me.Gearbox.Stacks[StackName(sn)]
++		if !ok {
++			response = &ApiError{
++				StatusCode: http.StatusNotFound,
++				Error:      fmt.Errorf("'%s' is not a valid stack", sn),
++			}
++			break
++		}
+ 	}
+-	return ctx.String(http.StatusOK, string(j))
++	return response
+ }
+ 
+ func (me *HostApi) addRoutes() {
+@@ -115,22 +153,32 @@ func (me *HostApi) addRoutes() {
+ 	e.POST("/projects/new", func(ctx echo.Context) error {
+ 		return me.jsonMarshalHandler(ctx, me.Config.Candidates)
+ 	})
+-
+ 	e.GET("/stacks", func(ctx echo.Context) error {
+-		return me.jsonMarshalHandler(ctx, []string{
+-			"WordPress",
+-			"Drupal",
+-			"Joomla",
+-		})
++		return me.jsonMarshalHandler(ctx, me.Gearbox.Stacks)
+ 	})
+-
+ 	e.GET("/stacks/:stack", func(ctx echo.Context) error {
+-		return me.jsonMarshalHandler(ctx, []string{
+-			"wordpress/dbserver",
+-			"wordpress/webserver",
+-			"wordpress/processvm",
+-			"wordpress/cacheserver",
+-		})
++		response := me.getStackResponse(ctx)
++		return me.jsonMarshalHandler(ctx, response)
++	})
++
++	e.GET("/stacks/:stack/members", func(ctx echo.Context) error {
++		var response interface{}
++		for range only.Once {
++			response := me.getStackResponse(ctx)
++			if _,ok := response.(ApiError); ok {
++				break
++			}
++
++			if stack,ok := response.(Stack); ok {
++				response = &ApiError{
++					StatusCode: http.StatusInternalServerError,
++					Error: stack,
++				}
++				break
++			}
++
++		}
++		return me.jsonMarshalHandler(ctx, response)
+ 	})
+ 
+ 	e.GET("/services/:service_id", func(ctx echo.Context) error {
+@@ -153,4 +201,6 @@ func (me *HostApi) addRoutes() {
+ 		})
+ 	})
+ 
++
++
+ }
+diff --git a/service.go b/service.go
+new file mode 100644
+index 0000000..5b32246
+--- /dev/null
++++ b/service.go
+@@ -0,0 +1,13 @@
++package gearbox
++
++type Service struct {
++	Label string   `json:"label"`
++}
++
++func (me *Service) String() string {
++	return me.Label
++}
++
++
++
++
+diff --git a/stack.go b/stack.go
+new file mode 100644
+index 0000000..94098e9
+--- /dev/null
++++ b/stack.go
+@@ -0,0 +1,44 @@
++package gearbox
++
++type Stacks []*Stack
++
++type StackMap map[StackName]*Stack
++
++type StackName string
++
++type Stack struct {
++	Name StackName `json:"name"`
++	Label string   `json:"label"`
++	Members StackMemberMap `json:"members"`
++}
++
++func (me *Stack) String() string  {
++	return string(me.Name)
++}
++
++func GetStackMap() StackMap {
++	return StackMap{
++		"wordpress": &Stack{
++			Name:"wordpress",
++			Label:"WordPress",
++			Members: StackMemberMap{
++				"webserver": &StackMember{
++					Label: "WordPress Web Server",
++					Examples: []string{"Apache", "Nginx", "Caddy", "Lighttpd"},
++				},
++				"processvm": &StackMember{
++					Label: "WordPress Process VM",
++					Examples: []string{"PHP", "HHVM"},
++				},
++				"dbserver": &StackMember{
++					Label: "WordPress Database Server",
++					Examples: []string{"MySQL", "MariaDB", "Percona"},
++				},
++				"cacheserver": &StackMember{
++					Label: "WordPress Cache Server",
++					Examples: []string{"Redis", "Memcached"},
++				},
++			},
++		},
++	}
++}
+diff --git a/stack_member.go b/stack_member.go
+new file mode 100644
+index 0000000..5b7d01b
+--- /dev/null
++++ b/stack_member.go
+@@ -0,0 +1,26 @@
++package gearbox
++
++//
++// @TODO StackMember might be renamed.
++//		 For now it is a placeholder name
++//
++
++type StackMemberName string
++
++type StackMemberMap map[StackMemberName]*StackMember
++
++type StackMembers []*StackMember
++
++type StackMember struct {
++	Name StackMemberName   `json:"name"`
++	Label string   `json:"label"`
++	Examples []string `json:"examples"`
++	Stack StackName `json:"stack"`
++	MemberType string `json:"member_type"`
++}
++
++func (me *StackMember) String() string {
++	return me.Label
++}
++
++

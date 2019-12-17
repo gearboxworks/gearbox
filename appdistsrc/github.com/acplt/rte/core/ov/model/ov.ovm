@@ -1,0 +1,262 @@
+/*
+*   $Id: ov.ovm,v 1.18 2007-04-26 12:12:24 martin Exp $
+*
+*   Copyright (C) 1998
+*   Lehrstuhl fuer Prozessleittechnik,
+*   D-52056 Aachen, Germany.
+*   All rights reserved.
+*
+*   Author: Dirk Meyer <dirk@plt.rwth-aachen.de>
+*
+*   This file is part of the ACPLT/OV Package 
+*   
+*   Licensed under the Apache License, Version 2.0 (the "License");
+*   you may not use this file except in compliance with the License.
+*   You may obtain a copy of the License at
+*
+*       http://www.apache.org/licenses/LICENSE-2.0
+*
+*   Unless required by applicable law or agreed to in writing, software
+*   distributed under the License is distributed on an "AS IS" BASIS,
+*   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*   See the License for the specific language governing permissions and
+*   limitations under the License.
+*
+*/
+/*
+*	History:
+*	--------
+*	15-Jun-1998 Dirk Meyer <dirk@plt.rwth-aachen.de>: File created.
+*	09-Apr-1999 Dirk Meyer <dirk@plt.rwth-aachen.de>: Major revision.
+*	07-Dez-2001 Ansgar Münnemann <ansgar@plt.rwth-aachen.de>: Initialvalues and partflags.
+*/
+
+LIBRARY ov
+	VERSION = "1.9.0";
+	AUTHOR = "Dirk Meyer/Ansgar Muennemann";
+	COPYRIGHT = "Copyright (C) 1998-2006 Lehrstuhl fuer Prozessleittechnik, RWTH Aachen";
+	COMMENT = "Metamodel of ACPLT/OV";
+	/*
+	*	object: top level class
+	*	-----------------------
+	*/
+	CLASS object
+		VARIABLES
+			identifier : STRING;
+			idH			:	UINT
+				HAS_ACCESSORS
+				COMMENT	= "high dword of this object's unique id within the server (as long as it exists)";
+			idL			:	UINT
+				HAS_ACCESSORS
+				COMMENT	= "low dword of this object's unique id within the server (as long as it exists)";
+			creationtime : TIME;
+			pouterobject : C_TYPE <OV_INSTPTR>;	//pointer to outer object if this is a OV Part
+			objectstate : INT;	//OV_OS_NONE, OV_OS_INIT, OV_OS_STARTED or OV_OS_ACTIVE
+			linktable : C_TYPE <OV_ATBLPTR>;
+		END_VARIABLES;
+		OPERATIONS
+			constructor : C_FUNCTION <OV_FNC_CONSTRUCTOR>;	//creation of object
+			checkinit : C_FUNCTION <OV_FNC_CHECKINIT>;	//is called once after construction
+			destructor : C_FUNCTION <OV_FNC_DESTRUCTOR>;	//deletion of object
+			startup : C_FUNCTION <OV_FNC_STARTUP>;	//startup could be after creation or after restarting db
+			shutdown : C_FUNCTION <OV_FNC_SHUTDOWN>;	//could be before destructor or before shuting down db
+			rename : C_FUNCTION <OV_FNC_RENAME>;	//the object should be renamed or moved
+			getaccess : C_FUNCTION <OV_FNC_GETACCESS>;
+			getflags : C_FUNCTION <OV_FNC_GETFLAGS>;
+			getcomment : C_FUNCTION <OV_FNC_GETCOMMENT>;
+			gettechunit: C_FUNCTION <OV_FNC_GETTECHUNIT>;
+			getvar : C_FUNCTION <OV_FNC_GETVAR>;
+			setvar : C_FUNCTION <OV_FNC_SETVAR>;
+		END_OPERATIONS;
+	END_CLASS;
+
+	/*
+	*	domain: a container class for other objects
+	*	-------------------------------------------
+	*/
+	CLASS domain : CLASS ov/object
+		IS_INSTANTIABLE;
+	END_CLASS;
+
+	/*
+	*	library: a library definition
+	*	-----------------------------
+	*/
+	CLASS library : CLASS ov/domain
+		IS_INSTANTIABLE;
+		VARIABLES
+			version : STRING HAS_GET_ACCESSOR;
+			author : STRING HAS_GET_ACCESSOR;
+			copyright : STRING HAS_GET_ACCESSOR;
+			comment : STRING HAS_GET_ACCESSOR;
+			handle : C_TYPE <OV_DLLHANDLE>;
+		END_VARIABLES;
+		OPERATIONS
+			constructor : C_FUNCTION <OV_FNC_CONSTRUCTOR>;
+			destructor : C_FUNCTION <OV_FNC_DESTRUCTOR>;
+		END_OPERATIONS;
+	END_CLASS;
+
+	/*
+	*	structure: a structure definition (superseeded by parts)
+	*	---------------------------------
+	*/
+	CLASS structure : CLASS ov/domain
+		IS_INSTANTIABLE;
+		VARIABLES
+			size : UINT;
+		END_VARIABLES;
+	END_CLASS;
+
+	/*
+	*	class: a class definition
+	*	-------------------------
+	*/	
+	CLASS class : CLASS ov/domain
+		IS_INSTANTIABLE;
+		VARIABLES
+			comment : STRING HAS_GET_ACCESSOR;
+			flags : UINT HAS_GET_ACCESSOR;
+			classprops : INT HAS_GET_ACCESSOR;	//could be OV_CP_INSTANTIABLE or OV_CP_FINAL
+			size : UINT HAS_GET_ACCESSOR UNIT = "Byte";
+			staticsize : UINT HAS_GET_ACCESSOR UNIT = "Byte";
+			linktablesize : UINT HAS_GET_ACCESSOR UNIT = "Byte";
+			pvtable : C_TYPE <OV_VTBLPTR>;
+		END_VARIABLES;
+	END_CLASS;
+
+	/*
+	*	association: an association definition
+	*	--------------------------------------
+	*/	
+	CLASS association : CLASS ov/object
+		IS_INSTANTIABLE;
+		VARIABLES
+			assoctype : INT HAS_GET_ACCESSOR;
+			assocprops: INT HAS_GET_ACCESSOR;
+			childrolename : STRING HAS_GET_ACCESSOR;
+			parentrolename : STRING HAS_GET_ACCESSOR;
+			parentoffset : UINT HAS_GET_ACCESSOR;
+			childoffset : UINT HAS_GET_ACCESSOR;
+			parentcomment : STRING HAS_GET_ACCESSOR;
+			childcomment : STRING HAS_GET_ACCESSOR;
+			parentflags : UINT HAS_GET_ACCESSOR;
+			childflags : UINT HAS_GET_ACCESSOR;
+			linkfnc : C_TYPE <OV_FNCPTR_LINK>;
+			unlinkfnc : C_TYPE <OV_FNCPTR_UNLINK>;
+			getaccessfnc : C_TYPE <OV_FNCPTR_GETACCESS>;
+		END_VARIABLES;
+	END_CLASS;
+
+	/*
+	*	variable: a variable definition
+	*	-------------------------------
+	*/
+	CLASS variable : CLASS ov/object
+		IS_INSTANTIABLE;
+		VARIABLES
+			vartype : INT HAS_GET_ACCESSOR;
+			ctypename : STRING HAS_GET_ACCESSOR;
+			varprops : INT HAS_GET_ACCESSOR;
+			veclen : UINT HAS_GET_ACCESSOR;
+			comment : STRING HAS_GET_ACCESSOR;
+			flags : UINT HAS_GET_ACCESSOR;
+			techunit : STRING HAS_GET_ACCESSOR;
+			initialvalue : ANY HAS_GET_ACCESSOR;
+			size : UINT;
+			offset : UINT;
+			getfnc : C_TYPE <OV_FNCPTR_GET>;
+			setfnc : C_TYPE <OV_FNCPTR_SET>;
+		END_VARIABLES;
+	END_CLASS;
+
+	/*
+	*	part: a part object definition
+	*	------------------------------
+	*/
+	CLASS part : CLASS ov/object
+		IS_INSTANTIABLE;
+		VARIABLES
+			offset : UINT;
+			flags  : UINT HAS_GET_ACCESSOR;
+		END_VARIABLES;
+	END_CLASS;
+
+	/*
+	*	operation: an operation definition
+	*	----------------------------------
+	*/
+	CLASS operation : CLASS ov/object
+		IS_INSTANTIABLE;
+		VARIABLES
+			opprops : INT HAS_GET_ACCESSOR;
+			cfnctypename : STRING HAS_GET_ACCESSOR;
+		END_VARIABLES;
+	END_CLASS;
+
+	/*
+	*	containment: domain objects contain objects
+	*	-------------------------------------------
+	*/
+	ASSOCIATION containment : ONE_TO_MANY
+		IS_LOCAL;
+		PARENT parent : CLASS ov/domain;
+		CHILD child : CLASS ov/object;
+	END_ASSOCIATION;
+
+	/*
+	*	instantiation: objects are instances of a class
+	*	-----------------------------------------------
+	*/
+	ASSOCIATION instantiation : ONE_TO_MANY
+		PARENT objectclass : CLASS ov/class;
+		CHILD instance : CLASS ov/object;
+	END_ASSOCIATION;
+
+	/*
+	*	inheritance: base classes inherit their properties to derived classes
+	*	---------------------------------------------------------------------
+	*/
+	ASSOCIATION inheritance : ONE_TO_MANY
+		PARENT baseclass : CLASS ov/class;
+		CHILD derivedclass : CLASS ov/class;
+	END_ASSOCIATION;
+
+	/*
+	*	parentrelationship: associations have a parent class
+	*	----------------------------------------------------
+	*/
+	ASSOCIATION parentrelationship : ONE_TO_MANY
+		PARENT parentclass : CLASS ov/class;
+		CHILD parentassociation : CLASS ov/association;
+	END_ASSOCIATION;
+
+	/*
+	*	childrelationship: associations have a child class
+	*	--------------------------------------------------
+	*/
+	ASSOCIATION childrelationship : ONE_TO_MANY
+		PARENT childclass : CLASS ov/class;
+		CHILD childassociation : CLASS ov/association;
+	END_ASSOCIATION;
+
+	/*
+	*	construction: structured variables are destribed by a structure definition
+	*	--------------------------------------------------------------------------
+	*/
+	ASSOCIATION construction : ONE_TO_MANY
+		PARENT structure : CLASS ov/structure;
+		CHILD variable : CLASS ov/variable;
+	END_ASSOCIATION;
+
+	/*
+	*	embedment: parts embedded in an object are described by a class
+	*	---------------------------------------------------------------
+	*/
+	ASSOCIATION embedment : ONE_TO_MANY
+		PARENT partclass : CLASS ov/class;
+		CHILD part : CLASS ov/part;
+	END_ASSOCIATION;
+
+END_LIBRARY;
+

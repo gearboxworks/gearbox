@@ -1,2 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
-œ
+.DS_Store
+.idea
+/bin
+/test/user-home/.gearbox/cache/
+/.gearbox
+/vendor

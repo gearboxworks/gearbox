@@ -1,0 +1,53 @@
+#ifndef KSHTTP_OVF_INCLUDED
+#define KSHTTP_OVF_INCLUDED
+
+typedef OV_RESULT KSHTTP_FNC_HANDLEEXTREQUEST(
+	const OV_INSTPTR_kshttp_httpClientHandlerExtension	pobj,
+	const OV_INSTPTR_kshttp_httpclienthandler	pClientHandler,
+	const OV_INSTPTR_ksbase_Channel pChannel,
+	const HTTP_REQUEST request,
+	HTTP_RESPONSE *response
+);
+
+typedef OV_RESULT KSHTTP_FNC_INDATAHANDLING(
+	HTTP_REQUEST *request,
+	HTTP_RESPONSE *response,
+	HTTP_COMMUNICATIONSTATUS *communicationStatus,
+	OV_BYTE *indata,
+	OV_UINT length
+);
+typedef OV_RESULT KSHTTP_FNC_GENERATEHEADER(
+	const HTTP_REQUEST request,
+	HTTP_RESPONSE *response,
+	HTTP_COMMUNICATIONSTATUS *communicationStatus,
+	OV_RESULT responseCreationResult,
+	OV_STRING additionalHeaders
+);
+typedef void KSHTTP_FNC_RESULT2HTTP(
+	const HTTP_REQUEST request,
+	HTTP_RESPONSE *response,
+	OV_RESULT const result
+);
+typedef OV_RESULT KSHTTP_FNC_OUTPACKETHANDLING(
+	const HTTP_REQUEST request,
+	HTTP_RESPONSE *response,
+	HTTP_COMMUNICATIONSTATUS *communicationStatus,
+	OV_INSTPTR_ksbase_Channel pChannel
+);
+typedef OV_RESULT KSHTTP_FNC_GENERATEKSBODY(
+	const HTTP_REQUEST request,
+	HTTP_RESPONSE *response,
+	HTTP_COMMUNICATIONSTATUS *communicationStatus,
+	OV_INSTPTR_ksbase_Channel pChannel,
+	OV_INSTPTR_kshttp_httpclienthandler this
+);
+typedef OV_BOOL KSHTTP_FNC_CHECKCOMMAND(
+	const OV_INSTPTR_kshttp_httpClientHandlerExtension	pobj,
+	const OV_INSTPTR_kshttp_httpclienthandler	pClientHandler,
+	const OV_INSTPTR_ksbase_Channel pChannel,
+	const HTTP_REQUEST request
+);
+
+typedef OV_RESULT KSHTTP_FNC_SENDHTTPREQUEST(OV_INSTPTR_kshttp_genericHttpClient pobj, OV_STRING uri, void (*callback)(const OV_INSTPTR_ov_domain this, const OV_INSTPTR_ov_domain that));
+
+#endif

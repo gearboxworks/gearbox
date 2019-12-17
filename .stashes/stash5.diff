@@ -1,0 +1,249 @@
+diff --git a/admin/js/gearbox.js b/admin/js/gearbox.js
+index 6081925..9b8f208 100644
+--- a/admin/js/gearbox.js
++++ b/admin/js/gearbox.js
+@@ -1,14 +1,19 @@
+-gearbox.loadProjects();
+-function getGearboxProjects() {
+-    if (!gearbox.projects) {
+-        window.setTimeout(getGearboxProjects,50);
+-        return;
+-    }
+-    var app = new Vue({
++(function(){
++    let app = new Vue({
+         el: '#app',
+         data: {
+-            projects: gearbox.projects,
++            apis: {},
++            projects: [
++                { name: "WABE" },
++                { name: "AtlPBA" }
++            ],
+         },
++        methods: {
++            getApiUrls() {
++                this.$http.get('/api.json').then(function(response) {
++                    this.apis = response.data
++                });
++            }
++        }
+     });
+-}
+-getGearboxProjects();
+\ No newline at end of file
++})();
+\ No newline at end of file
+diff --git a/api/main.go b/api/main.go
+index 7dd247a..da09656 100644
+--- a/api/main.go
++++ b/api/main.go
+@@ -8,5 +8,5 @@ import (
+ func main() {
+ 	c := gearbox.NewConfig(&host.MacOsConnector{})
+ 	c.Initialize()
+-	gearbox.NewApi(c).Start()
++	gearbox.NewHostApi(c).Start()
+ }
+diff --git a/bin/gearbox b/bin/gearbox
+index b0e3a78..a4c4eb6 100755
+Binary files a/bin/gearbox and b/bin/gearbox differ
+diff --git a/config.go b/config.go
+index cf03c19..491078e 100644
+--- a/config.go
++++ b/config.go
+@@ -47,16 +47,6 @@ func NewConfig(hc host.Connector) *Config {
+ }
+ 
+ func (me *Config) Initialize() {
+-	for range only.Once {
+-		file := me.GetFilepath()
+-		_, err := os.Stat(file)
+-		if err == nil {
+-			break
+-		}
+-		if !os.IsNotExist(err) {
+-			log.Fatal(err.Error())
+-		}
+-	}
+ 	me.Load()
+ 	me.Write()
+ }
+@@ -82,11 +72,10 @@ func (me *Config) Load() {
+ 	for range only.Once {
+ 		j, err := ioutil.ReadFile(me.GetFilepath())
+ 		if err != nil {
+-			log.Fatal(err.Error())
+-		}
+-		err = json.Unmarshal(j, &me)
+-		if err != nil {
+-			log.Fatal(err.Error())
++			err = json.Unmarshal(j, &me)
++			if err != nil {
++				log.Fatal(err.Error())
++			}
+ 		}
+ 		me.LoadProjects()
+ 	}
+@@ -119,6 +108,7 @@ func (me *Config) LoadProjects() {
+ 	for index, pr := range me.ProjectRoots {
+ 		group := index + 1
+ 		var files []os.FileInfo
++		err = os.Mkdir(pr.HostDir,0777)
+ 		files, err = ioutil.ReadDir(pr.HostDir)
+ 		if err != nil {
+ 			log.Fatal(err.Error())
+diff --git a/gearbox.go b/gearbox.go
+index e24ddf4..4606e39 100644
+--- a/gearbox.go
++++ b/gearbox.go
+@@ -5,9 +5,11 @@ import (
+ 	"fmt"
+ 	"gearbox/host"
+ 	"github.com/zserge/webview"
++	"io/ioutil"
+ 	"log"
+ 	"net"
+ 	"net/http"
++	"os"
+ )
+ 
+ var Instance *Gearbox
+@@ -20,7 +22,7 @@ type Gearbox struct {
+ type GearboxArgs Gearbox
+ 
+ func (me *Gearbox) Initialize() {
+-	me.WriteAdminAssetsToWebRoot()
++	me.WriteAssetsToAdminWebRoot()
+ 	me.Config.Initialize()
+ }
+ 
+@@ -51,15 +53,30 @@ func (me *Gearbox) GetProjects() string {
+ func (me *Gearbox) Admin() {
+ 	ln, err := net.Listen("tcp", "127.0.0.1:0")
+ 	if err != nil {
+-		log.Fatal(err)
++		panic(err)
+ 	}
+ 	defer ln.Close()
++
++	adminRootDir := me.HostConnector.GetAdminRootDir()
++
+ 	go func() {
+ 		// See [1]
+-		http.Handle("/", http.FileServer(http.Dir(me.HostConnector.GetAdminRootDir())))
+-		log.Fatal(http.Serve(ln, nil))
++		http.Handle("/", http.FileServer(http.Dir(adminRootDir)))
++		err = http.Serve(ln, nil)
++		if err != nil {
++			print(err.Error())
++		}
+ 	}()
+ 
++	api := NewHostApi(me.Config)
++	apiJson := fmt.Sprintf(`{"host_api":"%s","vm_api":"%s"}`,api.Url(),api.Url())
++	apiJsonFile := fmt.Sprintf("%s/api.json",adminRootDir)
++	err = ioutil.WriteFile(apiJsonFile,[]byte(apiJson),os.ModePerm)
++	if err != nil {
++		panic(err)
++	}
++	go api.Start()
++	defer api.Stop()
+ 	// See [2]
+ 	wv := webview.New(webview.Settings{
+ 		Title:     "Gearbox Admin Console",
+@@ -69,23 +86,10 @@ func (me *Gearbox) Admin() {
+ 		URL:       fmt.Sprintf("http://%s/index.html", ln.Addr().String()),
+ 		Debug:     true,
+ 	})
+-	wv.Dispatch(func() {
+-		me.AdminUpdater, err = wv.Bind("gearbox", &Bridge{
+-			Webview: wv,
+-			Gearbox: me,
+-		})
+-		if err != nil {
+-			log.Fatal(err)
+-		}
+-		//err = wv.Eval(string(MustAsset("admin/js/vue.js")))
+-		//if err != nil {
+-		//	log.Fatal(err)
+-		//}
+-	})
+ 	wv.Run()
+ }
+ 
+-func (me *Gearbox) WriteAdminAssetsToWebRoot() {
++func (me *Gearbox) WriteAssetsToAdminWebRoot() {
+ 	hc := me.HostConnector
+ 	if hc == nil {
+ 		log.Fatal("Gearbox has no host connector. (End users should never see this; it is a programming error.)")
+diff --git a/api.go b/host_api.go
+similarity index 89%
+rename from api.go
+rename to host_api.go
+index 6e8f973..5f1b478 100644
+--- a/api.go
++++ b/host_api.go
+@@ -2,6 +2,7 @@ package gearbox
+ 
+ import (
+ 	"encoding/json"
++	"fmt"
+ 	"github.com/labstack/echo"
+ 	"github.com/projectcfg/projectcfg/util"
+ 	"net/http"
+@@ -9,7 +10,7 @@ import (
+ 
+ const Port = "9999"
+ 
+-type Api struct {
++type HostApi struct {
+ 	Port   string
+ 	Config *Config
+ 	Echo   *echo.Echo
+@@ -45,10 +46,10 @@ const ApiResponse = `{
+ 	}
+ }`
+ 
+-func NewApi(conf *Config) *Api {
++func NewHostApi(conf *Config) *HostApi {
+ 	e := echo.New()
+ 
+-	api := &Api{
++	api := &HostApi{
+ 		Port:   Port,
+ 		Config: conf,
+ 		Echo:   e,
+@@ -112,18 +113,30 @@ func NewApi(conf *Config) *Api {
+ 		})
+ 	})
+ 
++
+ 	return api
+ }
+ 
+-func (me *Api) Start() {
++func (me *HostApi) Url() string {
++	return fmt.Sprintf("http://127.0.0.1:%s",me.Port)
++}
++
++func (me *HostApi) Start() {
+ 	err := me.Echo.Start(":" + me.Port)
+ 	if err != nil {
+ 		util.Error(err)
+ 	}
+ }
+ 
++func (me *HostApi) Stop() {
++	err := me.Echo.Close()
++	if err != nil {
++		util.Error(err)
++	}
++}
++
+ // @TODO Add ?format=yes to pretty print JSON
+-func jsonMarshalHandler(api *Api, ctx echo.Context, js interface{}) error {
++func jsonMarshalHandler(api *HostApi, ctx echo.Context, js interface{}) error {
+ 	r := &Response{}
+ 	err := json.Unmarshal([]byte(ApiResponse), &r)
+ 	if err != nil {

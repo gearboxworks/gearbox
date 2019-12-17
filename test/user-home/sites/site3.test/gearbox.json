@@ -1,0 +1,25 @@
+{
+   "gearbox": {
+      "scope": "project",
+      "schema": "v1",
+      "website": "https://gearbox.works",
+      "readme": [
+         "This file allows you to configure Gearbox for this project.",
+         "Find available services by typing 'gearbox service list' in your command line/terminal.",
+         "Read about this file format at https://docs.gearbox.works/gearbox.json/",
+         "You can delete this `readme` property if you like, just don't break the JSON."
+      ]
+   },
+   "hostname": "site3.local",
+   "aliases": [
+      "www.{hostname}",
+      "docs.{hostname}",
+      "api.{hostname}"
+   ],
+   "stack": {
+      "wordpress/dbserver": "gearboxworks/mariadb",
+      "wordpress/processvm": "gearboxworks/php",
+      "wordpress/webserver": "gearboxworks/nginx"
+   }
+}
+

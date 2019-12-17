@@ -1,0 +1,75 @@
+diff --git a/gearbox/gearbox.go b/gearbox/gearbox.go
+index 29aab82..cab805b 100644
+--- a/gearbox/gearbox.go
++++ b/gearbox/gearbox.go
+@@ -252,7 +252,7 @@ func NewGearbox(args *Args) Gearboxer {
+ 		gb.HostApi.SetGearbox(&gb)
+ 	}
+ 	if args.Gears == nil {
+-		gb.Gears = gears.NewGears()
++		gb.Gears = gears.NewGears(gb.GetOsSupport())
+ 	}
+ 	return &gb
+ }
+diff --git a/gears/gears.go b/gears/gears.go
+index 4b849a7..3d2e636 100644
+--- a/gears/gears.go
++++ b/gears/gears.go
+@@ -22,16 +22,21 @@ type Gear interface {
+ type Gears struct {
+ 	Authorities      types.Authorities `json:"authorities"`
+ 	NamedStackIds    types.StackIds    `json:"stacks"`
++	OsSupport         oss.OsSupporter   `json:"-"`
+ 	StackRoleMap     StackRoleMap      `json:"roles"`
+-	ServiceOptionMap ServiceOptionsMap `json:"services"`
+-	OsSupport        oss.OsSupporter   `json:"-"`
++	ServiceOptionsMap ServiceOptionsMap `json:"services"`
+ 	GlobalOptions    global.Options    `json:"-"`
+ 	refreshed        bool
+ }
+ 
+-func NewGears() *Gears {
+-	o := Gears{}
+-	return &o
++func NewGears(ossup oss.OsSupporter) *Gears {
++	return &Gears{
++		OsSupport: ossup,
++		Authorities: make(types.Authorities,0),
++		NamedStackIds: make(types.StackIds,0),
++		StackRoleMap: make(StackRoleMap,0),
++		ServiceOptionsMap: make(ServiceOptionsMap,0),
++	}
+ }
+ 
+ func (me *Gears) GetNamedStackIds() (nsids types.StackIds, sts status.Status) {
+@@ -52,7 +57,7 @@ func (me *Gears) GetStackRoleMap() (StackRoleMap, status.Status) {
+ }
+ 
+ func (me *Gears) GetNamedStackServiceOptionMap(stackid types.StackId) (rsm ServiceOptionsMap, sts status.Status) {
+-	return me.ServiceOptionMap.FilterForNamedStack(stackid)
++	return me.ServiceOptionsMap.FilterForNamedStack(stackid)
+ }
+ 
+ func (me *Gears) GetNamedStackRoleMap(stackid types.StackId) (StackRoleMap, status.Status) {
+@@ -106,7 +111,7 @@ func (me *Gears) Initialize() (sts status.Status) {
+ 		if is.Error(sts) {
+ 			break
+ 		}
+-		for rs, ro := range me.ServiceOptionMap {
++		for rs, ro := range me.ServiceOptionsMap {
+ 			sr, ok := me.StackRoleMap[rs]
+ 			if !ok {
+ 				continue // @TODO Log error here and communicate back to home base
+diff --git a/gears/service_options.go b/gears/service_options.go
+index 385807a..670c917 100644
+--- a/gears/service_options.go
++++ b/gears/service_options.go
+@@ -81,7 +81,7 @@ func (me ServiceOptionsMap) FilterForNamedStack(stackid types.StackId) (nsrm Ser
+ func (me *ServiceOptions) Fixup(nsid types.StackId) (sts status.Status) {
+ 	for range only.Once {
+ 		gsi := gsid.NewGearspecId()
+-		sts = gsi.Parse(gsid.Identifier(me.NamedStackId))
++		sts = gsi.Parse(gsid.Identifier(nsid))
+ 		if is.Error(sts) {
+ 			break
+ 		}

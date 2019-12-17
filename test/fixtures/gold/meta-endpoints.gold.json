@@ -1,0 +1,159 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/meta-endpoints",
+      "route": "meta-endpoints"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/meta/endpoints"
+   },
+   "data": {
+      "basedir-add": {
+         "uri_template": "/basedirs/new",
+         "methods": [
+            "POST",
+            "OPTIONS"
+         ]
+      },
+      "basedir-delete": {
+         "uri_template": "/basedirs/{nickname}",
+         "methods": [
+            "DELETE",
+            "OPTIONS"
+         ]
+      },
+      "basedir-update": {
+         "uri_template": "/basedirs/{nickname}",
+         "methods": [
+            "PUT",
+            "OPTIONS"
+         ]
+      },
+      "basedirs": {
+         "uri_template": "/basedirs",
+         "methods": [
+            "GET"
+         ]
+      },
+      "links": {
+         "uri_template": "/",
+         "methods": [
+            "GET"
+         ]
+      },
+      "meta-endpoints": {
+         "uri_template": "/meta/endpoints",
+         "methods": [
+            "GET"
+         ]
+      },
+      "meta-methods": {
+         "uri_template": "/meta/methods",
+         "methods": [
+            "GET"
+         ]
+      },
+      "project-add": {
+         "uri_template": "/projects/new",
+         "methods": [
+            "POST",
+            "OPTIONS"
+         ]
+      },
+      "project-aliases": {
+         "uri_template": "/projects/{hostname}/aliases",
+         "methods": [
+            "GET"
+         ]
+      },
+      "project-aliases-add": {
+         "uri_template": "/projects/{hostname}/aliases/new",
+         "methods": [
+            "POST",
+            "OPTIONS"
+         ]
+      },
+      "project-aliases-delete": {
+         "uri_template": "/projects/{hostname}/aliases/{alias}",
+         "methods": [
+            "DELETE",
+            "OPTIONS"
+         ]
+      },
+      "project-aliases-update": {
+         "uri_template": "/projects/{hostname}/aliases/{alias}",
+         "methods": [
+            "PUT",
+            "OPTIONS"
+         ]
+      },
+      "project-candidates": {
+         "uri_template": "/projects/candidates",
+         "methods": [
+            "GET"
+         ]
+      },
+      "project-delete": {
+         "uri_template": "/projects/{hostname}",
+         "methods": [
+            "DELETE",
+            "OPTIONS"
+         ]
+      },
+      "project-details": {
+         "uri_template": "/projects/{hostname}",
+         "methods": [
+            "GET"
+         ]
+      },
+      "project-update": {
+         "uri_template": "/projects/{hostname}",
+         "methods": [
+            "PUT",
+            "OPTIONS"
+         ]
+      },
+      "projects": {
+         "uri_template": "/projects",
+         "methods": [
+            "GET"
+         ]
+      },
+      "projects-disabled": {
+         "uri_template": "/projects/disabled",
+         "methods": [
+            "GET"
+         ]
+      },
+      "projects-enabled": {
+         "uri_template": "/projects/enabled",
+         "methods": [
+            "GET"
+         ]
+      },
+      "projects-with-details": {
+         "uri_template": "/projects/with-details",
+         "methods": [
+            "GET"
+         ]
+      },
+      "stack-details": {
+         "uri_template": "/stacks/{authority}/{stack}",
+         "methods": [
+            "GET"
+         ]
+      },
+      "stacks": {
+         "uri_template": "/stacks",
+         "methods": [
+            "GET"
+         ]
+      }
+   }
+}

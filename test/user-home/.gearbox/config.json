@@ -1,0 +1,35 @@
+{
+    "about": "This is a Gearbox user configuration file.",
+    "learn_more": "To learn about Gearbox visit https://gearbox.works",
+    "schema_version": "1.0",
+    "basedirs": {
+        "primary": {
+            "nickname": "primary",
+            "host_dir": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites",
+            "box_dir": "/home/gearbox/projects"
+        }
+    },
+    "projects": {
+        "site1.local": {
+            "hostname": "site1.local",
+            "enabled": false,
+            "basedir": "primary",
+            "notes": "",
+            "path": "site1.local"
+        },
+        "site3.test": {
+            "hostname": "site3.test",
+            "enabled": false,
+            "basedir": "primary",
+            "notes": "",
+            "path": "site3.test"
+        },
+        "site5.local": {
+            "hostname": "site5.local",
+            "enabled": false,
+            "basedir": "primary",
+            "notes": "",
+            "path": "site5"
+        }
+    }
+}

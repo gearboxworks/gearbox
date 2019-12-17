@@ -1,0 +1,1 @@
+{"basePath":"{{.UserHomeDir}}","exportedName":"Sites","exportedNamePath":"{{.UserHomeDir}}/Sites","exportOptions":"rw,insecure,no_subtree_check,async","network":"0.0.0.0/0","clients":{},"volumes":{"default":1},"exported":{},"clientValidator":null}

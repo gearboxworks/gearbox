@@ -1,0 +1,33 @@
+{
+   "success": true,
+   "status_code": 200,
+   "meta": {
+      "version": "0.1",
+      "service": "Gearbox API",
+      "docs_url": "https://docs.gearbox.works/api/project-candidates",
+      "route": "project-candidates"
+   },
+   "links": {
+      "links": "/",
+      "meta-endpoints": "/meta/endpoints",
+      "meta-methods": "/meta/methods",
+      "self": "/projects/candidates"
+   },
+   "data": [
+      {
+         "basedir": "primary",
+         "path": "site2.local",
+         "full_path": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site2.local"
+      },
+      {
+         "basedir": "primary",
+         "path": "site4.test",
+         "full_path": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site4.test"
+      },
+      {
+         "basedir": "primary",
+         "path": "site6",
+         "full_path": "/Users/mschinkel/go/src/github.com/gearboxworks/gearbox/test/user-home/sites/site6"
+      }
+   ]
+}

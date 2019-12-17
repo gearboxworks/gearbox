@@ -1,0 +1,67 @@
+# @see http://goreleaser.com
+
+project_name: Gearbox
+env:
+  - GO111MODULE=on
+
+before:
+  hooks:
+#    - /tmp/test.sh
+    - go mod download
+    - go-bindata -o gearbox/dist.go -pkg gearbox app/dist/... admin/dist/...
+    - echo {{ .Version }} > VERSION
+
+builds:
+  -
+    main: ./app/main.go
+
+    binary: gearbox
+
+    env:
+      - CGO_ENABLED=1
+
+    goos:
+#      - windows	# Saru to fix this.
+#      - darwin
+      - linux		# It's broken, but not critical for now.
+
+    goarch:
+      - amd64
+#      - 386
+#      - arm64
+#      - arm
+
+#    goarm:
+#      - 5
+#      - 6
+#      - 7
+
+archives:
+- replacements:
+    darwin: Darwin
+    linux: Linux
+    windows: Windows
+    386: i386
+    amd64: x86_64
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  #name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  name_template: "{{ .Tag }}"
+
+release:
+  name_template: "{{ .Tag }}"
+  draft: true
+  prerelease: auto
+  github:
+      owner: gearboxworks
+      name: gearbox
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
