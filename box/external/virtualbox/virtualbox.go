@@ -43,7 +43,7 @@ func RunVm(vm VirtualMachiner, args ...string) (exitCode string, err error) {
 			vboxManagePath = VBOXMANAGE
 		}
 
-		logger.Debug("EXEC[%v]: %v '%v'", vm.GetId(), vboxManagePath, strings.Join(args, ` `))
+		logger.Debug("EXEC[%v]: %v '%v'\n", vm.GetId(), vboxManagePath, strings.Join(args, ` `))
 		cmd := exec.Command(vboxManagePath, args...)
 		cmd.Stdout = logger.GetStdout()
 		cmd.Stderr = logger.GetStderr()
@@ -51,14 +51,15 @@ func RunVm(vm VirtualMachiner, args ...string) (exitCode string, err error) {
 		if err == nil {
 			break
 		}
+		//fmt.Printf("cmd Stdout:%v\n", cmd.Stdout)
 		exitCode = strings.TrimPrefix(err.Error(), "exit status ")
 
 		switch exitCode {
 		case exitCodeMissingVm:
-			err = fmt.Errorf("VirtualBox[%s] command error '%v'", vm.GetName(), cmd.Stderr)
+			err = fmt.Errorf("VirtualBox[%s] command error '%v'\n", vm.GetName(), cmd.Stderr)
 
 		default:
-			err = fmt.Errorf("VirtualBox[%s] failed to run command '%v'",
+			err = fmt.Errorf("VirtualBox[%s] failed to run command '%v'\n",
 				vm.GetName(),
 				err.Error(),
 			)
@@ -66,6 +67,8 @@ func RunVm(vm VirtualMachiner, args ...string) (exitCode string, err error) {
 			fmt.Printf("stderr:%v\n", cmd.Stderr)
 			fmt.Printf("returnCode:'%v'\n", exitCode)
 		}
+
+		return exitCode, err
 
 	}
 
@@ -87,6 +90,7 @@ func CreateVm(vm VirtualMachiner) (states.State, error) {
 		}
 
 		state, err = CmdVmInfo(vm)
+
 		switch state {
 		case states.StateError:
 			logger.Debug("%s: %v", vm.GetId(), err)
@@ -95,7 +99,7 @@ func CreateVm(vm VirtualMachiner) (states.State, error) {
 			fallthrough
 		case states.StateStarted:
 			err = nil
-			logger.Debug("VM '%s' already created", vm.GetId())
+			logger.Debug("VM '%s' already created\n", vm.GetId())
 
 		case states.StateUnregistered:
 			logger.Debug("creating VM '%s'", vm.GetId())
@@ -930,17 +934,19 @@ func CmdVmInfo(vm VirtualMachiner) (states.State, error) {
 			if err != nil {
 				if exitCode == exitCodeMissingVm {
 					state = states.StateUnregistered
-					err = fmt.Errorf("VM '%s' is not registered", vm.GetName())
+					err = fmt.Errorf("VM '%s' is not registered\n", vm.GetName())
 				} else {
 					state = states.StateError
 				}
 				break
 			}
 
+			//fmt.Printf("\n\n%s\n\n", logger.GetStdout())
+
 			kvs, ok := decodeResponse(logger.GetStdout(), '=')
 			if ok == false {
 				state = states.StateError
-				err = fmt.Errorf("VM '%s' can't decode showvminfo response", vm.GetName())
+				err = fmt.Errorf("VM '%s' can't decode showvminfo response\n", vm.GetName())
 				break
 			}
 
@@ -948,7 +954,7 @@ func CmdVmInfo(vm VirtualMachiner) (states.State, error) {
 			kvm, ok = kvs.decodeShowVmInfo()
 			if ok == false {
 				state = states.StateError
-				err = fmt.Errorf("VM '%s' can't decode showvminfo output", vm.GetName())
+				err = fmt.Errorf("VM '%s' can't decode showvminfo output\n", vm.GetName())
 				break
 			}
 			vm.SetInfo(kvm)
@@ -966,12 +972,12 @@ func CmdVmInfo(vm VirtualMachiner) (states.State, error) {
 
 			default:
 				state = states.StateUnknown
-				err = fmt.Errorf("VM '%s' is in an unknown state", vm.GetName())
+				err = fmt.Errorf("VM '%s' is in an unknown state\n", vm.GetName())
 			}
 
 		}
 
-		logger.Debug("VM '%s' is in state %s", vm.GetId(), state)
+		logger.Debug("VM '%s' is in state %s\n", vm.GetId(), state)
 	}
 
 	eblog.LogIfNil(vm, err)

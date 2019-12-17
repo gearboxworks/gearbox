@@ -112,11 +112,13 @@ func New(args ...Args) (*VmBox, error) {
 			_args.waitTime = DefaultVmWaitTime
 		}
 
-		_args.Releases, _ = NewReleases(_args.Channels)
+		//!!!!!!!!!!!!! Authentication box from popping up every 10 seconds constantly
+
+		_args.Releases, _ = NewReleases(_args.Channels) //Authentication box
 
 		_args.vms = make(VmMap)
 
-		*me = VmBox(_args)
+		*me = VmBox(_args) //Authentication box
 
 		me.SetWantState(states.StateIdle)
 		me.SetStateError(err)

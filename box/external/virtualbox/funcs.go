@@ -13,7 +13,6 @@ import (
 func decodeResponse(s *bytes.Buffer, splitOn rune) (dr KeyValues, ok bool) {
 
 	ok = false
-
 	lines := strings.Split(s.String(), "\n")
 	for _, l := range lines {
 		kv, lineOk := lineToKey(l, splitOn)
@@ -25,7 +24,7 @@ func decodeResponse(s *bytes.Buffer, splitOn rune) (dr KeyValues, ok bool) {
 			ok = true
 			dr = append(dr, kv)
 		}
-		// fmt.Printf("items[%d]: '%s' = '%s'\n", i, foo.Key, foo.Value)
+		 //fmt.Printf("items[]: '%s' = '%s'\n", kv.Key, kv.Value)
 	}
 
 	return

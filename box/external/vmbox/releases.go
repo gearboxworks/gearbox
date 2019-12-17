@@ -53,6 +53,7 @@ func NewReleases(c *channels.Channels) (*Releases, error) {
 	var err error
 
 	for range only.Once {
+
 		p := osdirs.New()
 
 		me := Releases{}
@@ -60,7 +61,7 @@ func NewReleases(c *channels.Channels) (*Releases, error) {
 		me.Map = make(ReleasesMap)
 		me.channels = c
 
-		err = me.UpdateReleases()
+		err = me.UpdateReleases() //Authentication box
 
 		ret = &me
 
@@ -153,7 +154,7 @@ func (me *Releases) UpdateReleases() error {
 		//ctx := context.Background()
 		opt := &github.ListOptions{}
 
-		releases, _, err := client.Repositories.ListReleases(context.Background(), "gearboxworks", "gearbox-os", opt)
+		releases, _, err := client.Repositories.ListReleases(context.Background(), "gearboxworks", "gearbox-os", opt) //Authentication box
 		if err != nil {
 			err = msgs.MakeError(entity.VmBoxEntityName, "can't fetch GitHub releases")
 			break
